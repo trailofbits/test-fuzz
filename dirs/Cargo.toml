@@ -1,0 +1,7 @@
+[package]
+name = "dirs"
+version = "0.1.0-alpha"
+edition = "2018"
+
+[dependencies]
+cargo_metadata = "0.11.1"

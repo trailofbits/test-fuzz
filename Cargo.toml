@@ -1,0 +1,34 @@
+[package]
+name = "test-fuzz"
+version = "0.1.0-alpha.0"
+edition = "2018"
+
+authors = ["Samuel E. Moelius III <sam@moeli.us>"]
+license = "MIT OR Apache-2.0"
+description = "To make fuzzing Rust easy"
+homepage = "https://github.com/smoelius/test-fuzz"
+repository = "https://github.com/smoelius/test-fuzz"
+readme = "README.md"
+
+[[bin]]
+name = "cargo-test-fuzz"
+path = "src/bin/cargo_test_fuzz.rs"
+
+[dependencies]
+afl = { git = "https://github.com/rust-fuzz/afl.rs", rev = "5142c995" }
+anyhow = "1.0.32"
+env_logger = "0.7.1"
+cargo_metadata = "0.11.1"
+clap = "3.0.0-beta.1"
+log = "0.4.11"
+serde = { version = "1.0", features = ["derive"] }
+subprocess = "0.2.4"
+
+dirs = { path = "./dirs" }
+runtime = { path = "./runtime" }
+test-fuzz-macro = { path = "./macro" }
+
+[features]
+default = []
+logging = ["test-fuzz-macro/logging"]
+persistent = ["test-fuzz-macro/persistent"]

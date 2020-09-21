@@ -1,0 +1,30 @@
+use crypto::{digest::Digest, sha1::Sha1};
+use dirs::corpus_directory_from_record_type;
+use serde::{de::DeserializeOwned, Serialize};
+use std::{
+    env,
+    fs::{create_dir_all, write},
+    io::Read,
+};
+
+pub fn fuzzing() -> bool {
+    env::var("TEST_FUZZ").map_or(false, |s| !s.is_empty())
+}
+
+pub fn write_record<T: Serialize>(record: &T) {
+    let corpus = corpus_directory_from_record_type::<T>();
+    create_dir_all(&corpus).unwrap_or_default();
+
+    let data = serde_cbor::to_vec(record).unwrap();
+    let hex = {
+        let mut hasher = Sha1::new();
+        hasher.input(&data);
+        hasher.result_str()
+    };
+    let path = corpus.join(hex);
+    write(path, &data).unwrap();
+}
+
+pub fn read_record<T: DeserializeOwned, R: Read>(reader: R) -> Option<T> {
+    serde_cbor::from_reader(reader).ok()
+}

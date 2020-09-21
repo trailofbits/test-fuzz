@@ -1,0 +1,8 @@
+[package]
+name = "example"
+version = "0.1.0-alpha"
+edition = "2018"
+
+[dependencies]
+serde = "1.0"
+test-fuzz = { path = ".." }
