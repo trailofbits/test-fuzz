@@ -9,12 +9,12 @@ $ cargo install test-fuzz --version 0.1.0-alpha.2
 ## Usage
 
 1. **Identify a fuzz target** by:
-    - Adding the following `dependencies` to tha target crate's `Cargo.toml` file:
+    - Adding the following `dependencies` to the target crate's `Cargo.toml` file:
         ```toml
         serde = "1.0"
         test-fuzz = "0.1.0-alpha.2"
         ```
-    - Adding the following `use` declaration to target file or module:
+    - Adding the following `use` declaration to the target file or module:
         ```rust
         use test_fuzz::test_fuzz;
         ```
