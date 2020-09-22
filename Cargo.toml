@@ -15,7 +15,7 @@ name = "cargo-test-fuzz"
 path = "src/bin/cargo_test_fuzz.rs"
 
 [dependencies]
-afl = { git = "https://github.com/rust-fuzz/afl.rs", rev = "5142c995" }
+afl = "0.8.0"
 anyhow = "1.0.32"
 env_logger = "0.7.1"
 cargo_metadata = "0.11.1"
@@ -24,9 +24,9 @@ log = "0.4.11"
 serde = { version = "1.0", features = ["derive"] }
 subprocess = "0.2.4"
 
-dirs = { path = "./dirs" }
-runtime = { path = "./runtime" }
-test-fuzz-macro = { path = "./macro" }
+dirs = { path = "./dirs", package = "test-fuzz-dirs", version = "0.1.0-alpha" }
+runtime = { path = "./runtime", package = "test-fuzz-runtime", version = "0.1.0-alpha" }
+test-fuzz-macro = { path = "./macro", version = "0.1.0-alpha" }
 
 [features]
 default = []

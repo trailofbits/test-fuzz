@@ -197,6 +197,8 @@ fn map_method_or_fn(
     let call_with_deserialized_arguments = {
         #[cfg(feature = "persistent")]
         quote! {
+            // smoelius: Remove the next line once 5142c995 appears in afl.rs on crates.io.
+            use test_fuzz::{afl, __fuzz};
             afl::fuzz!(|data: &[u8]| {
                 let _ = test_fuzz::runtime::read_record::<Record, _>(data).map(|record|
                     #call

@@ -1,7 +1,13 @@
 [package]
 name = "test-fuzz-macro"
-version = "0.1.0-alpha"
+version = "0.1.0-alpha.0"
 edition = "2018"
+
+description = "test-fuzz-macro"
+
+authors = ["Samuel E. Moelius III <sam@moeli.us>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/smoelius/test-fuzz"
 
 [lib]
 proc-macro = true
