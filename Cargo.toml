@@ -3,12 +3,11 @@ name = "test-fuzz"
 version = "0.1.0-alpha.1"
 edition = "2018"
 
+description = "To make fuzzing Rust easy"
+
 authors = ["Samuel E. Moelius III <sam@moeli.us>"]
 license = "MIT OR Apache-2.0"
-description = "To make fuzzing Rust easy"
-homepage = "https://github.com/smoelius/test-fuzz"
 repository = "https://github.com/smoelius/test-fuzz"
-readme = "README.md"
 
 [[bin]]
 name = "cargo-test-fuzz"
