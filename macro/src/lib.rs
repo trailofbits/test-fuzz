@@ -11,12 +11,12 @@ use syn::{
 use unzip3::Unzip3;
 
 #[derive(FromMeta)]
-struct TestFuzzImplArgs {}
+struct TestFuzzImplOpts {}
 
 #[proc_macro_attribute]
 pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
     let attr_args = parse_macro_input!(args as AttributeArgs);
-    let _ = TestFuzzOpts::from_list(&attr_args).unwrap();
+    let _ = TestFuzzImplOpts::from_list(&attr_args).unwrap();
 
     let item = parse_macro_input!(item as ItemImpl);
     let ItemImpl {
