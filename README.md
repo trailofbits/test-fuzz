@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-$ cargo install test-fuzz --version 0.1.0-alpha.2
+$ cargo install test-fuzz --version '>=0.1.0-alpha'
 ```
 
 ## Usage
@@ -12,7 +12,7 @@ $ cargo install test-fuzz --version 0.1.0-alpha.2
     - Adding the following `dependencies` to the target crate's `Cargo.toml` file:
         ```toml
         serde = "1.0"
-        test-fuzz = "0.1.0-alpha.2"
+        test-fuzz = "0.1.0-alpha"
         ```
     - Adding the following `use` declaration to the target file or module:
         ```rust
