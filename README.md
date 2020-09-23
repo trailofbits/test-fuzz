@@ -26,12 +26,12 @@ $ cargo install test-fuzz --version '>=0.1.0-alpha'
         }
         ```
 
-2. **Generate a corpus** by runnig `cargo test`:
+2. **Generate a corpus** by running `cargo test`:
     ```
     $ cargo test
     ```
 
-3. **Fuzz your target** by runnig `cargo test-fuzz`:
+3. **Fuzz your target** by running `cargo test-fuzz`:
     ```
     $ cargo test-fuzz --target foo
     ```
