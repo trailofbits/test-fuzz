@@ -37,6 +37,10 @@ struct TestFuzz {
     resume: bool,
     #[clap(long, about = "For testing build process")]
     no_instrumentation: bool,
+    #[clap(long, about = "Compile, but don't fuzz")]
+    no_run: bool,
+    #[clap(long, about = "Enable persistent mode")]
+    persistent: bool,
     #[clap(short, long, about = "Package containing fuzz target")]
     package: Option<String>,
     #[clap(long, about = "String that fuzz target's name must contain")]
@@ -51,6 +55,10 @@ fn main() -> Result<()> {
     let SubCommand::TestFuzz(opts) = Opts::parse().subcmd;
 
     let executables = build(&opts)?;
+
+    if opts.no_run {
+        return Ok(());
+    }
 
     let mut executable_targets = executable_targets(&executables)?;
 
@@ -79,6 +87,9 @@ fn build(opts: &TestFuzz) -> Result<Vec<(PathBuf, String)>> {
         args.extend_from_slice(&["afl"]);
     }
     args.extend_from_slice(&["test", "--no-run", "--message-format=json"]);
+    if opts.persistent {
+        args.extend_from_slice(&["--features", "test-fuzz/persistent"]);
+    }
     if let Some(package) = &opts.package {
         args.extend_from_slice(&["--package", &package])
     }

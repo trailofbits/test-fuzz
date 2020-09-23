@@ -56,6 +56,10 @@ TODO
 
 * **`--no-instrumentation`** - TODO
 
+* **`--no-run`** - TODO
+
+* **`--persistent`** - TODO
+
 * **`--resume`** - TODO
 
 * **`-p, --package = <package>`** - TODO
