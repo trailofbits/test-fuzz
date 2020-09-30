@@ -153,17 +153,20 @@ fn main() -> Result<()> {
 }
 
 fn build(opts: &TestFuzz) -> Result<Vec<(PathBuf, String)>> {
+    // smoelius: Put --message-format=json last so that it is easy to copy-and-paste the command
+    // without it.
     let mut args = vec![];
     if !opts.no_instrumentation {
         args.extend_from_slice(&["afl"]);
     }
-    args.extend_from_slice(&["test", "--no-run", "--message-format=json"]);
-    if opts.persistent {
-        args.extend_from_slice(&["--features", "test-fuzz/persistent"]);
-    }
+    args.extend_from_slice(&["test", "--no-run"]);
     if let Some(package) = &opts.package {
         args.extend_from_slice(&["--package", &package])
     }
+    if opts.persistent {
+        args.extend_from_slice(&["--features", "test-fuzz/persistent"]);
+    }
+    args.extend_from_slice(&["--message-format=json"]);
 
     let exec = Exec::cmd("cargo").args(&args);
     debug!("{:?}", exec);
