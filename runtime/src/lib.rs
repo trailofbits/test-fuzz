@@ -2,13 +2,69 @@ use crypto::{digest::Digest, sha1::Sha1};
 use dirs::corpus_directory_from_args_type;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
+    any::type_name,
     env,
+    fmt::{Debug, Formatter, Result},
     fs::{create_dir_all, write},
     io::Read,
+    marker::PhantomData,
 };
 
-pub fn fuzzing() -> bool {
-    env::var("TEST_FUZZ").map_or(false, |s| !s.is_empty())
+// smoelius: TryDebug uses Nikolai Vazquez's trick from `impls`.
+// https://github.com/nvzqz/impls#how-it-works
+
+struct DebugUnimplemented<T>(PhantomData<T>);
+
+impl<T> Debug for DebugUnimplemented<T> {
+    fn fmt(&self, fmt: &mut Formatter<'_>) -> Result {
+        const PAT: &str = "TryDebug<";
+        let type_name = type_name::<T>();
+        let pos = type_name.find(PAT).unwrap() + PAT.len();
+        write!(
+            fmt,
+            "<unknown of type {}>",
+            type_name[pos..].strip_suffix(">").unwrap()
+        )
+    }
+}
+
+pub trait TryDebugDefault {
+    fn apply<U>(&self, f: &mut dyn FnMut(&dyn Debug) -> U) -> U;
+}
+
+impl<T> TryDebugDefault for T {
+    fn apply<U>(&self, f: &mut dyn FnMut(&dyn Debug) -> U) -> U {
+        f(&DebugUnimplemented::<T>(PhantomData))
+    }
+}
+
+pub struct TryDebug<'a, T>(pub &'a T);
+
+impl<'a, T: Debug> TryDebug<'a, T> {
+    pub fn apply<U>(&self, f: &mut dyn FnMut(&dyn Debug) -> U) -> U {
+        f(self.0)
+    }
+}
+
+pub fn test_fuzz_enabled() -> bool {
+    enabled("")
+}
+
+pub fn display() -> bool {
+    enabled("DISPLAY")
+}
+
+pub fn replay() -> bool {
+    enabled("REPLAY")
+}
+
+pub fn pretty_print() -> bool {
+    enabled("PRETTY_PRINT")
+}
+
+fn enabled(opt: &str) -> bool {
+    let key = "TEST_FUZZ".to_owned() + if opt.is_empty() { "" } else { "_" } + opt;
+    env::var(key).map_or(false, |s| !s.is_empty())
 }
 
 pub fn write_args<T: Serialize>(args: &T) {

@@ -6,7 +6,8 @@ use std::convert::identity;
 use syn::{
     parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute, AttributeArgs, Block,
     Expr, FnArg, GenericArgument, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod,
-    LitStr, Pat, PathArguments, PathSegment, Signature, Type, TypePath, Visibility,
+    LitStr, Pat, PathArguments, PathSegment, ReturnType, Signature, Stmt, Type, TypePath,
+    Visibility,
 };
 use unzip_n::unzip_n;
 
@@ -168,11 +169,40 @@ fn map_method_or_fn(
         );
     }
 
-    let (receiver, tys, ser_args, de_args) = map_args(self_ty, sig);
-    let pub_tys: Vec<TokenStream2> = tys.iter().map(|ty| quote! { pub #ty }).collect();
+    let (receiver, arg_tys, fmt_args, ser_args, de_args) = map_args(self_ty, sig);
+    let pub_arg_tys: Vec<TokenStream2> = arg_tys.iter().map(|ty| quote! { pub #ty }).collect();
+    let ret_ty = match &sig.output {
+        ReturnType::Type(_, ty) => ty.clone(),
+        ReturnType::Default => parse_quote! { () },
+    };
+
     let target_ident = &sig.ident;
     let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
     let mod_ident = Ident::new(&format!("{}_fuzz", renamed_target_ident), Span::call_site());
+
+    let input_args = {
+        #[cfg(feature = "persistent")]
+        quote! {}
+        #[cfg(not(feature = "persistent"))]
+        quote! {
+            let args = test_fuzz::runtime::read_args::<Args, _>(std::io::stdin());
+        }
+    };
+    let output_args = {
+        #[cfg(feature = "persistent")]
+        quote! {}
+        #[cfg(not(feature = "persistent"))]
+        quote! {
+            args.map(|x| {
+                if test_fuzz::runtime::pretty_print() {
+                    eprint!("{:#?}", x);
+                } else {
+                    eprint!("{:?}", x);
+                };
+            });
+            eprintln!();
+        }
+    };
     let call: Expr = if receiver {
         let mut de_args = de_args.iter();
         let self_arg = de_args
@@ -202,25 +232,54 @@ fn map_method_or_fn(
             // smoelius: Remove the next line once 5142c995 appears in afl.rs on crates.io.
             use test_fuzz::{afl, __fuzz};
             afl::fuzz!(|data: &[u8]| {
-                let _ = test_fuzz::runtime::read_args::<Args, _>(data).map(|args|
+                let args = test_fuzz::runtime::read_args::<Args, _>(data);
+                let ret = args.map(|args|
                     #call
                 );
             });
         }
         #[cfg(not(feature = "persistent"))]
         quote! {
-            std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
-            let _ = test_fuzz::runtime::read_args::<Args, _>(std::io::stdin()).map(|args|
+            let ret = args.map(|args|
                 #call
             );
-            let _ = std::panic::take_hook();
+        }
+    };
+    let output_ret = {
+        #[cfg(feature = "persistent")]
+        quote! {
+            // smoelius: Suppress unused variable warning.
+            let _ = #ret_ty;
+        }
+        #[cfg(not(feature = "persistent"))]
+        quote! {
+            struct Ret(#ret_ty);
+            impl std::fmt::Debug for Ret {
+                fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    use test_fuzz::runtime::TryDebugDefault;
+                    let mut debug_tuple = fmt.debug_tuple("Ret");
+                    test_fuzz::runtime::TryDebug(&self.0).apply(&mut |value| {
+                        debug_tuple.field(value);
+                    });
+                    debug_tuple.finish()
+                }
+            }
+            let ret = ret.map(Ret);
+            ret.map(|x| {
+                if test_fuzz::runtime::pretty_print() {
+                    eprint!("{:#?}", x);
+                } else {
+                    eprint!("{:?}", x);
+                };
+            });
+            eprintln!();
         }
     };
     (
         parse_quote! {
             #(#attrs)* #vis #defaultness #sig {
                 #[cfg(test)]
-                if !test_fuzz::runtime::fuzzing() {
+                if !test_fuzz::runtime::test_fuzz_enabled() {
                     test_fuzz::runtime::write_args(&#mod_ident::Args(
                         #(#ser_args),*
                     ));
@@ -236,13 +295,36 @@ fn map_method_or_fn(
 
                 #[derive(serde::Deserialize, serde::Serialize)]
                 pub(super) struct Args(
-                    #(#pub_tys),*
+                    #(#pub_arg_tys),*
                 );
+
+                impl std::fmt::Debug for Args {
+                    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                        use test_fuzz::runtime::TryDebugDefault;
+                        let mut debug_struct = fmt.debug_struct("Args");
+                        #(#fmt_args)*
+                        debug_struct.finish()
+                    }
+                }
 
                 #[test]
                 fn entry() {
-                    if test_fuzz::runtime::fuzzing() {
-                        #call_with_deserialized_arguments
+                    // smoelius: Do not set the panic hook when replaying. Leave cargo test's panic
+                    // hook in place.
+                    if test_fuzz::runtime::test_fuzz_enabled() {
+                        if test_fuzz::runtime::display() {
+                            #input_args
+                            #output_args
+                        } else if test_fuzz::runtime::replay() {
+                            #input_args
+                            #call_with_deserialized_arguments
+                            #output_ret
+                        } else {
+                            std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
+                            #input_args
+                            #call_with_deserialized_arguments
+                            let _ = std::panic::take_hook();
+                        }
                     }
                 }
             }
@@ -250,10 +332,13 @@ fn map_method_or_fn(
     )
 }
 
-fn map_args(self_ty: &Option<Type>, sig: &Signature) -> (bool, Vec<Type>, Vec<Expr>, Vec<Expr>) {
-    unzip_n!(4);
+fn map_args(
+    self_ty: &Option<Type>,
+    sig: &Signature,
+) -> (bool, Vec<Type>, Vec<Stmt>, Vec<Expr>, Vec<Expr>) {
+    unzip_n!(5);
 
-    let (receiver, ty, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>) = sig
+    let (receiver, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = sig
         .inputs
         .iter()
         .enumerate()
@@ -262,10 +347,10 @@ fn map_args(self_ty: &Option<Type>, sig: &Signature) -> (bool, Vec<Type>, Vec<Ex
 
     let receiver = receiver.first().map_or(false, |&x| x);
 
-    (receiver, ty, ser, de)
+    (receiver, ty, fmt, ser, de)
 }
 
-fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, Expr, Expr) {
+fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, Stmt, Expr, Expr) {
     let self_ty = self_ty.clone();
     move |(i, arg)| {
         let i = Literal::usize_unsuffixed(i);
@@ -273,26 +358,38 @@ fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, E
             FnArg::Receiver(_) => (
                 true,
                 parse_quote! { #self_ty },
+                parse_quote! {
+                    test_fuzz::runtime::TryDebug(&self.#i).apply(&mut |value| {
+                        debug_struct.field("self", value);
+                    });
+                },
                 parse_quote! { self.clone() },
                 parse_quote! { args.#i },
             ),
             FnArg::Typed(pat_ty) => {
                 let pat = &*pat_ty.pat;
                 let ty = &*pat_ty.ty;
+                let name = format!("{}", pat.to_token_stream());
+                let fmt = parse_quote! {
+                    test_fuzz::runtime::TryDebug(&self.#i).apply(&mut |value| {
+                        debug_struct.field(#name, value);
+                    });
+                };
                 let default = (
                     false,
                     parse_quote! { #ty },
+                    parse_quote! { #fmt },
                     parse_quote! { #pat },
                     parse_quote! { args.#i },
                 );
                 match ty {
                     Type::Path(path) => map_arc_arg(&i, pat, path)
-                        .map(|(ty, ser, de)| (false, ty, ser, de))
+                        .map(|(ty, ser, de)| (false, ty, fmt, ser, de))
                         .unwrap_or(default),
                     Type::Reference(ty) => {
                         let ty = &*ty.elem;
                         let (ty, ser, de) = map_ref_arg(&i, pat, ty);
-                        (false, ty, ser, de)
+                        (false, ty, fmt, ser, de)
                     }
                     _ => default,
                 }

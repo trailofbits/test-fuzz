@@ -5,16 +5,19 @@
 use anyhow::{ensure, Result};
 use cargo_metadata::{Artifact, ArtifactProfile, Message};
 use clap::Clap;
-use dirs::{corpus_directory_from_target, output_directory_from_target};
+use dirs::{
+    corpus_directory_from_target, crashes_directory_from_target, output_directory_from_target,
+    queue_directory_from_target,
+};
 use log::debug;
 use std::{
     fmt::Debug,
-    fs::create_dir_all,
-    io::{BufRead, BufReader},
+    fs::{create_dir_all, read_dir, File},
+    io::{BufRead, BufReader, Read},
     path::PathBuf,
     process::Command,
 };
-use subprocess::Exec;
+use subprocess::{Exec, NullFile, Redirection};
 
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
@@ -31,18 +34,47 @@ enum SubCommand {
 
 #[derive(Clap, Debug)]
 struct TestFuzz {
+    #[clap(
+        long,
+        about = "Display corpus using uninstrumented fuzz target; to display with instrumentation, \
+use --display-corpus-instrumented"
+    )]
+    display_corpus: bool,
+    #[clap(long, hidden = true)]
+    display_corpus_instrumented: bool,
+    #[clap(long, about = "Display crashes")]
+    display_crashes: bool,
+    #[clap(long, about = "Display work queue")]
+    display_queue: bool,
     #[clap(long, about = "List fuzz targets")]
     list: bool,
-    #[clap(long, about = "Resume last fuzzing session")]
+    #[clap(long, about = "Resume target's last fuzzing session")]
     resume: bool,
-    #[clap(long, about = "For testing build process")]
+    #[clap(
+        long,
+        about = "Compile without instrumentation (for testing build process)"
+    )]
     no_instrumentation: bool,
     #[clap(long, about = "Compile, but don't fuzz")]
     no_run: bool,
-    #[clap(long, about = "Enable persistent mode")]
+    #[clap(long, about = "Enable persistent mode fuzzing")]
     persistent: bool,
+    #[clap(long, about = "Pretty-print debug output")]
+    pretty_print: bool,
     #[clap(short, long, about = "Package containing fuzz target")]
     package: Option<String>,
+    #[clap(
+        long,
+        about = "Replay corpus using uninstrumented fuzz target; to replay with instrumentation, \
+use --replay-corpus-instrumented"
+    )]
+    replay_corpus: bool,
+    #[clap(long, hidden = true)]
+    replay_corpus_instrumented: bool,
+    #[clap(long, about = "Replay crashes")]
+    replay_crashes: bool,
+    #[clap(long, about = "Replay work queue")]
+    replay_queue: bool,
     #[clap(long, about = "String that fuzz target's name must contain")]
     target: Option<String>,
     #[clap(last = true, about = "Arguments for the fuzzer")]
@@ -52,13 +84,15 @@ struct TestFuzz {
 fn main() -> Result<()> {
     env_logger::init();
 
-    let SubCommand::TestFuzz(opts) = Opts::parse().subcmd;
+    let opts = {
+        let SubCommand::TestFuzz(mut opts) = Opts::parse().subcmd;
+        if opts.display_corpus || opts.replay_corpus {
+            opts.no_instrumentation = true;
+        }
+        opts
+    };
 
     let executables = build(&opts)?;
-
-    if opts.no_run {
-        return Ok(());
-    }
 
     let mut executable_targets = executable_targets(&executables)?;
 
@@ -71,7 +105,37 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
+    if opts.no_run {
+        return Ok(());
+    }
+
     let (executable, krate, target) = executable_target(&opts, &executable_targets)?;
+
+    let display = opts.display_corpus
+        || opts.display_corpus_instrumented
+        || opts.display_crashes
+        || opts.display_queue;
+
+    let replay = opts.replay_corpus
+        || opts.replay_corpus_instrumented
+        || opts.replay_crashes
+        || opts.replay_queue;
+
+    let dir = if opts.display_corpus || opts.display_corpus_instrumented || opts.replay_corpus {
+        corpus_directory_from_target(&krate, &target)
+    } else if opts.display_crashes || opts.replay_crashes {
+        crashes_directory_from_target(&krate, &target)
+    } else if opts.display_queue || opts.replay_queue {
+        queue_directory_from_target(&krate, &target)
+    } else {
+        PathBuf::default()
+    };
+
+    if display {
+        return for_each_entry(&opts, &executable, &krate, &target, Action::Display, &dir);
+    } else if replay {
+        return for_each_entry(&opts, &executable, &krate, &target, Action::Replay, &dir);
+    }
 
     if opts.no_instrumentation {
         println!("Stopping before fuzzing since --no-instrumentation was specified.");
@@ -226,6 +290,117 @@ fn executable_target(
         executable_targets.1,
         executable_targets.2.remove(0),
     ))
+}
+
+#[derive(Eq, PartialEq)]
+enum Action {
+    Display,
+    Replay,
+}
+
+fn for_each_entry(
+    opts: &TestFuzz,
+    executable: &PathBuf,
+    _krate: &str,
+    target: &str,
+    action: Action,
+    dir: &PathBuf,
+) -> Result<()> {
+    let mut env = vec![("TEST_FUZZ", "1")];
+    env.extend(&[(
+        match action {
+            Action::Display => "TEST_FUZZ_DISPLAY",
+            Action::Replay => "TEST_FUZZ_REPLAY",
+        },
+        "1",
+    )]);
+    if opts.pretty_print {
+        env.extend(&[("TEST_FUZZ_PRETTY_PRINT", "1")]);
+    }
+
+    let args: Vec<String> = vec![
+        "--exact",
+        &(target.to_owned() + ENTRY_SUFFIX),
+        "--nocapture",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect();
+
+    let mut nonempty = false;
+    let mut failure = false;
+    let mut output = false;
+
+    for entry in read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        let file = File::open(&path)?;
+        let file_name = path
+            .file_name()
+            .map(|s| s.to_string_lossy())
+            .unwrap_or_default();
+
+        if file_name == "README.txt" || file_name == ".state" {
+            continue;
+        }
+
+        let exec = Exec::cmd(executable)
+            .env_extend(&env)
+            .args(&args)
+            .stdin(file)
+            .stdout(NullFile)
+            .stderr(Redirection::Pipe);
+        debug!("{:?}", exec);
+        let mut popen = exec.popen()?;
+        let buffer = popen
+            .stderr
+            .as_mut()
+            .map_or(Ok(vec![]), |stderr| -> Result<_> {
+                let mut buffer = Vec::new();
+                stderr.read_to_end(&mut buffer)?;
+                Ok(buffer)
+            })?;
+        let status = popen.wait()?;
+
+        print!("{}: ", file_name);
+        if buffer.is_empty() {
+            println!("{:?}", status);
+        } else {
+            print!("{}", String::from_utf8_lossy(&buffer));
+            output = true;
+        }
+
+        failure |= !status.success();
+
+        nonempty = true;
+    }
+
+    assert!(!(!nonempty && (failure || output)));
+
+    if !nonempty {
+        println!(
+            "Nothing to {}.",
+            match action {
+                Action::Display => "display",
+                Action::Replay => "replay",
+            }
+        );
+        return Ok(());
+    }
+
+    if !failure && !output {
+        println!("No output on stderr detected.");
+        return Ok(());
+    }
+
+    if failure && action == Action::Display {
+        println!(
+            "Encountered a failure while not replaying. A buggy Debug implementation perhaps?"
+        );
+        return Ok(());
+    }
+
+    Ok(())
 }
 
 fn fuzz(opts: &TestFuzz, executable: &PathBuf, krate: &str, target: &str) -> Result<()> {
