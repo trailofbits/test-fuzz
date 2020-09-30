@@ -4,11 +4,11 @@ use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
 use std::convert::identity;
 use syn::{
-    parse_macro_input, punctuated::Punctuated, token::Comma, token::Default, Attribute,
-    AttributeArgs, Block, FnArg, GenericArgument, Ident, ImplItem, ImplItemMethod, ItemFn,
-    ItemImpl, LitStr, Pat, PathArguments, PathSegment, Signature, Type, TypePath, Visibility,
+    parse_macro_input, punctuated::Punctuated, token, Attribute, AttributeArgs, Block, FnArg,
+    GenericArgument, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, LitStr, Pat, PathArguments,
+    PathSegment, Signature, Type, TypePath, Visibility,
 };
-use unzip3::Unzip3;
+use unzip_n::unzip_n;
 
 #[derive(FromMeta)]
 struct TestFuzzImplOpts {}
@@ -150,7 +150,7 @@ fn map_method_or_fn(
     opts: &TestFuzzOpts,
     attrs: &Vec<Attribute>,
     vis: &Visibility,
-    defaultness: &Option<Default>,
+    defaultness: &Option<token::Default>,
     sig: &Signature,
     block: &Block,
 ) -> (TokenStream2, Option<TokenStream2>) {
@@ -166,7 +166,7 @@ fn map_method_or_fn(
         );
     }
 
-    let (receiver, (tys, ser_args, de_args)) = map_args(self_ty, sig);
+    let (receiver, tys, ser_args, de_args) = map_args(self_ty, sig);
     let pub_tys: Vec<TokenStream2> = tys.iter().map(|ty| quote! { pub #ty }).collect();
     let target_ident = &sig.ident;
     let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
@@ -253,48 +253,52 @@ fn map_args(
     sig: &Signature,
 ) -> (
     bool,
-    (Vec<TokenStream2>, Vec<TokenStream2>, Vec<TokenStream2>),
+    Vec<TokenStream2>,
+    Vec<TokenStream2>,
+    Vec<TokenStream2>,
 ) {
-    let (receiver, ty_ser_de): (Vec<_>, Vec<_>) =
-        sig.inputs.iter().enumerate().map(map_arg(self_ty)).unzip();
+    unzip_n!(4);
+
+    let (receiver, ty, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>) = sig
+        .inputs
+        .iter()
+        .enumerate()
+        .map(map_arg(self_ty))
+        .unzip_n();
 
     let receiver = receiver.first().map_or(false, |&x| x);
 
-    let ty_ser_de: (Vec<_>, Vec<_>, Vec<_>) = ty_ser_de.into_iter().unzip3();
-
-    (receiver, ty_ser_de)
+    (receiver, ty, ser, de)
 }
 
 fn map_arg(
     self_ty: &Option<Type>,
-) -> impl Fn((usize, &FnArg)) -> (bool, (TokenStream2, TokenStream2, TokenStream2)) {
+) -> impl Fn((usize, &FnArg)) -> (bool, TokenStream2, TokenStream2, TokenStream2) {
     let self_ty = self_ty.clone();
     move |(i, arg)| {
         let i = Literal::usize_unsuffixed(i);
         match arg {
             FnArg::Receiver(_) => (
                 true,
-                (
-                    quote! { #self_ty },
-                    quote! { self.clone() },
-                    quote! { args.#i },
-                ),
+                quote! { #self_ty },
+                quote! { self.clone() },
+                quote! { args.#i },
             ),
             FnArg::Typed(pat_ty) => {
                 let pat = &*pat_ty.pat;
                 let ty = &*pat_ty.ty;
-                let default = (quote! { #ty }, quote! { #pat }, quote! { args.#i });
-                (
-                    false,
-                    match ty {
-                        Type::Path(path) => map_arc_arg(&i, pat, path).unwrap_or(default),
-                        Type::Reference(ty) => {
-                            let ty = &*ty.elem;
-                            map_ref_arg(&i, pat, ty)
-                        }
-                        _ => default,
-                    },
-                )
+                let default = (false, quote! { #ty }, quote! { #pat }, quote! { args.#i });
+                match ty {
+                    Type::Path(path) => map_arc_arg(&i, pat, path)
+                        .map(|(ty, ser, de)| (false, ty, ser, de))
+                        .unwrap_or(default),
+                    Type::Reference(ty) => {
+                        let ty = &*ty.elem;
+                        let (ty, ser, de) = map_ref_arg(&i, pat, ty);
+                        (false, ty, ser, de)
+                    }
+                    _ => default,
+                }
             }
         }
     }
@@ -341,11 +345,7 @@ fn map_ref_arg(i: &Literal, pat: &Pat, ty: &Type) -> (TokenStream2, TokenStream2
                 quote! { args.#i.as_slice() },
             )
         }
-        _ => (
-            quote! { #ty },
-            quote! { #pat.clone() },
-            quote! { &args.#i },
-        ),
+        _ => (quote! { #ty }, quote! { #pat.clone() }, quote! { &args.#i }),
     }
 }
 
@@ -358,7 +358,7 @@ fn opts_from_attr(attr: &Attribute) -> TestFuzzOpts {
 }
 
 fn tokens_from_opts(opts: &TestFuzzOpts) -> TokenStream {
-    let mut attrs = Punctuated::<TokenStream2, Comma>::default();
+    let mut attrs = Punctuated::<TokenStream2, token::Comma>::default();
     if let Some(()) = &opts.skip {
         attrs.push(quote! { skip });
     }
