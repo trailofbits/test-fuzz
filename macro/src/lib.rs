@@ -250,15 +250,7 @@ fn map_method_or_fn(
     )
 }
 
-fn map_args(
-    self_ty: &Option<Type>,
-    sig: &Signature,
-) -> (
-    bool,
-    Vec<Type>,
-    Vec<Expr>,
-    Vec<Expr>,
-) {
+fn map_args(self_ty: &Option<Type>, sig: &Signature) -> (bool, Vec<Type>, Vec<Expr>, Vec<Expr>) {
     unzip_n!(4);
 
     let (receiver, ty, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>) = sig
@@ -273,9 +265,7 @@ fn map_args(
     (receiver, ty, ser, de)
 }
 
-fn map_arg(
-    self_ty: &Option<Type>,
-) -> impl Fn((usize, &FnArg)) -> (bool, Type, Expr, Expr) {
+fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, Expr, Expr) {
     let self_ty = self_ty.clone();
     move |(i, arg)| {
         let i = Literal::usize_unsuffixed(i);
@@ -311,11 +301,7 @@ fn map_arg(
     }
 }
 
-fn map_arc_arg(
-    i: &Literal,
-    pat: &Pat,
-    path: &TypePath,
-) -> Option<(Type, Expr, Expr)> {
+fn map_arc_arg(i: &Literal, pat: &Pat, path: &TypePath) -> Option<(Type, Expr, Expr)> {
     if let Some(PathArguments::AngleBracketed(args)) =
         match_type_path(path, &["std", "sync", "Arc"])
     {
