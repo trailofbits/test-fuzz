@@ -9,14 +9,24 @@ pub fn corpus_directory_from_target(krate: &str, target: &str) -> PathBuf {
     corpus_directory().join(path_from_target(krate, target))
 }
 
+pub fn crashes_directory_from_target(krate: &str, target: &str) -> PathBuf {
+    output_directory_from_target(krate, target).join("crashes")
+}
+
+pub fn queue_directory_from_target(krate: &str, target: &str) -> PathBuf {
+    output_directory_from_target(krate, target).join("queue")
+}
+
 pub fn output_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    target_directory()
-        .join("afl")
-        .join(path_from_target(krate, target))
+    output_directory().join(path_from_target(krate, target))
 }
 
 fn corpus_directory() -> PathBuf {
     target_directory().join("corpus")
+}
+
+fn output_directory() -> PathBuf {
+    target_directory().join("afl")
 }
 
 fn target_directory() -> PathBuf {
