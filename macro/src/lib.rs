@@ -4,9 +4,9 @@ use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
 use std::convert::identity;
 use syn::{
-    parse_macro_input, punctuated::Punctuated, token, Attribute, AttributeArgs, Block, FnArg,
-    GenericArgument, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, LitStr, Pat, PathArguments,
-    PathSegment, Signature, Type, TypePath, Visibility,
+    parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute, AttributeArgs, Block,
+    Expr, FnArg, GenericArgument, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod,
+    LitStr, Pat, PathArguments, PathSegment, Signature, Type, TypePath, Visibility,
 };
 use unzip_n::unzip_n;
 
@@ -47,7 +47,7 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
     result.into()
 }
 
-fn map_impl_items(self_ty: &Type, items: &[ImplItem]) -> (Vec<TokenStream2>, Vec<TokenStream2>) {
+fn map_impl_items(self_ty: &Type, items: &[ImplItem]) -> (Vec<ImplItem>, Vec<ItemMod>) {
     let impl_items_modules = items.iter().map(map_impl_item(self_ty));
 
     let (impl_items, modules): (Vec<_>, Vec<_>) = impl_items_modules.unzip();
@@ -57,7 +57,7 @@ fn map_impl_items(self_ty: &Type, items: &[ImplItem]) -> (Vec<TokenStream2>, Vec
     (impl_items, modules)
 }
 
-fn map_impl_item(self_ty: &Type) -> impl Fn(&ImplItem) -> (TokenStream2, Option<TokenStream2>) {
+fn map_impl_item(self_ty: &Type) -> impl Fn(&ImplItem) -> (ImplItem, Option<ItemMod>) {
     let self_ty = self_ty.clone();
     move |impl_item| {
         if let ImplItem::Method(method) = &impl_item {
@@ -71,9 +71,9 @@ fn map_impl_item(self_ty: &Type) -> impl Fn(&ImplItem) -> (TokenStream2, Option<
                         None
                     }
                 })
-                .unwrap_or((quote! { #impl_item }, None))
+                .unwrap_or((impl_item.clone(), None))
         } else {
-            (quote! { #impl_item }, None)
+            (impl_item.clone(), None)
         }
     }
 }
@@ -82,7 +82,7 @@ fn map_method(
     self_ty: &Type,
     opts: &TestFuzzOpts,
     method: &ImplItemMethod,
-) -> (TokenStream2, Option<TokenStream2>) {
+) -> (ImplItem, Option<ItemMod>) {
     let ImplItemMethod {
         attrs,
         vis,
@@ -104,7 +104,7 @@ fn map_method(
         })
         .collect();
 
-    map_method_or_fn(
+    let (method, module) = map_method_or_fn(
         &Some(self_ty.clone()),
         &opts,
         &attrs,
@@ -112,7 +112,9 @@ fn map_method(
         defaultness,
         sig,
         block,
-    )
+    );
+
+    (parse_quote!( #method ), module)
 }
 
 #[derive(Clone, Debug, Default, FromMeta)]
@@ -153,11 +155,11 @@ fn map_method_or_fn(
     defaultness: &Option<token::Default>,
     sig: &Signature,
     block: &Block,
-) -> (TokenStream2, Option<TokenStream2>) {
+) -> (TokenStream2, Option<ItemMod>) {
     let stmts = &block.stmts;
     if opts.skip.is_some() {
         return (
-            quote! {
+            parse_quote! {
                 #(#attrs)* #vis #defaultness #sig {
                     #(#stmts)*
                 }
@@ -171,24 +173,24 @@ fn map_method_or_fn(
     let target_ident = &sig.ident;
     let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
     let mod_ident = Ident::new(&format!("{}_fuzz", renamed_target_ident), Span::call_site());
-    let call = if receiver {
+    let call: Expr = if receiver {
         let mut de_args = de_args.iter();
         let self_arg = de_args
             .next()
             .expect("should have at least one deserialized argument");
-        quote! {
+        parse_quote! {
             #self_arg . #target_ident(
                 #(#de_args),*
             )
         }
     } else if let Some(self_ty) = self_ty {
-        quote! {
+        parse_quote! {
             #self_ty :: #target_ident(
                 #(#de_args),*
             )
         }
     } else {
-        quote! {
+        parse_quote! {
             super :: #target_ident(
                 #(#de_args),*
             )
@@ -215,7 +217,7 @@ fn map_method_or_fn(
         }
     };
     (
-        quote! {
+        parse_quote! {
             #(#attrs)* #vis #defaultness #sig {
                 #[cfg(test)]
                 if !test_fuzz::runtime::fuzzing() {
@@ -227,7 +229,7 @@ fn map_method_or_fn(
                 #(#stmts)*
             }
         },
-        Some(quote! {
+        Some(parse_quote! {
             #[cfg(test)]
             mod #mod_ident {
                 use super::*;
@@ -253,9 +255,9 @@ fn map_args(
     sig: &Signature,
 ) -> (
     bool,
-    Vec<TokenStream2>,
-    Vec<TokenStream2>,
-    Vec<TokenStream2>,
+    Vec<Type>,
+    Vec<Expr>,
+    Vec<Expr>,
 ) {
     unzip_n!(4);
 
@@ -273,21 +275,26 @@ fn map_args(
 
 fn map_arg(
     self_ty: &Option<Type>,
-) -> impl Fn((usize, &FnArg)) -> (bool, TokenStream2, TokenStream2, TokenStream2) {
+) -> impl Fn((usize, &FnArg)) -> (bool, Type, Expr, Expr) {
     let self_ty = self_ty.clone();
     move |(i, arg)| {
         let i = Literal::usize_unsuffixed(i);
         match arg {
             FnArg::Receiver(_) => (
                 true,
-                quote! { #self_ty },
-                quote! { self.clone() },
-                quote! { args.#i },
+                parse_quote! { #self_ty },
+                parse_quote! { self.clone() },
+                parse_quote! { args.#i },
             ),
             FnArg::Typed(pat_ty) => {
                 let pat = &*pat_ty.pat;
                 let ty = &*pat_ty.ty;
-                let default = (false, quote! { #ty }, quote! { #pat }, quote! { args.#i });
+                let default = (
+                    false,
+                    parse_quote! { #ty },
+                    parse_quote! { #pat },
+                    parse_quote! { args.#i },
+                );
                 match ty {
                     Type::Path(path) => map_arc_arg(&i, pat, path)
                         .map(|(ty, ser, de)| (false, ty, ser, de))
@@ -308,16 +315,16 @@ fn map_arc_arg(
     i: &Literal,
     pat: &Pat,
     path: &TypePath,
-) -> Option<(TokenStream2, TokenStream2, TokenStream2)> {
+) -> Option<(Type, Expr, Expr)> {
     if let Some(PathArguments::AngleBracketed(args)) =
         match_type_path(path, &["std", "sync", "Arc"])
     {
         if args.args.len() == 1 {
             if let GenericArgument::Type(ty) = &args.args[0] {
                 Some((
-                    quote! { #ty },
-                    quote! { (*#pat).clone() },
-                    quote! { std::sync::Arc::new(args.#i) },
+                    parse_quote! { #ty },
+                    parse_quote! { (*#pat).clone() },
+                    parse_quote! { std::sync::Arc::new(args.#i) },
                 ))
             } else {
                 None
@@ -330,22 +337,26 @@ fn map_arc_arg(
     }
 }
 
-fn map_ref_arg(i: &Literal, pat: &Pat, ty: &Type) -> (TokenStream2, TokenStream2, TokenStream2) {
+fn map_ref_arg(i: &Literal, pat: &Pat, ty: &Type) -> (Type, Expr, Expr) {
     match ty {
         Type::Path(path) if match_type_path(path, &["str"]) == Some(PathArguments::None) => (
-            quote! { String },
-            quote! { #pat.to_owned() },
-            quote! { args.#i.as_str() },
+            parse_quote! { String },
+            parse_quote! { #pat.to_owned() },
+            parse_quote! { args.#i.as_str() },
         ),
         Type::Slice(ty) => {
             let ty = &*ty.elem;
             (
-                quote! { Vec<#ty> },
-                quote! { #pat.to_vec() },
-                quote! { args.#i.as_slice() },
+                parse_quote! { Vec<#ty> },
+                parse_quote! { #pat.to_vec() },
+                parse_quote! { args.#i.as_slice() },
             )
         }
-        _ => (quote! { #ty }, quote! { #pat.clone() }, quote! { &args.#i }),
+        _ => (
+            parse_quote! { #ty },
+            parse_quote! { #pat.clone() },
+            parse_quote! { &args.#i },
+        ),
     }
 }
 
