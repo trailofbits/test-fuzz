@@ -34,6 +34,8 @@ enum SubCommand {
 
 #[derive(Clap, Debug)]
 struct TestFuzz {
+    #[clap(long, about = "Display backtraces")]
+    backtrace: bool,
     #[clap(
         long,
         about = "Display corpus using uninstrumented fuzz target; to display with instrumentation, \
@@ -307,6 +309,9 @@ fn for_each_entry(
     dir: &PathBuf,
 ) -> Result<()> {
     let mut env = vec![("TEST_FUZZ", "1")];
+    if opts.backtrace {
+        env.extend(&[("RUST_BACKTRACE", "1")]);
+    }
     env.extend(&[(
         match action {
             Action::Display => "TEST_FUZZ_DISPLAY",
