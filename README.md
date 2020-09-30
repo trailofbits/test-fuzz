@@ -8,17 +8,17 @@ $ cargo install test-fuzz --version '>=0.1.0-alpha'
 
 ## Usage
 
-1. **Identify a fuzz target** by:
-    - Adding the following `dependencies` to the target crate's `Cargo.toml` file:
+1. **Identify a fuzz target**:
+    - Add the following `dependencies` to the target crate's `Cargo.toml` file:
         ```toml
         serde = "1.0"
         test-fuzz = "0.1.0-alpha"
         ```
-    - Adding the following `use` declaration to the target file or module:
+    - Add the following `use` declaration to the target file or module:
         ```rust
         use test_fuzz::test_fuzz;
         ```
-    - Preceding the target function with the `test_fuzz` attribute:
+    - Precede the target function with the `test_fuzz` attribute:
         ```rust
         #[test_fuzz]
         fn foo(...) {
@@ -36,21 +36,41 @@ $ cargo install test-fuzz --version '>=0.1.0-alpha'
     $ cargo test-fuzz --target foo
     ```
 
-## Features
+## Components
 
-### `test_fuzz`
-
-* **`skip`** - TODO
-
-* **`rename = "name"`** - TODO
-
-### `test_fuzz_impl`
+## `test_fuzz` attribute
 
 TODO
 
-### `cargo test-fuzz` options
+### Options
+
+* **`rename = "name"`** - TODO
+
+* **`skip`** - TODO
+
+## `test_fuzz_impl` attribute
+
+TODO
+
+`test_fuzz_impl` currently has no options.
+
+## `cargo test-fuzz` command
+
+TODO
+
+### Options
 
 * **`-- <args>...`** - TODO
+
+* **`--backtrace`** - TODO
+
+* **`--display-corpus`** - TODO
+
+* **`--display-crashes`** - TODO
+
+* **`--display-queue`** - TODO
+
+* **`--exact`** - TODO
 
 * **`--list`** - TODO
 
@@ -58,7 +78,17 @@ TODO
 
 * **`--no-run`** - TODO
 
+* **`--no-ui`** - TODO
+
 * **`--persistent`** - TODO
+
+* **`--pretty-print`** - TODO
+
+* **`--replay-corpus`** - TODO
+
+* **`--replay-crashes`** - TODO
+
+* **`--replay-queue`** - TODO
 
 * **`--resume`** - TODO
 
@@ -66,7 +96,21 @@ TODO
 
 * **`--target = <target>`** - TODO
 
+## `test_fuzz` crate
+
+TODO
+
+### Features
+
+* **`logging`** - TODO
+
+* **`persistent`** - TODO
+
 ## Limitations
+
+* **Clonable arguments** - TODO
+
+* **Seralizable arguments** - TODO
 
 * **Global variables** - TODO
 
