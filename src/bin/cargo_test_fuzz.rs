@@ -62,6 +62,8 @@ use --display-corpus-instrumented"
     no_instrumentation: bool,
     #[clap(long, about = "Compile, but don't fuzz")]
     no_run: bool,
+    #[clap(long, about = "Disable user interface")]
+    no_ui: bool,
     #[clap(long, about = "Enable persistent mode fuzzing")]
     persistent: bool,
     #[clap(long, about = "Pretty-print debug output")]
@@ -432,7 +434,10 @@ fn fuzz(opts: &TestFuzz, executable: &PathBuf, krate: &str, target: &str) -> Res
 
     let mut command = Command::new("cargo");
 
-    command.env("TEST_FUZZ", "1");
+    let mut env = vec![("TEST_FUZZ", "1")];
+    if opts.no_ui {
+        env.extend(&[("AFL_NO_UI", "1")]);
+    }
 
     let mut args = vec![];
     args.extend(
@@ -459,7 +464,7 @@ fn fuzz(opts: &TestFuzz, executable: &PathBuf, krate: &str, target: &str) -> Res
         .map(String::from),
     );
 
-    command.args(args);
+    command.envs(env).args(args);
 
     let status = command.status()?;
 
