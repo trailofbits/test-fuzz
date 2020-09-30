@@ -200,7 +200,7 @@ fn map_method_or_fn(
             // smoelius: Remove the next line once 5142c995 appears in afl.rs on crates.io.
             use test_fuzz::{afl, __fuzz};
             afl::fuzz!(|data: &[u8]| {
-                let _ = test_fuzz::runtime::read_record::<Record, _>(data).map(|record|
+                let _ = test_fuzz::runtime::read_args::<Args, _>(data).map(|args|
                     #call
                 );
             });
@@ -208,7 +208,7 @@ fn map_method_or_fn(
         #[cfg(not(feature = "persistent"))]
         quote! {
             std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
-            let _ = test_fuzz::runtime::read_record::<Record, _>(std::io::stdin()).map(|record|
+            let _ = test_fuzz::runtime::read_args::<Args, _>(std::io::stdin()).map(|args|
                 #call
             );
             let _ = std::panic::take_hook();
@@ -219,7 +219,7 @@ fn map_method_or_fn(
             #(#attrs)* #vis #defaultness #sig {
                 #[cfg(test)]
                 if !test_fuzz::runtime::fuzzing() {
-                    test_fuzz::runtime::write_record(&#mod_ident::Record(
+                    test_fuzz::runtime::write_args(&#mod_ident::Args(
                         #(#ser_args),*
                     ));
                 }
@@ -233,7 +233,7 @@ fn map_method_or_fn(
                 use super::*;
 
                 #[derive(serde::Deserialize, serde::Serialize)]
-                pub(super) struct Record(
+                pub(super) struct Args(
                     #(#pub_tys),*
                 );
 
@@ -277,13 +277,13 @@ fn map_arg(
                 (
                     quote! { #self_ty },
                     quote! { self.clone() },
-                    quote! { record.#i },
+                    quote! { args.#i },
                 ),
             ),
             FnArg::Typed(pat_ty) => {
                 let pat = &*pat_ty.pat;
                 let ty = &*pat_ty.ty;
-                let default = (quote! { #ty }, quote! { #pat }, quote! { record.#i });
+                let default = (quote! { #ty }, quote! { #pat }, quote! { args.#i });
                 (
                     false,
                     match ty {
@@ -313,7 +313,7 @@ fn map_arc_arg(
                 Some((
                     quote! { #ty },
                     quote! { (*#pat).clone() },
-                    quote! { std::sync::Arc::new(record.#i) },
+                    quote! { std::sync::Arc::new(args.#i) },
                 ))
             } else {
                 None
@@ -331,20 +331,20 @@ fn map_ref_arg(i: &Literal, pat: &Pat, ty: &Type) -> (TokenStream2, TokenStream2
         Type::Path(path) if match_type_path(path, &["str"]) == Some(PathArguments::None) => (
             quote! { String },
             quote! { #pat.to_owned() },
-            quote! { record.#i.as_str() },
+            quote! { args.#i.as_str() },
         ),
         Type::Slice(ty) => {
             let ty = &*ty.elem;
             (
                 quote! { Vec<#ty> },
                 quote! { #pat.to_vec() },
-                quote! { record.#i.as_slice() },
+                quote! { args.#i.as_slice() },
             )
         }
         _ => (
             quote! { #ty },
             quote! { #pat.clone() },
-            quote! { &record.#i },
+            quote! { &args.#i },
         ),
     }
 }
