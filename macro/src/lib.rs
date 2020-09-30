@@ -97,7 +97,7 @@ fn map_method(
             let mut attr = attr.clone();
             if attr.path.is_ident("test_fuzz") {
                 let mut opts = opts_from_attr(&attr);
-                opts.skip = Some(());
+                opts.skip = true;
                 attr.tokens = tokens_from_opts(&opts).into();
             }
             attr
@@ -120,9 +120,9 @@ fn map_method(
 #[derive(Clone, Debug, Default, FromMeta)]
 struct TestFuzzOpts {
     #[darling(default)]
-    skip: Option<()>,
-    #[darling(default)]
     rename: Option<Ident>,
+    #[darling(default)]
+    skip: bool,
 }
 
 #[proc_macro_attribute]
@@ -157,7 +157,7 @@ fn map_method_or_fn(
     block: &Block,
 ) -> (TokenStream2, Option<ItemMod>) {
     let stmts = &block.stmts;
-    if opts.skip.is_some() {
+    if opts.skip {
         return (
             parse_quote! {
                 #(#attrs)* #vis #defaultness #sig {
@@ -370,12 +370,12 @@ fn opts_from_attr(attr: &Attribute) -> TestFuzzOpts {
 
 fn tokens_from_opts(opts: &TestFuzzOpts) -> TokenStream {
     let mut attrs = Punctuated::<TokenStream2, token::Comma>::default();
-    if let Some(()) = &opts.skip {
-        attrs.push(quote! { skip });
-    }
     if let Some(rename) = &opts.rename {
         let rename_str = stringify(rename);
         attrs.push(quote! { rename = #rename_str });
+    }
+    if opts.skip {
+        attrs.push(quote! { skip });
     }
     (quote! {
         (
