@@ -249,7 +249,7 @@ fn map_method_or_fn(
         #[cfg(feature = "persistent")]
         quote! {
             // smoelius: Suppress unused variable warning.
-            let _ = #ret_ty;
+            let _: Option<#ret_ty> = None;
         }
         #[cfg(not(feature = "persistent"))]
         quote! {
