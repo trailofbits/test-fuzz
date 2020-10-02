@@ -1,0 +1,31 @@
+[package]
+name = "cargo-test-fuzz"
+version = "0.1.0-alpha.0"
+edition = "2018"
+
+description = "cargo-test-fuzz"
+
+authors = ["Samuel E. Moelius III <sam@moeli.us>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/smoelius/test-fuzz"
+
+[[bin]]
+name = "cargo-test-fuzz"
+path = "src/bin/cargo_test_fuzz.rs"
+
+[dependencies]
+afl = "0.8.0"
+anyhow = "1.0.32"
+env_logger = "0.7.1"
+cargo_metadata = "0.11.1"
+clap = "3.0.0-beta.1"
+log = "0.4.11"
+serde = { version = "1.0", features = ["derive"] }
+subprocess = "0.2.4"
+
+dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "0.1.0-alpha" }
+test_fuzz = { path = "..", package = "test-fuzz", version = "0.1.0-alpha" }
+
+[dev-dependencies]
+lazy_static = "1.4.0"
+

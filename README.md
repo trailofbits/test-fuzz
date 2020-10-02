@@ -3,7 +3,12 @@
 ## Installation
 
 ```
-$ cargo install test-fuzz --version '>=0.1.0-alpha'
+$ cargo install cargo-test-fuzz --version '>=0.1.0-alpha'
+```
+
+To update an existing installation, add `--force`:
+```
+$ cargo install cargo-test-fuzz --version '>=0.1.0-alpha' --force
 ```
 
 ## Usage

@@ -11,6 +11,7 @@ use dirs::{
 };
 use log::debug;
 use std::{
+    ffi::OsStr,
     fmt::Debug,
     fs::{create_dir_all, read_dir, File},
     io::{BufRead, BufReader, Read},
@@ -88,11 +89,9 @@ use --replay-corpus-instrumented"
     args: Vec<String>,
 }
 
-fn main() -> Result<()> {
-    env_logger::init();
-
+pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     let opts = {
-        let SubCommand::TestFuzz(mut opts) = Opts::parse().subcmd;
+        let SubCommand::TestFuzz(mut opts) = Opts::parse_from(args).subcmd;
         if opts.display_corpus || opts.replay_corpus {
             opts.no_instrumentation = true;
         }
