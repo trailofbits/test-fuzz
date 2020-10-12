@@ -16,12 +16,12 @@ use std::{
 struct DebugUnimplemented<T>(PhantomData<T>);
 
 impl<T> Debug for DebugUnimplemented<T> {
-    fn fmt(&self, fmt: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         const PAT: &str = "TryDebug<";
         let type_name = type_name::<T>();
         let pos = type_name.find(PAT).unwrap() + PAT.len();
         write!(
-            fmt,
+            f,
             "<unknown of type {}>",
             type_name[pos..].strip_suffix(">").unwrap()
         )
@@ -50,21 +50,21 @@ pub fn test_fuzz_enabled() -> bool {
     enabled("")
 }
 
-pub fn display() -> bool {
+pub fn display_enabled() -> bool {
     enabled("DISPLAY")
 }
 
-pub fn replay() -> bool {
-    enabled("REPLAY")
+pub fn pretty_print_enabled() -> bool {
+    enabled("PRETTY_PRINT")
 }
 
-pub fn pretty_print() -> bool {
-    enabled("PRETTY_PRINT")
+pub fn replay_enabled() -> bool {
+    enabled("REPLAY")
 }
 
 fn enabled(opt: &str) -> bool {
     let key = "TEST_FUZZ".to_owned() + if opt.is_empty() { "" } else { "_" } + opt;
-    env::var(key).map_or(false, |s| !s.is_empty())
+    env::var(key).map_or(false, |value| value != "0")
 }
 
 pub fn write_args<T: Serialize>(args: &T) {
