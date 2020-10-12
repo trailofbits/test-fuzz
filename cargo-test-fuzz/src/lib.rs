@@ -425,12 +425,12 @@ fn for_each_entry(
 }
 
 fn fuzz(opts: &TestFuzz, executable: &PathBuf, krate: &str, target: &str) -> Result<()> {
-    let corpus = corpus_directory_from_target(krate, target)
+    let corpus_dir = corpus_directory_from_target(krate, target)
         .to_string_lossy()
         .into_owned();
 
-    let output = output_directory_from_target(krate, target);
-    create_dir_all(&output).unwrap_or_default();
+    let output_dir = output_directory_from_target(krate, target);
+    create_dir_all(&output_dir).unwrap_or_default();
 
     let mut command = Command::new("cargo");
 
@@ -445,9 +445,9 @@ fn fuzz(opts: &TestFuzz, executable: &PathBuf, krate: &str, target: &str) -> Res
             "afl",
             "fuzz",
             "-i",
-            if opts.resume { "-" } else { &corpus },
+            if opts.resume { "-" } else { &corpus_dir },
             "-o",
-            &output.to_string_lossy(),
+            &output_dir.to_string_lossy(),
         ]
         .into_iter()
         .map(String::from),
