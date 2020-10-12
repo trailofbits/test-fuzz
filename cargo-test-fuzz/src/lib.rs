@@ -127,7 +127,11 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         || opts.replay_crashes
         || opts.replay_queue;
 
-    let dir = if opts.display_corpus || opts.display_corpus_instrumented || opts.replay_corpus {
+    let dir = if opts.display_corpus
+        || opts.display_corpus_instrumented
+        || opts.replay_corpus
+        || opts.replay_corpus_instrumented
+    {
         corpus_directory_from_target(&krate, &target)
     } else if opts.display_crashes || opts.replay_crashes {
         crashes_directory_from_target(&krate, &target)
