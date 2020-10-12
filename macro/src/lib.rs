@@ -466,7 +466,7 @@ fn map_ref_arg(i: &Literal, pat: &Pat, ty: &Type) -> (Type, Expr, Expr) {
         }
         _ => (
             parse_quote! { #ty },
-            parse_quote! { #pat.clone() },
+            parse_quote! { (*#pat).clone() },
             parse_quote! { &args.#i },
         ),
     }
