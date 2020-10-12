@@ -22,6 +22,8 @@ use subprocess::{Exec, NullFile, Redirection};
 
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
+const BASE_ENV: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
+
 #[derive(Clap, Debug)]
 struct Opts {
     #[clap(subcommand)]
@@ -325,7 +327,7 @@ fn for_each_entry(
     replay: bool,
     dir: &PathBuf,
 ) -> Result<()> {
-    let mut env = vec![("TEST_FUZZ", "1")];
+    let mut env = BASE_ENV.to_vec();
     if display {
         env.extend(&[("TEST_FUZZ_DISPLAY", "1")]);
     }
@@ -436,7 +438,7 @@ fn fuzz(opts: &TestFuzz, executable: &PathBuf, krate: &str, target: &str) -> Res
 
     let mut command = Command::new("cargo");
 
-    let mut env = vec![("TEST_FUZZ", "1")];
+    let mut env = BASE_ENV.to_vec();
     if opts.no_ui {
         env.extend(&[("AFL_NO_UI", "1")]);
     }

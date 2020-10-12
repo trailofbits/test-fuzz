@@ -6,11 +6,6 @@
 $ cargo install cargo-test-fuzz --version '>=0.1.0-alpha'
 ```
 
-To update an existing installation, add `--force`:
-```
-$ cargo install cargo-test-fuzz --version '>=0.1.0-alpha' --force
-```
-
 ## Usage
 
 1. **Identify a fuzz target**:
@@ -48,6 +43,8 @@ $ cargo install cargo-test-fuzz --version '>=0.1.0-alpha' --force
 TODO
 
 ### Options
+
+* **`force`** - TODO
 
 * **`rename = "name"`** - TODO
 

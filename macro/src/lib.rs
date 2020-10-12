@@ -118,8 +118,11 @@ fn map_method(
     (parse_quote!( #method ), module)
 }
 
+// smoelius: Additions to TestFuzzOpts must also be reflected in tokens_from_opts.
 #[derive(Clone, Debug, Default, FromMeta)]
 struct TestFuzzOpts {
+    #[darling(default)]
+    force: bool,
     #[darling(default)]
     rename: Option<Ident>,
     #[darling(default)]
@@ -180,6 +183,26 @@ fn map_method_or_fn(
     let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
     let mod_ident = Ident::new(&format!("{}_fuzz", renamed_target_ident), Span::call_site());
 
+    let (forced_write_args, mod_attr) = if opts.force {
+        (
+            quote! {
+                #[cfg(not(test))]
+                if test_fuzz::runtime::write_enabled() {
+                    test_fuzz::runtime::write_args(&#mod_ident::Args(
+                        #(#ser_args),*
+                    ));
+                }
+            },
+            quote! {},
+        )
+    } else {
+        (
+            quote! {},
+            quote! {
+                #[cfg(test)]
+            },
+        )
+    };
     let input_args = {
         #[cfg(feature = "persistent")]
         quote! {}
@@ -285,11 +308,13 @@ fn map_method_or_fn(
                     ));
                 }
 
+                #forced_write_args
+
                 #(#stmts)*
             }
         },
         Some(parse_quote! {
-            #[cfg(test)]
+            #mod_attr
             mod #mod_ident {
                 use super::*;
 
@@ -457,6 +482,9 @@ fn opts_from_attr(attr: &Attribute) -> TestFuzzOpts {
 
 fn tokens_from_opts(opts: &TestFuzzOpts) -> TokenStream {
     let mut attrs = Punctuated::<TokenStream2, token::Comma>::default();
+    if opts.force {
+        attrs.push(quote! { force });
+    }
     if let Some(rename) = &opts.rename {
         let rename_str = stringify(rename);
         attrs.push(quote! { rename = #rename_str });

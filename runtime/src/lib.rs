@@ -62,6 +62,10 @@ pub fn replay_enabled() -> bool {
     enabled("REPLAY")
 }
 
+pub fn write_enabled() -> bool {
+    enabled("WRITE")
+}
+
 fn enabled(opt: &str) -> bool {
     let key = "TEST_FUZZ".to_owned() + if opt.is_empty() { "" } else { "_" } + opt;
     env::var(key).map_or(false, |value| value != "0")
