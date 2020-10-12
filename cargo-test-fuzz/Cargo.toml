@@ -27,5 +27,8 @@ dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "0.1.0-alpha" }
 test_fuzz = { path = "..", package = "test-fuzz", version = "0.1.0-alpha" }
 
 [dev-dependencies]
+assert_cmd = "1.0.1"
 lazy_static = "1.4.0"
-
+predicates = "1.0.5"
+regex = "1.3.9"
+rlimit = "0.4.0"
