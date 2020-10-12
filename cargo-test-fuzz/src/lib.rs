@@ -10,6 +10,7 @@ use dirs::{
     queue_directory_from_target, target_directory,
 };
 use log::debug;
+use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
     fmt::Debug,
@@ -19,6 +20,7 @@ use std::{
     process::Command,
 };
 use subprocess::{Exec, NullFile, Redirection};
+use test_fuzz::test_fuzz;
 
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
@@ -36,7 +38,7 @@ enum SubCommand {
 }
 
 // smoelius: Wherever possible, try to reuse cargo test and libtest option names.
-#[derive(Clap, Debug)]
+#[derive(Clap, Clone, Debug, Deserialize, Serialize)]
 struct TestFuzz {
     #[clap(long, about = "Display backtraces")]
     backtrace: bool,
@@ -201,7 +203,7 @@ fn build(opts: &TestFuzz) -> Result<Vec<(PathBuf, String)>> {
         .stdout
         .as_mut()
         .map_or(Ok(vec![]), |stream| -> Result<_> {
-    let reader = BufReader::new(stream);
+            let reader = BufReader::new(stream);
             let messages: Vec<Message> = Message::parse_stream(reader)
                 .collect::<std::result::Result<_, std::io::Error>>()?;
             Ok(messages)
@@ -273,6 +275,7 @@ fn targets(executable: &PathBuf) -> Result<Vec<String>> {
     Ok(targets)
 }
 
+#[test_fuzz]
 fn filter_executable_targets(
     opts: &TestFuzz,
     pat: &str,
@@ -534,4 +537,37 @@ fn fuzz(opts: &TestFuzz, executable: &PathBuf, krate: &str, target: &str) -> Res
     ensure!(status.success(), "command failed: {:?}", command);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::cargo_test_fuzz as cargo;
+    use anyhow::Result;
+    use lazy_static::lazy_static;
+    use std::{env, io, path::PathBuf};
+
+    const TEST_DIR: &str = "../examples";
+
+    lazy_static! {
+        static ref SET_CURRENT_DIR: io::Result<()> = {
+            let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+            let manifest_path = PathBuf::from(manifest_dir).join("Cargo.toml");
+            env::set_var("TEST_FUZZ_MANIFEST_PATH", &*manifest_path.to_string_lossy());
+            env::set_current_dir(TEST_DIR)
+        };
+    }
+
+    #[test]
+    fn build_no_instrumentation_with_target() {
+        SET_CURRENT_DIR.as_ref().unwrap();
+        assert!(
+            cargo_test_fuzz(&["--no-run", "--no-instrumentation", "--target", "target"]).is_ok()
+        );
+    }
+
+    fn cargo_test_fuzz(args: &[&str]) -> Result<()> {
+        let mut cargo_args = vec!["cargo-test-fuzz", "test-fuzz"];
+        cargo_args.extend_from_slice(args);
+        cargo(&cargo_args)
+    }
 }
