@@ -1,3 +1,5 @@
+fn consume<T>(_: T) {}
+
 mod primitive {
     use test_fuzz::test_fuzz;
 
@@ -18,6 +20,20 @@ mod primitive {
         f64: f64,
         char: char,
     ) {
+        super::consume(bool);
+        super::consume(i8);
+        super::consume(i16);
+        super::consume(i32);
+        super::consume(u64);
+        super::consume(i128);
+        super::consume(u8);
+        super::consume(u16);
+        super::consume(u32);
+        super::consume(u64);
+        super::consume(u128);
+        super::consume(f32);
+        super::consume(f64);
+        super::consume(char);
     }
 
     #[test]
@@ -45,7 +61,11 @@ mod string {
     use test_fuzz::test_fuzz;
 
     #[test_fuzz]
-    fn target(str: &str, string: String, ref_string: &String) {}
+    fn target(str: &str, string: String, ref_string: &String) {
+        super::consume(str);
+        super::consume(string);
+        super::consume(ref_string);
+    }
 
     #[test]
     fn test() {
@@ -65,6 +85,12 @@ mod byte_array {
         byte_array_2: [u8; 2],
         ref_byte_array_2: &[u8; 2],
     ) {
+        super::consume(byte_array_0);
+        super::consume(ref_byte_array_0);
+        super::consume(byte_array_1);
+        super::consume(ref_byte_array_1);
+        super::consume(byte_array_2);
+        super::consume(ref_byte_array_2);
     }
 
     #[test]
@@ -84,7 +110,10 @@ mod option {
     use test_fuzz::test_fuzz;
 
     #[test_fuzz]
-    fn target(option: Option<u8>, ref_option: &Option<u8>) {}
+    fn target(option: Option<u8>, ref_option: &Option<u8>) {
+        super::consume(option);
+        super::consume(ref_option);
+    }
 
     #[test]
     fn test() {
@@ -96,7 +125,10 @@ mod unit {
     use test_fuzz::test_fuzz;
 
     #[test_fuzz]
-    fn target(unit: (), ref_unit: &()) {}
+    fn target(unit: (), ref_unit: &()) {
+        super::consume(unit);
+        super::consume(ref_unit);
+    }
 
     #[test]
     fn test() {
@@ -112,7 +144,10 @@ mod unit_struct {
     struct UnitStruct;
 
     #[test_fuzz]
-    fn target(unit_struct: UnitStruct, ref_unit_struct: &UnitStruct) {}
+    fn target(unit_struct: UnitStruct, ref_unit_struct: &UnitStruct) {
+        super::consume(unit_struct);
+        super::consume(ref_unit_struct);
+    }
 
     #[test]
     fn test() {
@@ -131,7 +166,10 @@ mod unit_variant {
     }
 
     #[test_fuzz]
-    fn target(unit_variant: UnitVariant, ref_unit_variant: &UnitVariant) {}
+    fn target(unit_variant: UnitVariant, ref_unit_variant: &UnitVariant) {
+        super::consume(unit_variant);
+        super::consume(ref_unit_variant);
+    }
 
     #[test]
     fn test() {
@@ -147,7 +185,10 @@ mod newtype_struct {
     struct NewtypeStruct(u8);
 
     #[test_fuzz]
-    fn target(newtype_struct: NewtypeStruct, ref_newtype_struct: &NewtypeStruct) {}
+    fn target(newtype_struct: NewtypeStruct, ref_newtype_struct: &NewtypeStruct) {
+        super::consume(newtype_struct);
+        super::consume(ref_newtype_struct);
+    }
 
     #[test]
     fn test() {
@@ -171,7 +212,10 @@ mod newtype_variant {
     }
 
     #[test_fuzz]
-    fn target(newtype_variant: NewtypeVariant, ref_newtype_variant: &NewtypeVariant) {}
+    fn target(newtype_variant: NewtypeVariant, ref_newtype_variant: &NewtypeVariant) {
+        super::consume(newtype_variant);
+        super::consume(ref_newtype_variant);
+    }
 
     #[test]
     fn test() {
@@ -191,6 +235,11 @@ mod seq {
         seq_hash_set: HashSet<u8>,
         ref_seq_hash_set: &HashSet<u8>,
     ) {
+        super::consume(seq_slice);
+        super::consume(seq_vec);
+        super::consume(ref_seq_vec);
+        super::consume(seq_hash_set);
+        super::consume(ref_seq_hash_set);
     }
 
     #[test]
@@ -215,6 +264,10 @@ mod tuple {
         tuple_u8_u8: (u8, u8),
         ref_tuple_u8_u8: &(u8, u8),
     ) {
+        super::consume(tuple_u8);
+        super::consume(ref_tuple_u8);
+        super::consume(tuple_u8_u8);
+        super::consume(ref_tuple_u8_u8);
     }
 
     #[test]
@@ -236,7 +289,10 @@ mod tuple_struct {
     struct TupleStruct(u8, u8, u8);
 
     #[test_fuzz]
-    fn target(tuple_struct: TupleStruct, ref_tuple_struct: &TupleStruct) {}
+    fn target(tuple_struct: TupleStruct, ref_tuple_struct: &TupleStruct) {
+        super::consume(tuple_struct);
+        super::consume(ref_tuple_struct);
+    }
 
     #[test]
     fn test() {
@@ -260,7 +316,10 @@ mod tuple_variant {
     }
 
     #[test_fuzz]
-    fn target(tuple_variant: TupleVariant, ref_tuple_variant: &TupleVariant) {}
+    fn target(tuple_variant: TupleVariant, ref_tuple_variant: &TupleVariant) {
+        super::consume(tuple_variant);
+        super::consume(ref_tuple_variant);
+    }
 
     #[test]
     fn test() {
@@ -273,7 +332,10 @@ mod map {
     use test_fuzz::test_fuzz;
 
     #[test_fuzz]
-    fn target(map: BTreeMap<u8, u8>, ref_map: &BTreeMap<u8, u8>) {}
+    fn target(map: BTreeMap<u8, u8>, ref_map: &BTreeMap<u8, u8>) {
+        super::consume(map);
+        super::consume(ref_map);
+    }
 
     #[test]
     fn test() {
@@ -296,7 +358,10 @@ mod strukt {
     }
 
     #[test_fuzz]
-    fn target(strukt: Struct, ref_strukt: &Struct) {}
+    fn target(strukt: Struct, ref_strukt: &Struct) {
+        super::consume(strukt);
+        super::consume(ref_strukt);
+    }
 
     #[test]
     fn test() {
@@ -324,7 +389,10 @@ mod struct_variant {
     }
 
     #[test_fuzz]
-    fn target(struct_variant: StructVariant, ref_struct_variant: &StructVariant) {}
+    fn target(struct_variant: StructVariant, ref_struct_variant: &StructVariant) {
+        super::consume(struct_variant);
+        super::consume(ref_struct_variant);
+    }
 
     #[test]
     fn test() {

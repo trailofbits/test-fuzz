@@ -408,7 +408,7 @@ fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, S
                     false,
                     parse_quote! { #ty },
                     parse_quote! { #fmt },
-                    parse_quote! { #pat },
+                    parse_quote! { #pat.clone() },
                     parse_quote! { args.#i },
                 );
                 match ty {
