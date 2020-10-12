@@ -193,7 +193,7 @@ fn map_method_or_fn(
         quote! {}
         #[cfg(not(feature = "persistent"))]
         quote! {
-            args.map(|x| {
+            args.as_ref().map(|x| {
                 if test_fuzz::runtime::pretty_print_enabled() {
                     eprint!("{:#?}", x);
                 } else {
@@ -312,13 +312,17 @@ fn map_method_or_fn(
                     // smoelius: Do not set the panic hook when replaying. Leave cargo test's panic
                     // hook in place.
                     if test_fuzz::runtime::test_fuzz_enabled() {
-                        if test_fuzz::runtime::display_enabled() {
+                        if test_fuzz::runtime::display_enabled()
+                            || test_fuzz::runtime::replay_enabled()
+                        {
                             #input_args
-                            #output_args
-                        } else if test_fuzz::runtime::replay_enabled() {
-                            #input_args
-                            #call_with_deserialized_arguments
-                            #output_ret
+                            if test_fuzz::runtime::display_enabled() {
+                                #output_args
+                            }
+                            if test_fuzz::runtime::replay_enabled() {
+                                #call_with_deserialized_arguments
+                                #output_ret
+                            }
                         } else {
                             std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
                             #input_args

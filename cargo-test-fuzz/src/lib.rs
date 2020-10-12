@@ -137,10 +137,8 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         PathBuf::default()
     };
 
-    if display {
-        return for_each_entry(&opts, &executable, &krate, &target, Action::Display, &dir);
-    } else if replay {
-        return for_each_entry(&opts, &executable, &krate, &target, Action::Replay, &dir);
+    if display || replay {
+        return for_each_entry(&opts, &executable, &krate, &target, display, replay, &dir);
     }
 
     if opts.no_instrumentation {
@@ -312,31 +310,25 @@ fn match_message(opts: &TestFuzz) -> String {
     })
 }
 
-#[derive(Eq, PartialEq)]
-enum Action {
-    Display,
-    Replay,
-}
-
 fn for_each_entry(
     opts: &TestFuzz,
     executable: &PathBuf,
     _krate: &str,
     target: &str,
-    action: Action,
+    display: bool,
+    replay: bool,
     dir: &PathBuf,
 ) -> Result<()> {
     let mut env = vec![("TEST_FUZZ", "1")];
+    if display {
+        env.extend(&[("TEST_FUZZ_DISPLAY", "1")]);
+    }
+    if replay {
+        env.extend(&[("TEST_FUZZ_REPLAY", "1")]);
+    }
     if opts.backtrace {
         env.extend(&[("RUST_BACKTRACE", "1")]);
     }
-    env.extend(&[(
-        match action {
-            Action::Display => "TEST_FUZZ_DISPLAY",
-            Action::Replay => "TEST_FUZZ_REPLAY",
-        },
-        "1",
-    )]);
     if opts.pretty_print {
         env.extend(&[("TEST_FUZZ_PRETTY_PRINT", "1")]);
     }
@@ -403,9 +395,11 @@ fn for_each_entry(
     if !nonempty {
         println!(
             "Nothing to {}.",
-            match action {
-                Action::Display => "display",
-                Action::Replay => "replay",
+            match (display, replay) {
+                (true, true) => "display/replay",
+                (true, false) => "display",
+                (false, true) => "replay",
+                (false, false) => unreachable!(),
             }
         );
         return Ok(());
@@ -416,7 +410,7 @@ fn for_each_entry(
         return Ok(());
     }
 
-    if failure && action == Action::Display {
+    if failure && !replay {
         println!(
             "Encountered a failure while not replaying. A buggy Debug implementation perhaps?"
         );
