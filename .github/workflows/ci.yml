@@ -5,8 +5,24 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: cargo-test-fuzz
+
     steps:
     - uses: actions/checkout@v2
+
+    - name: Install llvm
+      run: sudo apt-get install llvm
+
+    - name: Install afl
+      run: cargo install afl
+
+    - name: Build
+      run: cargo build
+
     - name: Test
-      run: cargo test
-      working-directory: cargo-test-fuzz
+      run: PATH="$PWD/target/debug:$PATH" cargo test
+      env:
+        AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
