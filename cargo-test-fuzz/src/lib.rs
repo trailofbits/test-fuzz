@@ -13,7 +13,7 @@ use log::debug;
 use std::{
     ffi::OsStr,
     fmt::Debug,
-    fs::{create_dir_all, read_dir, File},
+    fs::{create_dir_all, read_dir, remove_dir_all, File},
     io::{BufRead, BufReader, Read},
     path::PathBuf,
     process::Command,
@@ -85,6 +85,14 @@ use --replay-corpus-instrumented"
     replay_crashes: bool,
     #[clap(long, about = "Replay work queue")]
     replay_queue: bool,
+    #[clap(
+        long,
+        about = "Clear fuzzing data for one target, but leave corpus intact; to clear fuzzing data \
+for all targets, use --reset-all"
+    )]
+    reset: bool,
+    #[clap(long, hidden = true)]
+    reset_all: bool,
     #[clap(long, about = "Stop fuzzing once a crash is found")]
     run_until_crash: bool,
     #[clap(long, about = "String that fuzz target's name must contain")]
@@ -119,7 +127,15 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         return Ok(());
     }
 
+    if opts.reset_all {
+        return reset(&opts, &executable_targets);
+    }
+
     let (executable, krate, target) = executable_target(&opts, &executable_targets)?;
+
+    if opts.reset {
+        return reset(&opts, &executable_targets);
+    }
 
     let display = opts.display_corpus
         || opts.display_corpus_instrumented
@@ -321,6 +337,27 @@ fn match_message(opts: &TestFuzz) -> String {
             pat
         )
     })
+}
+
+fn reset(opts: &TestFuzz, executable_targets: &[(PathBuf, String, Vec<String>)]) -> Result<()> {
+    assert!(opts.reset_all || executable_targets.len() == 1);
+
+    for (_, krate, targets) in executable_targets {
+        assert!(opts.reset_all || targets.len() == 1);
+
+        for target in targets {
+            let output_dir = output_directory_from_target(krate, target);
+            remove_dir_all(output_dir).or_else(|err| {
+                if format!("{}", err).starts_with("No such file or directory") {
+                    Ok(())
+                } else {
+                    Err(err)
+                }
+            })?;
+        }
+    }
+
+    Ok(())
 }
 
 fn for_each_entry(
