@@ -1,5 +1,5 @@
 use cargo_metadata::MetadataCommand;
-use std::{any::type_name, path::PathBuf};
+use std::{any::type_name, env, path::PathBuf};
 
 pub fn corpus_directory_from_args_type<T>() -> PathBuf {
     corpus_directory().join(path_from_args_type::<T>())
@@ -22,15 +22,28 @@ pub fn output_directory_from_target(krate: &str, target: &str) -> PathBuf {
 }
 
 fn corpus_directory() -> PathBuf {
-    target_directory().join("corpus")
+    target_directory(false).join("corpus")
 }
 
 fn output_directory() -> PathBuf {
-    target_directory().join("afl")
+    target_directory(true).join("output")
 }
 
-fn target_directory() -> PathBuf {
-    MetadataCommand::new().exec().unwrap().target_directory
+pub fn target_directory(instrumented: bool) -> PathBuf {
+    let mut command = MetadataCommand::new();
+    if let Ok(path) = env::var("TEST_FUZZ_MANIFEST_PATH") {
+        command.manifest_path(path);
+    }
+    let mut target_dir = command.exec().unwrap().target_directory;
+    if instrumented {
+        let file_name = target_dir
+            .file_name()
+            .unwrap()
+            .to_string_lossy()
+            .to_string();
+        target_dir.set_file_name(file_name + "-afl");
+    }
+    target_dir
 }
 
 fn path_from_args_type<T>() -> String {

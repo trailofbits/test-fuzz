@@ -7,7 +7,7 @@ use cargo_metadata::{Artifact, ArtifactProfile, Message};
 use clap::Clap;
 use dirs::{
     corpus_directory_from_target, crashes_directory_from_target, output_directory_from_target,
-    queue_directory_from_target,
+    queue_directory_from_target, target_directory,
 };
 use log::debug;
 use std::{
@@ -165,6 +165,11 @@ fn build(opts: &TestFuzz) -> Result<Vec<(PathBuf, String)>> {
         args.extend_from_slice(&["afl"]);
     }
     args.extend_from_slice(&["test", "--no-run"]);
+    let target_dir = target_directory(true);
+    let target_dir_str = target_dir.to_string_lossy();
+    if !opts.no_instrumentation {
+        args.extend_from_slice(&["--target-dir", &target_dir_str]);
+    }
     if let Some(package) = &opts.package {
         args.extend_from_slice(&["--package", &package])
     }
