@@ -436,12 +436,18 @@ fn for_each_entry(
         let status = popen.wait()?;
 
         print!("{}: ", file_name);
-        if buffer.is_empty() {
-            println!("{:?}", status);
-        } else {
-            print!("{}", String::from_utf8_lossy(&buffer));
-            output = true;
-        }
+        buffer.last().map_or_else(
+            || {
+                println!("{:?}", status);
+            },
+            |last| {
+                print!("{}", String::from_utf8_lossy(&buffer));
+                if last != &b'\n' {
+                    println!();
+                }
+                output = true;
+            },
+        );
 
         failure |= !status.success();
 
