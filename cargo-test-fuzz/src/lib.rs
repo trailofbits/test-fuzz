@@ -69,7 +69,7 @@ use --display-corpus-instrumented"
     no_ui: bool,
     #[clap(long, about = "Enable persistent mode fuzzing")]
     persistent: bool,
-    #[clap(long, about = "Pretty-print debug output")]
+    #[clap(long, about = "Pretty-print debug output when displaying/replaying")]
     pretty_print: bool,
     #[clap(short, long, about = "Package containing fuzz target")]
     package: Option<String>,
