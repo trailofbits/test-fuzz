@@ -194,13 +194,21 @@ fn build(opts: &TestFuzz) -> Result<Vec<(PathBuf, String)>> {
     }
     args.extend_from_slice(&["--message-format=json"]);
 
-    let exec = Exec::cmd("cargo").args(&args);
+    let exec = Exec::cmd("cargo").args(&args).stdout(Redirection::Pipe);
     debug!("{:?}", exec);
-    let stream = exec.stream_stdout()?;
+    let mut popen = exec.clone().popen()?;
+    let messages = popen
+        .stdout
+        .as_mut()
+        .map_or(Ok(vec![]), |stream| -> Result<_> {
     let reader = BufReader::new(stream);
+            let messages: Vec<Message> = Message::parse_stream(reader)
+                .collect::<std::result::Result<_, std::io::Error>>()?;
+            Ok(messages)
+        })?;
+    let status = popen.wait()?;
 
-    let messages: Vec<Message> =
-        Message::parse_stream(reader).collect::<std::result::Result<_, std::io::Error>>()?;
+    ensure!(status.success(), "command failed: {:?}", exec);
 
     Ok(messages
         .into_iter()
@@ -420,9 +428,9 @@ fn for_each_entry(
         let buffer = popen
             .stderr
             .as_mut()
-            .map_or(Ok(vec![]), |stderr| -> Result<_> {
+            .map_or(Ok(vec![]), |stream| -> Result<_> {
                 let mut buffer = Vec::new();
-                stderr.read_to_end(&mut buffer)?;
+                stream.read_to_end(&mut buffer)?;
                 Ok(buffer)
             })?;
         let status = popen.wait()?;
