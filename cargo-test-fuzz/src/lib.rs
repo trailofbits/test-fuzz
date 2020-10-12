@@ -83,6 +83,8 @@ use --replay-corpus-instrumented"
     replay_crashes: bool,
     #[clap(long, about = "Replay work queue")]
     replay_queue: bool,
+    #[clap(long, about = "Stop fuzzing once a crash is found")]
+    run_until_crash: bool,
     #[clap(long, about = "String that fuzz target's name must contain")]
     target: Option<String>,
     #[clap(last = true, about = "Arguments for the fuzzer")]
@@ -437,6 +439,9 @@ fn fuzz(opts: &TestFuzz, executable: &PathBuf, krate: &str, target: &str) -> Res
     let mut env = vec![("TEST_FUZZ", "1")];
     if opts.no_ui {
         env.extend(&[("AFL_NO_UI", "1")]);
+    }
+    if opts.run_until_crash {
+        env.extend(&[("AFL_BENCH_UNTIL_CRASH", "1")]);
     }
 
     let mut args = vec![];
