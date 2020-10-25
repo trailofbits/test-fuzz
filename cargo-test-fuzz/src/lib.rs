@@ -549,17 +549,18 @@ mod tests {
     const TEST_DIR: &str = "../examples";
 
     lazy_static! {
-        static ref SET_CURRENT_DIR: io::Result<()> = {
+        static ref INITIALIZE: io::Result<()> = {
             let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
             let manifest_path = PathBuf::from(manifest_dir).join("Cargo.toml");
             env::set_var("TEST_FUZZ_MANIFEST_PATH", &*manifest_path.to_string_lossy());
+            // println!("{:?}", env::current_dir()?);
             env::set_current_dir(TEST_DIR)
         };
     }
 
     #[test]
     fn build_no_instrumentation_with_target() {
-        SET_CURRENT_DIR.as_ref().unwrap();
+        INITIALIZE.as_ref().unwrap();
         assert!(
             cargo_test_fuzz(&["--no-run", "--no-instrumentation", "--target", "target"]).is_ok()
         );
