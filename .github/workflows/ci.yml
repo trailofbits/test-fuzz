@@ -6,10 +6,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: cargo-test-fuzz
-
     steps:
     - uses: actions/checkout@v2
 
@@ -23,6 +19,6 @@ jobs:
       run: cargo build
 
     - name: Test
-      run: PATH="$PWD/target/debug:$PATH" cargo test
+      run: PATH="$PWD/target/debug:$PATH" cargo test --workspace
       env:
         AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1

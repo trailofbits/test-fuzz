@@ -6,4 +6,4 @@
 #                                                                                                  #
 ####################################################################################################
 
-export PATH=$PWD/cargo-test-fuzz/target/debug:$PATH
+export PATH=$PWD/target/debug:$PATH

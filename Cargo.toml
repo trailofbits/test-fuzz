@@ -20,3 +20,12 @@ test-fuzz-macro = { path = "./macro", version = "0.1.0-alpha" }
 default = []
 logging = ["test-fuzz-macro/logging"]
 persistent = ["test-fuzz-macro/persistent"]
+
+[workspace]
+members = [
+    "cargo-test-fuzz",
+    "dirs",
+    "examples",
+    "macro",
+    "runtime",
+]
