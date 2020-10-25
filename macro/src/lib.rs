@@ -208,7 +208,7 @@ fn map_method_or_fn(
         quote! {}
         #[cfg(not(feature = "persistent"))]
         quote! {
-            let args = test_fuzz::runtime::read_args::<Args, _>(std::io::stdin());
+            let mut args = test_fuzz::runtime::read_args::<Args, _>(std::io::stdin());
         }
     };
     let output_args = {
@@ -255,15 +255,15 @@ fn map_method_or_fn(
             // smoelius: Remove the next line once 5142c995 appears in afl.rs on crates.io.
             use test_fuzz::{afl, __fuzz};
             afl::fuzz!(|data: &[u8]| {
-                let args = test_fuzz::runtime::read_args::<Args, _>(data);
-                let ret = args.map(|args|
+                let mut args = test_fuzz::runtime::read_args::<Args, _>(data);
+                let ret = args.map(|mut args|
                     #call
                 );
             });
         }
         #[cfg(not(feature = "persistent"))]
         quote! {
-            let ret = args.map(|args|
+            let ret = args.map(|mut args|
                 #call
             );
         }
@@ -467,7 +467,7 @@ fn map_ref_arg(i: &Literal, pat: &Pat, ty: &Type) -> (Type, Expr, Expr) {
         _ => (
             parse_quote! { #ty },
             parse_quote! { (*#pat).clone() },
-            parse_quote! { &args.#i },
+            parse_quote! { &mut args.#i },
         ),
     }
 }

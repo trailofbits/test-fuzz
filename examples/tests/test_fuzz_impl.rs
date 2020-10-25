@@ -9,11 +9,16 @@ impl Struct {
     #[test_fuzz]
     pub fn foo(&self) {}
 
-    #[allow(dead_code)]
-    pub fn bar(&self) {}
+    #[test_fuzz]
+    pub fn bar(&mut self) {}
 }
 
 #[test]
-fn test() {
+fn foo() {
     Struct::default().foo();
+}
+
+#[test]
+fn bar() {
+    Struct::default().bar();
 }
