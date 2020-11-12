@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use test_fuzz::{test_fuzz, test_fuzz_impl};
 
-#[derive(Clone, Default, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
 struct Struct;
 
 #[test_fuzz_impl]
@@ -15,10 +15,10 @@ impl Struct {
 
 #[test]
 fn foo() {
-    Struct::default().foo();
+    Struct.foo();
 }
 
 #[test]
 fn bar() {
-    Struct::default().bar();
+    Struct.bar();
 }

@@ -3,8 +3,8 @@ mod debug {
     use std::fmt::{Debug, Formatter, Result};
     use test_fuzz::test_fuzz;
 
-    #[derive(Clone, Default, Deserialize, Serialize)]
-    struct Struct {}
+    #[derive(Clone, Deserialize, Serialize)]
+    struct Struct;
 
     impl Debug for Struct {
         fn fmt(&self, _f: &mut Formatter<'_>) -> Result {
@@ -17,6 +17,6 @@ mod debug {
 
     #[test]
     fn test() {
-        target(&Struct::default());
+        target(&Struct);
     }
 }
