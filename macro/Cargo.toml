@@ -14,9 +14,9 @@ proc-macro = true
 
 [dependencies]
 darling = "0.10.2"
-proc-macro2 = "1.0.19"
+proc-macro2 = "1.0.24"
 quote = "1.0.7"
-syn = "1.0.39"
+syn = "1.0.48"
 unzip-n = "0.1.2"
 
 [features]

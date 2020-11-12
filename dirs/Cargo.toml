@@ -10,4 +10,4 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/smoelius/test-fuzz"
 
 [dependencies]
-cargo_metadata = "0.11.1"
+cargo_metadata = "0.12.0"
