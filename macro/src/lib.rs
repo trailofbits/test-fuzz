@@ -7,7 +7,7 @@ use syn::{
     parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute, AttributeArgs, Block,
     Expr, FnArg, GenericArgument, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod,
     LitStr, Pat, PathArguments, PathSegment, ReturnType, Signature, Stmt, Type, TypePath,
-    Visibility,
+    TypeReference, Visibility,
 };
 use unzip_n::unzip_n;
 
@@ -416,7 +416,6 @@ fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, S
                         .map(|(ty, ser, de)| (false, ty, fmt, ser, de))
                         .unwrap_or(default),
                     Type::Reference(ty) => {
-                        let ty = &*ty.elem;
                         let (ty, ser, de) = map_ref_arg(&i, pat, ty);
                         (false, ty, fmt, ser, de)
                     }
@@ -449,8 +448,8 @@ fn map_arc_arg(i: &Literal, pat: &Pat, path: &TypePath) -> Option<(Type, Expr, E
     }
 }
 
-fn map_ref_arg(i: &Literal, pat: &Pat, ty: &Type) -> (Type, Expr, Expr) {
-    match ty {
+fn map_ref_arg(i: &Literal, pat: &Pat, ty: &TypeReference) -> (Type, Expr, Expr) {
+    match &*ty.elem {
         Type::Path(path) if match_type_path(path, &["str"]) == Some(PathArguments::None) => (
             parse_quote! { String },
             parse_quote! { #pat.to_owned() },
@@ -464,11 +463,19 @@ fn map_ref_arg(i: &Literal, pat: &Pat, ty: &Type) -> (Type, Expr, Expr) {
                 parse_quote! { args.#i.as_slice() },
             )
         }
-        _ => (
-            parse_quote! { #ty },
-            parse_quote! { (*#pat).clone() },
-            parse_quote! { &mut args.#i },
-        ),
+        _ => {
+            let mutability = if ty.mutability.is_some() {
+                quote! { mut }
+            } else {
+                quote! {}
+            };
+            let ty = &*ty.elem;
+            (
+                parse_quote! { #ty },
+                parse_quote! { (*#pat).clone() },
+                parse_quote! { & #mutability args.#i },
+            )
+        }
     }
 }
 
