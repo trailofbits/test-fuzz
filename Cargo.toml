@@ -12,7 +12,6 @@ repository = "https://github.com/smoelius/test-fuzz"
 [dependencies]
 afl = "0.8.0"
 
-dirs = { path = "./dirs", package = "test-fuzz-dirs", version = "0.1.0-alpha" }
 runtime = { path = "./runtime", package = "test-fuzz-runtime", version = "0.1.0-alpha" }
 test-fuzz-macro = { path = "./macro", version = "0.1.0-alpha" }
 
