@@ -14,13 +14,9 @@ $ cargo install cargo-test-fuzz --version '>=0.1.0-alpha'
         serde = "1.0"
         test-fuzz = "0.1.0-alpha"
         ```
-    - Add the following `use` declaration to the target file or module:
-        ```rust
-        use test_fuzz::test_fuzz;
-        ```
     - Precede the target function with the `test_fuzz` attribute:
         ```rust
-        #[test_fuzz]
+        #[test_fuzz::test_fuzz]
         fn foo(...) {
             ...
         }

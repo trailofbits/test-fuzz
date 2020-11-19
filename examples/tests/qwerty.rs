@@ -1,7 +1,5 @@
 mod qwerty {
-    use test_fuzz::test_fuzz;
-
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     pub fn target(data: &str) {
         assert!(
             !(data.len() == 6

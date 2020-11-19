@@ -1,7 +1,6 @@
 mod debug {
     use serde::{Deserialize, Serialize};
     use std::fmt::{Debug, Formatter, Result};
-    use test_fuzz::test_fuzz;
 
     #[derive(Clone, Deserialize, Serialize)]
     struct Struct;
@@ -12,7 +11,7 @@ mod debug {
         }
     }
 
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(s: &Struct) {}
 
     #[test]

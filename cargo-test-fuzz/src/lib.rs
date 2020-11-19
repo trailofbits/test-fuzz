@@ -20,7 +20,6 @@ use std::{
     process::Command,
 };
 use subprocess::{Exec, NullFile, Redirection};
-use test_fuzz::test_fuzz;
 
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
@@ -275,7 +274,7 @@ fn targets(executable: &PathBuf) -> Result<Vec<String>> {
     Ok(targets)
 }
 
-#[test_fuzz]
+#[test_fuzz::test_fuzz]
 fn filter_executable_targets(
     opts: &TestFuzz,
     pat: &str,

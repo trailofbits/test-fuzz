@@ -1,9 +1,7 @@
 fn consume<T>(_: T) {}
 
 mod primitive {
-    use test_fuzz::test_fuzz;
-
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     pub fn target(
         bool: bool,
         i8: i8,
@@ -58,9 +56,7 @@ mod primitive {
 }
 
 mod string {
-    use test_fuzz::test_fuzz;
-
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(str: &str, string: String, ref_string: &String, ref_mut_string: &mut String) {
         super::consume(str);
         super::consume(string);
@@ -80,9 +76,7 @@ mod string {
 }
 
 mod byte_array {
-    use test_fuzz::test_fuzz;
-
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         byte_array_0: [u8; 0],
         ref_byte_array_0: &[u8; 0],
@@ -122,9 +116,7 @@ mod byte_array {
 }
 
 mod option {
-    use test_fuzz::test_fuzz;
-
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(option: Option<u8>, ref_option: &Option<u8>, ref_mut_option: &mut Option<u8>) {
         super::consume(option);
         super::consume(ref_option);
@@ -142,9 +134,7 @@ mod option {
 }
 
 mod unit {
-    use test_fuzz::test_fuzz;
-
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(unit: (), ref_unit: &(), ref_mut_unit: &mut ()) {
         super::consume(unit);
         super::consume(ref_unit);
@@ -159,12 +149,10 @@ mod unit {
 
 mod unit_struct {
     use serde::{Deserialize, Serialize};
-    use test_fuzz::test_fuzz;
-
     #[derive(Clone, Default, Deserialize, Serialize)]
     struct UnitStruct;
 
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         unit_struct: UnitStruct,
         ref_unit_struct: &UnitStruct,
@@ -187,15 +175,13 @@ mod unit_struct {
 
 mod unit_variant {
     use serde::{Deserialize, Serialize};
-    use test_fuzz::test_fuzz;
-
     #[derive(Clone, Deserialize, Serialize)]
     enum UnitVariant {
         A,
         B,
     }
 
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         unit_variant: UnitVariant,
         ref_unit_variant: &UnitVariant,
@@ -214,12 +200,10 @@ mod unit_variant {
 
 mod newtype_struct {
     use serde::{Deserialize, Serialize};
-    use test_fuzz::test_fuzz;
-
     #[derive(Clone, Default, Deserialize, Serialize)]
     struct NewtypeStruct(u8);
 
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         newtype_struct: NewtypeStruct,
         ref_newtype_struct: &NewtypeStruct,
@@ -242,8 +226,6 @@ mod newtype_struct {
 
 mod newtype_variant {
     use serde::{Deserialize, Serialize};
-    use test_fuzz::test_fuzz;
-
     #[derive(Clone, Deserialize, Serialize)]
     enum NewtypeVariant {
         N(u8),
@@ -255,7 +237,7 @@ mod newtype_variant {
         }
     }
 
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         newtype_variant: NewtypeVariant,
         ref_newtype_variant: &NewtypeVariant,
@@ -278,9 +260,7 @@ mod newtype_variant {
 
 mod seq {
     use std::collections::HashSet;
-    use test_fuzz::test_fuzz;
-
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         seq_slice: &[u8],
         seq_vec: Vec<u8>,
@@ -314,9 +294,7 @@ mod seq {
 }
 
 mod tuple {
-    use test_fuzz::test_fuzz;
-
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         tuple_u8: (u8,),
         ref_tuple_u8: &(u8,),
@@ -348,12 +326,10 @@ mod tuple {
 
 mod tuple_struct {
     use serde::{Deserialize, Serialize};
-    use test_fuzz::test_fuzz;
-
     #[derive(Clone, Default, Deserialize, Serialize)]
     struct TupleStruct(u8, u8, u8);
 
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         tuple_struct: TupleStruct,
         ref_tuple_struct: &TupleStruct,
@@ -376,8 +352,6 @@ mod tuple_struct {
 
 mod tuple_variant {
     use serde::{Deserialize, Serialize};
-    use test_fuzz::test_fuzz;
-
     #[derive(Clone, Deserialize, Serialize)]
     enum TupleVariant {
         T(u8, u8),
@@ -389,7 +363,7 @@ mod tuple_variant {
         }
     }
 
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         tuple_variant: TupleVariant,
         ref_tuple_variant: &TupleVariant,
@@ -412,9 +386,7 @@ mod tuple_variant {
 
 mod map {
     use std::collections::BTreeMap;
-    use test_fuzz::test_fuzz;
-
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         map: BTreeMap<u8, u8>,
         ref_map: &BTreeMap<u8, u8>,
@@ -437,8 +409,6 @@ mod map {
 
 mod strukt {
     use serde::{Deserialize, Serialize};
-    use test_fuzz::test_fuzz;
-
     #[derive(Clone, Default, Deserialize, Serialize)]
     struct Struct {
         r: u8,
@@ -446,7 +416,7 @@ mod strukt {
         b: u8,
     }
 
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(strukt: Struct, ref_strukt: &Struct, ref_mut_strukt: &mut Struct) {
         super::consume(strukt);
         super::consume(ref_strukt);
@@ -465,8 +435,6 @@ mod strukt {
 
 mod struct_variant {
     use serde::{Deserialize, Serialize};
-    use test_fuzz::test_fuzz;
-
     #[derive(Clone, Deserialize, Serialize)]
     enum StructVariant {
         S { r: u8, g: u8, b: u8 },
@@ -482,7 +450,7 @@ mod struct_variant {
         }
     }
 
-    #[test_fuzz]
+    #[test_fuzz::test_fuzz]
     fn target(
         struct_variant: StructVariant,
         ref_struct_variant: &StructVariant,
