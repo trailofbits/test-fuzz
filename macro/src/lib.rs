@@ -66,7 +66,7 @@ fn map_impl_item(self_ty: &Type) -> impl Fn(&ImplItem) -> (ImplItem, Option<Item
                 .attrs
                 .iter()
                 .find_map(|attr| {
-                    if attr.path.is_ident("test_fuzz") {
+                    if is_test_fuzz(attr) {
                         Some(map_method(&self_ty, &opts_from_attr(attr), method))
                     } else {
                         None
@@ -96,7 +96,7 @@ fn map_method(
         .iter()
         .map(|attr| {
             let mut attr = attr.clone();
-            if attr.path.is_ident("test_fuzz") {
+            if is_test_fuzz(&attr) {
                 let mut opts = opts_from_attr(&attr);
                 opts.skip = true;
                 attr.tokens = tokens_from_opts(&opts).into();
@@ -534,6 +534,13 @@ fn match_type_path(path: &TypePath, other: &[&str]) -> Option<PathArguments> {
     } else {
         None
     }
+}
+
+fn is_test_fuzz(attr: &Attribute) -> bool {
+    attr.path
+        .segments
+        .iter()
+        .all(|PathSegment { ident, .. }| ident == "test_fuzz")
 }
 
 fn log(tokens: &TokenStream2) {
