@@ -1,5 +1,3 @@
-fn consume<T>(_: T) {}
-
 mod primitive {
     #[test_fuzz::test_fuzz]
     pub fn target(
@@ -18,20 +16,20 @@ mod primitive {
         f64: f64,
         char: char,
     ) {
-        super::consume(bool);
-        super::consume(i8);
-        super::consume(i16);
-        super::consume(i32);
-        super::consume(u64);
-        super::consume(i128);
-        super::consume(u8);
-        super::consume(u16);
-        super::consume(u32);
-        super::consume(u64);
-        super::consume(u128);
-        super::consume(f32);
-        super::consume(f64);
-        super::consume(char);
+        drop(bool);
+        drop(i8);
+        drop(i16);
+        drop(i32);
+        drop(u64);
+        drop(i128);
+        drop(u8);
+        drop(u16);
+        drop(u32);
+        drop(u64);
+        drop(u128);
+        drop(f32);
+        drop(f64);
+        drop(char);
     }
 
     #[test]
@@ -58,10 +56,10 @@ mod primitive {
 mod string {
     #[test_fuzz::test_fuzz]
     fn target(str: &str, string: String, ref_string: &String, ref_mut_string: &mut String) {
-        super::consume(str);
-        super::consume(string);
-        super::consume(ref_string);
-        super::consume(ref_mut_string);
+        drop(str);
+        drop(string);
+        drop(ref_string);
+        drop(ref_mut_string);
     }
 
     #[test]
@@ -88,15 +86,15 @@ mod byte_array {
         ref_byte_array_2: &[u8; 2],
         ref_mut_byte_array_2: &mut [u8; 2],
     ) {
-        super::consume(byte_array_0);
-        super::consume(ref_byte_array_0);
-        super::consume(ref_mut_byte_array_0);
-        super::consume(byte_array_1);
-        super::consume(ref_byte_array_1);
-        super::consume(ref_mut_byte_array_1);
-        super::consume(byte_array_2);
-        super::consume(ref_byte_array_2);
-        super::consume(ref_mut_byte_array_2);
+        drop(byte_array_0);
+        drop(ref_byte_array_0);
+        drop(ref_mut_byte_array_0);
+        drop(byte_array_1);
+        drop(ref_byte_array_1);
+        drop(ref_mut_byte_array_1);
+        drop(byte_array_2);
+        drop(ref_byte_array_2);
+        drop(ref_mut_byte_array_2);
     }
 
     #[test]
@@ -118,9 +116,9 @@ mod byte_array {
 mod option {
     #[test_fuzz::test_fuzz]
     fn target(option: Option<u8>, ref_option: &Option<u8>, ref_mut_option: &mut Option<u8>) {
-        super::consume(option);
-        super::consume(ref_option);
-        super::consume(ref_mut_option);
+        drop(option);
+        drop(ref_option);
+        drop(ref_mut_option);
     }
 
     #[test]
@@ -136,9 +134,9 @@ mod option {
 mod unit {
     #[test_fuzz::test_fuzz]
     fn target(unit: (), ref_unit: &(), ref_mut_unit: &mut ()) {
-        super::consume(unit);
-        super::consume(ref_unit);
-        super::consume(ref_mut_unit);
+        drop(unit);
+        drop(ref_unit);
+        drop(ref_mut_unit);
     }
 
     #[test]
@@ -158,9 +156,9 @@ mod unit_struct {
         ref_unit_struct: &UnitStruct,
         ref_mut_unit_struct: &mut UnitStruct,
     ) {
-        super::consume(unit_struct);
-        super::consume(ref_unit_struct);
-        super::consume(ref_mut_unit_struct);
+        drop(unit_struct);
+        drop(ref_unit_struct);
+        drop(ref_mut_unit_struct);
     }
 
     #[test]
@@ -187,9 +185,9 @@ mod unit_variant {
         ref_unit_variant: &UnitVariant,
         ref_mut_unit_variant: &mut UnitVariant,
     ) {
-        super::consume(unit_variant);
-        super::consume(ref_unit_variant);
-        super::consume(ref_mut_unit_variant);
+        drop(unit_variant);
+        drop(ref_unit_variant);
+        drop(ref_mut_unit_variant);
     }
 
     #[test]
@@ -209,9 +207,9 @@ mod newtype_struct {
         ref_newtype_struct: &NewtypeStruct,
         ref_mut_newtype_struct: &mut NewtypeStruct,
     ) {
-        super::consume(newtype_struct);
-        super::consume(ref_newtype_struct);
-        super::consume(ref_mut_newtype_struct);
+        drop(newtype_struct);
+        drop(ref_newtype_struct);
+        drop(ref_mut_newtype_struct);
     }
 
     #[test]
@@ -243,9 +241,9 @@ mod newtype_variant {
         ref_newtype_variant: &NewtypeVariant,
         ref_mut_newtype_variant: &mut NewtypeVariant,
     ) {
-        super::consume(newtype_variant);
-        super::consume(ref_newtype_variant);
-        super::consume(ref_mut_newtype_variant);
+        drop(newtype_variant);
+        drop(ref_newtype_variant);
+        drop(ref_mut_newtype_variant);
     }
 
     #[test]
@@ -270,13 +268,13 @@ mod seq {
         ref_seq_hash_set: &HashSet<u8>,
         ref_mut_seq_hash_set: &mut HashSet<u8>,
     ) {
-        super::consume(seq_slice);
-        super::consume(seq_vec);
-        super::consume(ref_seq_vec);
-        super::consume(ref_mut_seq_vec);
-        super::consume(seq_hash_set);
-        super::consume(ref_seq_hash_set);
-        super::consume(ref_mut_seq_hash_set);
+        drop(seq_slice);
+        drop(seq_vec);
+        drop(ref_seq_vec);
+        drop(ref_mut_seq_vec);
+        drop(seq_hash_set);
+        drop(ref_seq_hash_set);
+        drop(ref_mut_seq_hash_set);
     }
 
     #[test]
@@ -303,12 +301,12 @@ mod tuple {
         ref_tuple_u8_u8: &(u8, u8),
         ref_mut_tuple_u8_u8: &mut (u8, u8),
     ) {
-        super::consume(tuple_u8);
-        super::consume(ref_tuple_u8);
-        super::consume(ref_mut_tuple_u8);
-        super::consume(tuple_u8_u8);
-        super::consume(ref_tuple_u8_u8);
-        super::consume(ref_mut_tuple_u8_u8);
+        drop(tuple_u8);
+        drop(ref_tuple_u8);
+        drop(ref_mut_tuple_u8);
+        drop(tuple_u8_u8);
+        drop(ref_tuple_u8_u8);
+        drop(ref_mut_tuple_u8_u8);
     }
 
     #[test]
@@ -335,9 +333,9 @@ mod tuple_struct {
         ref_tuple_struct: &TupleStruct,
         ref_mut_tuple_struct: &mut TupleStruct,
     ) {
-        super::consume(tuple_struct);
-        super::consume(ref_tuple_struct);
-        super::consume(ref_mut_tuple_struct);
+        drop(tuple_struct);
+        drop(ref_tuple_struct);
+        drop(ref_mut_tuple_struct);
     }
 
     #[test]
@@ -369,9 +367,9 @@ mod tuple_variant {
         ref_tuple_variant: &TupleVariant,
         ref_mut_tuple_variant: &mut TupleVariant,
     ) {
-        super::consume(tuple_variant);
-        super::consume(ref_tuple_variant);
-        super::consume(ref_mut_tuple_variant);
+        drop(tuple_variant);
+        drop(ref_tuple_variant);
+        drop(ref_mut_tuple_variant);
     }
 
     #[test]
@@ -392,9 +390,9 @@ mod map {
         ref_map: &BTreeMap<u8, u8>,
         ref_mut_map: &mut BTreeMap<u8, u8>,
     ) {
-        super::consume(map);
-        super::consume(ref_map);
-        super::consume(ref_mut_map);
+        drop(map);
+        drop(ref_map);
+        drop(ref_mut_map);
     }
 
     #[test]
@@ -418,9 +416,9 @@ mod strukt {
 
     #[test_fuzz::test_fuzz]
     fn target(strukt: Struct, ref_strukt: &Struct, ref_mut_strukt: &mut Struct) {
-        super::consume(strukt);
-        super::consume(ref_strukt);
-        super::consume(ref_mut_strukt);
+        drop(strukt);
+        drop(ref_strukt);
+        drop(ref_mut_strukt);
     }
 
     #[test]
@@ -456,9 +454,9 @@ mod struct_variant {
         ref_struct_variant: &StructVariant,
         ref_mut_struct_variant: &mut StructVariant,
     ) {
-        super::consume(struct_variant);
-        super::consume(ref_struct_variant);
-        super::consume(ref_mut_struct_variant);
+        drop(struct_variant);
+        drop(ref_struct_variant);
+        drop(ref_mut_struct_variant);
     }
 
     #[test]
