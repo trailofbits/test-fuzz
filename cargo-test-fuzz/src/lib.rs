@@ -105,7 +105,7 @@ for all targets, use --reset-all"
 pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     let opts = {
         let SubCommand::TestFuzz(mut opts) = Opts::parse_from(args).subcmd;
-        if opts.display_corpus || opts.replay_corpus {
+        if opts.list || opts.display_corpus || opts.replay_corpus {
             opts.no_instrumentation = true;
         }
         opts
