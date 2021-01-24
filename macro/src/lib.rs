@@ -174,6 +174,14 @@ fn map_method_or_fn(
 
     let (receiver, arg_tys, fmt_args, ser_args, de_args) = map_args(self_ty, sig);
     let pub_arg_tys: Vec<TokenStream2> = arg_tys.iter().map(|ty| quote! { pub #ty }).collect();
+    let def_args: Vec<Expr> = arg_tys
+        .iter()
+        .map(|ty| {
+            parse_quote! {
+                test_fuzz::runtime::TryDefault::<#ty>::default()?
+            }
+        })
+        .collect();
     let ret_ty = match &sig.output {
         ReturnType::Type(_, ty) => ty.clone(),
         ReturnType::Default => parse_quote! { () },
@@ -329,6 +337,19 @@ fn map_method_or_fn(
                         let mut debug_struct = fmt.debug_struct("Args");
                         #(#fmt_args)*
                         debug_struct.finish()
+                    }
+                }
+
+                #[test]
+                fn default() {
+                    if !test_fuzz::runtime::test_fuzz_enabled() {
+                        use test_fuzz::runtime::TryDefaultDefault;
+                        let args = (|| -> Option<#mod_ident::Args> {
+                            Some(#mod_ident::Args(
+                                #(#def_args),*
+                            ))
+                        })();
+                        args.map(|args| test_fuzz::runtime::write_args(&args));
                     }
                 }
 

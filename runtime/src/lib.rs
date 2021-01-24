@@ -10,7 +10,7 @@ use std::{
     marker::PhantomData,
 };
 
-// smoelius: TryDebug uses Nikolai Vazquez's trick from `impls`.
+// smoelius: TryDebug and TryDefault use Nikolai Vazquez's trick from `impls`.
 // https://github.com/nvzqz/impls#how-it-works
 
 struct DebugUnimplemented<T>(PhantomData<T>);
@@ -43,6 +43,24 @@ pub struct TryDebug<'a, T>(pub &'a T);
 impl<'a, T: Debug> TryDebug<'a, T> {
     pub fn apply<U>(&self, f: &mut dyn FnMut(&dyn Debug) -> U) -> U {
         f(self.0)
+    }
+}
+
+pub trait TryDefaultDefault<U> {
+    fn default() -> Option<U>;
+}
+
+impl<T, U> TryDefaultDefault<U> for T {
+    fn default() -> Option<U> {
+        None
+    }
+}
+
+pub struct TryDefault<'a, T>(pub &'a T);
+
+impl<'a, T: Default> TryDefault<'a, T> {
+    pub fn default() -> Option<T> {
+        Some(T::default())
     }
 }
 
