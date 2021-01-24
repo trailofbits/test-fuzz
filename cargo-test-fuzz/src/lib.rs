@@ -181,7 +181,7 @@ fn build(opts: &TestFuzz) -> Result<Vec<(PathBuf, String)>> {
     if !opts.no_instrumentation {
         args.extend_from_slice(&["afl"]);
     }
-    args.extend_from_slice(&["test", "--no-run"]);
+    args.extend_from_slice(&["test", "--frozen", "--no-run"]);
     let target_dir = target_directory(true);
     let target_dir_str = target_dir.to_string_lossy();
     if !opts.no_instrumentation {
