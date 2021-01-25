@@ -6,10 +6,12 @@ use std::convert::identity;
 use syn::{
     parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute, AttributeArgs, Block,
     Expr, FnArg, GenericArgument, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod,
-    LitStr, Pat, PathArguments, PathSegment, ReturnType, Signature, Stmt, Type, TypePath,
+    LitStr, Pat, Path, PathArguments, PathSegment, ReturnType, Signature, Stmt, Type, TypePath,
     TypeReference, Visibility,
 };
 use unzip_n::unzip_n;
+
+mod util;
 
 #[derive(FromMeta)]
 struct TestFuzzImplOpts {}
@@ -31,11 +33,14 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
         brace_token: _,
         items,
     } = item;
-    let (impl_items, modules) = map_impl_items(&*self_ty, &items);
 
     // smoelius: Without the next line, you get:
     //   the trait `quote::ToTokens` is not implemented for `(std::option::Option<syn::token::Bang>, syn::Path, syn::token::For)`
-    let trait_ = trait_.map(|(bang, path, for_)| quote! { #bang #path #for_ });
+    let (trait_path, trait_) = trait_.map_or((None, None), |(bang, path, for_)| {
+        (Some(path.clone()), Some(quote! { #bang #path #for_ }))
+    });
+
+    let (impl_items, modules) = map_impl_items(&*self_ty, &trait_path, &items);
 
     let result = quote! {
         #(#attrs)* #defaultness #unsafety #impl_token #generics #trait_ #self_ty {
@@ -48,8 +53,12 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
     result.into()
 }
 
-fn map_impl_items(self_ty: &Type, items: &[ImplItem]) -> (Vec<ImplItem>, Vec<ItemMod>) {
-    let impl_items_modules = items.iter().map(map_impl_item(self_ty));
+fn map_impl_items(
+    self_ty: &Type,
+    trait_path: &Option<Path>,
+    items: &[ImplItem],
+) -> (Vec<ImplItem>, Vec<ItemMod>) {
+    let impl_items_modules = items.iter().map(map_impl_item(self_ty, &trait_path));
 
     let (impl_items, modules): (Vec<_>, Vec<_>) = impl_items_modules.unzip();
 
@@ -58,8 +67,12 @@ fn map_impl_items(self_ty: &Type, items: &[ImplItem]) -> (Vec<ImplItem>, Vec<Ite
     (impl_items, modules)
 }
 
-fn map_impl_item(self_ty: &Type) -> impl Fn(&ImplItem) -> (ImplItem, Option<ItemMod>) {
+fn map_impl_item(
+    self_ty: &Type,
+    trait_path: &Option<Path>,
+) -> impl Fn(&ImplItem) -> (ImplItem, Option<ItemMod>) {
     let self_ty = self_ty.clone();
+    let trait_path = trait_path.clone();
     move |impl_item| {
         if let ImplItem::Method(method) = &impl_item {
             method
@@ -67,7 +80,12 @@ fn map_impl_item(self_ty: &Type) -> impl Fn(&ImplItem) -> (ImplItem, Option<Item
                 .iter()
                 .find_map(|attr| {
                     if is_test_fuzz(attr) {
-                        Some(map_method(&self_ty, &opts_from_attr(attr), method))
+                        Some(map_method(
+                            &self_ty,
+                            &trait_path,
+                            &opts_from_attr(attr),
+                            method,
+                        ))
                     } else {
                         None
                     }
@@ -81,6 +99,7 @@ fn map_impl_item(self_ty: &Type) -> impl Fn(&ImplItem) -> (ImplItem, Option<Item
 
 fn map_method(
     self_ty: &Type,
+    trait_path: &Option<Path>,
     opts: &TestFuzzOpts,
     method: &ImplItemMethod,
 ) -> (ImplItem, Option<ItemMod>) {
@@ -107,6 +126,7 @@ fn map_method(
 
     let (method, module) = map_method_or_fn(
         &Some(self_ty.clone()),
+        trait_path,
         &opts,
         &attrs,
         vis,
@@ -141,7 +161,7 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
         sig,
         block,
     } = &item;
-    let (item, module) = map_method_or_fn(&None, &opts, attrs, vis, &None, sig, block);
+    let (item, module) = map_method_or_fn(&None, &None, &opts, attrs, vis, &None, sig, block);
     let result = quote! {
         #item
         #module
@@ -150,9 +170,10 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
     result.into()
 }
 
-#[allow(clippy::ptr_arg)]
+#[allow(clippy::ptr_arg, clippy::too_many_arguments)]
 fn map_method_or_fn(
     self_ty: &Option<Type>,
+    trait_path: &Option<Path>,
     opts: &TestFuzzOpts,
     attrs: &Vec<Attribute>,
     vis: &Visibility,
@@ -183,7 +204,9 @@ fn map_method_or_fn(
         })
         .collect();
     let ret_ty = match &sig.output {
-        ReturnType::Type(_, ty) => ty.clone(),
+        ReturnType::Type(_, ty) => self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
+            util::expand_self(&self_ty, &trait_path, ty)
+        }),
         ReturnType::Default => parse_quote! { () },
     };
 
@@ -449,7 +472,7 @@ fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, S
 
 fn map_arc_arg(i: &Literal, pat: &Pat, path: &TypePath) -> Option<(Type, Expr, Expr)> {
     if let Some(PathArguments::AngleBracketed(args)) =
-        match_type_path(path, &["std", "sync", "Arc"])
+        util::match_type_path(path, &["std", "sync", "Arc"])
     {
         if args.args.len() == 1 {
             if let GenericArgument::Type(ty) = &args.args[0] {
@@ -471,7 +494,7 @@ fn map_arc_arg(i: &Literal, pat: &Pat, path: &TypePath) -> Option<(Type, Expr, E
 
 fn map_ref_arg(i: &Literal, pat: &Pat, ty: &TypeReference) -> (Type, Expr, Expr) {
     match &*ty.elem {
-        Type::Path(path) if match_type_path(path, &["str"]) == Some(PathArguments::None) => (
+        Type::Path(path) if util::match_type_path(path, &["str"]) == Some(PathArguments::None) => (
             parse_quote! { String },
             parse_quote! { #pat.to_owned() },
             parse_quote! { args.#i.as_str() },
@@ -530,31 +553,6 @@ fn tokens_from_opts(opts: &TestFuzzOpts) -> TokenStream {
 
 fn stringify(ident: &Ident) -> LitStr {
     LitStr::new(ident.to_string().as_str(), Span::call_site())
-}
-
-fn match_type_path(path: &TypePath, other: &[&str]) -> Option<PathArguments> {
-    let mut path = path.clone();
-    let args = path.path.segments.last_mut().map(|segment| {
-        let args = segment.arguments.clone();
-        segment.arguments = PathArguments::None;
-        args
-    });
-    let lhs = path.path.segments.into_iter().collect::<Vec<_>>();
-    let rhs = other
-        .iter()
-        .map(|s| {
-            let ident = Ident::new(s, Span::call_site());
-            PathSegment {
-                ident,
-                arguments: PathArguments::None,
-            }
-        })
-        .collect::<Vec<_>>();
-    if path.qself.is_none() && lhs == rhs {
-        args
-    } else {
-        None
-    }
 }
 
 fn is_test_fuzz(attr: &Attribute) -> bool {
