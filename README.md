@@ -58,41 +58,47 @@ TODO
 
 ### Options
 
-* **`-- <args>...`** - TODO
+* **`-- <args>...`** - Arguments for the fuzzer
 
-* **`--backtrace`** - TODO
+* **`--backtrace`** - Display backtraces
 
-* **`--display-corpus`** - TODO
+* **`--consolidate`** - Move one target's crashes and work queue to its corpus; to consolidate all targets, use `--consolidate-all`
 
-* **`--display-crashes`** - TODO
+* **`--display-corpus`** - Display corpus using uninstrumented fuzz target; to display with instrumentation, use `--display-corpus-instrumented`
 
-* **`--display-queue`** - TODO
+* **`--display-crashes`** - Display crashes
 
-* **`--exact`** - TODO
+* **`--display-queue`** - Display work queue
 
-* **`--list`** - TODO
+* **`--exact`** - Target name is an exact name rather than a substring
 
-* **`--no-instrumentation`** - TODO
+* **`--list`** - List fuzz targets
 
-* **`--no-run`** - TODO
+* **`--no-instrumentation`** - Compile without instrumentation (for testing build process)
 
-* **`--no-ui`** - TODO
+* **`--no-run`** - Compile, but don't fuzz
 
-* **`--persistent`** - TODO
+* **`--no-ui`** - Disable user interface
 
-* **`--pretty-print`** - TODO
+* **`--persistent`** - Enable persistent mode fuzzing
 
-* **`--replay-corpus`** - TODO
+* **`--pretty-print`** - Pretty-print debug output when displaying/replaying
 
-* **`--replay-crashes`** - TODO
+* **`--replay-corpus`** - Replay corpus using uninstrumented fuzz target; to replay with instrumentation, use `--replay-corpus-instrumented`
 
-* **`--replay-queue`** - TODO
+* **`--replay-crashes`** - Replay crashes
 
-* **`--resume`** - TODO
+* **`--replay-queue`** - Replay work queue
 
-* **`-p, --package = <package>`** - TODO
+* **`--reset`** - Clear fuzzing data for one target, but leave corpus intact; to reset all targets, use `--reset-all`
 
-* **`--target = <target>`** - TODO
+* **`--resume`** - Resume target's last fuzzing session
+
+* **`--run-until-crash`** - Stop fuzzing once a crash is found
+
+* **`-p, --package = <package>`** - Package containing fuzz target
+
+* **`--target = <target>`** - String that fuzz target's name must contain
 
 ## `test_fuzz` crate
 
