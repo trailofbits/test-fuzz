@@ -21,7 +21,7 @@ fn test(target: &str, n: usize) {
         .assert()
         .success();
 
-    let dir = corpus_directory_from_target("default", (target.to_owned() + "::target").as_str());
+    let dir = corpus_directory_from_target("default", &(target.to_owned() + "::target"));
 
     assert_eq!(read_dir(dir).unwrap().count(), n);
 }
