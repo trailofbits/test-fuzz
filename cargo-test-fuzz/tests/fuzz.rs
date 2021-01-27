@@ -1,6 +1,7 @@
 use assert_cmd::prelude::*;
+use dirs::corpus_directory_from_target;
 use predicates::prelude::*;
-use std::process::Command;
+use std::{fs::remove_dir_all, process::Command};
 
 const TEST_DIR: &str = "../examples";
 
@@ -8,15 +9,19 @@ const TIMEOUT: &str = "60";
 
 #[test]
 fn fuzz_assert() {
-    fuzz("assert", false)
+    fuzz("assert", "assert", false)
 }
 
 #[test]
 fn fuzz_qwerty() {
-    fuzz("qwerty", true)
+    fuzz("qwerty", "qwerty", true)
 }
 
-fn fuzz(target: &str, persistent: bool) {
+fn fuzz(krate: &str, target: &str, persistent: bool) {
+    let corpus = corpus_directory_from_target(krate, &(target.to_owned() + "::target"));
+
+    remove_dir_all(&corpus).unwrap_or_default();
+
     Command::new("cargo")
         .current_dir(TEST_DIR)
         .args(&["test", "--", "--test", target])

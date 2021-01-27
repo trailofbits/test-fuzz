@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
     fmt::Debug,
-    fs::{create_dir_all, read_dir, remove_dir_all, File},
+    fs::{create_dir_all, read, read_dir, remove_dir_all, File},
     io::{BufRead, BufReader, Read},
     path::PathBuf,
     process::Command,
@@ -41,6 +41,14 @@ enum SubCommand {
 struct TestFuzz {
     #[clap(long, about = "Display backtraces")]
     backtrace: bool,
+    #[clap(
+        long,
+        about = "Move one target's crashes and work queue to its corpus; to consolidate all \
+targets, use --consolidate-all"
+    )]
+    consolidate: bool,
+    #[clap(long, hidden = true)]
+    consolidate_all: bool,
     #[clap(
         long,
         about = "Display corpus using uninstrumented fuzz target; to display with instrumentation, \
@@ -88,8 +96,8 @@ use --replay-corpus-instrumented"
     replay_queue: bool,
     #[clap(
         long,
-        about = "Clear fuzzing data for one target, but leave corpus intact; to clear fuzzing data \
-for all targets, use --reset-all"
+        about = "Clear fuzzing data for one target, but leave corpus intact; to reset all \
+targets, use --reset-all"
     )]
     reset: bool,
     #[clap(long, hidden = true)]
@@ -128,13 +136,19 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         return Ok(());
     }
 
-    if opts.reset_all {
+    if opts.consolidate_all || opts.reset_all {
+        if opts.consolidate_all {
+            consolidate(&opts, &executable_targets)?;
+        }
         return reset(&opts, &executable_targets);
     }
 
     let (executable, krate, target) = executable_target(&opts, &executable_targets)?;
 
-    if opts.reset {
+    if opts.consolidate || opts.reset {
+        if opts.consolidate {
+            consolidate(&opts, &executable_targets)?;
+        }
         return reset(&opts, &executable_targets);
     }
 
@@ -347,6 +361,43 @@ fn match_message(opts: &TestFuzz) -> String {
             pat
         )
     })
+}
+
+fn consolidate(
+    opts: &TestFuzz,
+    executable_targets: &[(PathBuf, String, Vec<String>)],
+) -> Result<()> {
+    assert!(opts.consolidate_all || executable_targets.len() == 1);
+
+    for (_, krate, targets) in executable_targets {
+        assert!(opts.consolidate_all || targets.len() == 1);
+
+        for target in targets {
+            let corpus_dir = corpus_directory_from_target(krate, target);
+            let crashes_dir = crashes_directory_from_target(krate, target);
+            let queue_dir = queue_directory_from_target(krate, target);
+
+            for dir in [crashes_dir, queue_dir].iter() {
+                for entry in read_dir(dir)? {
+                    let entry = entry?;
+                    let path = entry.path();
+                    let file_name = path
+                        .file_name()
+                        .map(|s| s.to_string_lossy())
+                        .unwrap_or_default();
+
+                    if file_name == "README.txt" || file_name == ".state" {
+                        continue;
+                    }
+
+                    let data = read(path)?;
+                    test_fuzz::runtime::write_data(&corpus_dir, &data)?;
+                }
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn reset(opts: &TestFuzz, executable_targets: &[(PathBuf, String, Vec<String>)]) -> Result<()> {

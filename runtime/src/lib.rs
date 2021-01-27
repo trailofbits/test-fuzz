@@ -4,10 +4,11 @@ use serde::{de::DeserializeOwned, Serialize};
 use std::{
     any::type_name,
     env,
-    fmt::{Debug, Formatter, Result},
+    fmt::{self, Debug, Formatter},
     fs::{create_dir_all, write},
-    io::Read,
+    io::{self, Read},
     marker::PhantomData,
+    path::Path,
 };
 
 // smoelius: TryDebug and TryDefault use Nikolai Vazquez's trick from `impls`.
@@ -16,7 +17,7 @@ use std::{
 struct DebugUnimplemented<T>(PhantomData<T>);
 
 impl<T> Debug for DebugUnimplemented<T> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         const PAT: &str = "TryDebug<";
         let type_name = type_name::<T>();
         let pos = type_name.find(PAT).unwrap() + PAT.len();
@@ -91,16 +92,19 @@ fn enabled(opt: &str) -> bool {
 
 pub fn write_args<T: Serialize>(args: &T) {
     let corpus = corpus_directory_from_args_type::<T>();
-    create_dir_all(&corpus).unwrap_or_default();
-
     let data = serde_cbor::to_vec(args).unwrap();
+    write_data(&corpus, &data).unwrap();
+}
+
+pub fn write_data(corpus: &Path, data: &[u8]) -> io::Result<()> {
+    create_dir_all(&corpus).unwrap_or_default();
     let hex = {
         let mut hasher = Sha1::new();
         hasher.input(&data);
         hasher.result_str()
     };
     let path = corpus.join(hex);
-    write(path, &data).unwrap();
+    write(path, &data)
 }
 
 pub fn read_args<T: DeserializeOwned, R: Read>(reader: R) -> Option<T> {
