@@ -2,21 +2,22 @@
 #![deny(clippy::unwrap_used)]
 #![warn(clippy::panic)]
 
-use anyhow::{ensure, Result};
-use cargo_metadata::{Artifact, ArtifactProfile, Message};
-use clap::Clap;
+use anyhow::{anyhow, bail, ensure, Result};
+use cargo_metadata::{Artifact, ArtifactProfile, Message, Metadata, MetadataCommand, PackageId};
+use clap::{crate_version, Clap};
 use dirs::{
     corpus_directory_from_target, crashes_directory_from_target, output_directory_from_target,
     queue_directory_from_target, target_directory,
 };
 use log::debug;
+use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
-    fmt::Debug,
+    fmt::{Debug, Formatter},
     fs::{create_dir_all, read, read_dir, remove_dir_all, File},
     io::{BufRead, BufReader, Read},
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
 };
 use subprocess::{Exec, NullFile, Redirection};
@@ -26,6 +27,7 @@ const ENTRY_SUFFIX: &str = "_fuzz::entry";
 const BASE_ENV: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
 
 #[derive(Clap, Debug)]
+#[clap(version = crate_version!())]
 struct Opts {
     #[clap(subcommand)]
     subcmd: SubCommand,
@@ -110,6 +112,28 @@ targets, use --reset-all"
     args: Vec<String>,
 }
 
+#[derive(Clone, Deserialize, Serialize)]
+struct Executable {
+    path: PathBuf,
+    name: String,
+    test_fuzz_version: Option<VersionReq>,
+}
+
+impl Debug for Executable {
+    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+        let test_fuzz_version = self
+            .test_fuzz_version
+            .as_ref()
+            .map(|version| version.to_string())
+            .unwrap_or_default();
+        fmt.debug_struct("Executable")
+            .field("path", &self.path)
+            .field("name", &self.name)
+            .field("test_fuzz_version", &test_fuzz_version)
+            .finish()
+    }
+}
+
 pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     let opts = {
         let SubCommand::TestFuzz(mut opts) = Opts::parse_from(args).subcmd;
@@ -127,6 +151,8 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         executable_targets = filter_executable_targets(&opts, &pat, &executable_targets);
     }
 
+    check_test_fuzz_versions(&executable_targets)?;
+
     if opts.list {
         println!("{:#?}", executable_targets);
         return Ok(());
@@ -143,7 +169,7 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         return reset(&opts, &executable_targets);
     }
 
-    let (executable, krate, target) = executable_target(&opts, &executable_targets)?;
+    let (executable, target) = executable_target(&opts, &executable_targets)?;
 
     if opts.consolidate || opts.reset {
         if opts.consolidate {
@@ -167,17 +193,17 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         || opts.replay_corpus
         || opts.replay_corpus_instrumented
     {
-        corpus_directory_from_target(&krate, &target)
+        corpus_directory_from_target(&executable.name, &target)
     } else if opts.display_crashes || opts.replay_crashes {
-        crashes_directory_from_target(&krate, &target)
+        crashes_directory_from_target(&executable.name, &target)
     } else if opts.display_queue || opts.replay_queue {
-        queue_directory_from_target(&krate, &target)
+        queue_directory_from_target(&executable.name, &target)
     } else {
         PathBuf::default()
     };
 
     if display || replay {
-        return for_each_entry(&opts, &executable, &krate, &target, display, replay, &dir);
+        return for_each_entry(&opts, &executable, &target, display, replay, &dir);
     }
 
     if opts.no_instrumentation {
@@ -185,10 +211,12 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         return Ok(());
     }
 
-    fuzz(&opts, &executable, &krate, &target)
+    fuzz(&opts, &executable, &target)
 }
 
-fn build(opts: &TestFuzz) -> Result<Vec<(PathBuf, String)>> {
+fn build(opts: &TestFuzz) -> Result<Vec<Executable>> {
+    let metadata = MetadataCommand::new().exec()?;
+
     // smoelius: Put --message-format=json last so that it is easy to copy-and-paste the command
     // without it.
     let mut args = vec![];
@@ -227,40 +255,61 @@ fn build(opts: &TestFuzz) -> Result<Vec<(PathBuf, String)>> {
 
     Ok(messages
         .into_iter()
-        .filter_map(|message| {
+        .map(|message| {
             if let Message::CompilerArtifact(Artifact {
+                package_id,
                 target: build_target,
                 profile: ArtifactProfile { test: true, .. },
                 executable: Some(executable),
                 ..
             }) = message
             {
-                Some((executable, build_target.name))
+                Ok(Some(Executable {
+                    path: executable,
+                    name: build_target.name,
+                    test_fuzz_version: test_fuzz_version(&metadata, package_id)?,
+                }))
             } else {
-                None
+                Ok(None)
             }
         })
+        .collect::<Result<Vec<_>>>()?
+        .into_iter()
+        .flatten()
         .collect())
 }
 
-fn executable_targets(
-    executables: &[(PathBuf, String)],
-) -> Result<Vec<(PathBuf, String, Vec<String>)>> {
-    let executable_targets: Vec<(PathBuf, String, Vec<String>)> = executables
+fn test_fuzz_version(metadata: &Metadata, package_id: PackageId) -> Result<Option<VersionReq>> {
+    let package = metadata
+        .packages
         .iter()
-        .map(|(executable, krate)| {
-            let targets = targets(executable)?;
-            Ok((executable.clone(), krate.clone(), targets))
+        .find(|package| package.id == package_id)
+        .ok_or_else(|| anyhow!("Could not find package `{}`", package_id))?;
+    Ok(package.dependencies.iter().find_map(|dependency| {
+        if dependency.name == "test-fuzz" {
+            Some(dependency.req.clone())
+        } else {
+            None
+        }
+    }))
+}
+
+fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec<String>)>> {
+    let executable_targets: Vec<(Executable, Vec<String>)> = executables
+        .iter()
+        .map(|executable| {
+            let targets = targets(&executable.path)?;
+            Ok((executable.clone(), targets))
         })
         .collect::<Result<_>>()?;
 
     Ok(executable_targets
         .into_iter()
-        .filter(|executable_targets| !executable_targets.2.is_empty())
+        .filter(|executable_targets| !executable_targets.1.is_empty())
         .collect())
 }
 
-fn targets(executable: &PathBuf) -> Result<Vec<String>> {
+fn targets(executable: &Path) -> Result<Vec<String>> {
     let exec = Exec::cmd(executable).args(&["--list"]);
     debug!("{:?}", exec);
     let stream = exec.stream_stdout()?;
@@ -292,14 +341,14 @@ fn targets(executable: &PathBuf) -> Result<Vec<String>> {
 fn filter_executable_targets(
     opts: &TestFuzz,
     pat: &str,
-    executable_targets: &[(PathBuf, String, Vec<String>)],
-) -> Vec<(PathBuf, String, Vec<String>)> {
+    executable_targets: &[(Executable, Vec<String>)],
+) -> Vec<(Executable, Vec<String>)> {
     executable_targets
         .iter()
-        .filter_map(|(executable, krate, targets)| {
+        .filter_map(|(executable, targets)| {
             let targets = filter_targets(opts, pat, targets);
             if !targets.is_empty() {
-                Some((executable.clone(), krate.clone(), targets))
+                Some((executable.clone(), targets))
             } else {
                 None
             }
@@ -317,8 +366,8 @@ fn filter_targets(opts: &TestFuzz, pat: &str, targets: &[String]) -> Vec<String>
 
 fn executable_target(
     opts: &TestFuzz,
-    executable_targets: &[(PathBuf, String, Vec<String>)],
-) -> Result<(PathBuf, String, String)> {
+    executable_targets: &[(Executable, Vec<String>)],
+) -> Result<(Executable, String)> {
     let mut executable_targets = executable_targets.to_vec();
 
     ensure!(
@@ -336,21 +385,17 @@ fn executable_target(
 
     let mut executable_targets = executable_targets.remove(0);
 
-    assert!(!executable_targets.2.is_empty());
+    assert!(!executable_targets.1.is_empty());
 
     ensure!(
-        executable_targets.2.len() <= 2,
+        executable_targets.1.len() <= 2,
         "found multiple fuzz targets{} in {:?}: {:#?}",
         match_message(opts),
-        (executable_targets.0, executable_targets.1),
-        executable_targets.2
+        executable_targets.0,
+        executable_targets.1
     );
 
-    Ok((
-        executable_targets.0,
-        executable_targets.1,
-        executable_targets.2.remove(0),
-    ))
+    Ok((executable_targets.0, executable_targets.1.remove(0)))
 }
 
 fn match_message(opts: &TestFuzz) -> String {
@@ -363,19 +408,33 @@ fn match_message(opts: &TestFuzz) -> String {
     })
 }
 
-fn consolidate(
-    opts: &TestFuzz,
-    executable_targets: &[(PathBuf, String, Vec<String>)],
-) -> Result<()> {
+fn check_test_fuzz_versions(executable_targets: &[(Executable, Vec<String>)]) -> Result<()> {
+    let version = Version::parse(crate_version!())?;
+    for (executable, _) in executable_targets {
+        if let Some(test_fuzz_version) = &executable.test_fuzz_version {
+            ensure!(
+                test_fuzz_version.matches(&version),
+                "`{}` depends on a newer version of `test_fuzz` ({}). Consider upgrading with `cargo install -f cargo-test-fuzz`.",
+                executable.name,
+                test_fuzz_version,
+            );
+        } else {
+            bail!("`{}` does not depend on `test_fuzz`", executable.name)
+        }
+    }
+    Ok(())
+}
+
+fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> Result<()> {
     assert!(opts.consolidate_all || executable_targets.len() == 1);
 
-    for (_, krate, targets) in executable_targets {
+    for (executable, targets) in executable_targets {
         assert!(opts.consolidate_all || targets.len() == 1);
 
         for target in targets {
-            let corpus_dir = corpus_directory_from_target(krate, target);
-            let crashes_dir = crashes_directory_from_target(krate, target);
-            let queue_dir = queue_directory_from_target(krate, target);
+            let corpus_dir = corpus_directory_from_target(&executable.name, target);
+            let crashes_dir = crashes_directory_from_target(&executable.name, target);
+            let queue_dir = queue_directory_from_target(&executable.name, target);
 
             for dir in [crashes_dir, queue_dir].iter() {
                 for entry in read_dir(dir)? {
@@ -400,14 +459,14 @@ fn consolidate(
     Ok(())
 }
 
-fn reset(opts: &TestFuzz, executable_targets: &[(PathBuf, String, Vec<String>)]) -> Result<()> {
+fn reset(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> Result<()> {
     assert!(opts.reset_all || executable_targets.len() == 1);
 
-    for (_, krate, targets) in executable_targets {
+    for (executable, targets) in executable_targets {
         assert!(opts.reset_all || targets.len() == 1);
 
         for target in targets {
-            let output_dir = output_directory_from_target(krate, target);
+            let output_dir = output_directory_from_target(&executable.name, target);
             remove_dir_all(output_dir).or_else(|err| {
                 if format!("{}", err).starts_with("No such file or directory") {
                     Ok(())
@@ -423,12 +482,11 @@ fn reset(opts: &TestFuzz, executable_targets: &[(PathBuf, String, Vec<String>)])
 
 fn for_each_entry(
     opts: &TestFuzz,
-    executable: &PathBuf,
-    _krate: &str,
+    executable: &Executable,
     target: &str,
     display: bool,
     replay: bool,
-    dir: &PathBuf,
+    dir: &Path,
 ) -> Result<()> {
     let mut env = BASE_ENV.to_vec();
     if display {
@@ -470,7 +528,7 @@ fn for_each_entry(
             continue;
         }
 
-        let exec = Exec::cmd(executable)
+        let exec = Exec::cmd(&executable.path)
             .env_extend(&env)
             .args(&args)
             .stdin(file)
@@ -537,12 +595,12 @@ fn for_each_entry(
     Ok(())
 }
 
-fn fuzz(opts: &TestFuzz, executable: &PathBuf, krate: &str, target: &str) -> Result<()> {
-    let corpus_dir = corpus_directory_from_target(krate, target)
+fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
+    let corpus_dir = corpus_directory_from_target(&executable.name, target)
         .to_string_lossy()
         .into_owned();
 
-    let output_dir = output_directory_from_target(krate, target);
+    let output_dir = output_directory_from_target(&executable.name, target);
     create_dir_all(&output_dir).unwrap_or_default();
 
     let mut command = Command::new("cargo");
@@ -572,7 +630,7 @@ fn fuzz(opts: &TestFuzz, executable: &PathBuf, krate: &str, target: &str) -> Res
     args.extend(
         vec![
             "--",
-            &executable.to_string_lossy(),
+            &executable.path.to_string_lossy(),
             "--exact",
             &(target.to_owned() + ENTRY_SUFFIX),
         ]

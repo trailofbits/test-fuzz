@@ -1,11 +1,12 @@
 [package]
 name = "test-fuzz-examples"
-version = "0.1.0-alpha"
+version = "0.1.0-alpha.9"
 edition = "2018"
+publish = false
 
 [dependencies]
 serde = "1.0"
-test-fuzz = { path = "..", version = "0.1.0-alpha" }
+test-fuzz = { path = "..", version = "=0.1.0-alpha.9" }
 
 [features]
 bar_fuzz = []
