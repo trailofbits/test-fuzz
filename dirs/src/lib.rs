@@ -36,12 +36,7 @@ pub fn target_directory(instrumented: bool) -> PathBuf {
     }
     let mut target_dir = command.exec().unwrap().target_directory;
     if instrumented {
-        let file_name = target_dir
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .to_string();
-        target_dir.set_file_name(file_name + "-afl");
+        target_dir = target_dir.join("afl");
     }
     target_dir
 }
