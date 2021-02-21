@@ -1,8 +1,8 @@
 digraph {
     "cargo-test-fuzz" -> "dirs"
-    "cargo-test-fuzz" -> "test_fuzz"
+    "cargo-test-fuzz" -> "test-fuzz"
     "macro" -> "runtime"
     "runtime" -> "dirs"
-    "test_fuzz" -> "runtime"
-    "test_fuzz" -> "macro"
+    "test-fuzz" -> "runtime"
+    "test-fuzz" -> "macro"
 }
