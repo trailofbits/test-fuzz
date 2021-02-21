@@ -24,7 +24,7 @@ fn display(target: &str, pattern: &str) {
         .assert()
         .success();
 
-    let mut command = Command::new("cargo");
+    let mut command = Command::cargo_bin("cargo-test-fuzz").unwrap();
 
     command
         .current_dir(TEST_DIR)

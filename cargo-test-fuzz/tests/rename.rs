@@ -5,13 +5,15 @@ const TEST_DIR: &str = "../examples";
 
 #[test]
 fn rename() {
-    Command::new("cargo")
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
         .current_dir(TEST_DIR)
         .args(&["test-fuzz", "--no-run", "--target", "rename"])
         .assert()
         .success();
 
-    Command::new("cargo")
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
         .current_dir(TEST_DIR)
         .args(&[
             "test-fuzz",

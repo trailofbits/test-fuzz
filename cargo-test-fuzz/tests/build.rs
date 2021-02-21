@@ -5,7 +5,8 @@ const TEST_DIR: &str = "../examples";
 
 #[test]
 fn build_no_instrumentation() {
-    Command::new("cargo")
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
         .current_dir(TEST_DIR)
         .args(&["test-fuzz", "--no-run", "--no-instrumentation"])
         .assert()
@@ -14,7 +15,8 @@ fn build_no_instrumentation() {
 
 #[test]
 fn build() {
-    Command::new("cargo")
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
         .current_dir(TEST_DIR)
         .args(&["test-fuzz", "--no-run"])
         .assert()
@@ -23,7 +25,8 @@ fn build() {
 
 #[test]
 fn build_pesistent() {
-    Command::new("cargo")
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
         .current_dir(TEST_DIR)
         .args(&["test-fuzz", "--no-run", "--persistent"])
         .assert()

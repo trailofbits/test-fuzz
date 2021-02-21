@@ -28,7 +28,7 @@ fn fuzz(krate: &str, target: &str, persistent: bool) {
         .assert()
         .success();
 
-    let mut command = Command::new("cargo");
+    let mut command = Command::cargo_bin("cargo-test-fuzz").unwrap();
 
     let mut args = vec![
         "test-fuzz",

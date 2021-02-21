@@ -24,7 +24,8 @@ fn consolidate() {
 
     assert_eq!(read_dir(&corpus).unwrap().count(), 1);
 
-    Command::new("cargo")
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
         .current_dir(TEST_DIR)
         .args(&[
             "test-fuzz",
@@ -39,7 +40,8 @@ fn consolidate() {
         .assert()
         .success();
 
-    Command::new("cargo")
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
         .current_dir(TEST_DIR)
         .args(&["test-fuzz", "--target", TARGET, "--consolidate"])
         .assert()

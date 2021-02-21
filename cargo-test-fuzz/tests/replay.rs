@@ -16,13 +16,15 @@ fn replay() {
         .assert()
         .success();
 
-    Command::new("cargo")
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
         .current_dir(TEST_DIR)
         .args(&["test-fuzz", "--target", "alloc", "--reset"])
         .assert()
         .success();
 
-    Command::new("cargo")
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
         .current_dir(TEST_DIR)
         .args(&[
             "test-fuzz",
@@ -39,7 +41,7 @@ fn replay() {
 
     Resource::DATA.set(MEMORY_LIMIT, MEMORY_LIMIT).unwrap();
 
-    let mut command = Command::new("cargo");
+    let mut command = Command::cargo_bin("cargo-test-fuzz").unwrap();
 
     command
         .current_dir(TEST_DIR)
