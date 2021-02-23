@@ -1,3 +1,5 @@
+#![allow(clippy::clippy::clippy::blacklisted_name)]
+
 use serde::{Deserialize, Serialize};
 use std::convert::{TryFrom, TryInto};
 

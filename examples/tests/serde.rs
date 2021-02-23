@@ -1,3 +1,8 @@
+#![allow(clippy::blacklisted_name)]
+#![allow(clippy::ptr_arg)]
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::unit_arg)]
+
 fn consume<T>(_: T) {}
 
 mod primitive {

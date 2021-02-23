@@ -649,6 +649,8 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(clippy::unwrap_used)]
+
     use super::cargo_test_fuzz as cargo;
     use anyhow::Result;
     use lazy_static::lazy_static;
@@ -669,9 +671,8 @@ mod tests {
     #[test]
     fn build_no_instrumentation_with_target() {
         INITIALIZE.as_ref().unwrap();
-        assert!(
-            cargo_test_fuzz(&["--no-run", "--no-instrumentation", "--target", "target"]).is_ok()
-        );
+        let _ =
+            cargo_test_fuzz(&["--no-run", "--no-instrumentation", "--target", "target"]).unwrap();
     }
 
     fn cargo_test_fuzz(args: &[&str]) -> Result<()> {
