@@ -46,7 +46,7 @@ struct TestFuzz {
     #[clap(
         long,
         about = "Move one target's crashes and work queue to its corpus; to consolidate all \
-targets, use --consolidate-all"
+        targets, use --consolidate-all"
     )]
     consolidate: bool,
     #[clap(long, hidden = true)]
@@ -54,7 +54,7 @@ targets, use --consolidate-all"
     #[clap(
         long,
         about = "Display corpus using uninstrumented fuzz target; to display with instrumentation, \
-use --display-corpus-instrumented"
+        use --display-corpus-instrumented"
     )]
     display_corpus: bool,
     #[clap(long, hidden = true)]
@@ -87,7 +87,7 @@ use --display-corpus-instrumented"
     #[clap(
         long,
         about = "Replay corpus using uninstrumented fuzz target; to replay with instrumentation, \
-use --replay-corpus-instrumented"
+        use --replay-corpus-instrumented"
     )]
     replay_corpus: bool,
     #[clap(long, hidden = true)]
@@ -99,7 +99,7 @@ use --replay-corpus-instrumented"
     #[clap(
         long,
         about = "Clear fuzzing data for one target, but leave corpus intact; to reset all \
-targets, use --reset-all"
+        targets, use --reset-all"
     )]
     reset: bool,
     #[clap(long, hidden = true)]
