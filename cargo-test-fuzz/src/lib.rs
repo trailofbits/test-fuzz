@@ -207,7 +207,7 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     }
 
     if opts.no_instrumentation {
-        println!("Stopping before fuzzing since --no-instrumentation was specified.");
+        eprintln!("Stopping before fuzzing since --no-instrumentation was specified.");
         return Ok(());
     }
 
@@ -568,7 +568,7 @@ fn for_each_entry(
     assert!(!(!nonempty && (failure || output)));
 
     if !nonempty {
-        println!(
+        eprintln!(
             "Nothing to {}.",
             match (display, replay) {
                 (true, true) => "display/replay",
@@ -581,12 +581,12 @@ fn for_each_entry(
     }
 
     if !failure && !output {
-        println!("No output on stderr detected.");
+        eprintln!("No output on stderr detected.");
         return Ok(());
     }
 
     if failure && !replay {
-        println!(
+        eprintln!(
             "Encountered a failure while not replaying. A buggy Debug implementation perhaps?"
         );
         return Ok(());

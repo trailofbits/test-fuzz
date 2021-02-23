@@ -6,18 +6,19 @@ const TEST_DIR: &str = "../examples";
 
 #[test]
 fn display_qwerty() {
-    display("qwerty", "Args { data: \"asdfgh\" }")
+    display("qwerty", "Args { data: \"asdfgh\" }", "")
 }
 
 #[test]
 fn display_debug() {
     display(
         "debug",
+        "",
         "Encountered a failure while not replaying. A buggy Debug implementation perhaps?",
     )
 }
 
-fn display(target: &str, pattern: &str) {
+fn display(target: &str, stdout: &str, stderr: &str) {
     Command::new("cargo")
         .current_dir(TEST_DIR)
         .args(&["test", "--", "--test", target])
@@ -31,5 +32,6 @@ fn display(target: &str, pattern: &str) {
         .args(&["test-fuzz", "--target", target, "--display-corpus"])
         .assert()
         .success()
-        .stdout(predicate::str::contains(pattern));
+        .stdout(predicate::str::contains(stdout))
+        .stderr(predicate::str::contains(stderr));
 }
