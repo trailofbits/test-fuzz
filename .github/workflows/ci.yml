@@ -15,10 +15,81 @@ jobs:
     - name: Install afl
       run: cargo install afl
 
-    - name: Build
-      run: cargo build
-
     - name: Test
-      run: PATH="$PWD/target/debug:$PATH" cargo test --workspace
+      run: cargo test --workspace
       env:
         AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
+
+  test-incompatible-cargo-afl:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install llvm
+      run: sudo apt-get install llvm
+
+    - name: Install older afl
+      run: cargo install afl --version=0.8.0
+
+    - name: Build
+      run: cargo build --workspace
+
+    - name: Test
+      run: |
+        cd examples
+        ../target/debug/cargo-test-fuzz test-fuzz --no-run 2>&1 1>/dev/null |
+          grep '^Error: `[^`]*` depends on `afl [^`]*`, which is incompatible with `cargo-afl [^`]*`.$'
+
+  test-incompatible-test-fuzz:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install llvm
+      run: sudo apt-get install llvm
+
+    - name: Install afl
+      run: cargo install afl
+
+    - name: Edit versions
+      run: |
+        sed -i 's/^\(version = "[^.]*\)\.[^.]*\.\([^"]*"\)$/\1.0.\2/' Cargo.toml
+        sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\)\.[^.]*\.\([^"]*".*}\)$/\1.0.\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
+
+    - name: Build
+      run: cargo build --workspace
+
+    - name: Test
+      run: |
+        cd examples
+        ../target/debug/cargo-test-fuzz test-fuzz --no-run 2>&1 1>/dev/null |
+          grep '^Error: `[^`]*` depends on `test-fuzz [^`]*`, which is incompatible with `cargo-test-fuzz [^`]*`.$'
+
+  test-newer-test-fuzz:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install llvm
+      run: sudo apt-get install llvm
+
+    - name: Install afl
+      run: cargo install afl
+
+    - name: Edit versions
+      run: |
+        sed -i 's/^\(version = "[^.]*\.[^.]*\)\.[^"]*\("\)$/\1.255\2/' Cargo.toml
+        sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\.[^.]*\)\.[^"]*\(".*}\)$/\1.255\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
+        sed -i 's/^\(version = "[^-]*\)-[^"]*\("\)$/\1\2/' cargo-test-fuzz/Cargo.toml
+
+    - name: Build
+      run: cargo build --workspace
+
+    - name: Test
+      run: |
+        cd examples
+        ../target/debug/cargo-test-fuzz test-fuzz --no-run 2>&1 1>/dev/null |
+          grep '^`[^`]*` depends on `test-fuzz [^`]*`, which is newer than `cargo-test-fuzz [^`]*`.'
