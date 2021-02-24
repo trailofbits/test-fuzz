@@ -3,7 +3,9 @@
 #![warn(clippy::panic)]
 
 use anyhow::{anyhow, bail, ensure, Result};
-use cargo_metadata::{Artifact, ArtifactProfile, Message, Metadata, MetadataCommand, PackageId};
+use cargo_metadata::{
+    Artifact, ArtifactProfile, Message, Metadata, MetadataCommand, Package, PackageId,
+};
 use clap::{crate_version, Clap};
 use dirs::{
     corpus_directory_from_target, crashes_directory_from_target, output_directory_from_target,
@@ -27,7 +29,6 @@ const ENTRY_SUFFIX: &str = "_fuzz::entry";
 const BASE_ENV: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
 
 #[derive(Clap, Debug)]
-#[clap(version = crate_version!())]
 struct Opts {
     #[clap(subcommand)]
     subcmd: SubCommand,
@@ -40,6 +41,7 @@ enum SubCommand {
 
 // smoelius: Wherever possible, try to reuse cargo test and libtest option names.
 #[derive(Clap, Clone, Debug, Deserialize, Serialize)]
+#[clap(version = crate_version!())]
 struct TestFuzz {
     #[clap(long, about = "Display backtraces")]
     backtrace: bool,
@@ -116,7 +118,8 @@ struct TestFuzz {
 struct Executable {
     path: PathBuf,
     name: String,
-    test_fuzz_version: Option<VersionReq>,
+    test_fuzz_version: Option<Version>,
+    afl_version: Option<Version>,
 }
 
 impl Debug for Executable {
@@ -126,10 +129,16 @@ impl Debug for Executable {
             .as_ref()
             .map(|version| version.to_string())
             .unwrap_or_default();
+        let afl_version = self
+            .afl_version
+            .as_ref()
+            .map(|version| version.to_string())
+            .unwrap_or_default();
         fmt.debug_struct("Executable")
             .field("path", &self.path)
             .field("name", &self.name)
             .field("test_fuzz_version", &test_fuzz_version)
+            .field("afl_version", &afl_version)
             .finish()
     }
 }
@@ -151,7 +160,7 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         executable_targets = filter_executable_targets(&opts, &pat, &executable_targets);
     }
 
-    check_test_fuzz_versions(&executable_targets)?;
+    check_test_fuzz_and_afl_versions(&executable_targets)?;
 
     if opts.list {
         println!("{:#?}", executable_targets);
@@ -264,10 +273,13 @@ fn build(opts: &TestFuzz) -> Result<Vec<Executable>> {
                 ..
             }) = message
             {
+                let (test_fuzz_version, afl_version) =
+                    test_fuzz_and_afl_versions(&metadata, package_id)?;
                 Ok(Some(Executable {
                     path: executable,
                     name: build_target.name,
-                    test_fuzz_version: test_fuzz_version(&metadata, package_id)?,
+                    test_fuzz_version,
+                    afl_version,
                 }))
             } else {
                 Ok(None)
@@ -279,19 +291,68 @@ fn build(opts: &TestFuzz) -> Result<Vec<Executable>> {
         .collect())
 }
 
-fn test_fuzz_version(metadata: &Metadata, package_id: PackageId) -> Result<Option<VersionReq>> {
-    let package = metadata
+fn test_fuzz_and_afl_versions(
+    metadata: &Metadata,
+    package_id: PackageId,
+) -> Result<(Option<Version>, Option<Version>)> {
+    let test_fuzz = package_dependency(metadata, &package_id, "test-fuzz")?;
+    let afl = test_fuzz
+        .as_ref()
+        .map(|package_id| package_dependency(metadata, &package_id, "afl"))
+        .transpose()?
+        .flatten();
+    let test_fuzz_version = test_fuzz
+        .map(|package_id| package_version(metadata, &package_id))
+        .transpose()?;
+    let afl_version = afl
+        .map(|package_id| package_version(metadata, &package_id))
+        .transpose()?;
+    Ok((test_fuzz_version, afl_version))
+}
+
+fn package_dependency(
+    metadata: &Metadata,
+    package_id: &PackageId,
+    name: &str,
+) -> Result<Option<PackageId>> {
+    let resolve = metadata
+        .resolve
+        .as_ref()
+        .ok_or_else(|| anyhow!("No dependency graph"))?;
+    let node = resolve
+        .nodes
+        .iter()
+        .find(|node| node.id == *package_id)
+        .ok_or_else(|| anyhow!("Could not find package `{}`", package_id))?;
+    Ok(node
+        .dependencies
+        .iter()
+        .map(|package_id| package_name(metadata, package_id).map(|s| (package_id, s == name)))
+        .collect::<Result<Vec<_>>>()?
+        .into_iter()
+        .find_map(|(package_id, found)| {
+            if found {
+                Some(package_id.clone())
+            } else {
+                None
+            }
+        }))
+}
+
+fn package_name(metadata: &Metadata, package_id: &PackageId) -> Result<String> {
+    package(metadata, package_id).map(|package| package.name.clone())
+}
+
+fn package_version(metadata: &Metadata, package_id: &PackageId) -> Result<Version> {
+    package(metadata, package_id).map(|package| package.version.clone())
+}
+
+fn package<'a>(metadata: &'a Metadata, package_id: &PackageId) -> Result<&'a Package> {
+    metadata
         .packages
         .iter()
-        .find(|package| package.id == package_id)
-        .ok_or_else(|| anyhow!("Could not find package `{}`", package_id))?;
-    Ok(package.dependencies.iter().find_map(|dependency| {
-        if dependency.name == "test-fuzz" {
-            Some(dependency.req.clone())
-        } else {
-            None
-        }
-    }))
+        .find(|package| package.id == *package_id)
+        .ok_or_else(|| anyhow!("Could not find package `{}`", package_id))
 }
 
 fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec<String>)>> {
@@ -408,21 +469,80 @@ fn match_message(opts: &TestFuzz) -> String {
     })
 }
 
-fn check_test_fuzz_versions(executable_targets: &[(Executable, Vec<String>)]) -> Result<()> {
-    let version = Version::parse(crate_version!())?;
+fn check_test_fuzz_and_afl_versions(
+    executable_targets: &[(Executable, Vec<String>)],
+) -> Result<()> {
+    let cargo_test_fuzz_version = Version::parse(crate_version!())?;
+    let cargo_afl_version = cargo_afl_version()?;
     for (executable, _) in executable_targets {
-        if let Some(test_fuzz_version) = &executable.test_fuzz_version {
-            ensure!(
-                test_fuzz_version.matches(&version),
-                "`{}` depends on a newer version of `test_fuzz` ({}). Consider upgrading with `cargo install -f cargo-test-fuzz`.",
-                executable.name,
-                test_fuzz_version,
-            );
-        } else {
-            bail!("`{}` does not depend on `test_fuzz`", executable.name)
-        }
+        check_dependency_version(
+            &executable.name,
+            "test-fuzz",
+            executable.test_fuzz_version.as_ref(),
+            "cargo-test-fuzz",
+            &cargo_test_fuzz_version,
+        )?;
+        check_dependency_version(
+            &executable.name,
+            "afl",
+            executable.afl_version.as_ref(),
+            "cargo-afl",
+            &cargo_afl_version,
+        )?;
     }
     Ok(())
+}
+
+fn cargo_afl_version() -> Result<Version> {
+    let output = Command::new("cargo").args(&["afl", "--version"]).output()?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let version = stdout.strip_prefix("cargo-afl ").ok_or_else(|| {
+        anyhow!(
+            "Could not determine `cargo-afl` version. Is it installed? Try `cargo install afl`."
+        )
+    })?;
+    Version::parse(version).map_err(Into::into)
+}
+
+fn check_dependency_version(
+    name: &str,
+    dependency: &str,
+    dependency_version: Option<&Version>,
+    install: &str,
+    install_version: &Version,
+) -> Result<()> {
+    if let Some(dependency_version) = dependency_version {
+        ensure!(
+            as_version_req(&dependency_version).matches(&install_version),
+            "`{}` depends on `{} {}`, which does not match `{} {}`.",
+            name,
+            dependency,
+            dependency_version,
+            install,
+            install_version
+        );
+        if !as_version_req(&install_version).matches(&dependency_version) {
+            eprintln!(
+                "`{}` depends on `{} {}`, which is newer than `{} {}`. Consider upgrading with \
+                `cargo install {} --force --version '>={}'`.",
+                name,
+                dependency,
+                dependency_version,
+                install,
+                install_version,
+                install,
+                dependency_version
+            );
+        }
+    } else {
+        bail!("`{}` does not depend on `{}`", name, dependency)
+    }
+    Ok(())
+}
+
+#[allow(clippy::expect_used)]
+fn as_version_req(version: &Version) -> VersionReq {
+    VersionReq::parse(&version.to_string()).expect("could not parse version as version request")
 }
 
 fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> Result<()> {
