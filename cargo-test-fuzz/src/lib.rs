@@ -622,6 +622,8 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
             if opts.resume { "-" } else { &corpus_dir },
             "-o",
             &output_dir.to_string_lossy(),
+            "-M",
+            "default",
         ]
         .into_iter()
         .map(String::from),

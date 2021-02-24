@@ -14,7 +14,7 @@ name = "cargo-test-fuzz"
 path = "src/bin/cargo_test_fuzz.rs"
 
 [dependencies]
-afl = "0.8.0"
+afl = "0.10.0"
 anyhow = "1.0.38"
 cargo_metadata = "0.12.3"
 clap = "3.0.0-beta.2"

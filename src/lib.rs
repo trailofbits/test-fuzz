@@ -3,9 +3,8 @@ pub use test_fuzz_macro::{test_fuzz, test_fuzz_impl};
 
 // smoelius: Re-export afl so that test-fuzz clients do not need to add it to their Cargo.toml
 // files.
-// smoelius: Remove `::{self, __fuzz}` once 5142c995 appears in afl.rs on crates.io.
 #[cfg(feature = "persistent")]
-pub use afl::{self, __fuzz};
+pub use afl;
 
 // smoelius: Unfortunately, the same trick doesn't work for serde.
 // https://github.com/serde-rs/serde/issues/1465

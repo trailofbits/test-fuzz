@@ -10,11 +10,15 @@ pub fn corpus_directory_from_target(krate: &str, target: &str) -> PathBuf {
 }
 
 pub fn crashes_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    output_directory_from_target(krate, target).join("crashes")
+    output_directory_from_target(krate, target)
+        .join("default")
+        .join("crashes")
 }
 
 pub fn queue_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    output_directory_from_target(krate, target).join("queue")
+    output_directory_from_target(krate, target)
+        .join("default")
+        .join("queue")
 }
 
 pub fn output_directory_from_target(krate: &str, target: &str) -> PathBuf {
