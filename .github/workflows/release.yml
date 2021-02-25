@@ -23,9 +23,6 @@ jobs:
             cargo publish --manifest-path "$X"/Cargo.toml
           done
 
-  release:
-    runs-on: ubuntu-latest
-    steps:
       - name: Create release
         uses: actions/create-release@v1
         env:
