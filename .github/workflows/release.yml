@@ -19,6 +19,8 @@ jobs:
 
       - name: Publish
         run: |
+          # smoelius: The crates must be published in this order, which is a reverse topological
+          # sort of `doc/crates.dot`.
           for X in dirs runtime macro . cargo-test-fuzz; do
             cargo publish --manifest-path "$X"/Cargo.toml
           done
