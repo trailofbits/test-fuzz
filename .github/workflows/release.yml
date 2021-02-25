@@ -22,7 +22,10 @@ jobs:
           # smoelius: The crates must be published in this order, which is a reverse topological
           # sort of `doc/crates.dot`.
           for X in dirs runtime macro . cargo-test-fuzz; do
-            cargo publish --manifest-path "$X"/Cargo.toml
+            # smoelius: Continue in case of a previous failed publish attempt.
+            cargo publish --manifest-path "$X"/Cargo.toml || true
+            # smoelius: Give `crate.io` a chance to update.
+            sleep 1m
           done
 
       - name: Create release
