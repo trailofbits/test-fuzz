@@ -308,7 +308,7 @@ fn map_method_or_fn(
             struct Ret(#ret_ty);
             impl std::fmt::Debug for Ret {
                 fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                    use test_fuzz::runtime::TryDebugDefault;
+                    use test_fuzz::runtime::TryDebugFallback;
                     let mut debug_tuple = fmt.debug_tuple("Ret");
                     test_fuzz::runtime::TryDebug(&self.0).apply(&mut |value| {
                         debug_tuple.field(value);
@@ -354,7 +354,7 @@ fn map_method_or_fn(
 
                 impl std::fmt::Debug for Args {
                     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        use test_fuzz::runtime::TryDebugDefault;
+                        use test_fuzz::runtime::TryDebugFallback;
                         let mut debug_struct = fmt.debug_struct("Args");
                         #(#fmt_args)*
                         debug_struct.finish()
@@ -364,7 +364,7 @@ fn map_method_or_fn(
                 #[test]
                 fn default() {
                     if !test_fuzz::runtime::test_fuzz_enabled() {
-                        use test_fuzz::runtime::TryDefaultDefault;
+                        use test_fuzz::runtime::TryDefaultFallback;
                         let args = (|| -> Option<#mod_ident::Args> {
                             Some(#mod_ident::Args(
                                 #(#def_args),*

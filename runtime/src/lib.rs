@@ -29,11 +29,11 @@ impl<T> Debug for DebugUnimplemented<T> {
     }
 }
 
-pub trait TryDebugDefault {
+pub trait TryDebugFallback {
     fn apply<U>(&self, f: &mut dyn FnMut(&dyn Debug) -> U) -> U;
 }
 
-impl<T> TryDebugDefault for T {
+impl<T> TryDebugFallback for T {
     fn apply<U>(&self, f: &mut dyn FnMut(&dyn Debug) -> U) -> U {
         f(&DebugUnimplemented::<T>(PhantomData))
     }
@@ -47,11 +47,11 @@ impl<'a, T: Debug> TryDebug<'a, T> {
     }
 }
 
-pub trait TryDefaultDefault<U> {
+pub trait TryDefaultFallback<U> {
     fn default() -> Option<U>;
 }
 
-impl<T, U> TryDefaultDefault<U> for T {
+impl<T, U> TryDefaultFallback<U> for T {
     fn default() -> Option<U> {
         None
     }
