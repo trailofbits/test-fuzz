@@ -513,15 +513,16 @@ fn check_dependency_version(
 ) -> Result<()> {
     if let Some(dependency_version) = dependency_version {
         ensure!(
-            as_version_req(&dependency_version).matches(&install_version),
-            "`{}` depends on `{} {}`, which does not match `{} {}`.",
+            as_version_req(&dependency_version).matches(&install_version)
+                || as_version_req(&install_version).matches(&dependency_version),
+            "`{}` depends on `{} {}`, which is incompatible with `{} {}`.",
             name,
             dependency,
             dependency_version,
             install,
             install_version
         );
-        if !as_version_req(&install_version).matches(&dependency_version) {
+        if !as_version_req(&dependency_version).matches(&install_version) {
             eprintln!(
                 "`{}` depends on `{} {}`, which is newer than `{} {}`. Consider upgrading with \
                 `cargo install {} --force --version '>={}'`.",
