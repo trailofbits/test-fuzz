@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-dirs"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 edition = "2018"
 
 description = "test-fuzz-dirs"

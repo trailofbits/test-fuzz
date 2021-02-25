@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 edition = "2018"
 
 description = "To make fuzzing Rust easy"
@@ -12,8 +12,8 @@ repository = "https://github.com/smoelius/test-fuzz"
 [dependencies]
 afl = "=0.10.0"
 
-runtime = { path = "./runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.9" }
-test-fuzz-macro = { path = "./macro", version = "=0.1.0-alpha.9" }
+runtime = { path = "./runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.10" }
+test-fuzz-macro = { path = "./macro", version = "=0.1.0-alpha.10" }
 
 [dev-dependencies]
 cargo_metadata = "0.12.3"
