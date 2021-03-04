@@ -25,9 +25,8 @@ fn display(target: &str, stdout: &str, stderr: &str) {
         .assert()
         .success();
 
-    let mut command = Command::cargo_bin("cargo-test-fuzz").unwrap();
-
-    command
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
         .current_dir(TEST_DIR)
         .args(&["test-fuzz", "--target", target, "--display-corpus"])
         .assert()
