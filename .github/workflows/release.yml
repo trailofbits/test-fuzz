@@ -24,7 +24,7 @@ jobs:
           for X in dirs runtime macro . cargo-test-fuzz; do
             # smoelius: Continue if a previous publish attempt failed.
             TMP="$(mktemp)"
-            cargo publish --manifest-path "$X"/Cargo.toml 2>"$TMP" 1>/dev/null || (
+            cargo publish --manifest-path "$X"/Cargo.toml 2>"$TMP" || (
               cat "$TMP" |
               tee /dev/stderr |
               tail -n 1 |
