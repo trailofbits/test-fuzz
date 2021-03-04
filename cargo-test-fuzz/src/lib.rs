@@ -26,7 +26,7 @@ use subprocess::{Exec, NullFile, Redirection};
 
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
-const BASE_ENV: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
+const BASE_ENVS: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
 
 #[derive(Clap, Debug)]
 struct Opts {
@@ -609,18 +609,18 @@ fn for_each_entry(
     replay: bool,
     dir: &Path,
 ) -> Result<()> {
-    let mut env = BASE_ENV.to_vec();
+    let mut envs = BASE_ENVS.to_vec();
     if display {
-        env.extend(&[("TEST_FUZZ_DISPLAY", "1")]);
+        envs.push(("TEST_FUZZ_DISPLAY", "1"));
     }
     if replay {
-        env.extend(&[("TEST_FUZZ_REPLAY", "1")]);
+        envs.push(("TEST_FUZZ_REPLAY", "1"));
     }
     if opts.backtrace {
-        env.extend(&[("RUST_BACKTRACE", "1")]);
+        envs.push(("RUST_BACKTRACE", "1"));
     }
     if opts.pretty_print {
-        env.extend(&[("TEST_FUZZ_PRETTY_PRINT", "1")]);
+        envs.push(("TEST_FUZZ_PRETTY_PRINT", "1"));
     }
 
     let args: Vec<String> = vec![
@@ -650,7 +650,7 @@ fn for_each_entry(
         }
 
         let exec = Exec::cmd(&executable.path)
-            .env_extend(&env)
+            .env_extend(&envs)
             .args(&args)
             .stdin(file)
             .stdout(NullFile)
@@ -726,12 +726,12 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
 
     let mut command = Command::new("cargo");
 
-    let mut env = BASE_ENV.to_vec();
+    let mut envs = BASE_ENVS.to_vec();
     if opts.no_ui {
-        env.extend(&[("AFL_NO_UI", "1")]);
+        envs.push(("AFL_NO_UI", "1"));
     }
     if opts.run_until_crash {
-        env.extend(&[("AFL_BENCH_UNTIL_CRASH", "1")]);
+        envs.push(("AFL_BENCH_UNTIL_CRASH", "1"));
     }
 
     let mut args = vec![];
@@ -761,7 +761,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         .map(String::from),
     );
 
-    command.envs(env).args(args);
+    command.envs(envs).args(args);
 
     let status = command.status()?;
 
