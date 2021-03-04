@@ -3,6 +3,24 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install llvm
+      run: sudo apt-get install llvm
+
+    - name: Format
+      run: cargo fmt && git diff --exit-code
+
+    - name: Lint
+      run: |
+        rustup update
+        rustup component add clippy
+        cargo clippy --workspace --tests -- -D warnings
+
   test:
     runs-on: ubuntu-latest
 
@@ -53,7 +71,7 @@ jobs:
     - name: Install afl
       run: cargo install afl
 
-    - name: Edit versions
+    - name: Downgrade test-fuzz version
       run: |
         sed -i 's/^\(version = "[^.]*\)\.[^.]*\.\([^"]*"\)$/\1.0.\2/' Cargo.toml
         sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\)\.[^.]*\.\([^"]*".*}\)$/\1.0.\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
@@ -79,7 +97,7 @@ jobs:
     - name: Install afl
       run: cargo install afl
 
-    - name: Edit versions
+    - name: Upgrade test-fuzz version
       run: |
         sed -i 's/^\(version = "[^.]*\.[^.]*\)\.[^"]*\("\)$/\1.255\2/' Cargo.toml
         sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\.[^.]*\)\.[^"]*\(".*}\)$/\1.255\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
