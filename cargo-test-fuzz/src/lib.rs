@@ -777,15 +777,12 @@ mod tests {
     use super::cargo_test_fuzz as cargo;
     use anyhow::Result;
     use lazy_static::lazy_static;
-    use std::{env, io, path::PathBuf};
+    use std::{env, io};
 
     const TEST_DIR: &str = "../examples";
 
     lazy_static! {
         static ref INITIALIZE: io::Result<()> = {
-            let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-            let manifest_path = PathBuf::from(manifest_dir).join("Cargo.toml");
-            env::set_var("TEST_FUZZ_MANIFEST_PATH", &*manifest_path.to_string_lossy());
             // println!("{:?}", env::current_dir()?);
             env::set_current_dir(TEST_DIR)
         };
@@ -794,8 +791,7 @@ mod tests {
     #[test]
     fn build_no_instrumentation_with_target() {
         INITIALIZE.as_ref().unwrap();
-        let _ =
-            cargo_test_fuzz(&["--no-run", "--no-instrumentation", "--target", "target"]).unwrap();
+        cargo_test_fuzz(&["--no-run", "--no-instrumentation", "--target", "target"]).unwrap();
     }
 
     fn cargo_test_fuzz(args: &[&str]) -> Result<()> {
