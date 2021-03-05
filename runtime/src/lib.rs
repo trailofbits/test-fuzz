@@ -35,7 +35,7 @@ pub trait TryDebugFallback {
 
 impl<T> TryDebugFallback for T {
     fn apply<U>(&self, f: &mut dyn FnMut(&dyn Debug) -> U) -> U {
-        f(&DebugUnimplemented::<T>(PhantomData))
+        f(&DebugUnimplemented::<Self>(PhantomData))
     }
 }
 
@@ -108,7 +108,7 @@ pub fn write_data(corpus: &Path, data: &[u8]) -> io::Result<()> {
     create_dir_all(&corpus).unwrap_or_default();
     let hex = {
         let mut hasher = Sha1::new();
-        hasher.input(&data);
+        hasher.input(data);
         hasher.result_str()
     };
     let path = corpus.join(hex);
