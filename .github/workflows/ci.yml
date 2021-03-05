@@ -19,7 +19,7 @@ jobs:
       run: |
         rustup update
         rustup component add clippy
-        cargo clippy --workspace --tests -- -D warnings
+        ./scripts/clippy.sh
 
   test:
     runs-on: ubuntu-latest
