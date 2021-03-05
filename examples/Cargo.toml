@@ -4,9 +4,16 @@ version = "0.1.0-alpha.10"
 edition = "2018"
 publish = false
 
+[[bin]]
+name = "hello-world"
+path = "src/main.rs"
+
 [dependencies]
 serde = "1.0"
 test-fuzz = { path = "..", version = "=0.1.0-alpha.10" }
+
+[dev-dependencies]
+lazy_static = "1.4.0"
 
 [features]
 bar_fuzz = []

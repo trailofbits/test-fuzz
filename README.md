@@ -40,7 +40,7 @@ TODO
 
 ### Options
 
-* **`force`** - TODO
+* **`include_in_production`** - TODO
 
 * **`rename = "name"`** - TODO
 

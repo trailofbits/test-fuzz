@@ -142,7 +142,7 @@ fn map_method(
 #[derive(Clone, Debug, Default, FromMeta)]
 struct TestFuzzOpts {
     #[darling(default)]
-    force: bool,
+    include_in_production: bool,
     #[darling(default)]
     rename: Option<Ident>,
     #[darling(default)]
@@ -214,7 +214,7 @@ fn map_method_or_fn(
     let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
     let mod_ident = Ident::new(&format!("{}_fuzz", renamed_target_ident), Span::call_site());
 
-    let (forced_write_args, mod_attr) = if opts.force {
+    let (in_production_write_args, mod_attr) = if opts.include_in_production {
         (
             quote! {
                 #[cfg(not(test))]
@@ -337,7 +337,7 @@ fn map_method_or_fn(
                     ));
                 }
 
-                #forced_write_args
+                #in_production_write_args
 
                 #(#stmts)*
             }
@@ -531,8 +531,8 @@ fn opts_from_attr(attr: &Attribute) -> TestFuzzOpts {
 
 fn tokens_from_opts(opts: &TestFuzzOpts) -> TokenStream {
     let mut attrs = Punctuated::<TokenStream2, token::Comma>::default();
-    if opts.force {
-        attrs.push(quote! { force });
+    if opts.include_in_production {
+        attrs.push(quote! { include_in_production });
     }
     if let Some(rename) = &opts.rename {
         let rename_str = stringify(rename);
