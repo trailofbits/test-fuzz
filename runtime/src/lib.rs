@@ -52,6 +52,7 @@ pub trait TryDefaultFallback<U> {
 }
 
 impl<T, U> TryDefaultFallback<U> for T {
+    #[must_use]
     fn default() -> Option<U> {
         None
     }
@@ -60,31 +61,38 @@ impl<T, U> TryDefaultFallback<U> for T {
 pub struct TryDefault<'a, T>(pub &'a T);
 
 impl<'a, T: Default> TryDefault<'a, T> {
+    #[must_use]
     pub fn default() -> Option<T> {
         Some(T::default())
     }
 }
 
+#[must_use]
 pub fn test_fuzz_enabled() -> bool {
     enabled("")
 }
 
+#[must_use]
 pub fn display_enabled() -> bool {
     enabled("DISPLAY")
 }
 
+#[must_use]
 pub fn pretty_print_enabled() -> bool {
     enabled("PRETTY_PRINT")
 }
 
+#[must_use]
 pub fn replay_enabled() -> bool {
     enabled("REPLAY")
 }
 
+#[must_use]
 pub fn write_enabled() -> bool {
     enabled("WRITE")
 }
 
+#[must_use]
 fn enabled(opt: &str) -> bool {
     let key = "TEST_FUZZ".to_owned() + if opt.is_empty() { "" } else { "_" } + opt;
     env::var(key).map_or(false, |value| value != "0")
