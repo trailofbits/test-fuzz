@@ -127,12 +127,12 @@ impl Debug for Executable {
         let test_fuzz_version = self
             .test_fuzz_version
             .as_ref()
-            .map(|version| version.to_string())
+            .map(ToString::to_string)
             .unwrap_or_default();
         let afl_version = self
             .afl_version
             .as_ref()
-            .map(|version| version.to_string())
+            .map(ToString::to_string)
             .unwrap_or_default();
         fmt.debug_struct("Executable")
             .field("path", &self.path)
@@ -157,7 +157,7 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     let mut executable_targets = executable_targets(&executables)?;
 
     if let Some(pat) = &opts.target {
-        executable_targets = filter_executable_targets(&opts, &pat, &executable_targets);
+        executable_targets = filter_executable_targets(&opts, pat, &executable_targets);
     }
 
     check_test_fuzz_and_afl_versions(&executable_targets)?;
@@ -239,7 +239,7 @@ fn build(opts: &TestFuzz) -> Result<Vec<Executable>> {
         args.extend_from_slice(&["--target-dir", &target_dir_str]);
     }
     if let Some(package) = &opts.package {
-        args.extend_from_slice(&["--package", &package])
+        args.extend_from_slice(&["--package", package])
     }
     if opts.persistent {
         args.extend_from_slice(&["--features", "test-fuzz/persistent"]);
@@ -274,7 +274,7 @@ fn build(opts: &TestFuzz) -> Result<Vec<Executable>> {
             }) = message
             {
                 let (test_fuzz_version, afl_version) =
-                    test_fuzz_and_afl_versions(&metadata, package_id)?;
+                    test_fuzz_and_afl_versions(&metadata, &package_id)?;
                 Ok(Some(Executable {
                     path: executable,
                     name: build_target.name,
@@ -293,12 +293,12 @@ fn build(opts: &TestFuzz) -> Result<Vec<Executable>> {
 
 fn test_fuzz_and_afl_versions(
     metadata: &Metadata,
-    package_id: PackageId,
+    package_id: &PackageId,
 ) -> Result<(Option<Version>, Option<Version>)> {
-    let test_fuzz = package_dependency(metadata, &package_id, "test-fuzz")?;
+    let test_fuzz = package_dependency(metadata, package_id, "test-fuzz")?;
     let afl = test_fuzz
         .as_ref()
-        .map(|package_id| package_dependency(metadata, &package_id, "afl"))
+        .map(|package_id| package_dependency(metadata, package_id, "afl"))
         .transpose()?
         .flatten();
     let test_fuzz_version = test_fuzz
@@ -513,8 +513,8 @@ fn check_dependency_version(
 ) -> Result<()> {
     if let Some(dependency_version) = dependency_version {
         ensure!(
-            as_version_req(&dependency_version).matches(&install_version)
-                || as_version_req(&install_version).matches(&dependency_version),
+            as_version_req(dependency_version).matches(install_version)
+                || as_version_req(install_version).matches(dependency_version),
             "`{}` depends on `{} {}`, which is incompatible with `{} {}`.",
             name,
             dependency,
@@ -522,7 +522,7 @@ fn check_dependency_version(
             install,
             install_version
         );
-        if !as_version_req(&dependency_version).matches(&install_version) {
+        if !as_version_req(dependency_version).matches(install_version) {
             eprintln!(
                 "`{}` depends on `{} {}`, which is newer than `{} {}`. Consider upgrading with \
                 `cargo install {} --force --version '>={}'`.",
@@ -557,13 +557,13 @@ fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]
             let crashes_dir = crashes_directory_from_target(&executable.name, target);
             let queue_dir = queue_directory_from_target(&executable.name, target);
 
-            for dir in [crashes_dir, queue_dir].iter() {
+            for dir in &[crashes_dir, queue_dir] {
                 for entry in read_dir(dir)? {
                     let entry = entry?;
                     let path = entry.path();
                     let file_name = path
                         .file_name()
-                        .map(|s| s.to_string_lossy())
+                        .map(OsStr::to_string_lossy)
                         .unwrap_or_default();
 
                     if file_name == "README.txt" || file_name == ".state" {
@@ -642,7 +642,7 @@ fn for_each_entry(
         let file = File::open(&path)?;
         let file_name = path
             .file_name()
-            .map(|s| s.to_string_lossy())
+            .map(OsStr::to_string_lossy)
             .unwrap_or_default();
 
         if file_name == "README.txt" || file_name == ".state" {
