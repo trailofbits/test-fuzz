@@ -238,7 +238,7 @@ mod newtype_variant {
 
     impl Default for NewtypeVariant {
         fn default() -> Self {
-            NewtypeVariant::N(u8::default())
+            Self::N(u8::default())
         }
     }
 
@@ -364,7 +364,7 @@ mod tuple_variant {
 
     impl Default for TupleVariant {
         fn default() -> Self {
-            TupleVariant::T(u8::default(), u8::default())
+            Self::T(u8::default(), u8::default())
         }
     }
 
@@ -447,7 +447,7 @@ mod struct_variant {
 
     impl Default for StructVariant {
         fn default() -> Self {
-            StructVariant::S {
+            Self::S {
                 r: u8::default(),
                 g: u8::default(),
                 b: u8::default(),
