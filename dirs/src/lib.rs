@@ -1,38 +1,46 @@
 use cargo_metadata::MetadataCommand;
 use std::{any::type_name, env, path::PathBuf};
 
+#[must_use]
 pub fn corpus_directory_from_args_type<T>() -> PathBuf {
     corpus_directory().join(path_from_args_type::<T>())
 }
 
+#[must_use]
 pub fn corpus_directory_from_target(krate: &str, target: &str) -> PathBuf {
     corpus_directory().join(path_from_target(krate, target))
 }
 
+#[must_use]
 pub fn crashes_directory_from_target(krate: &str, target: &str) -> PathBuf {
     output_directory_from_target(krate, target)
         .join("default")
         .join("crashes")
 }
 
+#[must_use]
 pub fn queue_directory_from_target(krate: &str, target: &str) -> PathBuf {
     output_directory_from_target(krate, target)
         .join("default")
         .join("queue")
 }
 
+#[must_use]
 pub fn output_directory_from_target(krate: &str, target: &str) -> PathBuf {
     output_directory().join(path_from_target(krate, target))
 }
 
+#[must_use]
 fn corpus_directory() -> PathBuf {
     target_directory(false).join("corpus")
 }
 
+#[must_use]
 fn output_directory() -> PathBuf {
     target_directory(true).join("output")
 }
 
+#[must_use]
 pub fn target_directory(instrumented: bool) -> PathBuf {
     let mut command = MetadataCommand::new();
     if let Ok(path) = env::var("TEST_FUZZ_MANIFEST_PATH") {
@@ -45,6 +53,7 @@ pub fn target_directory(instrumented: bool) -> PathBuf {
     target_dir
 }
 
+#[must_use]
 fn path_from_args_type<T>() -> String {
     type_name::<T>()
         .strip_suffix("_fuzz::Args")
@@ -52,6 +61,7 @@ fn path_from_args_type<T>() -> String {
         .to_owned()
 }
 
+#[must_use]
 fn path_from_target(krate: &str, target: &str) -> String {
     krate.replace("-", "_") + "::" + target
 }
