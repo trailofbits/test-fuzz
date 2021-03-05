@@ -2,7 +2,7 @@ use assert_cmd::prelude::*;
 use dirs::corpus_directory_from_target;
 use std::{fs::read_dir, process::Command};
 
-const TEST_DIR: &str = "../examples";
+const TEST_DIR: &str = "./examples";
 
 #[test]
 fn test_no_default() {
@@ -21,7 +21,7 @@ fn test(target: &str, n: usize) {
         .assert()
         .success();
 
-    let dir = corpus_directory_from_target("default", &(target.to_owned() + "::target"));
+    let corpus = corpus_directory_from_target("default", &(target.to_owned() + "::target"));
 
-    assert_eq!(read_dir(dir).unwrap().count(), n);
+    assert_eq!(read_dir(corpus).unwrap().count(), n);
 }
