@@ -7,7 +7,7 @@ fn consume<T>(_: T) {}
 
 mod primitive {
     #[test_fuzz::test_fuzz]
-    pub fn target(
+    fn target(
         bool: bool,
         i8: i8,
         i16: i16,

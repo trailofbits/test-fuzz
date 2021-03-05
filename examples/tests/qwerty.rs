@@ -1,6 +1,6 @@
 mod qwerty {
     #[test_fuzz::test_fuzz]
-    pub fn target(data: &str) {
+    fn target(data: &str) {
         assert!(
             !(data.len() == 6
                 && data.as_bytes()[0] == b'q'
