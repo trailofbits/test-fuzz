@@ -20,5 +20,4 @@ syn = { version = "1.0.60", features = ["full", "visit-mut"] }
 unzip-n = "0.1.2"
 
 [features]
-logging = []
 persistent = []

@@ -25,7 +25,6 @@ semver = "0.11.0"
 
 [features]
 default = []
-logging = ["test-fuzz-macro/logging"]
 persistent = ["test-fuzz-macro/persistent"]
 
 [workspace]

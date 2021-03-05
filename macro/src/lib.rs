@@ -561,7 +561,11 @@ fn is_test_fuzz(attr: &Attribute) -> bool {
 }
 
 fn log(tokens: &TokenStream2) {
-    if cfg!(feature = "logging") {
+    if log_enabled() {
         println!("{}", tokens);
     }
+}
+
+fn log_enabled() -> bool {
+    option_env!("TEST_FUZZ_LOG").map_or(false, |value| value != "0")
 }

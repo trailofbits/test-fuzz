@@ -106,8 +106,6 @@ TODO
 
 ### Features
 
-* **`logging`** - TODO
-
 * **`persistent`** - TODO
 
 ## Limitations
