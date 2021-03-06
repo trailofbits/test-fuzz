@@ -50,7 +50,7 @@ pub fn target_directory(instrumented: bool) -> PathBuf {
     if instrumented {
         target_dir = target_dir.join("afl");
     }
-    target_dir
+    target_dir.into()
 }
 
 #[must_use]
