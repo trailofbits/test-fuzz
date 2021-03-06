@@ -55,10 +55,8 @@ pub fn target_directory(instrumented: bool) -> PathBuf {
 
 #[must_use]
 fn path_from_args_type<T>() -> String {
-    type_name::<T>()
-        .strip_suffix("_fuzz::Args")
-        .unwrap()
-        .to_owned()
+    let type_name = type_name::<T>();
+    type_name[..type_name.find("_fuzz::write_args::Args").unwrap()].to_owned()
 }
 
 #[must_use]

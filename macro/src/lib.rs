@@ -1,13 +1,15 @@
+#![allow(clippy::default_trait_access)]
+
 use darling::FromMeta;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
-use std::convert::identity;
+use std::{convert::identity, str::FromStr};
 use syn::{
-    parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute, AttributeArgs, Block,
-    Expr, FnArg, GenericArgument, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod,
-    LitStr, Pat, Path, PathArguments, PathSegment, ReturnType, Signature, Stmt, Type, TypePath,
-    TypeReference, Visibility,
+    parse::Parser, parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute,
+    AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericMethodArgument, GenericParam,
+    Generics, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Pat, Path, PathArguments,
+    PathSegment, ReturnType, Signature, Stmt, Type, TypePath, TypeReference, Visibility,
 };
 use unzip_n::unzip_n;
 
@@ -40,7 +42,7 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
         (Some(path.clone()), Some(quote! { #bang #path #for_ }))
     });
 
-    let (impl_items, modules) = map_impl_items(&trait_path, &*self_ty, &items);
+    let (impl_items, modules) = map_impl_items(&generics, &trait_path, &*self_ty, &items);
 
     let result = quote! {
         #(#attrs)* #defaultness #unsafety #impl_token #generics #trait_ #self_ty {
@@ -54,11 +56,14 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 fn map_impl_items(
+    generics: &Generics,
     trait_path: &Option<Path>,
     self_ty: &Type,
     items: &[ImplItem],
 ) -> (Vec<ImplItem>, Vec<ItemMod>) {
-    let impl_items_modules = items.iter().map(map_impl_item(&trait_path, self_ty));
+    let impl_items_modules = items
+        .iter()
+        .map(map_impl_item(generics, trait_path, self_ty));
 
     let (impl_items, modules): (Vec<_>, Vec<_>) = impl_items_modules.unzip();
 
@@ -68,29 +73,16 @@ fn map_impl_items(
 }
 
 fn map_impl_item(
+    generics: &Generics,
     trait_path: &Option<Path>,
     self_ty: &Type,
 ) -> impl Fn(&ImplItem) -> (ImplItem, Option<ItemMod>) {
+    let generics = generics.clone();
     let trait_path = trait_path.clone();
     let self_ty = self_ty.clone();
     move |impl_item| {
         if let ImplItem::Method(method) = &impl_item {
-            method
-                .attrs
-                .iter()
-                .find_map(|attr| {
-                    if is_test_fuzz(attr) {
-                        Some(map_method(
-                            &trait_path,
-                            &self_ty,
-                            &opts_from_attr(attr),
-                            method,
-                        ))
-                    } else {
-                        None
-                    }
-                })
-                .unwrap_or((impl_item.clone(), None))
+            map_method(&generics, &trait_path, &self_ty, method)
         } else {
             (impl_item.clone(), None)
         }
@@ -98,9 +90,9 @@ fn map_impl_item(
 }
 
 fn map_method(
+    generics: &Generics,
     trait_path: &Option<Path>,
     self_ty: &Type,
-    opts: &TestFuzzOpts,
     method: &ImplItemMethod,
 ) -> (ImplItem, Option<ItemMod>) {
     let ImplItemMethod {
@@ -111,34 +103,28 @@ fn map_method(
         block,
     } = &method;
 
-    let attrs = attrs
-        .iter()
-        .map(|attr| {
-            let mut attr = attr.clone();
-            if is_test_fuzz(&attr) {
-                let mut opts = opts_from_attr(&attr);
-                opts.skip = true;
-                attr.tokens = tokens_from_opts(&opts).into();
-            }
-            attr
-        })
-        .collect();
+    let mut attrs = attrs.clone();
 
-    let (method, module) = map_method_or_fn(
-        trait_path,
-        &Some(self_ty.clone()),
-        &opts,
-        &attrs,
-        vis,
-        defaultness,
-        sig,
-        block,
-    );
-
-    (parse_quote!( #method ), module)
+    if let Some(i) = attrs.iter().position(is_test_fuzz) {
+        let attr = attrs.remove(i);
+        let opts = opts_from_attr(&attr);
+        let (method, module) = map_method_or_fn(
+            &generics.clone(),
+            trait_path,
+            &Some(self_ty.clone()),
+            &opts,
+            &attrs,
+            vis,
+            defaultness,
+            sig,
+            block,
+        );
+        (parse_quote!( #method ), module)
+    } else {
+        (parse_quote!( #method ), None)
+    }
 }
 
-// smoelius: Additions to TestFuzzOpts must also be reflected in tokens_from_opts.
 #[derive(Clone, Debug, Default, FromMeta)]
 struct TestFuzzOpts {
     #[darling(default)]
@@ -147,6 +133,10 @@ struct TestFuzzOpts {
     rename: Option<Ident>,
     #[darling(default)]
     skip: bool,
+    #[darling(default)]
+    specialize: Option<String>,
+    #[darling(default)]
+    specialize_impl: Option<String>,
 }
 
 #[proc_macro_attribute]
@@ -161,7 +151,17 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
         sig,
         block,
     } = &item;
-    let (item, module) = map_method_or_fn(&None, &None, &opts, attrs, vis, &None, sig, block);
+    let (item, module) = map_method_or_fn(
+        &Generics::default(),
+        &None,
+        &None,
+        &opts,
+        attrs,
+        vis,
+        &None,
+        sig,
+        block,
+    );
     let result = quote! {
         #item
         #module
@@ -170,8 +170,13 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
     result.into()
 }
 
-#[allow(clippy::ptr_arg, clippy::too_many_arguments)]
+#[allow(
+    clippy::ptr_arg,
+    clippy::too_many_arguments,
+    clippy::trivially_copy_pass_by_ref
+)]
 fn map_method_or_fn(
+    generics: &Generics,
     trait_path: &Option<Path>,
     self_ty: &Option<Type>,
     opts: &TestFuzzOpts,
@@ -182,6 +187,14 @@ fn map_method_or_fn(
     block: &Block,
 ) -> (TokenStream2, Option<ItemMod>) {
     let stmts = &block.stmts;
+    let opts_specialize = opts
+        .specialize
+        .as_ref()
+        .map(|s| parse_generic_method_arguments(s));
+    let opts_specialize_impl = opts
+        .specialize_impl
+        .as_ref()
+        .map(|s| parse_generic_method_arguments(s));
     if opts.skip {
         return (
             parse_quote! {
@@ -193,7 +206,29 @@ fn map_method_or_fn(
         );
     }
 
-    let (receiver, arg_tys, fmt_args, ser_args, de_args) = map_args(self_ty, sig);
+    let combined_generics = combine_generics(generics, &sig.generics);
+    let combined_generics_deserializable = restrict_to_deserialize(&combined_generics);
+
+    let (impl_generics, ty_generics, where_clause) = combined_generics.split_for_impl();
+    let (impl_generics_deserializable, _, _) = combined_generics_deserializable.split_for_impl();
+    let ty_generics_as_turbofish = ty_generics.as_turbofish();
+
+    let target_specialization = opts_specialize.as_ref().map(args_as_turbofish);
+    let combined_specialization =
+        combine_options(opts_specialize_impl, opts_specialize, |mut left, right| {
+            left.extend(right);
+            left
+        })
+        .as_ref()
+        .map(args_as_turbofish);
+
+    let (receiver, arg_tys, fmt_args, ser_args, de_args) = map_args(self_ty, sig.inputs.iter());
+    let args_is: Vec<TokenStream2> = (0..sig.inputs.len())
+        .map(|i| {
+            let i = Literal::usize_unsuffixed(i);
+            quote! { args . #i }
+        })
+        .collect();
     let pub_arg_tys: Vec<TokenStream2> = arg_tys.iter().map(|ty| quote! { pub #ty }).collect();
     let def_args: Vec<Expr> = arg_tys
         .iter()
@@ -205,7 +240,7 @@ fn map_method_or_fn(
         .collect();
     let ret_ty = match &sig.output {
         ReturnType::Type(_, ty) => self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
-            util::expand_self(&self_ty, &trait_path, ty)
+            util::expand_self(self_ty, trait_path, ty)
         }),
         ReturnType::Default => parse_quote! { () },
     };
@@ -219,7 +254,7 @@ fn map_method_or_fn(
             quote! {
                 #[cfg(not(test))]
                 if test_fuzz::runtime::write_enabled() {
-                    test_fuzz::runtime::write_args(&#mod_ident::Args(
+                    #mod_ident :: write_args(#mod_ident :: Args(
                         #(#ser_args),*
                     ));
                 }
@@ -239,7 +274,7 @@ fn map_method_or_fn(
         quote! {}
         #[cfg(not(feature = "persistent"))]
         quote! {
-            let mut args = test_fuzz::runtime::read_args::<Args, _>(std::io::stdin());
+            let mut args = UsingReader::<_>::read_args #combined_specialization (std::io::stdin());
         }
     };
     let output_args = {
@@ -263,19 +298,19 @@ fn map_method_or_fn(
             .next()
             .expect("should have at least one deserialized argument");
         parse_quote! {
-            #self_arg . #target_ident(
+            #self_arg . #target_ident #target_specialization (
                 #(#de_args),*
             )
         }
     } else if let Some(self_ty) = self_ty {
         parse_quote! {
-            #self_ty :: #target_ident(
+            #self_ty :: #target_ident #target_specialization (
                 #(#de_args),*
             )
         }
     } else {
         parse_quote! {
-            super :: #target_ident(
+            super :: #target_ident #target_specialization (
                 #(#de_args),*
             )
         }
@@ -284,7 +319,7 @@ fn map_method_or_fn(
         #[cfg(feature = "persistent")]
         quote! {
             test_fuzz::afl::fuzz!(|data: &[u8]| {
-                let mut args = test_fuzz::runtime::read_args::<Args, _>(data);
+                let mut args = UsingReader::<_>::read_args #combined_specialization (data);
                 let ret = args.map(|mut args|
                     #call
                 );
@@ -332,7 +367,7 @@ fn map_method_or_fn(
             #(#attrs)* #vis #defaultness #sig {
                 #[cfg(test)]
                 if !test_fuzz::runtime::test_fuzz_enabled() {
-                    test_fuzz::runtime::write_args(&#mod_ident::Args(
+                    #mod_ident :: write_args(#mod_ident :: Args(
                         #(#ser_args),*
                     ));
                 }
@@ -347,12 +382,37 @@ fn map_method_or_fn(
             mod #mod_ident {
                 use super::*;
 
-                #[derive(serde::Deserialize, serde::Serialize)]
-                pub(super) struct Args(
+                pub(super) struct Args #ty_generics (
                     #(#pub_arg_tys),*
                 );
 
-                impl std::fmt::Debug for Args {
+                pub(super) fn write_args #impl_generics (args: Args #ty_generics_as_turbofish) #where_clause {
+                    #[derive(serde::Serialize)]
+                    struct Args #ty_generics (
+                        #(#pub_arg_tys),*
+                    );
+                    let args = Args(
+                        #(#args_is),*
+                    );
+                    test_fuzz::runtime::write_args(&args);
+                }
+
+                struct UsingReader<R>(R);
+
+                impl<R: std::io::Read> UsingReader<R> {
+                    pub fn read_args #impl_generics_deserializable (reader: R) -> Option<Args #ty_generics_as_turbofish> #where_clause {
+                        #[derive(serde::Deserialize)]
+                        struct Args #ty_generics (
+                            #(#pub_arg_tys),*
+                        );
+                        let args = test_fuzz::runtime::read_args::<Args #ty_generics_as_turbofish, _>(reader);
+                        args.map(|args| #mod_ident :: Args(
+                            #(#args_is),*
+                        ))
+                    }
+                }
+
+                impl #impl_generics std::fmt::Debug for Args #ty_generics #where_clause {
                     fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                         use test_fuzz::runtime::TryDebugFallback;
                         let mut debug_struct = fmt.debug_struct("Args");
@@ -361,17 +421,25 @@ fn map_method_or_fn(
                     }
                 }
 
+                impl #impl_generics Args #ty_generics #where_clause {
+                    fn write_default() {
+                        if !test_fuzz::runtime::test_fuzz_enabled() {
+                            use test_fuzz::runtime::TryDefaultFallback;
+                            // smoelius: `def_args` contains `?`, which is why the code is written
+                            // this way.
+                            let args = (|| -> Option< #mod_ident :: Args #ty_generics_as_turbofish> {
+                                Some(#mod_ident::Args(
+                                    #(#def_args),*
+                                ))
+                            })();
+                            args.map(|args| write_args(args));
+                        }
+                    }
+                }
+
                 #[test]
                 fn default() {
-                    if !test_fuzz::runtime::test_fuzz_enabled() {
-                        use test_fuzz::runtime::TryDefaultFallback;
-                        let args = (|| -> Option<#mod_ident::Args> {
-                            Some(#mod_ident::Args(
-                                #(#def_args),*
-                            ))
-                        })();
-                        args.map(|args| test_fuzz::runtime::write_args(&args));
-                    }
+                    Args #combined_specialization :: write_default();
                 }
 
                 #[test]
@@ -403,18 +471,17 @@ fn map_method_or_fn(
     )
 }
 
-fn map_args(
+fn map_args<'a, I>(
     self_ty: &Option<Type>,
-    sig: &Signature,
-) -> (bool, Vec<Type>, Vec<Stmt>, Vec<Expr>, Vec<Expr>) {
+    inputs: I,
+) -> (bool, Vec<Type>, Vec<Stmt>, Vec<Expr>, Vec<Expr>)
+where
+    I: Iterator<Item = &'a FnArg>,
+{
     unzip_n!(5);
 
-    let (receiver, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = sig
-        .inputs
-        .iter()
-        .enumerate()
-        .map(map_arg(self_ty))
-        .unzip_n();
+    let (receiver, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) =
+        inputs.enumerate().map(map_arg(self_ty)).unzip_n();
 
     let receiver = receiver.first().map_or(false, |&x| x);
 
@@ -455,8 +522,7 @@ fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, S
                 );
                 match ty {
                     Type::Path(path) => map_arc_arg(&i, pat, path)
-                        .map(|(ty, ser, de)| (false, ty, fmt, ser, de))
-                        .unwrap_or(default),
+                        .map_or(default, |(ty, ser, de)| (false, ty, fmt, ser, de)),
                     Type::Reference(ty) => {
                         let (ty, ser, de) = map_ref_arg(&i, pat, ty);
                         (false, ty, fmt, ser, de)
@@ -529,35 +595,69 @@ fn opts_from_attr(attr: &Attribute) -> TestFuzzOpts {
         })
 }
 
-fn tokens_from_opts(opts: &TestFuzzOpts) -> TokenStream {
-    let mut attrs = Punctuated::<TokenStream2, token::Comma>::default();
-    if opts.include_in_production {
-        attrs.push(quote! { include_in_production });
-    }
-    if let Some(rename) = &opts.rename {
-        let rename_str = stringify(rename);
-        attrs.push(quote! { rename = #rename_str });
-    }
-    if opts.skip {
-        attrs.push(quote! { skip });
-    }
-    (quote! {
-        (
-            #attrs
-        )
-    })
-    .into()
-}
-
-fn stringify(ident: &Ident) -> LitStr {
-    LitStr::new(ident.to_string().as_str(), Span::call_site())
-}
-
 fn is_test_fuzz(attr: &Attribute) -> bool {
     attr.path
         .segments
         .iter()
         .all(|PathSegment { ident, .. }| ident == "test_fuzz")
+}
+
+fn parse_generic_method_arguments(s: &str) -> Punctuated<GenericMethodArgument, token::Comma> {
+    let tokens = TokenStream::from_str(s).unwrap();
+    Parser::parse(Punctuated::<Type, token::Comma>::parse_terminated, tokens)
+        .unwrap()
+        .into_iter()
+        .map(GenericMethodArgument::Type)
+        .collect()
+}
+
+fn combine_generics(left: &Generics, right: &Generics) -> Generics {
+    let mut generics = left.clone();
+    generics.params.extend(right.params.clone());
+    generics.where_clause = combine_options(
+        generics.where_clause,
+        right.where_clause.clone(),
+        |mut left, right| {
+            left.predicates.extend(right.predicates);
+            left
+        },
+    );
+    generics
+}
+
+// smoelius: Is there a better name for this operation? The closest thing I've found is the `<|>`
+// operation in Haskell's `Alternative` class (thanks, @incertia):
+// https://en.wikibooks.org/wiki/Haskell/Alternative_and_MonadPlus
+// ... (<|>) is a binary function which combines two computations.
+//                                      ^^^^^^^^
+
+fn combine_options<T, F>(x: Option<T>, y: Option<T>, f: F) -> Option<T>
+where
+    F: FnOnce(T, T) -> T,
+{
+    match (x, y) {
+        (Some(x), Some(y)) => Some(f(x, y)),
+        (x, None) => x,
+        (None, y) => y,
+    }
+}
+
+fn restrict_to_deserialize(generics: &Generics) -> Generics {
+    let mut generics = generics.clone();
+    generics.params.iter_mut().for_each(|param| {
+        if let GenericParam::Type(ty_param) = param {
+            ty_param
+                .bounds
+                .push(parse_quote! { serde::de::DeserializeOwned });
+        }
+    });
+    generics
+}
+
+fn args_as_turbofish(args: &Punctuated<GenericMethodArgument, token::Comma>) -> TokenStream2 {
+    quote! {
+        ::<#args>
+    }
 }
 
 fn log(tokens: &TokenStream2) {
