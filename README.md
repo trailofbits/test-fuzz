@@ -46,6 +46,10 @@ TODO
 
 * **`skip`** - TODO
 
+* **`specialize = "arguments"`** - TODO
+
+* **`specialize_impl = "arguments"`** - TODO
+
 ## `test_fuzz_impl` attribute
 
 TODO
@@ -108,12 +112,20 @@ TODO
 
 * **`persistent`** - TODO
 
+## Environment Variables
+
+* **`TEST_FUZZ_LOG`** - TODO
+
+* **`TEST_FUZZ_MANIFEST_PATH`** - TODO
+
+* **`TEST_FUZZ_WRITE`** - TODO
+
+TODO
+
 ## Limitations
 
 * **Clonable arguments** - TODO
 
-* **Seralizable arguments** - TODO
+* **Serializable arguments** - TODO
 
 * **Global variables** - TODO
-
-* **Type parameters** - TODO
