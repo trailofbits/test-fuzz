@@ -40,7 +40,7 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
         (Some(path.clone()), Some(quote! { #bang #path #for_ }))
     });
 
-    let (impl_items, modules) = map_impl_items(&*self_ty, &trait_path, &items);
+    let (impl_items, modules) = map_impl_items(&trait_path, &*self_ty, &items);
 
     let result = quote! {
         #(#attrs)* #defaultness #unsafety #impl_token #generics #trait_ #self_ty {
@@ -54,11 +54,11 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 fn map_impl_items(
-    self_ty: &Type,
     trait_path: &Option<Path>,
+    self_ty: &Type,
     items: &[ImplItem],
 ) -> (Vec<ImplItem>, Vec<ItemMod>) {
-    let impl_items_modules = items.iter().map(map_impl_item(self_ty, &trait_path));
+    let impl_items_modules = items.iter().map(map_impl_item(&trait_path, self_ty));
 
     let (impl_items, modules): (Vec<_>, Vec<_>) = impl_items_modules.unzip();
 
@@ -68,11 +68,11 @@ fn map_impl_items(
 }
 
 fn map_impl_item(
-    self_ty: &Type,
     trait_path: &Option<Path>,
+    self_ty: &Type,
 ) -> impl Fn(&ImplItem) -> (ImplItem, Option<ItemMod>) {
-    let self_ty = self_ty.clone();
     let trait_path = trait_path.clone();
+    let self_ty = self_ty.clone();
     move |impl_item| {
         if let ImplItem::Method(method) = &impl_item {
             method
@@ -81,8 +81,8 @@ fn map_impl_item(
                 .find_map(|attr| {
                     if is_test_fuzz(attr) {
                         Some(map_method(
-                            &self_ty,
                             &trait_path,
+                            &self_ty,
                             &opts_from_attr(attr),
                             method,
                         ))
@@ -98,8 +98,8 @@ fn map_impl_item(
 }
 
 fn map_method(
-    self_ty: &Type,
     trait_path: &Option<Path>,
+    self_ty: &Type,
     opts: &TestFuzzOpts,
     method: &ImplItemMethod,
 ) -> (ImplItem, Option<ItemMod>) {
@@ -125,8 +125,8 @@ fn map_method(
         .collect();
 
     let (method, module) = map_method_or_fn(
-        &Some(self_ty.clone()),
         trait_path,
+        &Some(self_ty.clone()),
         &opts,
         &attrs,
         vis,
@@ -172,8 +172,8 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
 
 #[allow(clippy::ptr_arg, clippy::too_many_arguments)]
 fn map_method_or_fn(
-    self_ty: &Option<Type>,
     trait_path: &Option<Path>,
+    self_ty: &Option<Type>,
     opts: &TestFuzzOpts,
     attrs: &Vec<Attribute>,
     vis: &Visibility,
