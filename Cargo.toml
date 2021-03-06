@@ -17,7 +17,7 @@ runtime = { path = "./runtime", package = "test-fuzz-runtime", version = "=0.1.0
 test-fuzz-macro = { path = "./macro", version = "=0.1.0-alpha.10" }
 
 [dev-dependencies]
-assert_cmd = "1.0.2"
+assert_cmd = "1.0.3"
 cargo_metadata = "0.13.1"
 dirs = { path = "./dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.10" }
 lazy_static = "1.4.0"

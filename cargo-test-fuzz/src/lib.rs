@@ -276,7 +276,7 @@ fn build(opts: &TestFuzz) -> Result<Vec<Executable>> {
                 let (test_fuzz_version, afl_version) =
                     test_fuzz_and_afl_versions(&metadata, &package_id)?;
                 Ok(Some(Executable {
-                    path: executable,
+                    path: executable.into(),
                     name: build_target.name,
                     test_fuzz_version,
                     afl_version,

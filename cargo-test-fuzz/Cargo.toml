@@ -15,9 +15,9 @@ path = "src/bin/cargo_test_fuzz.rs"
 
 [dependencies]
 anyhow = "1.0.38"
-cargo_metadata = "0.12.3"
+cargo_metadata = "0.13.1"
 clap = "3.0.0-beta.2"
-env_logger = "0.8.2"
+env_logger = "0.8.3"
 log = "0.4.14"
 semver = "0.11.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -27,8 +27,8 @@ dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.1
 test-fuzz = { path = "..", version = "=0.1.0-alpha.10" }
 
 [dev-dependencies]
-assert_cmd = "1.0.2"
+assert_cmd = "1.0.3"
 lazy_static = "1.4.0"
-predicates = "1.0.6"
+predicates = "1.0.7"
 regex = "1.4.3"
 rlimit = "0.4.0"
