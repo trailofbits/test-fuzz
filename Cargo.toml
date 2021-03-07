@@ -1,25 +1,25 @@
 [package]
 name = "test-fuzz"
-version = "0.1.0-alpha.11"
+version = "0.1.0-alpha.12"
 edition = "2018"
 
 description = "To make fuzzing Rust easy"
 
 authors = ["Samuel E. Moelius III <sam@moeli.us>"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/smoelius/test-fuzz"
+repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
 afl = "=0.10.0"
 serde = "1.0"
 
-runtime = { path = "./runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.11" }
-test-fuzz-macro = { path = "./macro", version = "=0.1.0-alpha.11" }
+runtime = { path = "./runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.12" }
+test-fuzz-macro = { path = "./macro", version = "=0.1.0-alpha.12" }
 
 [dev-dependencies]
 assert_cmd = "1.0.3"
 cargo_metadata = "0.13.1"
-dirs = { path = "./dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.11" }
+dirs = { path = "./dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.12" }
 lazy_static = "1.4.0"
 semver = "0.11.0"
 
