@@ -4,7 +4,6 @@ use semver::Version;
 
 lazy_static! {
     static ref METADATA: Metadata = MetadataCommand::new().no_deps().exec().unwrap();
-    static ref CRATE_VERSION: &'static str = env!("CARGO_PKG_VERSION");
 }
 
 #[test]
@@ -12,7 +11,7 @@ fn check_versions_are_equal() {
     for package in &METADATA.packages {
         assert_eq!(
             package.version.to_string(),
-            *CRATE_VERSION,
+            env!("CARGO_PKG_VERSION"),
             "{}",
             package.name
         );
@@ -31,11 +30,11 @@ fn check_versions_are_exact_and_match() {
                     dep
                 );
                 assert!(
-                    req.matches(&Version::parse(*CRATE_VERSION).unwrap()),
+                    req.matches(&Version::parse(env!("CARGO_PKG_VERSION")).unwrap()),
                     "`{}` dependency on `{}` does not match `{}`",
                     package.name,
                     dep,
-                    *CRATE_VERSION,
+                    env!("CARGO_PKG_VERSION"),
                 );
             }
         }
