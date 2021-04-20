@@ -14,7 +14,7 @@ name = "cargo-test-fuzz"
 path = "src/bin/cargo_test_fuzz.rs"
 
 [dependencies]
-anyhow = "1.0.38"
+anyhow = "1.0.40"
 cargo_metadata = "0.13.1"
 clap = "3.0.0-beta.2"
 env_logger = "0.8.3"
@@ -30,5 +30,5 @@ test-fuzz = { path = "..", version = "=0.1.0-alpha.12" }
 assert_cmd = "1.0.3"
 lazy_static = "1.4.0"
 predicates = "1.0.7"
-regex = "1.4.3"
-rlimit = "0.4.0"
+regex = "1.4.5"
+rlimit = "0.5.4"

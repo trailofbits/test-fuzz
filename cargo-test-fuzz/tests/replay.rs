@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
 use regex::Regex;
-use rlimit::Resource;
+use rlimit::{Resource, Rlim};
 use std::process::Command;
 
 const TEST_DIR: &str = "../examples";
@@ -39,7 +39,9 @@ fn replay() {
         .assert()
         .success();
 
-    Resource::DATA.set(MEMORY_LIMIT, MEMORY_LIMIT).unwrap();
+    Resource::DATA
+        .set(Rlim::from_raw(MEMORY_LIMIT), Rlim::from_raw(MEMORY_LIMIT))
+        .unwrap();
 
     let mut command = Command::cargo_bin("cargo-test-fuzz").unwrap();
 
