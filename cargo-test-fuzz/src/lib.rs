@@ -246,7 +246,12 @@ fn build(opts: &TestFuzz) -> Result<Vec<Executable>> {
     }
     args.extend_from_slice(&["--message-format=json"]);
 
-    let exec = Exec::cmd("cargo").args(&args).stdout(Redirection::Pipe);
+    // smoelius: Suppress "Warning: AFL++ tools will need to set AFL_MAP_SIZE..." Setting
+    // `AFL_QUIET=1` doesn't work here, so pipe standard error to /dev/null.
+    let exec = Exec::cmd("cargo")
+        .args(&args)
+        .stdout(Redirection::Pipe)
+        .stderr(NullFile);
     debug!("{:?}", exec);
     let mut popen = exec.clone().popen()?;
     let messages = popen
@@ -371,7 +376,9 @@ fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec
 }
 
 fn targets(executable: &Path) -> Result<Vec<String>> {
-    let exec = Exec::cmd(executable).args(&["--list"]);
+    let exec = Exec::cmd(executable)
+        .env_extend(&[("AFL_QUIET", "1")])
+        .args(&["--list"]);
     debug!("{:?}", exec);
     let stream = exec.stream_stdout()?;
 
@@ -610,6 +617,7 @@ fn for_each_entry(
     dir: &Path,
 ) -> Result<()> {
     let mut envs = BASE_ENVS.to_vec();
+    envs.push(("AFL_QUIET", "1"));
     if display {
         envs.push(("TEST_FUZZ_DISPLAY", "1"));
     }
