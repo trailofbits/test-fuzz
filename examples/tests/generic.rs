@@ -1,4 +1,4 @@
-#![allow(clippy::clippy::clippy::blacklisted_name)]
+#![allow(clippy::blacklisted_name)]
 
 mod generic {
     use lazy_static::lazy_static;
