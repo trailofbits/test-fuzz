@@ -8,8 +8,8 @@ use cargo_metadata::{
 };
 use clap::{crate_version, Clap};
 use dirs::{
-    corpus_directory_from_target, crashes_directory_from_target, output_directory_from_target,
-    queue_directory_from_target, target_directory,
+    corpus_directory_from_target, crashes_directory_from_target, hangs_directory_from_target,
+    output_directory_from_target, queue_directory_from_target, target_directory,
 };
 use log::debug;
 use semver::{Version, VersionReq};
@@ -18,15 +18,20 @@ use std::{
     ffi::OsStr,
     fmt::{Debug, Formatter},
     fs::{create_dir_all, read, read_dir, remove_dir_all, File},
-    io::{BufRead, BufReader, Read},
+    io::{BufRead, BufReader},
     path::{Path, PathBuf},
     process::Command,
+    time::Duration,
 };
-use subprocess::{Exec, NullFile, Redirection};
+use subprocess::{CommunicateError, Exec, NullFile, Redirection};
 
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
 const BASE_ENVS: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
+
+const DEFAULT_TIMEOUT: u64 = 1000;
+
+const NANOS_PER_MILLI: u64 = 1_000_000;
 
 #[derive(Clap, Debug)]
 struct Opts {
@@ -47,8 +52,8 @@ struct TestFuzz {
     backtrace: bool,
     #[clap(
         long,
-        about = "Move one target's crashes and work queue to its corpus; to consolidate all \
-        targets, use --consolidate-all"
+        about = "Move one target's crashes, hangs, and work queue to its corpus; to consolidate \
+        all targets, use --consolidate-all"
     )]
     consolidate: bool,
     #[clap(long, hidden = true)]
@@ -63,6 +68,8 @@ struct TestFuzz {
     display_corpus_instrumented: bool,
     #[clap(long, about = "Display crashes")]
     display_crashes: bool,
+    #[clap(long, about = "Display hangs")]
+    display_hangs: bool,
     #[clap(long, about = "Display work queue")]
     display_queue: bool,
     #[clap(long, about = "Target name is an exact name rather than a substring")]
@@ -96,6 +103,8 @@ struct TestFuzz {
     replay_corpus_instrumented: bool,
     #[clap(long, about = "Replay crashes")]
     replay_crashes: bool,
+    #[clap(long, about = "Replay hangs")]
+    replay_hangs: bool,
     #[clap(long, about = "Replay work queue")]
     replay_queue: bool,
     #[clap(
@@ -110,6 +119,12 @@ struct TestFuzz {
     run_until_crash: bool,
     #[clap(long, about = "String that fuzz target's name must contain")]
     target: Option<String>,
+    #[clap(
+        long,
+        about = "Number of milliseconds to consider a hang when fuzzing or replaying (equivalent \
+        to `-- -t <timeout>` when fuzzing)"
+    )]
+    timeout: Option<u64>,
     #[clap(last = true, about = "Arguments for the fuzzer")]
     args: Vec<String>,
 }
@@ -190,11 +205,13 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     let display = opts.display_corpus
         || opts.display_corpus_instrumented
         || opts.display_crashes
+        || opts.display_hangs
         || opts.display_queue;
 
     let replay = opts.replay_corpus
         || opts.replay_corpus_instrumented
         || opts.replay_crashes
+        || opts.replay_hangs
         || opts.replay_queue;
 
     let dir = if opts.display_corpus
@@ -205,6 +222,8 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         corpus_directory_from_target(&executable.name, &target)
     } else if opts.display_crashes || opts.replay_crashes {
         crashes_directory_from_target(&executable.name, &target)
+    } else if opts.display_hangs || opts.replay_hangs {
+        hangs_directory_from_target(&executable.name, &target)
     } else if opts.display_queue || opts.replay_queue {
         queue_directory_from_target(&executable.name, &target)
     } else {
@@ -562,9 +581,10 @@ fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]
         for target in targets {
             let corpus_dir = corpus_directory_from_target(&executable.name, target);
             let crashes_dir = crashes_directory_from_target(&executable.name, target);
+            let hangs_dir = hangs_directory_from_target(&executable.name, target);
             let queue_dir = queue_directory_from_target(&executable.name, target);
 
-            for dir in &[crashes_dir, queue_dir] {
+            for dir in &[crashes_dir, hangs_dir, queue_dir] {
                 for entry in read_dir(dir)? {
                     let entry = entry?;
                     let path = entry.path();
@@ -642,6 +662,7 @@ fn for_each_entry(
 
     let mut nonempty = false;
     let mut failure = false;
+    let mut timeout = false;
     let mut output = false;
 
     for entry in read_dir(dir)? {
@@ -665,36 +686,49 @@ fn for_each_entry(
             .stderr(Redirection::Pipe);
         debug!("{:?}", exec);
         let mut popen = exec.popen()?;
-        let buffer = popen
-            .stderr
-            .as_mut()
-            .map_or(Ok(vec![]), |stream| -> Result<_> {
-                let mut buffer = Vec::new();
-                stream.read_to_end(&mut buffer)?;
-                Ok(buffer)
-            })?;
-        let status = popen.wait()?;
+        let millis = opts.timeout.unwrap_or(DEFAULT_TIMEOUT);
+        let time = Duration::from_millis(millis);
+        let mut communicator = popen.communicate_start(None).limit_time(time);
+        let (buffer, status) = match communicator.read() {
+            Ok((_, buffer)) => {
+                let status = popen.wait()?;
+                (buffer.unwrap_or_default(), Some(status))
+            }
+            Err(CommunicateError {
+                error,
+                capture: (_, buffer),
+            }) => {
+                popen.kill()?;
+                if error.kind() != std::io::ErrorKind::TimedOut {
+                    return Err(anyhow!(error));
+                }
+                let _ = popen.wait()?;
+                (buffer.unwrap_or_default(), None)
+            }
+        };
 
         print!("{}: ", file_name);
-        buffer.last().map_or_else(
-            || {
+        if let Some(last) = buffer.last() {
+            print!("{}", String::from_utf8_lossy(&buffer));
+            if last != &b'\n' {
+                println!();
+            }
+            output = true;
+        }
+        if let Some(status) = status {
+            if buffer.is_empty() {
                 println!("{:?}", status);
-            },
-            |last| {
-                print!("{}", String::from_utf8_lossy(&buffer));
-                if last != &b'\n' {
-                    println!();
-                }
-                output = true;
-            },
-        );
-
-        failure |= !status.success();
+            }
+            failure |= !status.success();
+        } else {
+            println!("Timeout");
+            timeout = true;
+        }
 
         nonempty = true;
     }
 
-    assert!(!(!nonempty && (failure || output)));
+    assert!(!(!nonempty && (failure || timeout || output)));
 
     if !nonempty {
         eprintln!(
@@ -709,14 +743,21 @@ fn for_each_entry(
         return Ok(());
     }
 
-    if !failure && !output {
+    if !failure && !timeout && !output {
         eprintln!("No output on stderr detected.");
         return Ok(());
     }
 
-    if failure && !replay {
+    if (failure || timeout) && !replay {
         eprintln!(
-            "Encountered a failure while not replaying. A buggy Debug implementation perhaps?"
+            "Encountered a {} while not replaying. A buggy Debug implementation perhaps?",
+            if failure {
+                "failure"
+            } else if timeout {
+                "timeout"
+            } else {
+                unreachable!()
+            }
         );
         return Ok(());
     }
@@ -757,6 +798,12 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         .into_iter()
         .map(String::from),
     );
+    if let Some(timeout) = opts.timeout {
+        args.extend(vec![
+            "-t".to_owned(),
+            format!("{}", timeout * NANOS_PER_MILLI),
+        ]);
+    }
     args.extend(opts.args.clone());
     args.extend(
         vec![

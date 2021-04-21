@@ -1,44 +1,77 @@
 use assert_cmd::prelude::*;
+use dirs::corpus_directory_from_target;
 use regex::Regex;
 use rlimit::{Resource, Rlim};
-use std::process::Command;
+use std::{fs::remove_dir_all, process::Command};
 
 const TEST_DIR: &str = "../examples";
 
 // smoelius: MEMORY_LIMIT must be large enough for the build process to complete.
 const MEMORY_LIMIT: u64 = 1024 * 1024 * 1024;
 
+const TIMEOUT: &str = "120";
+
+enum What {
+    CRASHES,
+    HANGS,
+}
+
 #[test]
-fn replay() {
-    Command::new("cargo")
-        .current_dir(TEST_DIR)
-        .args(&["test", "--", "--test", "alloc"])
-        .assert()
-        .success();
-
-    Command::cargo_bin("cargo-test-fuzz")
-        .unwrap()
-        .current_dir(TEST_DIR)
-        .args(&["test-fuzz", "--target", "alloc", "--reset"])
-        .assert()
-        .success();
-
-    Command::cargo_bin("cargo-test-fuzz")
-        .unwrap()
-        .current_dir(TEST_DIR)
-        .args(&[
-            "test-fuzz",
-            "--target",
-            "alloc",
-            "--no-ui",
+fn replay_crashes() {
+    replay(
+        "alloc",
+        "alloc::target",
+        &[
             "--run-until-crash",
             "--",
             "-m",
             &format!("{}", MEMORY_LIMIT / 1024),
-        ])
+        ],
+        What::CRASHES,
+        &Regex::new(r"memory allocation of \d{10,} bytes failed\n").unwrap(),
+    )
+}
+
+#[test]
+fn replay_hangs() {
+    replay(
+        "parse_duration",
+        "parse_duration::parse",
+        &["--persistent", "--", "-V", TIMEOUT],
+        What::HANGS,
+        &Regex::new(r"Timeout\n").unwrap(),
+    )
+}
+
+fn replay(name: &str, target: &str, fuzz_args: &[&str], what: What, re: &Regex) {
+    let corpus = corpus_directory_from_target(name, target);
+
+    remove_dir_all(&corpus).unwrap_or_default();
+
+    Command::new("cargo")
+        .current_dir(TEST_DIR)
+        .args(&["test", "--", "--test", name])
         .assert()
         .success();
 
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
+        .current_dir(TEST_DIR)
+        .args(&["test-fuzz", "--target", target, "--reset"])
+        .assert()
+        .success();
+
+    let mut args = vec!["test-fuzz", "--target", target, "--no-ui"];
+    args.extend_from_slice(fuzz_args);
+
+    Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
+        .current_dir(TEST_DIR)
+        .args(args)
+        .assert()
+        .success();
+
+    // smoelius: The memory limit must be set to replay the crashes, but not the hangs.
     Resource::DATA
         .set(Rlim::from_raw(MEMORY_LIMIT), Rlim::from_raw(MEMORY_LIMIT))
         .unwrap();
@@ -47,13 +80,19 @@ fn replay() {
 
     command
         .current_dir(TEST_DIR)
-        .args(&["test-fuzz", "--target", "alloc", "--replay-crashes"])
+        .args(&[
+            "test-fuzz",
+            "--target",
+            target,
+            match what {
+                What::CRASHES => "--replay-crashes",
+                What::HANGS => "--replay-hangs",
+            },
+        ])
         .assert()
         .success();
 
-    assert!(Regex::new(r"memory allocation of \d{10,} bytes failed\n")
-        .unwrap()
-        .is_match(&String::from_utf8_lossy(
-            &command.assert().get_output().stdout
-        )));
+    assert!(re.is_match(&String::from_utf8_lossy(
+        &command.assert().get_output().stdout
+    )));
 }

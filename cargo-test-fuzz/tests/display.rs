@@ -10,11 +10,20 @@ fn display_qwerty() {
 }
 
 #[test]
-fn display_debug() {
+fn display_debug_crash() {
     display(
-        "debug",
+        "debug_crash",
         "",
         "Encountered a failure while not replaying. A buggy Debug implementation perhaps?",
+    )
+}
+
+#[test]
+fn display_debug_hang() {
+    display(
+        "debug_hang",
+        "",
+        "Encountered a timeout while not replaying. A buggy Debug implementation perhaps?",
     )
 }
 
