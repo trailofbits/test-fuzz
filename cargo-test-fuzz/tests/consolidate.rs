@@ -6,19 +6,27 @@ use std::{
 };
 
 const TEST_DIR: &str = "../examples";
-const CRATE: &str = "assert";
+const NAME: &str = "assert";
 const TARGET: &str = "assert::target";
 const TIMEOUT: &str = "60";
 
 #[test]
 fn consolidate() {
-    let corpus = corpus_directory_from_target(CRATE, TARGET);
+    let corpus = corpus_directory_from_target(NAME, TARGET);
 
     remove_dir_all(&corpus).unwrap_or_default();
 
+    // smoelius: Do not run additional tests (e.g., the default tests), so that at most one corpus
+    // entry is produced.
     Command::new("cargo")
         .current_dir(TEST_DIR)
-        .args(&["test", "--", "--test", TARGET])
+        .args(&[
+            "test",
+            "--",
+            "--exact",
+            "--test",
+            &format!("{}::test", NAME),
+        ])
         .assert()
         .success();
 
