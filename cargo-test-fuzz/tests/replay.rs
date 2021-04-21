@@ -12,8 +12,8 @@ const MEMORY_LIMIT: u64 = 1024 * 1024 * 1024;
 const TIMEOUT: &str = "120";
 
 enum What {
-    CRASHES,
-    HANGS,
+    Crashes,
+    Hangs,
 }
 
 #[test]
@@ -27,23 +27,24 @@ fn replay_crashes() {
             "-m",
             &format!("{}", MEMORY_LIMIT / 1024),
         ],
-        What::CRASHES,
+        &What::Crashes,
         &Regex::new(r"memory allocation of \d{10,} bytes failed\n").unwrap(),
     )
 }
 
+#[allow(clippy::trivial_regex)]
 #[test]
 fn replay_hangs() {
     replay(
         "parse_duration",
         "parse_duration::parse",
         &["--persistent", "--", "-V", TIMEOUT],
-        What::HANGS,
+        &What::Hangs,
         &Regex::new(r"Timeout\n").unwrap(),
     )
 }
 
-fn replay(name: &str, target: &str, fuzz_args: &[&str], what: What, re: &Regex) {
+fn replay(name: &str, target: &str, fuzz_args: &[&str], what: &What, re: &Regex) {
     let corpus = corpus_directory_from_target(name, target);
 
     remove_dir_all(&corpus).unwrap_or_default();
@@ -85,8 +86,8 @@ fn replay(name: &str, target: &str, fuzz_args: &[&str], what: What, re: &Regex) 
             "--target",
             target,
             match what {
-                What::CRASHES => "--replay-crashes",
-                What::HANGS => "--replay-hangs",
+                What::Crashes => "--replay-crashes",
+                What::Hangs => "--replay-hangs",
             },
         ])
         .assert()

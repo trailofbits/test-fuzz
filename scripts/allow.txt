@@ -3,5 +3,6 @@ clippy::cognitive_complexity
 clippy::if_not_else
 clippy::missing_const_for_fn
 clippy::missing_errors_doc
+clippy::missing_panics_doc
 clippy::struct_excessive_bools
 clippy::too_many_lines
