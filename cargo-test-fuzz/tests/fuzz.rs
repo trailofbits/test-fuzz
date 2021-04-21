@@ -9,22 +9,22 @@ const TIMEOUT: &str = "60";
 
 #[test]
 fn fuzz_assert() {
-    fuzz("assert", "assert", false)
+    fuzz("assert", false)
 }
 
 #[test]
 fn fuzz_qwerty() {
-    fuzz("qwerty", "qwerty", true)
+    fuzz("qwerty", true)
 }
 
-fn fuzz(krate: &str, target: &str, persistent: bool) {
-    let corpus = corpus_directory_from_target(krate, &(target.to_owned() + "::target"));
+fn fuzz(name: &str, persistent: bool) {
+    let corpus = corpus_directory_from_target(name, &format!("{}::target", name));
 
     remove_dir_all(&corpus).unwrap_or_default();
 
     Command::new("cargo")
         .current_dir(TEST_DIR)
-        .args(&["test", "--", "--test", target])
+        .args(&["test", "--", "--test", name])
         .assert()
         .success();
 
@@ -33,7 +33,7 @@ fn fuzz(krate: &str, target: &str, persistent: bool) {
     let mut args = vec![
         "test-fuzz",
         "--target",
-        target,
+        name,
         "--no-ui",
         "--run-until-crash",
     ];

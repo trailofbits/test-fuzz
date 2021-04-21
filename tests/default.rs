@@ -14,14 +14,14 @@ fn test_default() {
     test("default", 2)
 }
 
-fn test(target: &str, n: usize) {
+fn test(name: &str, n: usize) {
     Command::new("cargo")
         .current_dir(TEST_DIR)
-        .args(&["test", "--", "--test", target])
+        .args(&["test", "--", "--test", name])
         .assert()
         .success();
 
-    let corpus = corpus_directory_from_target("default", &(target.to_owned() + "::target"));
+    let corpus = corpus_directory_from_target("default", &format!("{}::target", name));
 
     assert_eq!(read_dir(corpus).unwrap().count(), n);
 }

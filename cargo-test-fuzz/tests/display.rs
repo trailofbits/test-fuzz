@@ -18,17 +18,17 @@ fn display_debug() {
     )
 }
 
-fn display(target: &str, stdout: &str, stderr: &str) {
+fn display(name: &str, stdout: &str, stderr: &str) {
     Command::new("cargo")
         .current_dir(TEST_DIR)
-        .args(&["test", "--", "--test", target])
+        .args(&["test", "--", "--test", name])
         .assert()
         .success();
 
     Command::cargo_bin("cargo-test-fuzz")
         .unwrap()
         .current_dir(TEST_DIR)
-        .args(&["test-fuzz", "--target", target, "--display-corpus"])
+        .args(&["test-fuzz", "--target", name, "--display-corpus"])
         .assert()
         .success()
         .stdout(predicate::str::contains(stdout))

@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use predicates::prelude::*;
 use std::{fs::remove_dir_all, process::Command, sync::Mutex};
 
-const KRATE: &str = "generic";
+const NAME: &str = "generic";
 
 const TARGET: &str = "generic::target";
 
@@ -30,7 +30,7 @@ lazy_static! {
 fn fuzz(test: &str, timeout: bool) {
     let _guard = LOCK.lock().unwrap();
 
-    let corpus = corpus_directory_from_target(KRATE, TARGET);
+    let corpus = corpus_directory_from_target(NAME, TARGET);
 
     remove_dir_all(&corpus).unwrap_or_default();
 
@@ -41,7 +41,7 @@ fn fuzz(test: &str, timeout: bool) {
             "--",
             "--exact",
             "--test",
-            &(KRATE.to_owned() + "::" + test),
+            &format!("{}::{}", NAME, test),
         ])
         .assert()
         .success();
