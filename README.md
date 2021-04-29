@@ -34,7 +34,7 @@ Fuzzing with `test-fuzz` is essentially three easy steps:
         serde = "1.0"
         test-fuzz = "0.1.0-alpha"
         ```
-    - Precede the target function with the `test_fuzz` macro:
+    - Precede the target function with the [`test_fuzz`](#test_fuzz-macro) macro:
         ```rust
         #[test_fuzz::test_fuzz]
         fn foo(...) {
@@ -47,7 +47,7 @@ Fuzzing with `test-fuzz` is essentially three easy steps:
     $ cargo test
     ```
 
-3. **Fuzz your target** by running `cargo test-fuzz`:
+3. **Fuzz your target** by running [`cargo test-fuzz`](#cargo-test-fuzz-command):
     ```
     $ cargo test-fuzz --target foo
     ```
@@ -59,14 +59,14 @@ Fuzzing with `test-fuzz` is essentially three easy steps:
 Preceding a function with the `test_fuzz` macro indicates that the function is a fuzz target.
 
 The primary effects of the `test_fuzz` macro are:
-* Add instrumentation to the target to serialize its arguments and write them to a corpus file each time the target is called. The instrumentation is guarded by `#[cfg(test)]` so that corpus files are generated only when running tests (however, see `enable_in_production` below).
-* Add a test to read and deserialize arguments from standard input and apply the target to them. The test checks an environment variable, set by `cargo test-fuzz`, so that the test does not block trying to read from standard input during a normal invocation of `cargo test`. The test is enclosed in a module to reduce the likelihood of a name collision. Currently, the name of the module is `target_fuzz`, where `target` is the name of the target (however, see `rename` below).
+* Add instrumentation to the target to serialize its arguments and write them to a corpus file each time the target is called. The instrumentation is guarded by `#[cfg(test)]` so that corpus files are generated only when running tests (however, see [`enable_in_production`](#options) below).
+* Add a test to read and deserialize arguments from standard input and apply the target to them. The test checks an environment variable, set by [`cargo test-fuzz`](#cargo-test-fuzz-command), so that the test does not block trying to read from standard input during a normal invocation of `cargo test`. The test is enclosed in a module to reduce the likelihood of a name collision. Currently, the name of the module is `target_fuzz`, where `target` is the name of the target (however, see [`rename`](#options) below).
 
 #### Options
 
-* **`enable_in_production`** - Generate corpus files when not running tests, provided the environment variable `TEST_FUZZ_WRITE` is set. The default is to generate corpus files only when running tests, regardless of whether `TEST_FUZZ_WRITE` is set. When running a target from outside its package directory, set `TEST_FUZZ_MANIFEST_PATH` to the path of the package's `Cargo.toml` file.
+* **`enable_in_production`** - Generate corpus files when not running tests, provided the environment variable [`TEST_FUZZ_WRITE`](#environment-variables) is set. The default is to generate corpus files only when running tests, regardless of whether [`TEST_FUZZ_WRITE`](#environment-variables) is set. When running a target from outside its package directory, set [`TEST_FUZZ_MANIFEST_PATH`](#environment-variables) to the path of the package's `Cargo.toml` file.
 
-    **WARNING**: Setting `enable_in_production` could introduce a denial-of-service vector. For example, setting this option for a function that is called many times with different arguments could fill up the disk. The check of `TEST_FUZZ_WRITE` is meant to provide some defense against this possibility. Nonetheless, consider this option carefully before using it.
+    **WARNING**: Setting `enable_in_production` could introduce a denial-of-service vector. For example, setting this option for a function that is called many times with different arguments could fill up the disk. The check of [`TEST_FUZZ_WRITE`](#environment-variables) is meant to provide some defense against this possibility. Nonetheless, consider this option carefully before using it.
 
 * **`rename = "name"`** - Treat the target as though its name is `name` when adding a module to the enclosing scope. Expansion of the `test_fuzz` macro adds a module definition to the enclosing scope. Currently, the module is named `target_fuzz`, where `target` is the name of the target. Use of this option causes the module to instead be be named `name_fuzz`. Example:
     ```rust
@@ -102,7 +102,7 @@ The primary effects of the `test_fuzz` macro are:
 
 ### `test_fuzz_impl` macro
 
-Whenever the `test_fuzz` macro is used in an `impl` block,
+Whenever the [`test_fuzz`](#test_fuzz-macro) macro is used in an `impl` block,
 the `impl` must be preceded with the `test_fuzz_impl` macro. Example:
 
 ```rust
@@ -115,7 +115,7 @@ impl Foo {
 }
 ```
 
-The reason for this requirement is as follows. Expansion of the `test_fuzz` macro adds a module definition to the enclosing scope. However, a module definition cannot appear inside an `impl` block. Preceding the `impl` with the `test_fuzz_impl` macro causes the module to be added outside the `impl` block.
+The reason for this requirement is as follows. Expansion of the [`test_fuzz`](#test_fuzz-macro) macro adds a module definition to the enclosing scope. However, a module definition cannot appear inside an `impl` block. Preceding the `impl` with the `test_fuzz_impl` macro causes the module to be added outside the `impl` block.
 
 `test_fuzz_impl` currently has no options.
 
@@ -195,14 +195,14 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
 * **`TEST_FUZZ_LOG`** - During macro expansion, write instrumented fuzz targets and their associated module definitions to standard output. This can be useful for debugging.
 
-* **`TEST_FUZZ_MANIFEST_PATH`** - When running a target from outside its package directory, find the package's `Cargo.toml` file at this location. One may need to set this environment variable when `enable_in_production` is used.
+* **`TEST_FUZZ_MANIFEST_PATH`** - When running a target from outside its package directory, find the package's `Cargo.toml` file at this location. One may need to set this environment variable when [`enable_in_production`](#options) is used.
 
-* **`TEST_FUZZ_WRITE`** - Generate corpus files when not running tests for those targets for which `enable_in_production` is set. See `enable_in_production` above.
+* **`TEST_FUZZ_WRITE`** - Generate corpus files when not running tests for those targets for which [`enable_in_production`](#options) is set.
 
 ## Limitations
 
-* **Clonable arguments** - If an argument is passed by mutable reference to a target function, then the argument's type must implement the `Clone` trait. The reason for this requirement is that the argument is needed in two places: in a `test-fuzz`-internal function that writes corpus files, and in the body of the target function. To resolve this conflict, the argument is cloned before being passed to the former.
+* **Clonable arguments** - If an argument is passed by mutable reference to a target function, then the argument's type must implement the [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) trait. The reason for this requirement is that the argument is needed in two places: in a `test-fuzz`-internal function that writes corpus files, and in the body of the target function. To resolve this conflict, the argument is cloned before being passed to the former.
 
-* **Serializable / deserializable arguments** - In general, a target's arguments must implement the `serde::Deserialize` and `serde::Serialize` traits, e.g., by deriving them. We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable / deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also `specialize` and `specialize_impl` above.
+* **Serializable / deserializable arguments** - In general, a target's arguments must implement the [`serde::Deserialize`](https://docs.serde.rs/serde/trait.Deserialize.html) and [`serde::Serialize`](https://docs.serde.rs/serde/trait.Serialize.html) traits, e.g., by [deriving them](https://serde.rs/derive.html). We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable / deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`specialize` and `specialize_impl`](#options) above.
 
 * **Global variables** - The fuzzing harnesses that `test-fuzz` generates do not initialize global variables. No general purpose solution for this problem currently exists. So, to fuzz a function that relies on global variables using `test-fuzz`, ad-hoc methods must be used.
