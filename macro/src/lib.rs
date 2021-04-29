@@ -128,7 +128,7 @@ fn map_method(
 #[derive(Clone, Debug, Default, FromMeta)]
 struct TestFuzzOpts {
     #[darling(default)]
-    include_in_production: bool,
+    enable_in_production: bool,
     #[darling(default)]
     rename: Option<Ident>,
     #[darling(default)]
@@ -249,7 +249,7 @@ fn map_method_or_fn(
     let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
     let mod_ident = Ident::new(&format!("{}_fuzz", renamed_target_ident), Span::call_site());
 
-    let (in_production_write_args, mod_attr) = if opts.include_in_production {
+    let (in_production_write_args, mod_attr) = if opts.enable_in_production {
         (
             quote! {
                 #[cfg(not(test))]
