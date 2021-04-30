@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz"
-version = "0.1.0-alpha.12"
+version = "0.1.0-alpha.13"
 edition = "2018"
 
 description = "To make fuzzing Rust easy"
@@ -13,13 +13,13 @@ repository = "https://github.com/trailofbits/test-fuzz"
 afl = "=0.10.0"
 serde = "1.0"
 
-runtime = { path = "./runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.12" }
-test-fuzz-macro = { path = "./macro", version = "=0.1.0-alpha.12" }
+runtime = { path = "./runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.13" }
+test-fuzz-macro = { path = "./macro", version = "=0.1.0-alpha.13" }
 
 [dev-dependencies]
 assert_cmd = "1.0.3"
 cargo_metadata = "0.13.1"
-dirs = { path = "./dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.12" }
+dirs = { path = "./dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.13" }
 lazy_static = "1.4.0"
 semver = "0.11.0"
 

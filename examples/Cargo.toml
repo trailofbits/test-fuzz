@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-examples"
-version = "0.1.0-alpha.12"
+version = "0.1.0-alpha.13"
 edition = "2018"
 publish = false
 
@@ -10,7 +10,7 @@ path = "src/main.rs"
 
 [dependencies]
 serde = "1.0"
-test-fuzz = { path = "..", version = "=0.1.0-alpha.12" }
+test-fuzz = { path = "..", version = "=0.1.0-alpha.13" }
 
 [dev-dependencies]
 lazy_static = "1.4.0"
