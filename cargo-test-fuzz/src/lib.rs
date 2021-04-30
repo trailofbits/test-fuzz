@@ -167,7 +167,19 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         opts
     };
 
-    let executables = build(&opts)?;
+    let display = opts.display_corpus
+        || opts.display_corpus_instrumented
+        || opts.display_crashes
+        || opts.display_hangs
+        || opts.display_queue;
+
+    let replay = opts.replay_corpus
+        || opts.replay_corpus_instrumented
+        || opts.replay_crashes
+        || opts.replay_hangs
+        || opts.replay_queue;
+
+    let executables = build(&opts, display || replay)?;
 
     let mut executable_targets = executable_targets(&executables)?;
 
@@ -202,18 +214,6 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         return reset(&opts, &executable_targets);
     }
 
-    let display = opts.display_corpus
-        || opts.display_corpus_instrumented
-        || opts.display_crashes
-        || opts.display_hangs
-        || opts.display_queue;
-
-    let replay = opts.replay_corpus
-        || opts.replay_corpus_instrumented
-        || opts.replay_crashes
-        || opts.replay_hangs
-        || opts.replay_queue;
-
     let dir = if opts.display_corpus
         || opts.display_corpus_instrumented
         || opts.replay_corpus
@@ -242,7 +242,7 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     fuzz(&opts, &executable, &target)
 }
 
-fn build(opts: &TestFuzz) -> Result<Vec<Executable>> {
+fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     let metadata = MetadataCommand::new().exec()?;
 
     // smoelius: Put --message-format=json last so that it is easy to copy-and-paste the command
@@ -267,10 +267,12 @@ fn build(opts: &TestFuzz) -> Result<Vec<Executable>> {
 
     // smoelius: Suppress "Warning: AFL++ tools will need to set AFL_MAP_SIZE..." Setting
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to /dev/null.
-    let exec = Exec::cmd("cargo")
-        .args(&args)
-        .stdout(Redirection::Pipe)
-        .stderr(NullFile);
+    // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when
+    // displaying/replaying.
+    let mut exec = Exec::cmd("cargo").args(&args).stdout(Redirection::Pipe);
+    if quiet {
+        exec = exec.stderr(NullFile);
+    }
     debug!("{:?}", exec);
     let mut popen = exec.clone().popen()?;
     let messages = popen
