@@ -211,6 +211,19 @@ fn map_method_or_fn(
 
     let (impl_generics, ty_generics, where_clause) = combined_generics.split_for_impl();
     let (impl_generics_deserializable, _, _) = combined_generics_deserializable.split_for_impl();
+
+    // smoelius: "Constraints don’t count as 'using' a type parameter," as explained by Daniel Keep
+    // here: https://users.rust-lang.org/t/error-parameter-t-is-never-used-e0392-but-i-use-it/5673
+    // So, for each type parameter `T`, add a `PhantomData<T>` member to `Args` to ensure that `T`
+    // is used. See also: https://github.com/rust-lang/rust/issues/23246
+    let phantom_tys = ty_generic_phantom_tys(&combined_generics);
+    let phantoms: Vec<Expr> = phantom_tys
+        .iter()
+        .map(|_| {
+            parse_quote! { std::marker::PhantomData }
+        })
+        .collect();
+
     let ty_generics_as_turbofish = ty_generics.as_turbofish();
 
     let target_specialization = opts_specialize.as_ref().map(args_as_turbofish);
@@ -222,14 +235,19 @@ fn map_method_or_fn(
         .as_ref()
         .map(args_as_turbofish);
 
-    let (receiver, arg_tys, fmt_args, ser_args, de_args) = map_args(self_ty, sig.inputs.iter());
-    let args_is: Vec<TokenStream2> = (0..sig.inputs.len())
-        .map(|i| {
+    let (receiver, mut arg_tys, fmt_args, mut ser_args, de_args) =
+        map_args(self_ty, sig.inputs.iter());
+    arg_tys.extend_from_slice(&phantom_tys);
+    ser_args.extend_from_slice(&phantoms);
+    let pub_arg_tys: Vec<TokenStream2> = arg_tys.iter().map(|ty| quote! { pub #ty }).collect();
+    let args_is: Vec<Expr> = arg_tys
+        .iter()
+        .enumerate()
+        .map(|(i, _)| {
             let i = Literal::usize_unsuffixed(i);
-            quote! { args . #i }
+            parse_quote! { args . #i }
         })
         .collect();
-    let pub_arg_tys: Vec<TokenStream2> = arg_tys.iter().map(|ty| quote! { pub #ty }).collect();
     let def_args: Vec<Expr> = arg_tys
         .iter()
         .map(|ty| {
@@ -652,6 +670,21 @@ fn restrict_to_deserialize(generics: &Generics) -> Generics {
         }
     });
     generics
+}
+
+fn ty_generic_phantom_tys(generics: &Generics) -> Vec<Type> {
+    generics
+        .params
+        .iter()
+        .filter_map(|param| {
+            if let GenericParam::Type(ty_param) = param {
+                let ident = &ty_param.ident;
+                Some(parse_quote! { std::marker::PhantomData< #ident > })
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 fn args_as_turbofish(args: &Punctuated<GenericMethodArgument, token::Comma>) -> TokenStream2 {
