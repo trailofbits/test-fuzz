@@ -201,7 +201,7 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
 ## Limitations
 
-* **Clonable arguments** - If an argument is passed by mutable reference to a target function, then the argument's type must implement the [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) trait. The reason for this requirement is that the argument is needed in two places: in a `test-fuzz`-internal function that writes corpus files, and in the body of the target function. To resolve this conflict, the argument is cloned before being passed to the former.
+* **Clonable arguments** - If an argument is passed by reference to a target function, then the argument's type must implement the [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) trait. The reason for this requirement is that the referent is needed in two places: in a `test-fuzz`-internal function that writes corpus files, and in the body of the target function. To resolve this conflict, the argument is cloned before being passed to the former.
 
 * **Serializable / deserializable arguments** - In general, a target's arguments must implement the [`serde::Deserialize`](https://docs.serde.rs/serde/trait.Deserialize.html) and [`serde::Serialize`](https://docs.serde.rs/serde/trait.Serialize.html) traits, e.g., by [deriving them](https://serde.rs/derive.html). We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable / deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`specialize` and `specialize_impl`](#options) above.
 
