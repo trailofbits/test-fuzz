@@ -277,7 +277,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     let mut popen = exec.clone().popen()?;
     let messages = popen
         .stdout
-        .as_mut()
+        .take()
         .map_or(Ok(vec![]), |stream| -> Result<_> {
             let reader = BufReader::new(stream);
             let messages: Vec<Message> = Message::parse_stream(reader)
@@ -399,7 +399,8 @@ fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec
 fn targets(executable: &Path) -> Result<Vec<String>> {
     let exec = Exec::cmd(executable)
         .env_extend(&[("AFL_QUIET", "1")])
-        .args(&["--list"]);
+        .args(&["--list"])
+        .stderr(NullFile);
     debug!("{:?}", exec);
     let stream = exec.stream_stdout()?;
 
