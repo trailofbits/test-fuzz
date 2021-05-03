@@ -117,6 +117,11 @@ impl Foo {
 
 The reason for this requirement is as follows. Expansion of the [`test_fuzz`](#test_fuzz-macro) macro adds a module definition to the enclosing scope. However, a module definition cannot appear inside an `impl` block. Preceding the `impl` with the `test_fuzz_impl` macro causes the module to be added outside the `impl` block.
 
+If you see an error like the following, it likely means a use of the `test_fuzz_impl` macro is missing:
+```
+error: module is not supported in `trait`s or `impl`s
+```
+
 `test_fuzz_impl` currently has no options.
 
 ### `cargo test-fuzz` command
