@@ -17,6 +17,7 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
     * [`cargo test-fuzz` command](#cargo-test-fuzz-command)
 4. [Environment Variables](#environment-variables)
 5. [Limitations](#limitations)
+6. [Tips and Tricks](#tips-and-tricks)
 
 ## Installation
 
@@ -211,3 +212,9 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 * **Serializable / deserializable arguments** - In general, a target's arguments must implement the [`serde::Deserialize`](https://docs.serde.rs/serde/trait.Deserialize.html) and [`serde::Serialize`](https://docs.serde.rs/serde/trait.Serialize.html) traits, e.g., by [deriving them](https://serde.rs/derive.html). We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable / deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`specialize` and `specialize_impl`](#options) above.
 
 * **Global variables** - The fuzzing harnesses that `test-fuzz` generates do not initialize global variables. No general purpose solution for this problem currently exists. So, to fuzz a function that relies on global variables using `test-fuzz`, ad-hoc methods must be used.
+
+## Tips and tricks
+
+* `#[cfg(test)]` [is not enabled](https://github.com/rust-lang/rust/issues/45599#issuecomment-460488107) for integration tests. If your target is tested only by integration tests, then consider using [`enable_in_production`](#options) and [`TEST_FUZZ_WRITE`](#environment-variables) to generate a corpus. (Note the warning accompanying [`enable_in_production`](#options), however.)
+
+* Rust [won't allow you to](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types) implement `serde::Serializable` for other repositories' types. But you may be able to [patch](https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html) other repositories to make their types serializeble.
