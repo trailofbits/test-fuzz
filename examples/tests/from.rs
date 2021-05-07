@@ -13,7 +13,7 @@ struct Bar(Option<Foo>);
 impl From<Foo> for Bar {
     #[test_fuzz::test_fuzz]
     fn from(foo: Foo) -> Self {
-        Bar(Some(foo))
+        Self(Some(foo))
     }
 }
 
