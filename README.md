@@ -27,7 +27,7 @@ $ cargo install cargo-test-fuzz --version '>=0.1.0-alpha'
 
 ## Usage
 
-Fuzzing with `test-fuzz` is essentially three easy steps:
+Fuzzing with `test-fuzz` is essentially three steps:*
 
 1. **Identify a fuzz target**:
     - Add the following `dependencies` to the target crate's `Cargo.toml` file:
@@ -53,6 +53,22 @@ Fuzzing with `test-fuzz` is essentially three easy steps:
     $ cargo test-fuzz --target foo
     ```
 
+\* Some additional steps may be necessary following a reboot. AFL requires the following commands to be run as root:
+
+* Linux
+    ```sh
+    echo core >/proc/sys/kernel/core_pattern
+    cd /sys/devices/system/cpu
+    echo performance | tee cpu*/cpufreq/scaling_governor
+    ```
+
+* OSX
+    ```sh
+    SL=/System/Library; PL=com.apple.ReportCrash
+    launchctl unload -w ${SL}/LaunchAgents/${PL}.plist
+    sudo launchctl unload -w ${SL}/LaunchDaemons/${PL}.Root.plist
+    ```
+
 ## Components
 
 ### `test_fuzz` macro
@@ -74,7 +90,7 @@ The primary effects of the `test_fuzz` macro are:
     #[test_fuzz(rename = "bar")]
     fn foo() {}
 
-    // Without the use of `rename`, a name collision and compile error would result.
+    // Without the use of `rename`, a name collision and compile error would occur.
     mod foo_fuzz {}
     ```
 
@@ -207,9 +223,9 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
 ## Limitations
 
-* **Clonable arguments** - If an argument is passed by reference to a target function, then the argument's type must implement the [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) trait. The reason for this requirement is that the referent is needed in two places: in a `test-fuzz`-internal function that writes corpus files, and in the body of the target function. To resolve this conflict, the argument is cloned before being passed to the former.
+* **Clonable arguments** - A target's arguments must implement the [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) trait. The reason for this requirement is that the arguments are needed in two places: in a `test-fuzz`-internal function that writes corpus files, and in the body of the target function. To resolve this conflict, the arguments are cloned before being passed to the former.
 
-* **Serializable / deserializable arguments** - In general, a target's arguments must implement the [`serde::Deserialize`](https://docs.serde.rs/serde/trait.Deserialize.html) and [`serde::Serialize`](https://docs.serde.rs/serde/trait.Serialize.html) traits, e.g., by [deriving them](https://serde.rs/derive.html). We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable / deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`specialize` and `specialize_impl`](#options) above.
+* **Serializable / deserializable arguments** - In general, a target's arguments must implement the [`serde::Serialize`](https://docs.serde.rs/serde/trait.Serialize.html) and [`serde::Deserialize`](https://docs.serde.rs/serde/trait.Deserialize.html) traits, e.g., by [deriving them](https://serde.rs/derive.html). We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable / deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`specialize` and `specialize_impl`](#options) above.
 
 * **Global variables** - The fuzzing harnesses that `test-fuzz` generates do not initialize global variables. No general purpose solution for this problem currently exists. So, to fuzz a function that relies on global variables using `test-fuzz`, ad-hoc methods must be used.
 
@@ -217,4 +233,4 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
 * `#[cfg(test)]` [is not enabled](https://github.com/rust-lang/rust/issues/45599#issuecomment-460488107) for integration tests. If your target is tested only by integration tests, then consider using [`enable_in_production`](#options) and [`TEST_FUZZ_WRITE`](#environment-variables) to generate a corpus. (Note the warning accompanying [`enable_in_production`](#options), however.)
 
-* Rust [won't allow you to](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types) implement `serde::Serializable` for other repositories' types. But you may be able to [patch](https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html) other repositories to make their types serializeble.
+* Rust [won't allow you to](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types) implement `serde::Serializable` for other repositories' types. But you may be able to [patch](https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html) other repositories to make their types serializeble. Also, [`cargo-clone`](https://github.com/JanLikar/cargo-clone) can be useful for grabbing dependencies' repositories.
