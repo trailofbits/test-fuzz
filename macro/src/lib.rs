@@ -4,7 +4,7 @@ use darling::FromMeta;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
-use std::{convert::identity, str::FromStr};
+use std::str::FromStr;
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute,
     AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericMethodArgument, GenericParam,
@@ -67,7 +67,7 @@ fn map_impl_items(
 
     let (impl_items, modules): (Vec<_>, Vec<_>) = impl_items_modules.unzip();
 
-    let modules = modules.into_iter().filter_map(identity).collect();
+    let modules = modules.into_iter().flatten().collect();
 
     (impl_items, modules)
 }
