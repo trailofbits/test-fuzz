@@ -15,11 +15,22 @@ jobs:
     - name: Format
       run: cargo fmt && git diff --exit-code
 
+    - name: License
+      run: |
+        cargo install cargo-license
+        ./scripts/check_licenses.sh
+
     - name: Lint
       run: |
         rustup update
         rustup component add clippy
         ./scripts/clippy.sh
+
+    - name: Udeps
+      run: |
+        rustup toolchain install nightly
+        cargo install cargo-udeps
+        cargo +nightly udeps --workspace --tests
 
   test:
     runs-on: ubuntu-latest
