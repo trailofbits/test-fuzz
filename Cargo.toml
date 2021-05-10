@@ -21,6 +21,7 @@ assert_cmd = "1.0.3"
 cargo_metadata = "0.13.1"
 dirs = { path = "./dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.15" }
 lazy_static = "1.4.0"
+predicates = "1.0.8"
 semver = "0.11.0"
 
 [features]
