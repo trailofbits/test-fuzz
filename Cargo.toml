@@ -27,6 +27,9 @@ semver = "0.11.0"
 default = []
 persistent = ["test-fuzz-macro/persistent"]
 
+[package.metadata.cargo-udeps.ignore]
+normal = ["afl"]
+
 [workspace]
 members = [
     "cargo-test-fuzz",
