@@ -21,8 +21,8 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
 
 ## Installation
 
-```
-$ cargo install cargo-test-fuzz --version '>=0.1.0-alpha'
+```sh
+cargo install cargo-test-fuzz --version '>=0.1.0-alpha'
 ```
 
 ## Usage
