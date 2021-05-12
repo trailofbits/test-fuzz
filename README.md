@@ -81,6 +81,27 @@ The primary effects of the `test_fuzz` macro are:
 
 #### Options
 
+* **`concretize = "parameters"`** - Use `parameters` as the target's type parameters when fuzzing. Example:
+    ```rust
+    #[test_fuzz(concretize = "String")]
+    fn foo<T: Clone + Debug + Serialize>(x: &T) {
+        ...
+    }
+    ```
+    Note: The target's arguments must be serializable for **every** instantiation of its type parameters. But the target's arguments are required to be deserializable only when the target is instantiated with `parameters`.
+
+* **`concretize_impl = "parameters"`** - Use `parameters` as the target's `Self` type parameters when fuzzing. Example:
+    ```rust
+    #[test_fuzz_impl]
+    impl<T: Clone + Debug + Serialize> for Foo {
+        #[test_fuzz(concretize_impl = "String")]
+        fn bar(&self, x: &T) {
+            ...
+        }
+    }
+    ```
+    Note: The target's arguments must be serializable for **every** instantiation of its `Self` type parameters. But the target's arguments are required to be deserializable only when the target's `Self` is instantiated with `parameters`.
+
 * **`enable_in_production`** - Generate corpus files when not running tests, provided the environment variable [`TEST_FUZZ_WRITE`](#environment-variables) is set. The default is to generate corpus files only when running tests, regardless of whether [`TEST_FUZZ_WRITE`](#environment-variables) is set. When running a target from outside its package directory, set [`TEST_FUZZ_MANIFEST_PATH`](#environment-variables) to the path of the package's `Cargo.toml` file.
 
     **WARNING**: Setting `enable_in_production` could introduce a denial-of-service vector. For example, setting this option for a function that is called many times with different arguments could fill up the disk. The check of [`TEST_FUZZ_WRITE`](#environment-variables) is meant to provide some defense against this possibility. Nonetheless, consider this option carefully before using it.
@@ -95,27 +116,6 @@ The primary effects of the `test_fuzz` macro are:
     ```
 
 * **`skip`** - Disable the use of the `test_fuzz` macro in which `skip` appears.
-
-* **`specialize = "parameters"`** - Use `parameters` as the target's type parameters when fuzzing. Example:
-    ```rust
-    #[test_fuzz(specialize = "String")]
-    fn foo<T: Clone + Debug + Serialize>(x: &T) {
-        ...
-    }
-    ```
-    Note: The target's arguments must be serializable for **every** instantiation of its type parameters. But the target's arguments are required to be deserializable only when the target is instantiated with `parameters`.
-
-* **`specialize_impl = "parameters"`** - Use `parameters` as the target's `Self` type parameters when fuzzing. Example:
-    ```rust
-    #[test_fuzz_impl]
-    impl<T: Clone + Debug + Serialize> for Foo {
-        #[test_fuzz(specialize_impl = "String")]
-        fn bar(&self, x: &T) {
-            ...
-        }
-    }
-    ```
-    Note: The target's arguments must be serializable for **every** instantiation of its `Self` type parameters. But the target's arguments are required to be deserializable only when the target's `Self` is instantiated with `parameters`.
 
 ### `test_fuzz_impl` macro
 
@@ -225,7 +225,7 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
 * **Clonable arguments** - A target's arguments must implement the [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) trait. The reason for this requirement is that the arguments are needed in two places: in a `test-fuzz`-internal function that writes corpus files, and in the body of the target function. To resolve this conflict, the arguments are cloned before being passed to the former.
 
-* **Serializable / deserializable arguments** - In general, a target's arguments must implement the [`serde::Serialize`](https://docs.serde.rs/serde/trait.Serialize.html) and [`serde::Deserialize`](https://docs.serde.rs/serde/trait.Deserialize.html) traits, e.g., by [deriving them](https://serde.rs/derive.html). We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable / deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`specialize` and `specialize_impl`](#options) above.
+* **Serializable / deserializable arguments** - In general, a target's arguments must implement the [`serde::Serialize`](https://docs.serde.rs/serde/trait.Serialize.html) and [`serde::Deserialize`](https://docs.serde.rs/serde/trait.Deserialize.html) traits, e.g., by [deriving them](https://serde.rs/derive.html). We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable / deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`concretize` and `concretize_impl`](#options) above.
 
 * **Global variables** - The fuzzing harnesses that `test-fuzz` generates do not initialize global variables. No general purpose solution for this problem currently exists. So, to fuzz a function that relies on global variables using `test-fuzz`, ad-hoc methods must be used.
 

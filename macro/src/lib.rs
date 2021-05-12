@@ -128,15 +128,15 @@ fn map_method(
 #[derive(Clone, Debug, Default, FromMeta)]
 struct TestFuzzOpts {
     #[darling(default)]
+    concretize: Option<String>,
+    #[darling(default)]
+    concretize_impl: Option<String>,
+    #[darling(default)]
     enable_in_production: bool,
     #[darling(default)]
     rename: Option<Ident>,
     #[darling(default)]
     skip: bool,
-    #[darling(default)]
-    specialize: Option<String>,
-    #[darling(default)]
-    specialize_impl: Option<String>,
 }
 
 #[proc_macro_attribute]
@@ -187,12 +187,12 @@ fn map_method_or_fn(
     block: &Block,
 ) -> (TokenStream2, Option<ItemMod>) {
     let stmts = &block.stmts;
-    let opts_specialize = opts
-        .specialize
+    let opts_concretize = opts
+        .concretize
         .as_ref()
         .map(|s| parse_generic_method_arguments(s));
-    let opts_specialize_impl = opts
-        .specialize_impl
+    let opts_concretize_impl = opts
+        .concretize_impl
         .as_ref()
         .map(|s| parse_generic_method_arguments(s));
     if opts.skip {
@@ -226,9 +226,9 @@ fn map_method_or_fn(
 
     let ty_generics_as_turbofish = ty_generics.as_turbofish();
 
-    let target_specialization = opts_specialize.as_ref().map(args_as_turbofish);
-    let combined_specialization =
-        combine_options(opts_specialize_impl, opts_specialize, |mut left, right| {
+    let target_concretization = opts_concretize.as_ref().map(args_as_turbofish);
+    let combined_concretization =
+        combine_options(opts_concretize_impl, opts_concretize, |mut left, right| {
             left.extend(right);
             left
         })
@@ -292,7 +292,7 @@ fn map_method_or_fn(
         quote! {}
         #[cfg(not(feature = "persistent"))]
         quote! {
-            let mut args = UsingReader::<_>::read_args #combined_specialization (std::io::stdin());
+            let mut args = UsingReader::<_>::read_args #combined_concretization (std::io::stdin());
         }
     };
     let output_args = {
@@ -316,19 +316,19 @@ fn map_method_or_fn(
             .next()
             .expect("should have at least one deserialized argument");
         parse_quote! {
-            #self_arg . #target_ident #target_specialization (
+            #self_arg . #target_ident #target_concretization (
                 #(#de_args),*
             )
         }
     } else if let Some(self_ty) = self_ty {
         parse_quote! {
-            #self_ty :: #target_ident #target_specialization (
+            #self_ty :: #target_ident #target_concretization (
                 #(#de_args),*
             )
         }
     } else {
         parse_quote! {
-            super :: #target_ident #target_specialization (
+            super :: #target_ident #target_concretization (
                 #(#de_args),*
             )
         }
@@ -337,7 +337,7 @@ fn map_method_or_fn(
         #[cfg(feature = "persistent")]
         quote! {
             test_fuzz::afl::fuzz!(|data: &[u8]| {
-                let mut args = UsingReader::<_>::read_args #combined_specialization (data);
+                let mut args = UsingReader::<_>::read_args #combined_concretization (data);
                 let ret: Option< #ret_ty > = args.map(|mut args|
                     #call
                 );
@@ -457,7 +457,7 @@ fn map_method_or_fn(
 
                 #[test]
                 fn default() {
-                    Args #combined_specialization :: write_default();
+                    Args #combined_concretization :: write_default();
                 }
 
                 #[test]
