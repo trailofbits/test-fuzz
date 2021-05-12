@@ -46,7 +46,7 @@ mod generic {
         // state:
         // Derived `Debug` formats are not stable, and so may change with future Rust versions.
         // So `x` should not be compared to a string constant.
-        #[test_fuzz::test_fuzz(specialize_impl = "Bar")]
+        #[test_fuzz::test_fuzz(concretize_impl = "Bar")]
         fn target(&self, x: &T) {
             assert_ne!(
                 format!("{:?}", x),
@@ -54,10 +54,10 @@ mod generic {
             );
         }
 
-        #[test_fuzz::test_fuzz(specialize_impl = "Bar", specialize = "Baz<Bar>")]
+        #[test_fuzz::test_fuzz(concretize_impl = "Bar", concretize = "Baz<Bar>")]
         fn target_bound<U: BazTrait + Clone + Debug + Serialize>(&self, x: &T, y: &U) {}
 
-        #[test_fuzz::test_fuzz(specialize_impl = "Bar", specialize = "Baz<Bar>")]
+        #[test_fuzz::test_fuzz(concretize_impl = "Bar", concretize = "Baz<Bar>")]
         fn target_where_clause<U>(&self, x: &T, y: &U)
         where
             U: BazTrait + Clone + Debug + Serialize,
