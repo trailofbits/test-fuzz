@@ -134,9 +134,9 @@ struct TestFuzzOpts {
     #[darling(default)]
     enable_in_production: bool,
     #[darling(default)]
-    rename: Option<Ident>,
+    only_concretizations: bool,
     #[darling(default)]
-    skip: bool,
+    rename: Option<Ident>,
 }
 
 #[proc_macro_attribute]
@@ -195,16 +195,9 @@ fn map_method_or_fn(
         .concretize_impl
         .as_ref()
         .map(|s| parse_generic_method_arguments(s));
-    if opts.skip {
-        return (
-            parse_quote! {
-                #(#attrs)* #vis #defaultness #sig {
-                    #(#stmts)*
-                }
-            },
-            None,
-        );
-    }
+
+    let impl_type_names = type_names(generics);
+    let type_names = type_names(&sig.generics);
 
     let combined_generics = combine_generics(generics, &sig.generics);
     let combined_generics_deserializable = restrict_to_deserialize(&combined_generics);
@@ -267,14 +260,39 @@ fn map_method_or_fn(
     let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
     let mod_ident = Ident::new(&format!("{}_fuzz", renamed_target_ident), Span::call_site());
 
-    let (in_production_write_args, mod_attr) = if opts.enable_in_production {
+    let write_concretizations = quote! {
+        let impl_concretization = [
+            #(#impl_type_names),*
+        ];
+        let concretization = [
+            #(#type_names),*
+        ];
+        test_fuzz::runtime::write_impl_concretization::< #mod_ident :: Args #ty_generics_as_turbofish>(&impl_concretization);
+        test_fuzz::runtime::write_concretization::< #mod_ident :: Args #ty_generics_as_turbofish>(&concretization);
+    };
+    let write_args = if opts.only_concretizations {
+        quote! {}
+    } else {
+        quote! {
+            #mod_ident :: write_args(#mod_ident :: Args(
+                #(#ser_args),*
+            ));
+        }
+    };
+    let write_concretizations_and_args = quote! {
+        #[cfg(test)]
+        if !test_fuzz::runtime::test_fuzz_enabled() {
+            #write_concretizations
+            #write_args
+        }
+    };
+    let (in_production_write_concretizations_and_args, mod_attr) = if opts.enable_in_production {
         (
             quote! {
                 #[cfg(not(test))]
                 if test_fuzz::runtime::write_enabled() {
-                    #mod_ident :: write_args(#mod_ident :: Args(
-                        #(#ser_args),*
-                    ));
+                    #write_concretizations
+                    #write_args
                 }
             },
             quote! {},
@@ -380,30 +398,11 @@ fn map_method_or_fn(
             eprintln!();
         }
     };
-    (
-        parse_quote! {
-            #(#attrs)* #vis #defaultness #sig {
-                #[cfg(test)]
-                if !test_fuzz::runtime::test_fuzz_enabled() {
-                    #mod_ident :: write_args(#mod_ident :: Args(
-                        #(#ser_args),*
-                    ));
-                }
-
-                #in_production_write_args
-
-                #(#stmts)*
-            }
-        },
-        Some(parse_quote! {
-            #mod_attr
-            mod #mod_ident {
-                use super::*;
-
-                pub(super) struct Args #ty_generics (
-                    #(#pub_arg_tys),*
-                );
-
+    let (mod_items, entry_stmts) = if opts.only_concretizations {
+        (quote! {}, quote! {})
+    } else {
+        (
+            quote! {
                 pub(super) fn write_args #impl_generics (args: Args #ty_generics_as_turbofish) #where_clause {
                     #[derive(serde::Serialize)]
                     struct Args #ty_generics (
@@ -459,30 +458,56 @@ fn map_method_or_fn(
                 fn default() {
                     Args #combined_concretization :: write_default();
                 }
+            },
+            quote! {
+                // smoelius: Do not set the panic hook when replaying. Leave cargo test's panic
+                // hook in place.
+                if test_fuzz::runtime::test_fuzz_enabled() {
+                    if test_fuzz::runtime::display_enabled()
+                        || test_fuzz::runtime::replay_enabled()
+                    {
+                        #input_args
+                        if test_fuzz::runtime::display_enabled() {
+                            #output_args
+                        }
+                        if test_fuzz::runtime::replay_enabled() {
+                            #call_with_deserialized_arguments
+                            #output_ret
+                        }
+                    } else {
+                        std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
+                        #input_args
+                        #call_with_deserialized_arguments
+                        let _ = std::panic::take_hook();
+                    }
+                }
+            },
+        )
+    };
+    (
+        parse_quote! {
+            #(#attrs)* #vis #defaultness #sig {
+                #write_concretizations_and_args
+
+                #in_production_write_concretizations_and_args
+
+                #(#stmts)*
+            }
+        },
+        Some(parse_quote! {
+            #mod_attr
+            mod #mod_ident {
+                use super::*;
+
+                pub(super) struct Args #ty_generics (
+                    #(#pub_arg_tys),*
+                );
+
+                #mod_items
 
                 #[test]
                 fn entry() {
-                    // smoelius: Do not set the panic hook when replaying. Leave cargo test's panic
-                    // hook in place.
-                    if test_fuzz::runtime::test_fuzz_enabled() {
-                        if test_fuzz::runtime::display_enabled()
-                            || test_fuzz::runtime::replay_enabled()
-                        {
-                            #input_args
-                            if test_fuzz::runtime::display_enabled() {
-                                #output_args
-                            }
-                            if test_fuzz::runtime::replay_enabled() {
-                                #call_with_deserialized_arguments
-                                #output_ret
-                            }
-                        } else {
-                            std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
-                            #input_args
-                            #call_with_deserialized_arguments
-                            let _ = std::panic::take_hook();
-                        }
-                    }
+                    #entry_stmts
                 }
             }
         }),
@@ -635,6 +660,21 @@ fn parse_generic_method_arguments(s: &str) -> Punctuated<GenericMethodArgument, 
         .unwrap()
         .into_iter()
         .map(GenericMethodArgument::Type)
+        .collect()
+}
+
+fn type_names(generics: &Generics) -> Vec<Expr> {
+    generics
+        .params
+        .iter()
+        .filter_map(|param| {
+            if let GenericParam::Type(ty_param) = param {
+                let ident = &ty_param.ident;
+                Some(parse_quote! { std::any::type_name::< #ident >() })
+            } else {
+                None
+            }
+        })
         .collect()
 }
 

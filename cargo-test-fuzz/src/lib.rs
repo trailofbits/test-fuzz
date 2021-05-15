@@ -8,8 +8,10 @@ use cargo_metadata::{
 };
 use clap::{crate_version, Clap};
 use dirs::{
-    corpus_directory_from_target, crashes_directory_from_target, hangs_directory_from_target,
-    output_directory_from_target, queue_directory_from_target, target_directory,
+    concretizations_directory_from_target, corpus_directory_from_target,
+    crashes_directory_from_target, hangs_directory_from_target,
+    impl_concretizations_directory_from_target, output_directory_from_target,
+    queue_directory_from_target, target_directory,
 };
 use log::debug;
 use semver::{Version, VersionReq};
@@ -18,12 +20,12 @@ use std::{
     ffi::OsStr,
     fmt::{Debug, Formatter},
     fs::{create_dir_all, read, read_dir, remove_dir_all, File},
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, Read},
     path::{Path, PathBuf},
     process::Command,
     time::Duration,
 };
-use subprocess::{CommunicateError, Exec, NullFile, Redirection};
+use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
 
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
@@ -58,6 +60,8 @@ struct TestFuzz {
     consolidate: bool,
     #[clap(long, hidden = true)]
     consolidate_all: bool,
+    #[clap(long, about = "Display concretizations")]
+    display_concretizations: bool,
     #[clap(
         long,
         about = "Display corpus using uninstrumented fuzz target; to display with instrumentation, \
@@ -70,6 +74,8 @@ struct TestFuzz {
     display_crashes: bool,
     #[clap(long, about = "Display hangs")]
     display_hangs: bool,
+    #[clap(long, about = "Display `impl` concretizations")]
+    display_impl_concretizations: bool,
     #[clap(long, about = "Display work queue")]
     display_queue: bool,
     #[clap(long, about = "Target name is an exact name rather than a substring")]
@@ -161,7 +167,12 @@ impl Debug for Executable {
 pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     let opts = {
         let SubCommand::TestFuzz(mut opts) = Opts::parse_from(args).subcmd;
-        if opts.list || opts.display_corpus || opts.replay_corpus {
+        if opts.list
+            || opts.display_corpus
+            || opts.replay_corpus
+            || opts.display_impl_concretizations
+            || opts.display_concretizations
+        {
             opts.no_instrumentation = true;
         }
         opts
@@ -171,7 +182,9 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         || opts.display_corpus_instrumented
         || opts.display_crashes
         || opts.display_hangs
-        || opts.display_queue;
+        || opts.display_queue
+        || opts.display_impl_concretizations
+        || opts.display_concretizations;
 
     let replay = opts.replay_corpus
         || opts.replay_corpus_instrumented
@@ -214,6 +227,8 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         return reset(&opts, &executable_targets);
     }
 
+    let raw = opts.display_impl_concretizations || opts.display_concretizations;
+
     let dir = if opts.display_corpus
         || opts.display_corpus_instrumented
         || opts.replay_corpus
@@ -226,12 +241,16 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         hangs_directory_from_target(&executable.name, &target)
     } else if opts.display_queue || opts.replay_queue {
         queue_directory_from_target(&executable.name, &target)
+    } else if opts.display_impl_concretizations {
+        impl_concretizations_directory_from_target(&executable.name, &target)
+    } else if opts.display_concretizations {
+        concretizations_directory_from_target(&executable.name, &target)
     } else {
         PathBuf::default()
     };
 
     if display || replay {
-        return for_each_entry(&opts, &executable, &target, display, replay, &dir);
+        return for_each_entry(&opts, &executable, &target, display, replay, raw, &dir);
     }
 
     if opts.no_instrumentation {
@@ -637,6 +656,7 @@ fn for_each_entry(
     target: &str,
     display: bool,
     replay: bool,
+    raw: bool,
     dir: &Path,
 ) -> Result<()> {
     let mut envs = BASE_ENVS.to_vec();
@@ -671,7 +691,7 @@ fn for_each_entry(
     for entry in read_dir(dir)? {
         let entry = entry?;
         let path = entry.path();
-        let file = File::open(&path)?;
+        let mut file = File::open(&path)?;
         let file_name = path
             .file_name()
             .map(OsStr::to_string_lossy)
@@ -681,32 +701,38 @@ fn for_each_entry(
             continue;
         }
 
-        let exec = Exec::cmd(&executable.path)
-            .env_extend(&envs)
-            .args(&args)
-            .stdin(file)
-            .stdout(NullFile)
-            .stderr(Redirection::Pipe);
-        debug!("{:?}", exec);
-        let mut popen = exec.popen()?;
-        let millis = opts.timeout.unwrap_or(DEFAULT_TIMEOUT);
-        let time = Duration::from_millis(millis);
-        let mut communicator = popen.communicate_start(None).limit_time(time);
-        let (buffer, status) = match communicator.read() {
-            Ok((_, buffer)) => {
-                let status = popen.wait()?;
-                (buffer.unwrap_or_default(), Some(status))
-            }
-            Err(CommunicateError {
-                error,
-                capture: (_, buffer),
-            }) => {
-                popen.kill()?;
-                if error.kind() != std::io::ErrorKind::TimedOut {
-                    return Err(anyhow!(error));
+        let (buffer, status) = if raw {
+            let mut buffer = Vec::new();
+            file.read_to_end(&mut buffer)?;
+            (buffer, Some(ExitStatus::Exited(0)))
+        } else {
+            let exec = Exec::cmd(&executable.path)
+                .env_extend(&envs)
+                .args(&args)
+                .stdin(file)
+                .stdout(NullFile)
+                .stderr(Redirection::Pipe);
+            debug!("{:?}", exec);
+            let mut popen = exec.popen()?;
+            let millis = opts.timeout.unwrap_or(DEFAULT_TIMEOUT);
+            let time = Duration::from_millis(millis);
+            let mut communicator = popen.communicate_start(None).limit_time(time);
+            match communicator.read() {
+                Ok((_, buffer)) => {
+                    let status = popen.wait()?;
+                    (buffer.unwrap_or_default(), Some(status))
                 }
-                let _ = popen.wait()?;
-                (buffer.unwrap_or_default(), None)
+                Err(CommunicateError {
+                    error,
+                    capture: (_, buffer),
+                }) => {
+                    popen.kill()?;
+                    if error.kind() != std::io::ErrorKind::TimedOut {
+                        return Err(anyhow!(error));
+                    }
+                    let _ = popen.wait()?;
+                    (buffer.unwrap_or_default(), None)
+                }
             }
         };
 
@@ -719,7 +745,7 @@ fn for_each_entry(
             output = true;
         }
         if let Some(status) = status {
-            if buffer.is_empty() {
+            if !raw && buffer.is_empty() {
                 println!("{:?}", status);
             }
             failure |= !status.success();

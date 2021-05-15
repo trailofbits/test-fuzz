@@ -35,6 +35,7 @@ mod generic {
         fn target_where_clause<U>(&self, x: &T, y: &U)
         where
             U: BazTrait + Clone + Debug + Serialize;
+        fn target_only_concretizations<U>(&self, x: &T, y: &U);
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -63,6 +64,9 @@ mod generic {
             U: BazTrait + Clone + Debug + Serialize,
         {
         }
+
+        #[test_fuzz::test_fuzz(only_concretizations)]
+        fn target_only_concretizations<U>(&self, _: &T, _: &U) {}
     }
 
     #[cfg(test)]
@@ -91,5 +95,11 @@ mod generic {
     fn test_where_clause() {
         Struct.target_where_clause(&*FOO, &Baz(FOO.clone()));
         Struct.target_where_clause(&*BAR, &Baz(BAR.clone()));
+    }
+
+    #[test]
+    fn test_only_concretizations() {
+        Struct.target_only_concretizations(&*FOO, &Baz(FOO.clone()));
+        Struct.target_only_concretizations(&*BAR, &Baz(BAR.clone()));
     }
 }
