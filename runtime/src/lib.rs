@@ -1,5 +1,8 @@
 use crypto::{digest::Digest, sha1::Sha1};
-use dirs::corpus_directory_from_args_type;
+use dirs::{
+    concretizations_directory_from_args_type, corpus_directory_from_args_type,
+    impl_concretizations_directory_from_args_type,
+};
 use serde::{de::DeserializeOwned, Serialize};
 use std::{
     any::type_name,
@@ -98,20 +101,32 @@ fn enabled(opt: &str) -> bool {
     env::var(key).map_or(false, |value| value != "0")
 }
 
+pub fn write_impl_concretization<T>(args: &[&str]) {
+    let impl_concretizations = impl_concretizations_directory_from_args_type::<T>();
+    let data = args.join(", ");
+    write_data(&impl_concretizations, data.as_bytes()).unwrap();
+}
+
+pub fn write_concretization<T>(args: &[&str]) {
+    let concretizations = concretizations_directory_from_args_type::<T>();
+    let data = args.join(", ");
+    write_data(&concretizations, data.as_bytes()).unwrap();
+}
+
 pub fn write_args<T: Serialize>(args: &T) {
     let corpus = corpus_directory_from_args_type::<T>();
     let data = serde_cbor::to_vec(args).unwrap();
     write_data(&corpus, &data).unwrap();
 }
 
-pub fn write_data(corpus: &Path, data: &[u8]) -> io::Result<()> {
-    create_dir_all(&corpus).unwrap_or_default();
+pub fn write_data(dir: &Path, data: &[u8]) -> io::Result<()> {
+    create_dir_all(&dir).unwrap_or_default();
     let hex = {
         let mut hasher = Sha1::new();
         hasher.input(data);
         hasher.result_str()
     };
-    let path = corpus.join(hex);
+    let path = dir.join(hex);
     write(path, &data)
 }
 
