@@ -236,7 +236,7 @@ fn map_method_or_fn(
         .map(args_as_turbofish);
 
     let (receiver, mut arg_tys, fmt_args, mut ser_args, de_args) =
-        map_args(self_ty, sig.inputs.iter());
+        map_args(self_ty, trait_path, sig.inputs.iter());
     arg_tys.extend_from_slice(&phantom_tys);
     ser_args.extend_from_slice(&phantoms);
     let pub_arg_tys: Vec<TokenStream2> = arg_tys.iter().map(|ty| quote! { pub #ty }).collect();
@@ -338,14 +338,14 @@ fn map_method_or_fn(
         quote! {
             test_fuzz::afl::fuzz!(|data: &[u8]| {
                 let mut args = UsingReader::<_>::read_args #combined_specialization (data);
-                let ret = args.map(|mut args|
+                let ret: Option< #ret_ty > = args.map(|mut args|
                     #call
                 );
             });
         }
         #[cfg(not(feature = "persistent"))]
         quote! {
-            let ret = args.map(|mut args|
+            let ret: Option< #ret_ty > = args.map(|mut args|
                 #call
             );
         }
@@ -491,6 +491,7 @@ fn map_method_or_fn(
 
 fn map_args<'a, I>(
     self_ty: &Option<Type>,
+    trait_path: &Option<Path>,
     inputs: I,
 ) -> (bool, Vec<Type>, Vec<Stmt>, Vec<Expr>, Vec<Expr>)
 where
@@ -498,16 +499,22 @@ where
 {
     unzip_n!(5);
 
-    let (receiver, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) =
-        inputs.enumerate().map(map_arg(self_ty)).unzip_n();
+    let (receiver, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
+        .enumerate()
+        .map(map_arg(self_ty, trait_path))
+        .unzip_n();
 
     let receiver = receiver.first().map_or(false, |&x| x);
 
     (receiver, ty, fmt, ser, de)
 }
 
-fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, Stmt, Expr, Expr) {
+fn map_arg(
+    self_ty: &Option<Type>,
+    trait_path: &Option<Path>,
+) -> impl Fn((usize, &FnArg)) -> (bool, Type, Stmt, Expr, Expr) {
     let self_ty = self_ty.clone();
+    let trait_path = trait_path.clone();
     move |(i, arg)| {
         let i = Literal::usize_unsuffixed(i);
         match arg {
@@ -524,7 +531,9 @@ fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, S
             ),
             FnArg::Typed(pat_ty) => {
                 let pat = &*pat_ty.pat;
-                let ty = &*pat_ty.ty;
+                let ty = self_ty.as_ref().map_or(*pat_ty.ty.clone(), |self_ty| {
+                    util::expand_self(self_ty, &trait_path, &*pat_ty.ty)
+                });
                 let name = format!("{}", pat.to_token_stream());
                 let fmt = parse_quote! {
                     test_fuzz::runtime::TryDebug(&self.#i).apply(&mut |value| {
@@ -538,7 +547,7 @@ fn map_arg(self_ty: &Option<Type>) -> impl Fn((usize, &FnArg)) -> (bool, Type, S
                     parse_quote! { #pat.clone() },
                     parse_quote! { args.#i },
                 );
-                match ty {
+                match &ty {
                     Type::Path(path) => map_arc_arg(&i, pat, path)
                         .map_or(default, |(ty, ser, de)| (false, ty, fmt, ser, de)),
                     Type::Reference(ty) => {
