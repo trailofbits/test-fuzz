@@ -1,9 +1,9 @@
-use crypto::{digest::Digest, sha1::Sha1};
 use dirs::{
     concretizations_directory_from_args_type, corpus_directory_from_args_type,
     impl_concretizations_directory_from_args_type,
 };
 use serde::{de::DeserializeOwned, Serialize};
+use sha1::{Digest, Sha1};
 use std::{
     any::type_name,
     env,
@@ -27,7 +27,7 @@ impl<T> Debug for DebugUnimplemented<T> {
         write!(
             f,
             "<unknown of type {}>",
-            type_name[pos..].strip_suffix(">").unwrap()
+            type_name[pos..].strip_suffix('>').unwrap()
         )
     }
 }
@@ -122,9 +122,8 @@ pub fn write_args<T: Serialize>(args: &T) {
 pub fn write_data(dir: &Path, data: &[u8]) -> io::Result<()> {
     create_dir_all(&dir).unwrap_or_default();
     let hex = {
-        let mut hasher = Sha1::new();
-        hasher.input(data);
-        hasher.result_str()
+        let hash = Sha1::digest(data);
+        hex::encode(hash)
     };
     let path = dir.join(hex);
     write(path, &data)
