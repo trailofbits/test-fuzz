@@ -36,6 +36,7 @@ const DEFAULT_TIMEOUT: u64 = 1000;
 const NANOS_PER_MILLI: u64 = 1_000_000;
 
 #[derive(Clap, Debug)]
+#[clap(bin_name = "cargo")]
 struct Opts {
     #[clap(subcommand)]
     subcmd: SubCommand,
