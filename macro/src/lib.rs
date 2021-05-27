@@ -196,8 +196,18 @@ fn map_method_or_fn(
         .as_ref()
         .map(|s| parse_generic_method_arguments(s));
 
-    let impl_type_names = type_names(generics);
-    let type_names = type_names(&sig.generics);
+    let impl_ty_idents = type_idents(generics);
+    let ty_idents = type_idents(&sig.generics);
+    let combined_type_idents = [impl_ty_idents.clone(), ty_idents.clone()].concat();
+
+    let impl_ty_names: Vec<Expr> = impl_ty_idents
+        .iter()
+        .map(|ident| parse_quote! { std::any::type_name::< #ident >() })
+        .collect();
+    let ty_names: Vec<Expr> = ty_idents
+        .iter()
+        .map(|ident| parse_quote! { std::any::type_name::< #ident >() })
+        .collect();
 
     let combined_generics = combine_generics(generics, &sig.generics);
     let combined_generics_deserializable = restrict_to_deserialize(&combined_generics);
@@ -209,7 +219,7 @@ fn map_method_or_fn(
     // here: https://users.rust-lang.org/t/error-parameter-t-is-never-used-e0392-but-i-use-it/5673
     // So, for each type parameter `T`, add a `PhantomData<T>` member to `Args` to ensure that `T`
     // is used. See also: https://github.com/rust-lang/rust/issues/23246
-    let phantom_tys = ty_generic_phantom_tys(&combined_generics);
+    let phantom_tys = type_generic_phantom_types(&combined_generics);
     let phantoms: Vec<Expr> = phantom_tys
         .iter()
         .map(|_| {
@@ -219,7 +229,8 @@ fn map_method_or_fn(
 
     let ty_generics_as_turbofish = ty_generics.as_turbofish();
 
-    let target_concretization = opts_concretize.as_ref().map(args_as_turbofish);
+    let impl_concretization = opts_concretize_impl.as_ref().map(args_as_turbofish);
+    let concretization = opts_concretize.as_ref().map(args_as_turbofish);
     let combined_concretization =
         combine_options(opts_concretize_impl, opts_concretize, |mut left, right| {
             left.extend(right);
@@ -227,6 +238,8 @@ fn map_method_or_fn(
         })
         .as_ref()
         .map(args_as_turbofish);
+
+    let self_ty_base = self_ty.as_ref().map(type_base);
 
     let (receiver, mut arg_tys, fmt_args, mut ser_args, de_args) =
         map_args(self_ty, trait_path, sig.inputs.iter());
@@ -262,10 +275,10 @@ fn map_method_or_fn(
 
     let write_concretizations = quote! {
         let impl_concretization = [
-            #(#impl_type_names),*
+            #(#impl_ty_names),*
         ];
         let concretization = [
-            #(#type_names),*
+            #(#ty_names),*
         ];
         test_fuzz::runtime::write_impl_concretization::< #mod_ident :: Args #ty_generics_as_turbofish>(&impl_concretization);
         test_fuzz::runtime::write_concretization::< #mod_ident :: Args #ty_generics_as_turbofish>(&concretization);
@@ -274,7 +287,7 @@ fn map_method_or_fn(
         quote! {}
     } else {
         quote! {
-            #mod_ident :: write_args(#mod_ident :: Args(
+            #mod_ident :: write_args::< #(#combined_type_idents),* >(#mod_ident :: Args(
                 #(#ser_args),*
             ));
         }
@@ -334,19 +347,19 @@ fn map_method_or_fn(
             .next()
             .expect("should have at least one deserialized argument");
         parse_quote! {
-            #self_arg . #target_ident #target_concretization (
+            #self_arg . #target_ident #concretization (
                 #(#de_args),*
             )
         }
-    } else if let Some(self_ty) = self_ty {
+    } else if let Some(self_ty_base) = self_ty_base {
         parse_quote! {
-            #self_ty :: #target_ident #target_concretization (
+            #self_ty_base #impl_concretization :: #target_ident #concretization (
                 #(#de_args),*
             )
         }
     } else {
         parse_quote! {
-            super :: #target_ident #target_concretization (
+            super :: #target_ident #concretization (
                 #(#de_args),*
             )
         }
@@ -663,14 +676,13 @@ fn parse_generic_method_arguments(s: &str) -> Punctuated<GenericMethodArgument, 
         .collect()
 }
 
-fn type_names(generics: &Generics) -> Vec<Expr> {
+fn type_idents(generics: &Generics) -> Vec<Ident> {
     generics
         .params
         .iter()
         .filter_map(|param| {
             if let GenericParam::Type(ty_param) = param {
-                let ident = &ty_param.ident;
-                Some(parse_quote! { std::any::type_name::< #ident >() })
+                Some(ty_param.ident.clone())
             } else {
                 None
             }
@@ -721,7 +733,7 @@ fn restrict_to_deserialize(generics: &Generics) -> Generics {
     generics
 }
 
-fn ty_generic_phantom_tys(generics: &Generics) -> Vec<Type> {
+fn type_generic_phantom_types(generics: &Generics) -> Vec<Type> {
     generics
         .params
         .iter()
@@ -740,6 +752,19 @@ fn args_as_turbofish(args: &Punctuated<GenericMethodArgument, token::Comma>) -> 
     quote! {
         ::<#args>
     }
+}
+
+fn type_base(ty: &Type) -> Type {
+    let mut ty = ty.clone();
+
+    if let Type::Path(ref mut path) = ty {
+        if let Some(segment) = path.path.segments.last_mut() {
+            let ident = &segment.ident;
+            *segment = parse_quote! { #ident };
+        }
+    }
+
+    ty
 }
 
 fn log(tokens: &TokenStream2) {

@@ -22,12 +22,18 @@ mod generic {
 
     impl FooBarTrait for Bar {}
 
-    trait BazTrait {}
+    trait BazTrait {
+        fn qux();
+    }
 
     #[derive(Clone, Debug, Deserialize, Serialize)]
     struct Baz<T>(T);
 
-    impl<T> BazTrait for Baz<T> {}
+    #[test_fuzz::test_fuzz_impl]
+    impl<T> BazTrait for Baz<T> {
+        #[test_fuzz::test_fuzz(concretize_impl = "Bar")]
+        fn qux() {}
+    }
 
     trait Trait<T: FooBarTrait> {
         fn target(&self, x: &T);
