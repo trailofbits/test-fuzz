@@ -39,3 +39,8 @@ members = [
     "macro",
     "runtime",
 ]
+
+[workspace.metadata.dylint]
+libraries = [
+    { git = "https://github.com/trailofbits/dylint", pattern = "examples/try_io_result" }
+]

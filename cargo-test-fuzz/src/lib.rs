@@ -2,7 +2,8 @@
 #![deny(clippy::unwrap_used)]
 #![warn(clippy::panic)]
 
-use anyhow::{anyhow, bail, ensure, Result};
+use anyhow::{anyhow, bail, ensure, Context, Result};
+use bitflags::bitflags;
 use cargo_metadata::{
     Artifact, ArtifactProfile, Message, Metadata, MetadataCommand, Package, PackageId,
 };
@@ -34,6 +35,13 @@ const BASE_ENVS: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0"
 const DEFAULT_TIMEOUT: u64 = 1000;
 
 const NANOS_PER_MILLI: u64 = 1_000_000;
+
+bitflags! {
+    struct Flags: u8 {
+        const REQUIRES_CARGO_TEST = 0b0000_0001;
+        const RAW = 0b0000_0010;
+    }
+}
 
 #[derive(Clap, Debug)]
 #[clap(bin_name = "cargo")]
@@ -228,30 +236,46 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         return reset(&opts, &executable_targets);
     }
 
-    let raw = opts.display_impl_concretizations || opts.display_concretizations;
-
-    let dir = if opts.display_corpus
+    let (flags, dir) = if opts.display_corpus
         || opts.display_corpus_instrumented
         || opts.replay_corpus
         || opts.replay_corpus_instrumented
     {
-        corpus_directory_from_target(&executable.name, &target)
+        (
+            Flags::REQUIRES_CARGO_TEST,
+            corpus_directory_from_target(&executable.name, &target),
+        )
     } else if opts.display_crashes || opts.replay_crashes {
-        crashes_directory_from_target(&executable.name, &target)
+        (
+            Flags::empty(),
+            crashes_directory_from_target(&executable.name, &target),
+        )
     } else if opts.display_hangs || opts.replay_hangs {
-        hangs_directory_from_target(&executable.name, &target)
+        (
+            Flags::empty(),
+            hangs_directory_from_target(&executable.name, &target),
+        )
     } else if opts.display_queue || opts.replay_queue {
-        queue_directory_from_target(&executable.name, &target)
+        (
+            Flags::empty(),
+            queue_directory_from_target(&executable.name, &target),
+        )
     } else if opts.display_impl_concretizations {
-        impl_concretizations_directory_from_target(&executable.name, &target)
+        (
+            Flags::REQUIRES_CARGO_TEST | Flags::RAW,
+            impl_concretizations_directory_from_target(&executable.name, &target),
+        )
     } else if opts.display_concretizations {
-        concretizations_directory_from_target(&executable.name, &target)
+        (
+            Flags::REQUIRES_CARGO_TEST | Flags::RAW,
+            concretizations_directory_from_target(&executable.name, &target),
+        )
     } else {
-        PathBuf::default()
+        (Flags::empty(), PathBuf::default())
     };
 
     if display || replay {
-        return for_each_entry(&opts, &executable, &target, display, replay, raw, &dir);
+        return for_each_entry(&opts, &executable, &target, display, replay, flags, &dir);
     }
 
     if opts.no_instrumentation {
@@ -301,12 +325,15 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         .map_or(Ok(vec![]), |stream| -> Result<_> {
             let reader = BufReader::new(stream);
             let messages: Vec<Message> = Message::parse_stream(reader)
-                .collect::<std::result::Result<_, std::io::Error>>()?;
+                .collect::<std::result::Result<_, std::io::Error>>()
+                .with_context(|| format!("`parse_stream` failed for `{:?}`", exec))?;
             Ok(messages)
         })?;
-    let status = popen.wait()?;
+    let status = popen
+        .wait()
+        .with_context(|| format!("`wait` failed for `{:?}`", popen))?;
 
-    ensure!(status.success(), "command failed: {:?}", exec);
+    ensure!(status.success(), "Command failed: {:?}", exec);
 
     Ok(messages
         .into_iter()
@@ -422,13 +449,13 @@ fn targets(executable: &Path) -> Result<Vec<String>> {
         .args(&["--list"])
         .stderr(NullFile);
     debug!("{:?}", exec);
-    let stream = exec.stream_stdout()?;
+    let stream = exec.clone().stream_stdout()?;
 
     // smoelius: A test executable's --list output ends with an empty line followed by
     // "M tests, N benchmarks." Stop at the empty line.
     let mut targets = Vec::<String>::default();
     for line in BufReader::new(stream).lines() {
-        let line = line?;
+        let line = line.with_context(|| format!("Could not get output of `{:?}`", exec))?;
         if line.is_empty() {
             break;
         }
@@ -543,7 +570,11 @@ fn check_test_fuzz_and_afl_versions(
 }
 
 fn cargo_afl_version() -> Result<Version> {
-    let output = Command::new("cargo").args(&["afl", "--version"]).output()?;
+    let mut command = Command::new("cargo");
+    command.args(&["afl", "--version"]);
+    let output = command
+        .output()
+        .with_context(|| format!("Could not get output of `{:?}`", command))?;
     let stdout = String::from_utf8_lossy(&output.stdout);
     let version = stdout.strip_prefix("cargo-afl ").ok_or_else(|| {
         anyhow!(
@@ -592,7 +623,7 @@ fn check_dependency_version(
 
 #[allow(clippy::expect_used)]
 fn as_version_req(version: &Version) -> VersionReq {
-    VersionReq::parse(&version.to_string()).expect("could not parse version as version request")
+    VersionReq::parse(&version.to_string()).expect("Could not parse version as version request")
 }
 
 fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> Result<()> {
@@ -608,8 +639,12 @@ fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]
             let queue_dir = queue_directory_from_target(&executable.name, target);
 
             for dir in &[crashes_dir, hangs_dir, queue_dir] {
-                for entry in read_dir(dir)? {
-                    let entry = entry?;
+                for entry in read_dir(dir)
+                    .with_context(|| format!("`read_dir` failed for `{}`", dir.to_string_lossy()))?
+                {
+                    let entry = entry.with_context(|| {
+                        format!("`read_dir` failed for `{}`", dir.to_string_lossy())
+                    })?;
                     let path = entry.path();
                     let file_name = path
                         .file_name()
@@ -620,8 +655,15 @@ fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]
                         continue;
                     }
 
-                    let data = read(path)?;
-                    test_fuzz::runtime::write_data(&corpus_dir, &data)?;
+                    let data = read(&path).with_context(|| {
+                        format!("`read` failed for `{}`", path.to_string_lossy())
+                    })?;
+                    test_fuzz::runtime::write_data(&corpus_dir, &data).with_context(|| {
+                        format!(
+                            "`test_fuzz::runtime::write_data` failed for `{}`",
+                            corpus_dir.to_string_lossy()
+                        )
+                    })?;
                 }
             }
         }
@@ -638,12 +680,14 @@ fn reset(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> R
 
         for target in targets {
             let output_dir = output_directory_from_target(&executable.name, target);
-            remove_dir_all(output_dir).or_else(|err| {
-                if format!("{}", err).starts_with("No such file or directory") {
-                    Ok(())
-                } else {
-                    Err(err)
-                }
+            if !output_dir.exists() {
+                continue;
+            }
+            remove_dir_all(&output_dir).with_context(|| {
+                format!(
+                    "`remove_dir_all` failed for `{}`",
+                    output_dir.to_string_lossy()
+                )
             })?;
         }
     }
@@ -657,9 +701,20 @@ fn for_each_entry(
     target: &str,
     display: bool,
     replay: bool,
-    raw: bool,
+    flags: Flags,
     dir: &Path,
 ) -> Result<()> {
+    ensure!(
+        dir.exists(),
+        "Could not find `{}`{}",
+        dir.to_string_lossy(),
+        if flags.contains(Flags::REQUIRES_CARGO_TEST) {
+            ". Did you remember to run `cargo test`?"
+        } else {
+            ""
+        }
+    );
+
     let mut envs = BASE_ENVS.to_vec();
     envs.push(("AFL_QUIET", "1"));
     if display {
@@ -689,10 +744,14 @@ fn for_each_entry(
     let mut timeout = false;
     let mut output = false;
 
-    for entry in read_dir(dir)? {
-        let entry = entry?;
+    for entry in read_dir(dir)
+        .with_context(|| format!("`read_dir` failed for `{}`", dir.to_string_lossy()))?
+    {
+        let entry =
+            entry.with_context(|| format!("`read_dir` failed for `{}`", dir.to_string_lossy()))?;
         let path = entry.path();
-        let mut file = File::open(&path)?;
+        let mut file = File::open(&path)
+            .with_context(|| format!("`open` failed for `{}`", path.to_string_lossy()))?;
         let file_name = path
             .file_name()
             .map(OsStr::to_string_lossy)
@@ -702,9 +761,11 @@ fn for_each_entry(
             continue;
         }
 
-        let (buffer, status) = if raw {
+        let (buffer, status) = if flags.contains(Flags::RAW) {
             let mut buffer = Vec::new();
-            file.read_to_end(&mut buffer)?;
+            file.read_to_end(&mut buffer).with_context(|| {
+                format!("`read_to_end` failed for `{}`", path.to_string_lossy())
+            })?;
             (buffer, Some(ExitStatus::Exited(0)))
         } else {
             let exec = Exec::cmd(&executable.path)
@@ -714,7 +775,10 @@ fn for_each_entry(
                 .stdout(NullFile)
                 .stderr(Redirection::Pipe);
             debug!("{:?}", exec);
-            let mut popen = exec.popen()?;
+            let mut popen = exec
+                .clone()
+                .popen()
+                .with_context(|| format!("`popen` failed for `{:?}`", exec))?;
             let millis = opts.timeout.unwrap_or(DEFAULT_TIMEOUT);
             let time = Duration::from_millis(millis);
             let mut communicator = popen.communicate_start(None).limit_time(time);
@@ -727,7 +791,9 @@ fn for_each_entry(
                     error,
                     capture: (_, buffer),
                 }) => {
-                    popen.kill()?;
+                    popen
+                        .kill()
+                        .with_context(|| format!("`kill` failed for `{:?}`", popen))?;
                     if error.kind() != std::io::ErrorKind::TimedOut {
                         return Err(anyhow!(error));
                     }
@@ -746,7 +812,7 @@ fn for_each_entry(
             output = true;
         }
         if let Some(status) = status {
-            if !raw && buffer.is_empty() {
+            if !flags.contains(Flags::RAW) && buffer.is_empty() {
                 println!("{:?}", status);
             }
             failure |= !status.success();
@@ -796,9 +862,17 @@ fn for_each_entry(
 }
 
 fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
-    let corpus_dir = corpus_directory_from_target(&executable.name, target)
-        .to_string_lossy()
-        .into_owned();
+    let input_dir = if opts.resume {
+        "-".to_owned()
+    } else {
+        let corpus_dir = corpus_directory_from_target(&executable.name, target);
+        ensure!(
+            corpus_dir.exists(),
+            "Could not find `{}`. Did you remember to run `cargo test`?",
+            corpus_dir.to_string_lossy(),
+        );
+        corpus_dir.to_string_lossy().into_owned()
+    };
 
     let output_dir = output_directory_from_target(&executable.name, target);
     create_dir_all(&output_dir).unwrap_or_default();
@@ -819,7 +893,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
             "afl",
             "fuzz",
             "-i",
-            if opts.resume { "-" } else { &corpus_dir },
+            &input_dir,
             "-o",
             &output_dir.to_string_lossy(),
             "-M",
@@ -848,9 +922,11 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
 
     command.envs(envs).args(args);
 
-    let status = command.status()?;
+    let status = command
+        .status()
+        .with_context(|| format!("Could not get status of `{:?}`", command))?;
 
-    ensure!(status.success(), "command failed: {:?}", command);
+    ensure!(status.success(), "Command failed: {:?}", command);
 
     Ok(())
 }

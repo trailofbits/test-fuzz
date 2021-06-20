@@ -20,11 +20,16 @@ jobs:
         cargo install cargo-license
         ./scripts/check_licenses.sh
 
-    - name: Lint
+    - name: Clippy
       run: |
         rustup update
         rustup component add clippy
         ./scripts/clippy.sh
+
+    - name: Dylint
+      run: |
+        cargo install cargo-dylint dylint-link
+        DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all --workspace
 
     - name: Udeps
       run: |
