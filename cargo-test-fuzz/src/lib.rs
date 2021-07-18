@@ -89,10 +89,14 @@ struct TestFuzz {
     display_queue: bool,
     #[clap(long, about = "Target name is an exact name rather than a substring")]
     exact: bool,
+    #[clap(long, about = "Space or comma separated list of features to activate")]
+    features: Option<String>,
     #[clap(long, about = "List fuzz targets")]
     list: bool,
     #[clap(long, about = "Resume target's last fuzzing session")]
     resume: bool,
+    #[clap(long, about = "Do not activate the `default` feature")]
+    no_default_features: bool,
     #[clap(
         long,
         about = "Compile without instrumentation (for testing build process)"
@@ -296,6 +300,12 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         args.extend_from_slice(&["afl"]);
     }
     args.extend_from_slice(&["test", "--frozen", "--no-run"]);
+    if let Some(features) = &opts.features {
+        args.extend_from_slice(&["--features", features]);
+    }
+    if opts.no_default_features {
+        args.extend_from_slice(&["--no-default-features"]);
+    }
     let target_dir = target_directory(true);
     let target_dir_str = target_dir.to_string_lossy();
     if !opts.no_instrumentation {
