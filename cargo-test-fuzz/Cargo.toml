@@ -25,7 +25,7 @@ serde = { version = "1.0", features = ["derive"] }
 subprocess = "0.2.6"
 
 dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.18" }
-test-fuzz = { path = "..", version = "=0.1.0-alpha.18" }
+test-fuzz = { path = "../test-fuzz", version = "=0.1.0-alpha.18" }
 
 [dev-dependencies]
 assert_cmd = "1.0.3"
