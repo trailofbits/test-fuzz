@@ -11,7 +11,7 @@ repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
 hex = "0.4.3"
-serde = { version = "1.0", features = ["derive"] }
+serde = { version = "1.0.126", features = ["derive"] }
 serde_cbor = "0.11.1"
 sha-1 = "0.9.6"
 

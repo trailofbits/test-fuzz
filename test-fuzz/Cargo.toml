@@ -11,7 +11,7 @@ repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
 afl = "=0.10.1"
-serde = "1.0"
+serde = "1.0.126"
 
 runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.18" }
 test-fuzz-macro = { path = "../macro", version = "=0.1.0-alpha.18" }
