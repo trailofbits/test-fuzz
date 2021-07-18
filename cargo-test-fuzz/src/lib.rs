@@ -501,6 +501,7 @@ fn filter_targets(opts: &TestFuzz, pat: &str, targets: &[String]) -> Vec<String>
         .collect()
 }
 
+#[allow(clippy::expect_used)]
 fn executable_target(
     opts: &TestFuzz,
     executable_targets: &[(Executable, Vec<String>)],
@@ -508,31 +509,33 @@ fn executable_target(
     let mut executable_targets = executable_targets.to_vec();
 
     ensure!(
-        !executable_targets.is_empty(),
-        "found no fuzz targets{}",
-        match_message(opts)
-    );
-
-    ensure!(
         executable_targets.len() <= 1,
-        "found multiple executables with fuzz targets{}: {:#?}",
+        "Found multiple executables with fuzz targets{}: {:#?}",
         match_message(opts),
         executable_targets
     );
 
-    let mut executable_targets = executable_targets.remove(0);
-
-    assert!(!executable_targets.1.is_empty());
+    let mut executable_targets = if let Some(executable_targets) = executable_targets.pop() {
+        executable_targets
+    } else {
+        bail!("Found no fuzz targets{}", match_message(opts));
+    };
 
     ensure!(
-        executable_targets.1.len() <= 2,
-        "found multiple fuzz targets{} in {:?}: {:#?}",
+        executable_targets.1.len() <= 1,
+        "Found multiple fuzz targets{} in {:?}: {:#?}",
         match_message(opts),
         executable_targets.0,
         executable_targets.1
     );
 
-    Ok((executable_targets.0, executable_targets.1.remove(0)))
+    Ok((
+        executable_targets.0,
+        executable_targets
+            .1
+            .pop()
+            .expect("Executable with no fuzz targets"),
+    ))
 }
 
 fn match_message(opts: &TestFuzz) -> String {
