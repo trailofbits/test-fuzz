@@ -2,7 +2,7 @@ use assert_cmd::prelude::*;
 use dirs::corpus_directory_from_target;
 use std::{fs::read_dir, process::Command};
 
-const TEST_DIR: &str = "./examples";
+const TEST_DIR: &str = "../examples";
 
 #[test]
 fn test_no_default() {

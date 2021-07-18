@@ -2,7 +2,7 @@ use assert_cmd::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
 
-const TEST_DIR: &str = "examples";
+const TEST_DIR: &str = "../examples";
 
 #[test]
 fn rename() {

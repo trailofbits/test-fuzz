@@ -1,36 +1,3 @@
-[package]
-name = "test-fuzz"
-version = "0.1.0-alpha.18"
-edition = "2018"
-
-description = "To make fuzzing Rust easy"
-
-authors = ["Samuel E. Moelius III <sam@moeli.us>"]
-license = "MIT OR Apache-2.0"
-repository = "https://github.com/trailofbits/test-fuzz"
-
-[dependencies]
-afl = "=0.10.0"
-serde = "1.0"
-
-runtime = { path = "./runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.18" }
-test-fuzz-macro = { path = "./macro", version = "=0.1.0-alpha.18" }
-
-[dev-dependencies]
-assert_cmd = "1.0.3"
-cargo_metadata = "0.13.1"
-dirs = { path = "./dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.18" }
-lazy_static = "1.4.0"
-predicates = "1.0.8"
-semver = "0.11.0"
-
-[features]
-default = []
-persistent = ["test-fuzz-macro/persistent"]
-
-[package.metadata.cargo-udeps.ignore]
-normal = ["afl"]
-
 [workspace]
 members = [
     "cargo-test-fuzz",
@@ -38,6 +5,7 @@ members = [
     "examples",
     "macro",
     "runtime",
+    "test-fuzz",
 ]
 
 [workspace.metadata.dylint]
