@@ -1,34 +1,30 @@
-use assert_cmd::prelude::*;
-use std::process::Command;
-
-const TEST_DIR: &str = "../examples";
+// smoelius: In each use of `examples::test_fuzz` below, the `target` argument is arbitrary. To
+// have a version of `examples::test_fuzz` that takes no arguments for just these tests would be
+// more trouble than it is worth.
 
 #[test]
 fn build_no_instrumentation() {
-    Command::cargo_bin("cargo-test-fuzz")
+    examples::test_fuzz("assert::target")
         .unwrap()
-        .current_dir(TEST_DIR)
-        .args(&["test-fuzz", "--no-run", "--no-instrumentation"])
+        .args(&["--no-run", "--no-instrumentation"])
         .assert()
         .success();
 }
 
 #[test]
 fn build() {
-    Command::cargo_bin("cargo-test-fuzz")
+    examples::test_fuzz("assert::target")
         .unwrap()
-        .current_dir(TEST_DIR)
-        .args(&["test-fuzz", "--no-run"])
+        .args(&["--no-run"])
         .assert()
         .success();
 }
 
 #[test]
 fn build_pesistent() {
-    Command::cargo_bin("cargo-test-fuzz")
+    examples::test_fuzz("assert::target")
         .unwrap()
-        .current_dir(TEST_DIR)
-        .args(&["test-fuzz", "--no-run", "--persistent"])
+        .args(&["--no-run", "--persistent"])
         .assert()
         .success();
 }

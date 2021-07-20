@@ -33,3 +33,5 @@ lazy_static = "1.4.0"
 predicates = "2.0.0"
 regex = "1.5.4"
 rlimit = "0.5.4"
+
+examples = { path = "../examples", package = "test-fuzz-examples", version = "=0.1.0-alpha.18" }

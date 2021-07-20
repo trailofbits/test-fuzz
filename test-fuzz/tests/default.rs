@@ -1,27 +1,25 @@
-use assert_cmd::prelude::*;
 use dirs::corpus_directory_from_target;
-use std::{fs::read_dir, process::Command};
-
-const TEST_DIR: &str = "../examples";
+use std::fs::{read_dir, remove_dir_all};
 
 #[test]
 fn test_no_default() {
-    test("no_default", 1)
+    test("no_default", 0)
 }
 
 #[test]
 fn test_default() {
-    test("default", 2)
+    test("default", 1)
 }
 
 fn test(name: &str, n: usize) {
-    Command::new("cargo")
-        .current_dir(TEST_DIR)
-        .args(&["test", "--", "--test", name])
+    let corpus = corpus_directory_from_target("default", &format!("{}::target", name));
+
+    remove_dir_all(&corpus).unwrap_or_default();
+
+    examples::test("default", &format!("{}::target_fuzz::default", name))
+        .unwrap()
         .assert()
         .success();
 
-    let corpus = corpus_directory_from_target("default", &format!("{}::target", name));
-
-    assert_eq!(read_dir(corpus).unwrap().count(), n);
+    assert_eq!(read_dir(corpus).map(Iterator::count).unwrap_or_default(), n);
 }

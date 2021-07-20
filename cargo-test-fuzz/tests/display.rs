@@ -1,18 +1,22 @@
-use assert_cmd::prelude::*;
 use predicates::prelude::*;
-use std::process::Command;
-
-const TEST_DIR: &str = "../examples";
 
 #[test]
 fn display_qwerty() {
-    display("qwerty", "Args { data: \"asdfgh\" }", "")
+    display(
+        "qwerty",
+        "qwerty::test",
+        "qwerty::target",
+        "Args { data: \"asdfgh\" }",
+        "",
+    )
 }
 
 #[test]
 fn display_debug_crash() {
     display(
-        "debug_crash",
+        "debug",
+        "debug_crash::target_fuzz::default",
+        "debug_crash::target",
         "",
         "Encountered a failure while not replaying. A buggy Debug implementation perhaps?",
     )
@@ -21,23 +25,20 @@ fn display_debug_crash() {
 #[test]
 fn display_debug_hang() {
     display(
-        "debug_hang",
+        "debug",
+        "debug_hang::target_fuzz::default",
+        "debug_hang::target",
         "",
         "Encountered a timeout while not replaying. A buggy Debug implementation perhaps?",
     )
 }
 
-fn display(name: &str, stdout: &str, stderr: &str) {
-    Command::new("cargo")
-        .current_dir(TEST_DIR)
-        .args(&["test", "--", "--test", name])
-        .assert()
-        .success();
+fn display(name: &str, test: &str, target: &str, stdout: &str, stderr: &str) {
+    examples::test(name, test).unwrap().assert().success();
 
-    Command::cargo_bin("cargo-test-fuzz")
+    examples::test_fuzz(target)
         .unwrap()
-        .current_dir(TEST_DIR)
-        .args(&["test-fuzz", "--target", name, "--display-corpus"])
+        .args(&["--display-corpus"])
         .assert()
         .success()
         .stdout(predicate::str::contains(stdout))

@@ -1,8 +1,5 @@
-use assert_cmd::prelude::*;
 use dirs::{concretizations_directory_from_target, impl_concretizations_directory_from_target};
-use std::{fs::remove_dir_all, process::Command};
-
-const TEST_DIR: &str = "../examples";
+use std::fs::remove_dir_all;
 
 #[test]
 fn generic() {
@@ -57,15 +54,8 @@ fn test(name: &str, test: &str, target: &str, impl_expected: &[&str], expected: 
 
     remove_dir_all(&concretizations).unwrap_or_default();
 
-    Command::new("cargo")
-        .current_dir(TEST_DIR)
-        .args(&[
-            "test",
-            "--",
-            "--exact",
-            "--test",
-            &format!("{}::{}", name, test),
-        ])
+    examples::test(name, &format!("{}::{}", name, test))
+        .unwrap()
         .assert()
         .success();
 
@@ -73,16 +63,9 @@ fn test(name: &str, test: &str, target: &str, impl_expected: &[&str], expected: 
         ("--display-impl-concretizations", impl_expected),
         ("--display-concretizations", expected),
     ] {
-        let assert = &Command::cargo_bin("cargo-test-fuzz")
+        let assert = &examples::test_fuzz(&format!("{}::{}", name, target))
             .unwrap()
-            .current_dir(TEST_DIR)
-            .args(&[
-                "test-fuzz",
-                option,
-                "--exact",
-                "--target",
-                &format!("{}::{}", name, target),
-            ])
+            .args(&[option])
             .assert()
             .success();
 

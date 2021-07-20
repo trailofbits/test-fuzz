@@ -1,9 +1,6 @@
-use assert_cmd::prelude::*;
 use dirs::corpus_directory_from_target;
 use predicates::prelude::*;
-use std::{fs::remove_dir_all, process::Command};
-
-const TEST_DIR: &str = "../examples";
+use std::fs::remove_dir_all;
 
 const TIMEOUT: &str = "60";
 
@@ -22,33 +19,21 @@ fn fuzz(name: &str, persistent: bool) {
 
     remove_dir_all(&corpus).unwrap_or_default();
 
-    Command::new("cargo")
-        .current_dir(TEST_DIR)
-        .args(&["test", "--", "--test", name])
+    examples::test(name, &format!("{}::test", name))
+        .unwrap()
         .assert()
         .success();
 
-    let mut command = Command::cargo_bin("cargo-test-fuzz").unwrap();
+    let mut command = examples::test_fuzz(&format!("{}::target", name)).unwrap();
 
-    let mut args = vec![
-        "test-fuzz",
-        "--target",
-        name,
-        "--no-ui",
-        "--run-until-crash",
-    ];
+    let mut args = vec!["--no-ui", "--run-until-crash"];
     if persistent {
         args.push("--persistent");
     }
     args.extend_from_slice(&["--", "-V", TIMEOUT]);
 
-    command
-        .current_dir(TEST_DIR)
-        .args(&args)
-        .assert()
-        .success()
-        .stdout(
-            predicate::str::contains("+++ Testing aborted programmatically +++")
-                .and(predicate::str::contains("Time limit was reached").not()),
-        );
+    command.args(&args).assert().success().stdout(
+        predicate::str::contains("+++ Testing aborted programmatically +++")
+            .and(predicate::str::contains("Time limit was reached").not()),
+    );
 }
