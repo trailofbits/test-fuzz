@@ -10,12 +10,12 @@ use std::{
 };
 
 #[test]
-fn test_no_write() {
+fn no_write() {
     test(false, 0)
 }
 
 #[test]
-fn test_write() {
+fn write() {
     test(true, 1)
 }
 
