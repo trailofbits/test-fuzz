@@ -2,12 +2,12 @@ use dirs::corpus_directory_from_target;
 use std::fs::{read_dir, remove_dir_all};
 
 #[test]
-fn test_no_default() {
+fn no_default() {
     test("no_default", 0)
 }
 
 #[test]
-fn test_default() {
+fn default() {
     test("default", 1)
 }
 
