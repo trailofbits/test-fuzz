@@ -2,19 +2,29 @@ use assert_cmd::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
 
-const TEST_DIR: &str = "../examples";
-
 #[test]
 fn rename() {
     Command::new("cargo")
-        .current_dir(TEST_DIR)
-        .args(&["test", "--no-run"])
+        .args(&[
+            "test",
+            "--workspace",
+            "--package",
+            "test-fuzz-examples",
+            "--no-run",
+        ])
         .assert()
         .success();
 
     Command::new("cargo")
-        .current_dir(TEST_DIR)
-        .args(&["test", "--no-run", "--features", "bar_fuzz"])
+        .args(&[
+            "test",
+            "--workspace",
+            "--package",
+            "test-fuzz-examples",
+            "--no-run",
+            "--features",
+            "test-fuzz-examples/bar_fuzz",
+        ])
         .assert()
         .failure()
         .stderr(predicate::str::contains(

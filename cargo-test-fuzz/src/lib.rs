@@ -940,21 +940,9 @@ mod tests {
 
     use super::cargo_test_fuzz as cargo;
     use anyhow::Result;
-    use lazy_static::lazy_static;
-    use std::{env, io};
-
-    const TEST_DIR: &str = "../examples";
-
-    lazy_static! {
-        static ref INITIALIZE: io::Result<()> = {
-            // println!("{:?}", env::current_dir()?);
-            env::set_current_dir(TEST_DIR)
-        };
-    }
 
     #[test]
     fn build_no_instrumentation_with_target() {
-        INITIALIZE.as_ref().unwrap();
         cargo_test_fuzz(&["--no-run", "--no-instrumentation", "--target", "target"]).unwrap();
     }
 

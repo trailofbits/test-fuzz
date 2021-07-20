@@ -1,11 +1,5 @@
-use assert_cmd::prelude::*;
 use dirs::corpus_directory_from_target;
-use std::{
-    fs::{read_dir, remove_dir_all},
-    process::Command,
-};
-
-const TEST_DIR: &str = "../examples";
+use std::fs::{read_dir, remove_dir_all};
 
 const CRASH_TIMEOUT: &str = "60";
 
@@ -34,36 +28,25 @@ fn consolidate(name: &str, target: &str, fuzz_args: &[&str]) {
 
     remove_dir_all(&corpus).unwrap_or_default();
 
-    // smoelius: Do not run additional tests (e.g., the default tests), so that at most one corpus
-    // entry is produced.
-    Command::new("cargo")
-        .current_dir(TEST_DIR)
-        .args(&[
-            "test",
-            "--",
-            "--exact",
-            "--test",
-            &format!("{}::test", name),
-        ])
+    examples::test(name, &format!("{}::test", name))
+        .unwrap()
         .assert()
         .success();
 
     assert_eq!(read_dir(&corpus).unwrap().count(), 1);
 
-    let mut args = vec!["test-fuzz", "--target", target, "--no-ui"];
+    let mut args = vec!["--no-ui"];
     args.extend_from_slice(fuzz_args);
 
-    Command::cargo_bin("cargo-test-fuzz")
+    examples::test_fuzz(target)
         .unwrap()
-        .current_dir(TEST_DIR)
         .args(args)
         .assert()
         .success();
 
-    Command::cargo_bin("cargo-test-fuzz")
+    examples::test_fuzz(target)
         .unwrap()
-        .current_dir(TEST_DIR)
-        .args(&["test-fuzz", "--target", target, "--consolidate"])
+        .args(&["--consolidate"])
         .assert()
         .success();
 
