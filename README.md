@@ -15,9 +15,10 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
     * [`test_fuzz` macro](#test_fuzz-macro)
     * [`test_fuzz_impl` macro](#test_fuzz_impl-macro)
     * [`cargo test-fuzz` command](#cargo-test-fuzz-command)
-4. [Environment Variables](#environment-variables)
-5. [Limitations](#limitations)
-6. [Tips and Tricks](#tips-and-tricks)
+4. [Auto-generated Corpus Files](#auto-generated-corpus-files)
+5. [Environment Variables](#environment-variables)
+6. [Limitations](#limitations)
+7. [Tips and Tricks](#tips-and-tricks)
 
 ## Installation
 
@@ -105,6 +106,8 @@ The primary effects of the `test_fuzz` macro are:
 * **`enable_in_production`** - Generate corpus files when not running tests, provided the environment variable [`TEST_FUZZ_WRITE`](#environment-variables) is set. The default is to generate corpus files only when running tests, regardless of whether [`TEST_FUZZ_WRITE`](#environment-variables) is set. When running a target from outside its package directory, set [`TEST_FUZZ_MANIFEST_PATH`](#environment-variables) to the path of the package's `Cargo.toml` file.
 
     **WARNING**: Setting `enable_in_production` could introduce a denial-of-service vector. For example, setting this option for a function that is called many times with different arguments could fill up the disk. The check of [`TEST_FUZZ_WRITE`](#environment-variables) is meant to provide some defense against this possibility. Nonetheless, consider this option carefully before using it.
+
+* **`no_auto`** - Do not try to [auto-generate corpus files](#auto-generated-corpus-files) for this target.
 
 * **`only_concretizations`** - Record the target's concretizations when running tests, but do not generate corpus files and do not implement a fuzzing harness. This can be useful when the target is a generic function, but it is unclear what type parameters should be used for fuzzing.
 
@@ -226,6 +229,31 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 * **`--target <target>`** - String that fuzz target's name must contain
 
 * **`--timeout <timeout>`** - Number of milliseconds to consider a hang when fuzzing or replaying (equivalent to `-- -t <timeout>` when fuzzing)
+
+## Auto-generated Corpus Files
+
+`cargo-test-fuzz` can auto-generate values for types that implement certain traits. If all of a target's argument types implement such traits, `cargo-test-fuzz` can auto-generate corpus files for the target.
+
+The traits that `cargo-test-fuzz` currently supports and the values generated for them are as follows:
+
+| Trait(s) | Value(s) |
+|-|-|
+| `Bounded` | `T::min_value()`, `T::max_value()` |
+| `Bounded + Add + One` | `T::min_value() + T::one()` |
+| `Bounded + Add + Div + Two` | `T::min_value() / T::two() + T::max_value() / T::two()` |
+| `Bounded + Add + Div + Two + One` | `T::min_value() / T::two() + T::max_value() / T::two() + T::one()` |
+| `Bounded + Sub + One` | `T::max_value() - T::one()` |
+| `Default` | `T::default()` |
+
+**Key**
+
+* `Add` - [`core::ops::Add`](https://doc.rust-lang.org/beta/core/ops/trait.Add.html)
+* `Bounded` - [`num_traits::bounds::Bounded`](https://docs.rs/num-traits/0.2.14/num_traits/bounds/trait.Bounded.html)
+* `Default` - [`std::default::Default`](https://doc.rust-lang.org/std/default/trait.Default.html)
+* `Div` - [`core::ops::Div`](https://doc.rust-lang.org/beta/core/ops/trait.Div.html)
+* `One` - [`num_traits::One`](https://docs.rs/num-traits/0.2.14/num_traits/identities/trait.One.html)
+* `Sub` - [`core::ops::Sub`](https://doc.rust-lang.org/beta/core/ops/trait.Sub.html)
+* `Two` - `test_fuzz::runtime::traits::Two` (essentially `Add + One`)
 
 ## Environment Variables
 

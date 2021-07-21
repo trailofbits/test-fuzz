@@ -15,7 +15,7 @@ fn display_qwerty() {
 fn display_debug_crash() {
     display(
         "debug",
-        "debug_crash::target_fuzz::default",
+        "debug_crash::target_fuzz::auto",
         "debug_crash::target",
         "",
         "Encountered a failure while not replaying. A buggy Debug implementation perhaps?",
@@ -26,7 +26,7 @@ fn display_debug_crash() {
 fn display_debug_hang() {
     display(
         "debug",
-        "debug_hang::target_fuzz::default",
+        "debug_hang::target_fuzz::auto",
         "debug_hang::target",
         "",
         "Encountered a timeout while not replaying. A buggy Debug implementation perhaps?",
