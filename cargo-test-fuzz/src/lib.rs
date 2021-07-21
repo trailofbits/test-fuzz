@@ -944,11 +944,13 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
     );
 
     command.envs(envs).args(args);
-
+    debug!("{:?}", command);
     let status = command
         .status()
         .with_context(|| format!("Could not get status of `{:?}`", command))?;
 
+    // smoelius: When this command fails in a test, the stderr output gets lost. I haven't figured
+    // out why.
     ensure!(status.success(), "Command failed: {:?}", command);
 
     Ok(())
