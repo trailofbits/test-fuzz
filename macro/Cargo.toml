@@ -21,3 +21,5 @@ unzip-n = "0.1.2"
 
 [features]
 persistent = []
+serde_bincode = []
+serde_cbor = []

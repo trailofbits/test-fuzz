@@ -953,7 +953,16 @@ mod tests {
 
     #[test]
     fn build_no_instrumentation_with_target() {
-        cargo_test_fuzz(&["--no-run", "--no-instrumentation", "--target", "target"]).unwrap();
+        cargo_test_fuzz(&[
+            "--no-default-features",
+            "--features",
+            &("test-fuzz/serde_".to_owned() + test_fuzz::serde_format()),
+            "--no-run",
+            "--no-instrumentation",
+            "--target",
+            "target",
+        ])
+        .unwrap();
     }
 
     fn cargo_test_fuzz(args: &[&str]) -> Result<()> {

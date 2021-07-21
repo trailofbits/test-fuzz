@@ -14,6 +14,17 @@ use std::{
     path::Path,
 };
 
+#[cfg(feature = "serde_bincode")]
+const BYTE_LIMIT: u64 = 1024 * 1024 * 1024;
+
+#[derive(Copy, Clone)]
+pub enum SerdeFormat {
+    #[cfg(feature = "serde_bincode")]
+    Bincode,
+    #[cfg(feature = "serde_cbor")]
+    Cbor,
+}
+
 // smoelius: TryDebug and TryDefault use Nikolai Vazquez's trick from `impls`.
 // https://github.com/nvzqz/impls#how-it-works
 
@@ -113,10 +124,25 @@ pub fn write_concretization<T>(args: &[&str]) {
     write_data(&concretizations, data.as_bytes()).unwrap();
 }
 
-pub fn write_args<T: Serialize>(args: &T) {
+#[allow(unused_variables)]
+pub fn write_args<T: Serialize>(serde_format: SerdeFormat, args: &T) {
     let corpus = corpus_directory_from_args_type::<T>();
-    let data = serde_cbor::to_vec(args).unwrap();
-    write_data(&corpus, &data).unwrap();
+    match serde_format {
+        #[cfg(feature = "serde_bincode")]
+        SerdeFormat::Bincode => {
+            use bincode::Options;
+            let data = bincode::options()
+                .with_limit(BYTE_LIMIT)
+                .serialize(args)
+                .unwrap();
+            write_data(&corpus, &data).unwrap();
+        }
+        #[cfg(feature = "serde_cbor")]
+        SerdeFormat::Cbor => {
+            let data = serde_cbor::to_vec(args).unwrap();
+            write_data(&corpus, &data).unwrap();
+        }
+    };
 }
 
 pub fn write_data(dir: &Path, data: &[u8]) -> io::Result<()> {
@@ -129,6 +155,18 @@ pub fn write_data(dir: &Path, data: &[u8]) -> io::Result<()> {
     write(path, &data)
 }
 
-pub fn read_args<T: DeserializeOwned, R: Read>(reader: R) -> Option<T> {
-    serde_cbor::from_reader(reader).ok()
+#[allow(unused_variables)]
+pub fn read_args<T: DeserializeOwned, R: Read>(serde_format: SerdeFormat, reader: R) -> Option<T> {
+    match serde_format {
+        #[cfg(feature = "serde_bincode")]
+        SerdeFormat::Bincode => {
+            use bincode::Options;
+            bincode::options()
+                .with_limit(BYTE_LIMIT)
+                .deserialize_from(reader)
+                .ok()
+        }
+        #[cfg(feature = "serde_cbor")]
+        SerdeFormat::Cbor => serde_cbor::from_reader(reader).ok(),
+    }
 }

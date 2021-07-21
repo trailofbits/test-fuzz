@@ -10,9 +10,15 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
+bincode = { version = "1.3.3", optional = true }
 hex = "0.4.3"
 serde = { version = "1.0.126", features = ["derive"] }
-serde_cbor = "0.11.1"
+serde_cbor = { version = "0.11.1", optional = true }
 sha-1 = "0.9.6"
 
 dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.18" }
+
+[features]
+default = []
+serde_bincode = ["bincode"]
+# serde_cbor is implicit.

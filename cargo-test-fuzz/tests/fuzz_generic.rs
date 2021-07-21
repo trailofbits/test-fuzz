@@ -11,12 +11,18 @@ const TIMEOUT: &str = "60";
 
 #[test]
 fn fuzz_foo_qwerty() {
-    fuzz(
-        "test_foo_qwerty",
-        true,
-        "+++ Testing aborted programmatically +++",
-        false,
-    );
+    // smoelius: When `bincode` is enabled, `cargo-afl` fails because "the program crashed with one
+    // of the test cases provided."
+    if test_fuzz::serde_format() == "bincode" {
+        fuzz("test_foo_qwerty", false, "", false);
+    } else {
+        fuzz(
+            "test_foo_qwerty",
+            true,
+            "+++ Testing aborted programmatically +++",
+            false,
+        );
+    };
 }
 
 #[test]

@@ -27,8 +27,10 @@ dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.1
 examples = { path = "../examples", package = "test-fuzz-examples", version = "=0.1.0-alpha.18" }
 
 [features]
-default = []
+default = ["serde_bincode"]
 persistent = ["test-fuzz-macro/persistent"]
+serde_bincode = ["test-fuzz-macro/serde_bincode", "runtime/serde_bincode"]
+serde_cbor = ["test-fuzz-macro/serde_cbor", "runtime/serde_cbor"]
 
 [package.metadata.cargo-udeps.ignore]
 normal = ["afl"]

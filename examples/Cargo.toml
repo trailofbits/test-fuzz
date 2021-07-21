@@ -19,7 +19,7 @@ subprocess = "0.2.7"
 
 dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.18" }
 runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.18" }
-test-fuzz = { path = "../test-fuzz", version = "=0.1.0-alpha.18" }
+test-fuzz = { path = "../test-fuzz", version = "=0.1.0-alpha.18", default-features = false }
 
 [dev-dependencies]
 lazy_static = "1.4.0"
