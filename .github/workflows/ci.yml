@@ -40,6 +40,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    strategy:
+      matrix:
+        serde_format: [bincode, cbor]
+
     steps:
     - uses: actions/checkout@v2
 
@@ -50,7 +54,7 @@ jobs:
       run: cargo install afl
 
     - name: Test
-      run: cargo test --workspace
+      run: cargo test --workspace --no-default-features --features=test-fuzz/serde_${{ matrix.serde_format }}
       env:
         AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
 
@@ -66,13 +70,9 @@ jobs:
     - name: Install older afl
       run: cargo install afl --version=0.8.0
 
-    - name: Build
-      run: cargo build --workspace
-
     - name: Test
       run: |
-        cd examples
-        ../target/debug/cargo-test-fuzz test-fuzz --no-run 2>&1 1>/dev/null |
+        cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null |
           grep '^Error: `[^`]*` depends on `afl [^`]*`, which is incompatible with `cargo-afl [^`]*`.$'
 
   test-incompatible-test-fuzz:
@@ -92,13 +92,9 @@ jobs:
         sed -i 's/^\(version = "[^.]*\)\.[^.]*\.\([^"]*"\)$/\1.0.\2/' test-fuzz/Cargo.toml
         sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\)\.[^.]*\.\([^"]*".*}\)$/\1.0.\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
 
-    - name: Build
-      run: cargo build --workspace
-
     - name: Test
       run: |
-        cd examples
-        ../target/debug/cargo-test-fuzz test-fuzz --no-run 2>&1 1>/dev/null |
+        cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null |
           grep '^Error: `[^`]*` depends on `test-fuzz [^`]*`, which is incompatible with `cargo-test-fuzz [^`]*`.$'
 
   test-newer-test-fuzz:
@@ -119,11 +115,7 @@ jobs:
         sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\.[^.]*\)\.[^"]*\(".*}\)$/\1.255\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
         sed -i 's/^\(version = "[^-]*\)-[^"]*\("\)$/\1\2/' cargo-test-fuzz/Cargo.toml
 
-    - name: Build
-      run: cargo build --workspace
-
     - name: Test
       run: |
-        cd examples
-        ../target/debug/cargo-test-fuzz test-fuzz --no-run 2>&1 1>/dev/null |
+        cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null |
           grep '^`[^`]*` depends on `test-fuzz [^`]*`, which is newer than `cargo-test-fuzz [^`]*`.'

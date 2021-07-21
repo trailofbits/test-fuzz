@@ -273,6 +273,7 @@ fn map_method_or_fn(
     let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
     let mod_ident = Ident::new(&format!("{}_fuzz", renamed_target_ident), Span::call_site());
 
+    let serde_format = serde_format();
     let write_concretizations = quote! {
         let impl_concretization = [
             #(#impl_ty_names),*
@@ -424,7 +425,7 @@ fn map_method_or_fn(
                     let args = Args(
                         #(#args_is),*
                     );
-                    test_fuzz::runtime::write_args(&args);
+                    test_fuzz::runtime::write_args(#serde_format, &args);
                 }
 
                 struct UsingReader<R>(R);
@@ -435,7 +436,7 @@ fn map_method_or_fn(
                         struct Args #ty_generics (
                             #(#pub_arg_tys),*
                         );
-                        let args = test_fuzz::runtime::read_args::<Args #ty_generics_as_turbofish, _>(reader);
+                        let args = test_fuzz::runtime::read_args::<Args #ty_generics_as_turbofish, _>(#serde_format, reader);
                         args.map(|args| #mod_ident :: Args(
                             #(#args_is),*
                         ))
@@ -765,6 +766,20 @@ fn type_base(ty: &Type) -> Type {
     }
 
     ty
+}
+
+fn serde_format() -> Expr {
+    let mut formats = vec![];
+    #[cfg(feature = "serde_bincode")]
+    formats.push(parse_quote! { test_fuzz::runtime::SerdeFormat::Bincode });
+    #[cfg(feature = "serde_cbor")]
+    formats.push(parse_quote! { test_fuzz::runtime::SerdeFormat::Cbor });
+    assert!(
+        formats.len() <= 1,
+        "Multiple serde formats selected: {:?}",
+        formats
+    );
+    formats.pop().expect("No serde format selected")
 }
 
 fn log(tokens: &TokenStream2) {
