@@ -28,6 +28,7 @@ use std::{
 };
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
 
+const AUTO_SUFFIX: &str = "_fuzz::auto";
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
 const BASE_ENVS: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
@@ -879,11 +880,20 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         "-".to_owned()
     } else {
         let corpus_dir = corpus_directory_from_target(&executable.name, target);
-        ensure!(
-            corpus_dir.exists(),
-            "Could not find `{}`. Did you remember to run `cargo test`?",
-            corpus_dir.to_string_lossy(),
-        );
+        if !corpus_dir.exists() {
+            eprintln!(
+                "Could not find `{}`. Trying to auto-generate it...",
+                corpus_dir.to_string_lossy(),
+            );
+            auto_generate_corpus(executable, target)?;
+            ensure!(
+                corpus_dir.exists(),
+                "Could not find or auto-generate `{}`. Please ensure `{}` is tested.",
+                corpus_dir.to_string_lossy(),
+                target
+            );
+            eprintln!("Auto-generated `{}`.", corpus_dir.to_string_lossy());
+        }
         corpus_dir.to_string_lossy().into_owned()
     };
 
@@ -935,6 +945,19 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
 
     command.envs(envs).args(args);
 
+    let status = command
+        .status()
+        .with_context(|| format!("Could not get status of `{:?}`", command))?;
+
+    ensure!(status.success(), "Command failed: {:?}", command);
+
+    Ok(())
+}
+
+fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
+    let mut command = Command::new(&executable.path);
+    command.args(&["--exact", &(target.to_owned() + AUTO_SUFFIX)]);
+    debug!("{:?}", command);
     let status = command
         .status()
         .with_context(|| format!("Could not get status of `{:?}`", command))?;

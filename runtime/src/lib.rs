@@ -14,6 +14,10 @@ use std::{
     path::Path,
 };
 
+pub use num_traits;
+
+pub mod traits;
+
 #[cfg(feature = "serde_bincode")]
 const BYTE_LIMIT: u64 = 1024 * 1024 * 1024;
 
@@ -25,7 +29,7 @@ pub enum SerdeFormat {
     Cbor,
 }
 
-// smoelius: TryDebug and TryDefault use Nikolai Vazquez's trick from `impls`.
+// smoelius: TryDebug, etc. use Nikolai Vazquez's trick from `impls`.
 // https://github.com/nvzqz/impls#how-it-works
 
 struct DebugUnimplemented<T>(PhantomData<T>);
@@ -61,24 +65,61 @@ impl<'a, T: Debug> TryDebug<'a, T> {
     }
 }
 
-pub trait TryDefaultFallback<U> {
-    fn default() -> Option<U>;
+/// * `ty` - Type. When `auto_impl!` is used in the `auto!` macro, this should be just `$ty`.
+/// * `trait` - Trait that `ty` may or may not implement.
+/// * `expr` - Vector of values using `trait`, should `ty` implement it. In `expr`, `T` should be
+///   used as the name of the type, not `$ty`.
+#[macro_export]
+macro_rules! auto_impl {
+    ($ty:ty, $trait:path, $expr:expr) => {{
+        trait AutoFallback<U> {
+            fn auto() -> Vec<U>;
+        }
+
+        impl<T, U> AutoFallback<U> for T {
+            #[must_use]
+            fn auto() -> Vec<U> {
+                vec![]
+            }
+        }
+
+        struct Auto<T>(std::marker::PhantomData<T>);
+
+        impl<T: $trait> Auto<T> {
+            #[must_use]
+            pub fn auto() -> Vec<T> {
+                $expr
+            }
+        }
+
+        Auto::<$ty>::auto() as Vec<$ty>
+    }};
 }
 
-impl<T, U> TryDefaultFallback<U> for T {
-    #[must_use]
-    fn default() -> Option<U> {
-        None
-    }
-}
-
-pub struct TryDefault<'a, T>(pub &'a T);
-
-impl<'a, T: Default> TryDefault<'a, T> {
-    #[must_use]
-    pub fn default() -> Option<T> {
-        Some(T::default())
-    }
+#[macro_export]
+macro_rules! auto {
+    ($ty:ty) => {{
+        let xss = [
+            $crate::auto_impl!(
+                $ty,
+                $crate::num_traits::bounds::Bounded,
+                vec![T::min_value(), T::max_value()]
+            ),
+            $crate::auto_impl!($ty, Default, vec![T::default()]),
+            $crate::auto_impl!(
+                $ty,
+                $crate::traits::MaxValueSubOne,
+                vec![T::max_value_sub_one()]
+            ),
+            $crate::auto_impl!($ty, $crate::traits::Middle, vec![T::low(), T::high()]),
+            $crate::auto_impl!(
+                $ty,
+                $crate::traits::MinValueAddOne,
+                vec![T::min_value_add_one()]
+            ),
+        ];
+        std::array::IntoIter::new(xss).flatten()
+    }};
 }
 
 #[must_use]

@@ -6,7 +6,11 @@
 fn consume<T>(_: T) {}
 
 mod primitive {
-    #[test_fuzz::test_fuzz]
+    // smoelius: `no_auto` because `serde_cbor` does not fully support 128-bit integers:
+    // https://github.com/pyfisch/cbor/pull/145
+    // We might use `ciborium` as an alternative to `serde_cbor`. But `ciborium` currently has no
+    // way to limit the size of an allocation: https://github.com/enarx/ciborium/issues/11
+    #[test_fuzz::test_fuzz(no_auto)]
     fn target(
         bool: bool,
         i8: i8,

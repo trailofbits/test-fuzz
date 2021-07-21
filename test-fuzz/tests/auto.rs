@@ -2,21 +2,21 @@ use dirs::corpus_directory_from_target;
 use std::fs::{read_dir, remove_dir_all};
 
 #[test]
-fn no_default() {
-    test("no_default", 0)
+fn signed() {
+    test("signed", 6)
 }
 
 #[test]
-fn default() {
-    test("default", 1)
+fn unsigned() {
+    test("unsigned", 6)
 }
 
 fn test(name: &str, n: usize) {
-    let corpus = corpus_directory_from_target("default", &format!("{}::target", name));
+    let corpus = corpus_directory_from_target("auto", &format!("{}::target", name));
 
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test("default", &format!("{}::target_fuzz::auto", name))
+    examples::test("auto", &format!("{}::target_fuzz::auto", name))
         .unwrap()
         .assert()
         .success();

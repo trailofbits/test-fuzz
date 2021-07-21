@@ -134,6 +134,8 @@ struct TestFuzzOpts {
     #[darling(default)]
     enable_in_production: bool,
     #[darling(default)]
+    no_auto: bool,
+    #[darling(default)]
     only_concretizations: bool,
     #[darling(default)]
     rename: Option<Ident>,
@@ -254,14 +256,15 @@ fn map_method_or_fn(
             parse_quote! { args . #i }
         })
         .collect();
-    let def_args: Vec<Expr> = arg_tys
+    let autos: Vec<Expr> = arg_tys
         .iter()
         .map(|ty| {
             parse_quote! {
-                test_fuzz::runtime::TryDefault::<#ty>::default()?
+                test_fuzz::runtime::auto!( #ty ).collect::<Vec<_>>()
             }
         })
         .collect();
+    let args_from_autos = args_from_autos(&autos);
     let ret_ty = match &sig.output {
         ReturnType::Type(_, ty) => self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
             util::expand_self(self_ty, trait_path, ty)
@@ -318,6 +321,29 @@ fn map_method_or_fn(
                 #[cfg(test)]
             },
         )
+    };
+    let auto = if opts.no_auto {
+        quote! {}
+    } else {
+        quote! {
+            // smoelius: `#autos` could refer to type parameters. Expanding it in a method
+            // definition like this ensures such type parameters resolve.
+            impl #impl_generics Args #ty_generics #where_clause {
+                fn write_auto() {
+                    let autos = ( #(#autos,)* );
+                    for args in #args_from_autos {
+                        write_args(args);
+                    }
+                }
+            }
+
+            #[test]
+            fn auto() {
+                if !test_fuzz::runtime::test_fuzz_enabled() {
+                    Args #combined_concretization :: write_auto();
+                }
+            }
+        }
     };
     let input_args = {
         #[cfg(feature = "persistent")]
@@ -452,26 +478,7 @@ fn map_method_or_fn(
                     }
                 }
 
-                impl #impl_generics Args #ty_generics #where_clause {
-                    fn write_default() {
-                        if !test_fuzz::runtime::test_fuzz_enabled() {
-                            use test_fuzz::runtime::TryDefaultFallback;
-                            // smoelius: `def_args` contains `?`, which is why the code is written
-                            // this way.
-                            let args = (|| -> Option< #mod_ident :: Args #ty_generics_as_turbofish> {
-                                Some(#mod_ident::Args(
-                                    #(#def_args),*
-                                ))
-                            })();
-                            args.map(|args| write_args(args));
-                        }
-                    }
-                }
-
-                #[test]
-                fn default() {
-                    Args #combined_concretization :: write_default();
-                }
+                #auto
             },
             quote! {
                 // smoelius: Do not set the panic hook when replaying. Leave cargo test's panic
@@ -766,6 +773,38 @@ fn type_base(ty: &Type) -> Type {
     }
 
     ty
+}
+
+// smoelius: The current strategy for combining auto-generated values is a kind of "round robin."
+// The strategy ensures that each auto-generated value gets into at least one `Arg` value.
+fn args_from_autos(autos: &[Expr]) -> Expr {
+    let lens: Vec<Expr> = (0..autos.len())
+        .map(|i| {
+            let i = Literal::usize_unsuffixed(i);
+            parse_quote! {
+                autos.#i.len()
+            }
+        })
+        .collect();
+    let args: Vec<Expr> = (0..autos.len())
+        .map(|i| {
+            let i = Literal::usize_unsuffixed(i);
+            parse_quote! {
+                autos.#i[(i + #i) % lens[#i]].clone()
+            }
+        })
+        .collect();
+    parse_quote! {{
+        let lens = [ #(#lens),* ];
+        let max = if std::array::IntoIter::new(lens).min().unwrap_or(1) > 0 {
+            std::array::IntoIter::new(lens).max().unwrap_or(1)
+        } else {
+            0
+        };
+        (0..max).map(move |i|
+            Args( #(#args),* )
+        )
+    }}
 }
 
 fn serde_format() -> Expr {
