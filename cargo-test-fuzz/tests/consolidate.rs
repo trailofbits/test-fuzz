@@ -1,4 +1,5 @@
 use dirs::corpus_directory_from_target;
+use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
 
 const CRASH_TIMEOUT: &str = "60";
@@ -11,6 +12,7 @@ fn consolidate_crashes() {
         "assert",
         "assert::target",
         &["--run-until-crash", "--", "-V", CRASH_TIMEOUT],
+        "Args { x: true }",
     );
 }
 
@@ -20,10 +22,11 @@ fn consolidate_hangs() {
         "parse_duration",
         "parse_duration::parse",
         &["--persistent", "--", "-V", HANG_TIMEOUT],
+        "",
     );
 }
 
-fn consolidate(name: &str, target: &str, fuzz_args: &[&str]) {
+fn consolidate(name: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
     let corpus = corpus_directory_from_target(name, target);
 
     remove_dir_all(&corpus).unwrap_or_default();
@@ -51,4 +54,11 @@ fn consolidate(name: &str, target: &str, fuzz_args: &[&str]) {
         .success();
 
     assert!(read_dir(&corpus).unwrap().count() > 1);
+
+    examples::test_fuzz(target)
+        .unwrap()
+        .args(&["--display-corpus"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(pattern));
 }
