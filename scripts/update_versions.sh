@@ -9,7 +9,7 @@ fi
 
 set -x
 
-VERSION="$(grep -m 1 '^version = "[^"]*"$' Cargo.toml)"
+VERSION="$(grep -m 1 '^version = "[^"]*"$' test-fuzz/Cargo.toml)"
 
 find . -name Cargo.toml -exec sed -i "{
 s/^version = \"[^\"]*\"$/$VERSION/

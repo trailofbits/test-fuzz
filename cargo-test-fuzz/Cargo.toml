@@ -1,6 +1,6 @@
 [package]
 name = "cargo-test-fuzz"
-version = "0.1.0-alpha.18"
+version = "0.1.0-alpha.19"
 edition = "2018"
 
 description = "cargo-test-fuzz"
@@ -24,8 +24,8 @@ semver = "0.11.0"
 serde = { version = "1.0.126", features = ["derive"] }
 subprocess = "0.2.7"
 
-dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.18" }
-test-fuzz = { path = "../test-fuzz", version = "=0.1.0-alpha.18", default-features = false }
+dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.19" }
+test-fuzz = { path = "../test-fuzz", version = "=0.1.0-alpha.19", default-features = false }
 
 [dev-dependencies]
 assert_cmd = "1.0.7"
@@ -34,7 +34,7 @@ predicates = "2.0.0"
 regex = "1.5.4"
 rlimit = "0.5.4"
 
-examples = { path = "../examples", package = "test-fuzz-examples", version = "=0.1.0-alpha.18" }
+examples = { path = "../examples", package = "test-fuzz-examples", version = "=0.1.0-alpha.19" }
 
 [features]
 default = ["test-fuzz/serde_bincode"]

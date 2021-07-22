@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz"
-version = "0.1.0-alpha.18"
+version = "0.1.0-alpha.19"
 edition = "2018"
 
 description = "To make fuzzing Rust easy"
@@ -13,8 +13,8 @@ repository = "https://github.com/trailofbits/test-fuzz"
 afl = "=0.10.1"
 serde = "1.0.126"
 
-runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.18" }
-test-fuzz-macro = { path = "../macro", version = "=0.1.0-alpha.18" }
+runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.19" }
+test-fuzz-macro = { path = "../macro", version = "=0.1.0-alpha.19" }
 
 [dev-dependencies]
 assert_cmd = "1.0.7"
@@ -23,8 +23,8 @@ lazy_static = "1.4.0"
 predicates = "2.0.0"
 semver = "0.11.0"
 
-dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.18" }
-examples = { path = "../examples", package = "test-fuzz-examples", version = "=0.1.0-alpha.18" }
+dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.19" }
+examples = { path = "../examples", package = "test-fuzz-examples", version = "=0.1.0-alpha.19" }
 
 [features]
 default = ["serde_bincode"]
