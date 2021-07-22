@@ -21,7 +21,7 @@ jobs:
         run: |
           # smoelius: The crates must be published in this order, which is a reverse topological
           # sort of `doc/crates.dot`.
-          for X in dirs runtime macro test-fuzz cargo-test-fuzz; do
+          for X in dirs runtime macro examples test-fuzz cargo-test-fuzz; do
             # smoelius: Continue if a previous publish attempt failed.
             TMP="$(mktemp)"
             cargo publish --manifest-path "$X"/Cargo.toml 2>"$TMP" || (
