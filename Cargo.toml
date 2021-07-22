@@ -1,8 +1,8 @@
 [workspace]
 members = [
     "cargo-test-fuzz",
-    "dirs",
     "examples",
+    "internal",
     "macro",
     "runtime",
     "test-fuzz",

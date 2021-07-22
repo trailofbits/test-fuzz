@@ -1,4 +1,4 @@
-use dirs::corpus_directory_from_target;
+use internal::{dirs::corpus_directory_from_target, examples};
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
 
@@ -20,13 +20,7 @@ fn no_auto() {
 
 #[test]
 fn auto_empty() {
-    auto(
-        "no_default",
-        "no_default::target",
-        false,
-        "Could not find or auto-generate",
-        0,
-    );
+    auto("no_default", "no_default::target", false, "", 0);
 }
 
 #[test]

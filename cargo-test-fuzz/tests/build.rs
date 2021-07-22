@@ -1,3 +1,5 @@
+use internal::examples;
+
 // smoelius: In each use of `examples::test_fuzz` below, the `target` argument is arbitrary. To
 // have a version of `examples::test_fuzz` that takes no arguments for just these tests would be
 // more trouble than it is worth.

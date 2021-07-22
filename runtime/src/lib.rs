@@ -1,4 +1,4 @@
-use dirs::{
+use internal::dirs::{
     concretizations_directory_from_args_type, corpus_directory_from_args_type,
     impl_concretizations_directory_from_args_type,
 };

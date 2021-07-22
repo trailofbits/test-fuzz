@@ -1,3 +1,4 @@
+use internal::examples;
 use predicates::prelude::*;
 
 #[test]

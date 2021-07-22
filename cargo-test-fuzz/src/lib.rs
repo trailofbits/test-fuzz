@@ -8,7 +8,7 @@ use cargo_metadata::{
     Artifact, ArtifactProfile, Message, Metadata, MetadataCommand, Package, PackageId,
 };
 use clap::{crate_version, Clap};
-use dirs::{
+use internal::dirs::{
     concretizations_directory_from_target, corpus_directory_from_target,
     crashes_directory_from_target, hangs_directory_from_target,
     impl_concretizations_directory_from_target, output_directory_from_target,
