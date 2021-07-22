@@ -595,7 +595,7 @@ fn cargo_afl_version() -> Result<Version> {
             "Could not determine `cargo-afl` version. Is it installed? Try `cargo install afl`."
         )
     })?;
-    Version::parse(version).map_err(Into::into)
+    Version::parse(version.trim_end()).map_err(Into::into)
 }
 
 fn check_dependency_version(
