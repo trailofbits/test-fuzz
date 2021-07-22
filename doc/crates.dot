@@ -3,7 +3,6 @@ digraph {
     "cargo-test-fuzz" -> "test-fuzz"
     "macro" -> "runtime"
     "runtime" -> "dirs"
-    "test-fuzz" -> "examples"
     "test-fuzz" -> "runtime"
     "test-fuzz" -> "macro"
 }
