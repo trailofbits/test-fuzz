@@ -6,19 +6,10 @@ publish = false
 
 [[bin]]
 name = "hello-world"
-path = "src/bin/hello_world.rs"
+path = "src/main.rs"
 
 [dependencies]
-anyhow = "1.0.42"
-assert_cmd = "1.0.7"
-cargo_metadata = "0.13.1"
-if_chain = "1.0.1"
-log = "0.4.14"
 serde = "1.0.126"
-subprocess = "0.2.7"
-
-dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.21" }
-runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.21" }
 test-fuzz = { path = "../test-fuzz", version = "=0.1.0-alpha.21", default-features = false }
 
 [dev-dependencies]

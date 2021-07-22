@@ -13,6 +13,7 @@ repository = "https://github.com/trailofbits/test-fuzz"
 afl = "=0.10.1"
 serde = "1.0.126"
 
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=0.1.0-alpha.21" }
 runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=0.1.0-alpha.21" }
 test-fuzz-macro = { path = "../macro", version = "=0.1.0-alpha.21" }
 
@@ -23,14 +24,11 @@ lazy_static = "1.4.0"
 predicates = "2.0.0"
 semver = "0.11.0"
 
-dirs = { path = "../dirs", package = "test-fuzz-dirs", version = "=0.1.0-alpha.21" }
-examples = { path = "../examples", package = "test-fuzz-examples", version = "=0.1.0-alpha.21" }
-
 [features]
 default = ["serde_bincode"]
 persistent = ["test-fuzz-macro/persistent"]
-serde_bincode = ["test-fuzz-macro/serde_bincode", "runtime/serde_bincode"]
-serde_cbor = ["test-fuzz-macro/serde_cbor", "runtime/serde_cbor"]
+serde_bincode = ["internal/serde_bincode", "runtime/serde_bincode", "test-fuzz-macro/serde_bincode"]
+serde_cbor = ["internal/serde_cbor", "runtime/serde_cbor", "test-fuzz-macro/serde_cbor"]
 
 [package.metadata.cargo-udeps.ignore]
 normal = ["afl"]

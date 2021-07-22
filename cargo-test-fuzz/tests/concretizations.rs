@@ -1,4 +1,7 @@
-use dirs::{concretizations_directory_from_target, impl_concretizations_directory_from_target};
+use internal::{
+    dirs::{concretizations_directory_from_target, impl_concretizations_directory_from_target},
+    examples,
+};
 use std::fs::remove_dir_all;
 
 #[test]

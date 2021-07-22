@@ -1,4 +1,4 @@
-use dirs::corpus_directory_from_target;
+use internal::{dirs::corpus_directory_from_target, examples};
 use predicates::prelude::*;
 use std::fs::remove_dir_all;
 

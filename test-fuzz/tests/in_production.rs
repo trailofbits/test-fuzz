@@ -1,5 +1,5 @@
 use assert_cmd::prelude::*;
-use dirs::corpus_directory_from_target;
+use internal::dirs::corpus_directory_from_target;
 use lazy_static::lazy_static;
 use std::{
     env,
