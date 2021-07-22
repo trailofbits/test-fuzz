@@ -5,7 +5,7 @@
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use bitflags::bitflags;
 use cargo_metadata::{
-    Artifact, ArtifactProfile, Message, Metadata, MetadataCommand, Package, PackageId,
+    Artifact, ArtifactProfile, Message, Metadata, MetadataCommand, Package, PackageId, Version,
 };
 use clap::{crate_version, Clap};
 use internal::dirs::{
@@ -15,7 +15,7 @@ use internal::dirs::{
     queue_directory_from_target, target_directory,
 };
 use log::debug;
-use semver::{Version, VersionReq};
+use semver::VersionReq;
 use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
