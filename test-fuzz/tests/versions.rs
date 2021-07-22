@@ -1,6 +1,5 @@
-use cargo_metadata::{Dependency, Metadata, MetadataCommand};
+use cargo_metadata::{Dependency, Metadata, MetadataCommand, Version};
 use lazy_static::lazy_static;
-use semver::Version;
 
 lazy_static! {
     static ref METADATA: Metadata = MetadataCommand::new().no_deps().exec().unwrap();
@@ -24,7 +23,7 @@ fn versions_are_exact_and_match() {
         for Dependency { name: dep, req, .. } in &package.dependencies {
             if dep.starts_with("test-fuzz") {
                 assert!(
-                    req.is_exact(),
+                    req.to_string().starts_with("="),
                     "`{}` dependency on `{}` is not exact",
                     package.name,
                     dep

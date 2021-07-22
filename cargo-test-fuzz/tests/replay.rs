@@ -1,6 +1,6 @@
 use internal::{dirs::corpus_directory_from_target, examples};
 use predicates::prelude::*;
-use rlimit::{Resource, Rlim};
+use rlimit::Resource;
 use std::fs::remove_dir_all;
 
 // smoelius: MEMORY_LIMIT must be large enough for the build process to complete.
@@ -67,9 +67,7 @@ fn replay(name: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {
         .success();
 
     // smoelius: The memory limit must be set to replay the crashes, but not the hangs.
-    Resource::DATA
-        .set(Rlim::from_raw(MEMORY_LIMIT), Rlim::from_raw(MEMORY_LIMIT))
-        .unwrap();
+    Resource::DATA.set(MEMORY_LIMIT, MEMORY_LIMIT).unwrap();
 
     let mut command = examples::test_fuzz(target).unwrap();
 

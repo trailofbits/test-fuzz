@@ -14,13 +14,13 @@ name = "cargo-test-fuzz"
 path = "src/bin/cargo_test_fuzz.rs"
 
 [dependencies]
-anyhow = "1.0.40"
+anyhow = "1.0.42"
 bitflags = "1.2.1"
-cargo_metadata = "0.13.1"
+cargo_metadata = "0.14.0"
 clap = "3.0.0-beta.2"
 env_logger = "0.9.0"
 log = "0.4.14"
-semver = "0.11.0"
+semver = "1.0.3"
 serde = { version = "1.0.126", features = ["derive"] }
 subprocess = "0.2.7"
 
@@ -32,7 +32,7 @@ assert_cmd = "1.0.7"
 lazy_static = "1.4.0"
 predicates = "2.0.0"
 regex = "1.5.4"
-rlimit = "0.5.4"
+rlimit = "0.6.2"
 
 [features]
 default = ["test-fuzz/serde_bincode"]
