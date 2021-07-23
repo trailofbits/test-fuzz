@@ -107,7 +107,7 @@ The primary effects of the `test_fuzz` macro are:
 
     **WARNING**: Setting `enable_in_production` could introduce a denial-of-service vector. For example, setting this option for a function that is called many times with different arguments could fill up the disk. The check of [`TEST_FUZZ_WRITE`](#environment-variables) is meant to provide some defense against this possibility. Nonetheless, consider this option carefully before using it.
 
-* **`no_auto`** - Do not try to [auto-generate corpus files](#auto-generated-corpus-files) for this target.
+* **`no_auto`** - Do not try to [auto-generate corpus files](#auto-generated-corpus-files) for the target.
 
 * **`only_concretizations`** - Record the target's concretizations when running tests, but do not generate corpus files and do not implement a fuzzing harness. This can be useful when the target is a generic function, but it is unclear what type parameters should be used for fuzzing.
 
@@ -277,4 +277,25 @@ The traits that `cargo-test-fuzz` currently supports and the values generated fo
 
 * If you know the package in which your target resides, passing `-p <package>` to `cargo test`/[`cargo test-fuzz`](#cargo-test-fuzz-command) can significantly reduce build times.
 
-* Rust [won't allow you to](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types) implement `serde::Serializable` for other repositories' types. But you may be able to [patch](https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html) other repositories to make their types serializeble. Also, [`cargo-clone`](https://github.com/JanLikar/cargo-clone) can be useful for grabbing dependencies' repositories.
+* Rust [won't allow you to](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types) implement `serde::Serialize` for other repositories' types. But you may be able to [patch](https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html) other repositories to make their types serializeble. Also, [`cargo-clone`](https://github.com/JanLikar/cargo-clone) can be useful for grabbing dependencies' repositories.
+
+* If a type `Foo` is easy to construct (say by calling `Foo::new()`), and if you don't care to record `Foo` values, then you may be able to implement `serde::Serialize`/`serde::Deserialize` for `Foo` like this:
+    ```rust
+    impl serde::Serialize for Foo {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
+            ().serialize(serializer)
+        }
+    }
+
+    impl<'de> serde::Deserialize<'de> for Foo {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            <()>::deserialize(deserializer).map(|_| Foo::new())
+        }
+    }
+    ```
