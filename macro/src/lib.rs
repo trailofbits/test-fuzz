@@ -4,13 +4,15 @@ use darling::FromMeta;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
-use std::str::FromStr;
+use std::{io::Write, str::FromStr};
+use subprocess::{Exec, Redirection};
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute,
     AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericMethodArgument, GenericParam,
     Generics, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Pat, Path, PathArguments,
     PathSegment, ReturnType, Signature, Stmt, Type, TypePath, TypeReference, Visibility,
 };
+use toolchain_find::find_installed_component;
 use unzip_n::unzip_n;
 
 mod util;
@@ -823,7 +825,15 @@ fn serde_format() -> Expr {
 
 fn log(tokens: &TokenStream2) {
     if log_enabled() {
-        println!("{}", tokens);
+        if let Some(rustfmt) = find_installed_component("rustfmt") {
+            let mut popen = Exec::cmd(rustfmt).stdin(Redirection::Pipe).popen().unwrap();
+            let mut stdin = popen.stdin.take().unwrap();
+            write!(stdin, "{}", tokens).unwrap();
+            let status = popen.wait().unwrap();
+            assert!(status.success());
+        } else {
+            println!("{}", tokens);
+        }
     }
 }
 
