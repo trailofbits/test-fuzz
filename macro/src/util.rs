@@ -30,7 +30,7 @@ impl<'a> VisitMut for TypeVisitor<'a> {
                 let trait_path = self
                     .trait_path
                     .as_ref()
-                    .expect("expect `trait_path` to be set");
+                    .expect("`trait_path` should be set");
                 *ty = parse_quote! { < #self_ty as #trait_path > :: #(#segments)::* };
                 return;
             }

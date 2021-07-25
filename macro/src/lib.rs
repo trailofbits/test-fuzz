@@ -1,4 +1,5 @@
 #![allow(clippy::default_trait_access)]
+#![deny(clippy::unwrap_used)]
 
 use darling::FromMeta;
 use proc_macro::TokenStream;
@@ -23,7 +24,8 @@ struct TestFuzzImplOpts {}
 #[proc_macro_attribute]
 pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
     let attr_args = parse_macro_input!(args as AttributeArgs);
-    let _ = TestFuzzImplOpts::from_list(&attr_args).unwrap();
+    let _ =
+        TestFuzzImplOpts::from_list(&attr_args).expect("Could not parse `test_fuzz_impl` options");
 
     let item = parse_macro_input!(item as ItemImpl);
     let ItemImpl {
@@ -146,7 +148,7 @@ struct TestFuzzOpts {
 #[proc_macro_attribute]
 pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
     let attr_args = parse_macro_input!(args as AttributeArgs);
-    let opts = TestFuzzOpts::from_list(&attr_args).unwrap();
+    let opts = TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options");
 
     let item = parse_macro_input!(item as ItemFn);
     let ItemFn {
@@ -374,7 +376,7 @@ fn map_method_or_fn(
         let mut de_args = de_args.iter();
         let self_arg = de_args
             .next()
-            .expect("should have at least one deserialized argument");
+            .expect("Should have at least one deserialized argument");
         parse_quote! {
             #self_arg . #target_ident #concretization (
                 #(#de_args),*
@@ -665,8 +667,9 @@ fn map_ref_arg(i: &Literal, pat: &Pat, ty: &TypeReference) -> (Type, Expr, Expr)
 fn opts_from_attr(attr: &Attribute) -> TestFuzzOpts {
     attr.parse_args::<TokenStream2>()
         .map_or(TestFuzzOpts::default(), |tokens| {
-            let attr_args = parse_macro_input::parse::<AttributeArgs>(tokens.into()).unwrap();
-            TestFuzzOpts::from_list(&attr_args).unwrap()
+            let attr_args = parse_macro_input::parse::<AttributeArgs>(tokens.into())
+                .expect("Could not parse attribute args");
+            TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options")
         })
 }
 
@@ -678,12 +681,10 @@ fn is_test_fuzz(attr: &Attribute) -> bool {
 }
 
 fn parse_generic_method_arguments(s: &str) -> Punctuated<GenericMethodArgument, token::Comma> {
-    let tokens = TokenStream::from_str(s).unwrap();
-    Parser::parse(Punctuated::<Type, token::Comma>::parse_terminated, tokens)
-        .unwrap()
-        .into_iter()
-        .map(GenericMethodArgument::Type)
-        .collect()
+    let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
+    let args = Parser::parse(Punctuated::<Type, token::Comma>::parse_terminated, tokens)
+        .expect("Could not parse generic method arguments");
+    args.into_iter().map(GenericMethodArgument::Type).collect()
 }
 
 fn type_idents(generics: &Generics) -> Vec<Ident> {
@@ -826,11 +827,17 @@ fn serde_format() -> Expr {
 fn log(tokens: &TokenStream2) {
     if log_enabled() {
         if let Some(rustfmt) = find_installed_component("rustfmt") {
-            let mut popen = Exec::cmd(rustfmt).stdin(Redirection::Pipe).popen().unwrap();
-            let mut stdin = popen.stdin.take().unwrap();
-            write!(stdin, "{}", tokens).unwrap();
-            let status = popen.wait().unwrap();
-            assert!(status.success());
+            let mut popen = Exec::cmd(rustfmt)
+                .stdin(Redirection::Pipe)
+                .popen()
+                .expect("`popen` failed");
+            let mut stdin = popen
+                .stdin
+                .take()
+                .expect("Could not take `rustfmt`'s standard input");
+            write!(stdin, "{}", tokens).expect("Could not write to `rustfmt`'s standard input");
+            let status = popen.wait().expect("`wait` failed");
+            assert!(status.success(), "`rustfmt` failed");
         } else {
             println!("{}", tokens);
         }
