@@ -1,6 +1,9 @@
-use internal::dirs::{
-    concretizations_directory_from_args_type, corpus_directory_from_args_type,
-    impl_concretizations_directory_from_args_type,
+use internal::{
+    dirs::{
+        concretizations_directory_from_args_type, corpus_directory_from_args_type,
+        impl_concretizations_directory_from_args_type,
+    },
+    SerdeFormat,
 };
 use serde::{de::DeserializeOwned, Serialize};
 use sha1::{Digest, Sha1};
@@ -20,14 +23,6 @@ pub mod traits;
 
 #[cfg(feature = "serde_bincode")]
 const BYTE_LIMIT: u64 = 1024 * 1024 * 1024;
-
-#[derive(Copy, Clone)]
-pub enum SerdeFormat {
-    #[cfg(feature = "serde_bincode")]
-    Bincode,
-    #[cfg(feature = "serde_cbor")]
-    Cbor,
-}
 
 // smoelius: TryDebug, etc. use Nikolai Vazquez's trick from `impls`.
 // https://github.com/nvzqz/impls#how-it-works

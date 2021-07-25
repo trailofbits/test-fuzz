@@ -19,7 +19,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
         "test-fuzz-examples",
         "--no-default-features",
         "--features",
-        &("test-fuzz/serde_".to_owned() + crate::serde_format()),
+        &("test-fuzz/".to_owned() + crate::serde_format().as_feature()),
         "--no-run",
         "--message-format=json",
     ];
@@ -89,7 +89,7 @@ pub fn test_fuzz(target: &str) -> Result<Command> {
         "test-fuzz-examples",
         "--no-default-features",
         "--features",
-        &("test-fuzz/serde_".to_owned() + crate::serde_format()),
+        &("test-fuzz/".to_owned() + crate::serde_format().as_feature()),
         "--exact",
         "--target",
         target,

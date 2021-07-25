@@ -12,7 +12,7 @@ fn rename() {
             "test-fuzz-examples",
             "--no-run",
             "--features",
-            &("test-fuzz/serde_".to_owned() + test_fuzz::serde_format()),
+            &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
         ])
         .assert()
         .success();
@@ -25,7 +25,7 @@ fn rename() {
             "test-fuzz-examples",
             "--no-run",
             "--features",
-            &("test-fuzz/serde_".to_owned() + test_fuzz::serde_format()),
+            &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
             "--features",
             "test-fuzz-examples/bar_fuzz",
         ])
