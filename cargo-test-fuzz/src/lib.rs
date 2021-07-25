@@ -981,7 +981,7 @@ mod tests {
         cargo_test_fuzz(&[
             "--no-default-features",
             "--features",
-            &("test-fuzz/serde_".to_owned() + test_fuzz::serde_format()),
+            &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
             "--no-run",
             "--no-instrumentation",
             "--target",

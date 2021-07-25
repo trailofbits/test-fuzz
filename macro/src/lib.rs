@@ -1,6 +1,7 @@
 #![allow(clippy::default_trait_access)]
 
 use darling::FromMeta;
+use internal::serde_format;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
@@ -805,20 +806,6 @@ fn args_from_autos(autos: &[Expr]) -> Expr {
             Args( #(#args),* )
         )
     }}
-}
-
-fn serde_format() -> Expr {
-    let mut formats = vec![];
-    #[cfg(feature = "serde_bincode")]
-    formats.push(parse_quote! { test_fuzz::runtime::SerdeFormat::Bincode });
-    #[cfg(feature = "serde_cbor")]
-    formats.push(parse_quote! { test_fuzz::runtime::SerdeFormat::Cbor });
-    assert!(
-        formats.len() <= 1,
-        "Multiple serde formats selected: {:?}",
-        formats
-    );
-    formats.pop().expect("No serde format selected")
 }
 
 fn log(tokens: &TokenStream2) {

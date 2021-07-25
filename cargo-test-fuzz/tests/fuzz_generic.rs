@@ -1,4 +1,4 @@
-use internal::{dirs::corpus_directory_from_target, examples};
+use internal::{dirs::corpus_directory_from_target, examples, serde_format};
 use lazy_static::lazy_static;
 use predicates::prelude::*;
 use std::{fs::remove_dir_all, sync::Mutex};
@@ -13,7 +13,7 @@ const TIMEOUT: &str = "60";
 fn fuzz_foo_qwerty() {
     // smoelius: When `bincode` is enabled, `cargo-afl` fails because "the program crashed with one
     // of the test cases provided."
-    if test_fuzz::serde_format() == "bincode" {
+    if serde_format().to_string() == "Bincode" {
         fuzz("test_foo_qwerty", false, "", false);
     } else {
         fuzz(

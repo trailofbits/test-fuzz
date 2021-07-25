@@ -15,7 +15,10 @@ assert_cmd = "1.0.7"
 cargo_metadata = "0.14.0"
 if_chain = "1.0.1"
 log = "0.4.14"
+proc-macro2 = "1.0.28"
+quote = "1.0.9"
 serde = "1.0.126"
+strum_macros = "0.21.0"
 subprocess = "0.2.7"
 
 [features]

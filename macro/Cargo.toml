@@ -19,7 +19,7 @@ quote = "1.0.9"
 syn = { version = "1.0.74", features = ["full", "parsing", "visit-mut"] }
 unzip-n = "0.1.2"
 
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=0.1.0-alpha.22" }
+
 [features]
 persistent = []
-serde_bincode = []
-serde_cbor = []
