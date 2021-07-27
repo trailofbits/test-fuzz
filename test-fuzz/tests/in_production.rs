@@ -4,7 +4,7 @@ use lazy_static::lazy_static;
 use std::{
     env,
     fs::{read_dir, remove_dir_all},
-    path::PathBuf,
+    path::Path,
     process::Command,
     sync::Mutex,
 };
@@ -21,13 +21,10 @@ fn write() {
 
 #[cfg(test)]
 lazy_static! {
-    static ref MANIFEST_PATH: String = {
-        let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
-        PathBuf::from(manifest_dir)
-            .join("Cargo.toml")
-            .to_string_lossy()
-            .to_string()
-    };
+    static ref MANIFEST_PATH: String = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("Cargo.toml")
+        .to_string_lossy()
+        .to_string();
     static ref LOCK: Mutex<()> = Mutex::new(());
 }
 
