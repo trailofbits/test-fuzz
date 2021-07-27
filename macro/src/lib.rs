@@ -823,6 +823,7 @@ fn log(tokens: &TokenStream2) {
                 .take()
                 .expect("Could not take `rustfmt`'s standard input");
             write!(stdin, "{}", tokens).expect("Could not write to `rustfmt`'s standard input");
+            drop(stdin);
             let status = popen.wait().expect("`wait` failed");
             assert!(status.success(), "`rustfmt` failed");
         } else {
