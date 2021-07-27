@@ -1,15 +1,24 @@
 use assert_cmd::prelude::*;
+use lazy_static::lazy_static;
 use predicates::prelude::*;
-use std::process::Command;
+use std::{path::Path, process::Command};
+
+lazy_static! {
+    static ref MANIFEST_PATH: String = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("examples")
+        .join("Cargo.toml")
+        .to_string_lossy()
+        .to_string();
+}
 
 #[test]
 fn rename() {
     Command::new("cargo")
         .args(&[
             "test",
-            "--workspace",
-            "--package",
-            "test-fuzz-examples",
+            "--manifest-path",
+            &MANIFEST_PATH,
             "--no-run",
             "--features",
             &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
@@ -20,14 +29,13 @@ fn rename() {
     Command::new("cargo")
         .args(&[
             "test",
-            "--workspace",
-            "--package",
-            "test-fuzz-examples",
+            "--manifest-path",
+            &MANIFEST_PATH,
             "--no-run",
             "--features",
             &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
             "--features",
-            "test-fuzz-examples/bar_fuzz",
+            "bar_fuzz",
         ])
         .assert()
         .failure()
