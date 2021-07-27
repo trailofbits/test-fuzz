@@ -43,6 +43,6 @@ impl ToTokens for SerdeFormat {
         let ident = Ident::new(&self.to_string(), Span::call_site());
         tokens.append_all(quote! {
             test_fuzz::SerdeFormat::#ident
-        })
+        });
     }
 }
