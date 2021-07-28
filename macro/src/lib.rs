@@ -41,6 +41,8 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
         items,
     } = item;
 
+    let (_, _, where_clause) = generics.split_for_impl();
+
     // smoelius: Without the next line, you get:
     //   the trait `quote::ToTokens` is not implemented for `(std::option::Option<syn::token::Bang>, syn::Path, syn::token::For)`
     let (trait_path, trait_) = trait_.map_or((None, None), |(bang, path, for_)| {
@@ -50,7 +52,7 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
     let (impl_items, modules) = map_impl_items(&generics, &trait_path, &*self_ty, &items);
 
     let result = quote! {
-        #(#attrs)* #defaultness #unsafety #impl_token #generics #trait_ #self_ty {
+        #(#attrs)* #defaultness #unsafety #impl_token #generics #trait_ #self_ty #where_clause {
             #(#impl_items)*
         }
 
@@ -331,22 +333,9 @@ fn map_method_or_fn(
         quote! {}
     } else {
         quote! {
-            // smoelius: `#autos` could refer to type parameters. Expanding it in a method
-            // definition like this ensures such type parameters resolve.
-            impl #impl_generics Args #ty_generics #where_clause {
-                fn write_auto() {
-                    let autos = ( #(#autos,)* );
-                    for args in #args_from_autos {
-                        write_args(args);
-                    }
-                }
-            }
-
             #[test]
             fn auto() {
-                if !test_fuzz::runtime::test_fuzz_enabled() {
-                    Args #combined_concretization :: write_auto();
-                }
+                Args #combined_concretization :: auto();
             }
         }
     };
@@ -401,14 +390,14 @@ fn map_method_or_fn(
         quote! {
             test_fuzz::afl::fuzz!(|data: &[u8]| {
                 let mut args = UsingReader::<_>::read_args #combined_concretization (data);
-                let ret: Option< #ret_ty > = args.map(|mut args|
+                let ret: Option<<Args #combined_concretization as HasRetTy>::RetTy> = args.map(|mut args|
                     #call
                 );
             });
         }
         #[cfg(not(feature = "persistent"))]
         quote! {
-            let ret: Option< #ret_ty > = args.map(|mut args|
+            let ret: Option<<Args #combined_concretization as HasRetTy>::RetTy> = args.map(|mut args|
                 #call
             );
         }
@@ -417,11 +406,11 @@ fn map_method_or_fn(
         #[cfg(feature = "persistent")]
         quote! {
             // smoelius: Suppress unused variable warning.
-            let _: Option<#ret_ty> = None;
+            let _: Option<<Args #combined_concretization as HasRetTy>::RetTy> = None;
         }
         #[cfg(not(feature = "persistent"))]
         quote! {
-            struct Ret(#ret_ty);
+            struct Ret(<Args #combined_concretization as HasRetTy>::RetTy);
             impl std::fmt::Debug for Ret {
                 fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                     use test_fuzz::runtime::TryDebugFallback;
@@ -448,6 +437,9 @@ fn map_method_or_fn(
     } else {
         (
             quote! {
+                // smoelius: It is tempting to want to put all of these functions under `impl Args`.
+                // But `write_args` and `read args` impose different bounds on their arguments. So
+                // I don't think this would work.
                 pub(super) fn write_args #impl_generics (args: Args #ty_generics_as_turbofish) #where_clause {
                     #[derive(serde::Serialize)]
                     struct Args #ty_generics (
@@ -483,30 +475,57 @@ fn map_method_or_fn(
                     }
                 }
 
+                // smoelius: Inherent associated types are unstable:
+                // https://github.com/rust-lang/rust/issues/8995
+                trait HasRetTy {
+                    type RetTy;
+                }
+
+                impl #impl_generics HasRetTy for Args #ty_generics #where_clause {
+                    type RetTy = #ret_ty;
+                }
+
+                impl #impl_generics Args #ty_generics #where_clause {
+                    // smoelius: `#autos` could refer to type parameters. Expanding it in a method
+                    // definition like this ensures such type parameters resolve.
+                    fn auto() {
+                        if !test_fuzz::runtime::test_fuzz_enabled() {
+                            let autos = ( #(#autos,)* );
+                            for args in #args_from_autos {
+                                write_args(args);
+                            }
+                        }
+                    }
+
+                    fn entry() {
+                        // smoelius: Do not set the panic hook when replaying. Leave cargo test's
+                        // panic hook in place.
+                        if test_fuzz::runtime::test_fuzz_enabled() {
+                            if test_fuzz::runtime::display_enabled()
+                                || test_fuzz::runtime::replay_enabled()
+                            {
+                                #input_args
+                                if test_fuzz::runtime::display_enabled() {
+                                    #output_args
+                                }
+                                if test_fuzz::runtime::replay_enabled() {
+                                    #call_with_deserialized_arguments
+                                    #output_ret
+                                }
+                            } else {
+                                std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
+                                #input_args
+                                #call_with_deserialized_arguments
+                                let _ = std::panic::take_hook();
+                            }
+                        }
+                    }
+                }
+
                 #auto
             },
             quote! {
-                // smoelius: Do not set the panic hook when replaying. Leave cargo test's panic
-                // hook in place.
-                if test_fuzz::runtime::test_fuzz_enabled() {
-                    if test_fuzz::runtime::display_enabled()
-                        || test_fuzz::runtime::replay_enabled()
-                    {
-                        #input_args
-                        if test_fuzz::runtime::display_enabled() {
-                            #output_args
-                        }
-                        if test_fuzz::runtime::replay_enabled() {
-                            #call_with_deserialized_arguments
-                            #output_ret
-                        }
-                    } else {
-                        std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
-                        #input_args
-                        #call_with_deserialized_arguments
-                        let _ = std::panic::take_hook();
-                    }
-                }
+                Args #combined_concretization :: entry();
             },
         )
     };
