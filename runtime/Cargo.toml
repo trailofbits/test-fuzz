@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-runtime"
-version = "0.1.0-alpha.23"
+version = "0.1.0-alpha.24"
 edition = "2018"
 
 description = "test-fuzz-runtime"
@@ -17,7 +17,7 @@ serde = { version = "1.0.126", features = ["derive"] }
 serde_cbor = { version = "0.11.1", optional = true }
 sha-1 = "0.9.7"
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=0.1.0-alpha.23" }
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=0.1.0-alpha.24" }
 
 [features]
 default = []
