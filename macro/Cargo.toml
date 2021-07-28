@@ -25,3 +25,5 @@ internal = { path = "../internal", package = "test-fuzz-internal", version = "=0
 
 [features]
 persistent = []
+serde_bincode = ["internal/serde_bincode"]
+serde_cbor = ["internal/serde_cbor"]
