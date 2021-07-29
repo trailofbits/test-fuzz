@@ -6,12 +6,12 @@ const TIMEOUT: &str = "60";
 
 #[test]
 fn fuzz_assert() {
-    fuzz("assert", false)
+    fuzz("assert", false);
 }
 
 #[test]
 fn fuzz_qwerty() {
-    fuzz("qwerty", true)
+    fuzz("qwerty", true);
 }
 
 fn fuzz(name: &str, persistent: bool) {

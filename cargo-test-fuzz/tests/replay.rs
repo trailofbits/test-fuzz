@@ -26,7 +26,7 @@ fn replay_crashes() {
         ],
         &What::Crashes,
         r"memory allocation of \d{10,} bytes failed\n",
-    )
+    );
 }
 
 #[allow(clippy::trivial_regex)]
@@ -38,7 +38,7 @@ fn replay_hangs() {
         &["--persistent", "--", "-V", TIMEOUT],
         &What::Hangs,
         r"Timeout\n",
-    )
+    );
 }
 
 fn replay(name: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {

@@ -32,7 +32,7 @@ fn fuzz_bar_asdfgh() {
         true,
         "+++ Testing aborted programmatically +++",
         true,
-    )
+    );
 }
 
 #[cfg(test)]

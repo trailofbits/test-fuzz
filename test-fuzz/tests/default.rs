@@ -3,12 +3,12 @@ use std::fs::{read_dir, remove_dir_all};
 
 #[test]
 fn no_default() {
-    test("no_default", 0)
+    test("no_default", 0);
 }
 
 #[test]
 fn default() {
-    test("default", 1)
+    test("default", 1);
 }
 
 fn test(name: &str, n: usize) {
