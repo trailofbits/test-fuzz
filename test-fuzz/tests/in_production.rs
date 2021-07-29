@@ -11,12 +11,12 @@ use std::{
 
 #[test]
 fn no_write() {
-    test(false, 0)
+    test(false, 0);
 }
 
 #[test]
 fn write() {
-    test(true, 1)
+    test(true, 1);
 }
 
 #[cfg(test)]

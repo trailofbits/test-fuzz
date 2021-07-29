@@ -3,12 +3,12 @@ use std::fs::{read_dir, remove_dir_all};
 
 #[test]
 fn signed() {
-    test("signed", 6)
+    test("signed", 6);
 }
 
 #[test]
 fn unsigned() {
-    test("unsigned", 6)
+    test("unsigned", 6);
 }
 
 fn test(name: &str, n: usize) {

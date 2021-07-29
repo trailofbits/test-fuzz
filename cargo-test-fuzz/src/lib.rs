@@ -313,7 +313,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         args.extend_from_slice(&["--target-dir", &target_dir_str]);
     }
     if let Some(package) = &opts.package {
-        args.extend_from_slice(&["--package", package])
+        args.extend_from_slice(&["--package", package]);
     }
     if opts.persistent {
         args.extend_from_slice(&["--features", "test-fuzz/persistent"]);

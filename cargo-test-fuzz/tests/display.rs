@@ -9,7 +9,7 @@ fn display_qwerty() {
         "qwerty::target",
         "Args { data: \"asdfgh\" }",
         "",
-    )
+    );
 }
 
 #[test]
@@ -20,7 +20,7 @@ fn display_debug_crash() {
         "debug_crash::target",
         "",
         "Encountered a failure while not replaying. A buggy Debug implementation perhaps?",
-    )
+    );
 }
 
 #[test]
@@ -31,7 +31,7 @@ fn display_debug_hang() {
         "debug_hang::target",
         "",
         "Encountered a timeout while not replaying. A buggy Debug implementation perhaps?",
-    )
+    );
 }
 
 fn display(name: &str, test: &str, target: &str, stdout: &str, stderr: &str) {
