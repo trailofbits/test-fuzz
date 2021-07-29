@@ -571,6 +571,7 @@ fn check_test_fuzz_and_afl_versions(
             executable.test_fuzz_version.as_ref(),
             "cargo-test-fuzz",
             &cargo_test_fuzz_version,
+            "cargo-test-fuzz",
         )?;
         check_dependency_version(
             &executable.name,
@@ -578,6 +579,7 @@ fn check_test_fuzz_and_afl_versions(
             executable.afl_version.as_ref(),
             "cargo-afl",
             &cargo_afl_version,
+            "afl",
         )?;
     }
     Ok(())
@@ -602,30 +604,31 @@ fn check_dependency_version(
     name: &str,
     dependency: &str,
     dependency_version: Option<&Version>,
-    install: &str,
-    install_version: &Version,
+    binary: &str,
+    binary_version: &Version,
+    krate: &str,
 ) -> Result<()> {
     if let Some(dependency_version) = dependency_version {
         ensure!(
-            as_version_req(dependency_version).matches(install_version)
-                || as_version_req(install_version).matches(dependency_version),
+            as_version_req(dependency_version).matches(binary_version)
+                || as_version_req(binary_version).matches(dependency_version),
             "`{}` depends on `{} {}`, which is incompatible with `{} {}`.",
             name,
             dependency,
             dependency_version,
-            install,
-            install_version
+            binary,
+            binary_version
         );
-        if !as_version_req(dependency_version).matches(install_version) {
+        if !as_version_req(dependency_version).matches(binary_version) {
             eprintln!(
                 "`{}` depends on `{} {}`, which is newer than `{} {}`. Consider upgrading with \
                 `cargo install {} --force --version '>={}'`.",
                 name,
                 dependency,
                 dependency_version,
-                install,
-                install_version,
-                install,
+                binary,
+                binary_version,
+                krate,
                 dependency_version
             );
         }
