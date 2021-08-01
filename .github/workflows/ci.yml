@@ -9,6 +9,24 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Dylint versions
+      run: cargo search dylint | sort | tee dylint_versions
+
+    # smoelius: The `~/.cargo/` entries are from
+    # https://github.com/actions/cache/blob/main/examples.md#rust---cargo.
+    # The rest were added by me.
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ~/.dylint_drivers/
+          ~/.rustup/toolchains/
+          target/dylint/
+        key: ${{ runner.os }}-dylint-${{ hashFiles('dylint_versions') }}
+
     - name: Install llvm
       run: sudo apt-get install llvm
 
@@ -17,7 +35,7 @@ jobs:
 
     - name: License
       run: |
-        cargo install cargo-license
+        cargo install cargo-license || true
         ./scripts/check_licenses.sh
 
     - name: Clippy
@@ -28,13 +46,13 @@ jobs:
 
     - name: Dylint
       run: |
-        cargo install cargo-dylint dylint-link
+        cargo install cargo-dylint dylint-link || true
         DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all --workspace
 
     - name: Udeps
       run: |
         rustup toolchain install nightly
-        cargo install cargo-udeps
+        cargo install cargo-udeps || true
         cargo +nightly udeps --workspace --tests
 
   test:
