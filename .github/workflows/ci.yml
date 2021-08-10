@@ -7,53 +7,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Dylint versions
-      run: cargo search dylint | sort | tee dylint_versions
+      - name: Dylint versions
+        run: cargo search dylint | sort | tee dylint_versions
 
-    # smoelius: The `~/.cargo/` entries are from
-    # https://github.com/actions/cache/blob/main/examples.md#rust---cargo.
-    # The rest were added by me.
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/bin/
-          ~/.cargo/registry/index/
-          ~/.cargo/registry/cache/
-          ~/.cargo/git/db/
-          ~/.dylint_drivers/
-          ~/.rustup/toolchains/
-          target/dylint/
-        key: ${{ runner.os }}-dylint-${{ hashFiles('dylint_versions') }}
+      # smoelius: The `~/.cargo/` entries are from
+      # https://github.com/actions/cache/blob/main/examples.md#rust---cargo.
+      # The rest were added by me.
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.dylint_drivers/
+            ~/.rustup/toolchains/
+            target/dylint/
+          key: ${{ runner.os }}-dylint-${{ hashFiles('dylint_versions') }}
 
-    - name: Install llvm
-      run: sudo apt-get install llvm
+      - name: Install llvm
+        run: sudo apt-get install llvm
 
-    - name: Format
-      run: cargo fmt && git diff --exit-code
+      - name: Format
+        run: cargo fmt && git diff --exit-code
 
-    - name: License
-      run: |
-        cargo install cargo-license || true
-        ./scripts/check_licenses.sh
+      - name: License
+        run: |
+          cargo install cargo-license || true
+          ./scripts/check_licenses.sh
 
-    - name: Clippy
-      run: |
-        rustup update
-        rustup component add clippy
-        ./scripts/clippy.sh
+      - name: Clippy
+        run: |
+          rustup update
+          rustup component add clippy
+          ./scripts/clippy.sh
 
-    - name: Dylint
-      run: |
-        cargo install cargo-dylint dylint-link || true
-        DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all --workspace
+      - name: Dylint
+        run: |
+          cargo install cargo-dylint dylint-link || true
+          DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all --workspace
 
-    - name: Udeps
-      run: |
-        rustup toolchain install nightly
-        cargo install cargo-udeps || true
-        cargo +nightly udeps --workspace --tests
+      - name: Udeps
+        run: |
+          rustup toolchain install nightly
+          cargo install cargo-udeps || true
+          cargo +nightly udeps --workspace --tests
 
   test:
     runs-on: ubuntu-latest
@@ -63,100 +63,101 @@ jobs:
         serde_format: [bincode, cbor]
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Install llvm
-      run: sudo apt-get install llvm
+      - name: Install llvm
+        run: sudo apt-get install llvm
 
-    - name: Install afl
-      run: cargo install afl
+      - name: Install afl
+        run: cargo install afl
 
-    - name: Test
-      run: cargo test --workspace --no-default-features --features=test-fuzz/serde_${{ matrix.serde_format }}
-      env:
-        AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
+      - name: Test
+        run: cargo test --workspace --no-default-features --features=test-fuzz/serde_${{ matrix.serde_format }} -- --nocapture
+        env:
+          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
+          RUST_LOG: warn
 
   test-incompatible-cargo-afl:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Install llvm
-      run: sudo apt-get install llvm
+      - name: Install llvm
+        run: sudo apt-get install llvm
 
-    - name: Install older afl
-      run: cargo install afl --version=0.8.0
+      - name: Install older afl
+        run: cargo install afl --version=0.8.0
 
-    - name: Test
-      run: |
-        OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
-        echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `afl [^`]*`, which is incompatible with `cargo-afl [^`]*`.$'
+      - name: Test
+        run: |
+          OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
+          echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `afl [^`]*`, which is incompatible with `cargo-afl [^`]*`.$'
 
   test-newer-afl:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Install llvm
-      run: sudo apt-get install llvm
+      - name: Install llvm
+        run: sudo apt-get install llvm
 
-    - name: Install afl 0.10.0
-      run: cargo install afl --version=0.10.0
+      - name: Install afl 0.10.0
+        run: cargo install afl --version=0.10.0
 
-    - name: Require afl 0.10.1
-      run: |
-        sed -i 's/afl = "[^"]*"/afl = "=0.10.1"/' test-fuzz/Cargo.toml
+      - name: Require afl 0.10.1
+        run: |
+          sed -i 's/afl = "[^"]*"/afl = "=0.10.1"/' test-fuzz/Cargo.toml
 
-    - name: Test
-      run: |
-        OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
-        echo "$OUTPUT" | grep '^`[^`]*` depends on `afl [^`]*`, which is newer than `cargo-afl [^`]*`.'
-        echo "$OUTPUT" | grep 'Consider upgrading with `cargo install afl --force --version [^`]*`.$'
+      - name: Test
+        run: |
+          OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
+          echo "$OUTPUT" | grep '^`[^`]*` depends on `afl [^`]*`, which is newer than `cargo-afl [^`]*`.'
+          echo "$OUTPUT" | grep 'Consider upgrading with `cargo install afl --force --version [^`]*`.$'
 
   test-incompatible-test-fuzz:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Install llvm
-      run: sudo apt-get install llvm
+      - name: Install llvm
+        run: sudo apt-get install llvm
 
-    - name: Install afl
-      run: cargo install afl
+      - name: Install afl
+        run: cargo install afl
 
-    - name: Downgrade test-fuzz version
-      run: |
-        sed -i 's/^\(version = "[^.]*\)\.[^.]*\.\([^"]*"\)$/\1.0.\2/' test-fuzz/Cargo.toml
-        sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\)\.[^.]*\.\([^"]*".*}\)$/\1.0.\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
+      - name: Downgrade test-fuzz version
+        run: |
+          sed -i 's/^\(version = "[^.]*\)\.[^.]*\.\([^"]*"\)$/\1.0.\2/' test-fuzz/Cargo.toml
+          sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\)\.[^.]*\.\([^"]*".*}\)$/\1.0.\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
 
-    - name: Test
-      run: |
-        OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
-        echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `test-fuzz [^`]*`, which is incompatible with `cargo-test-fuzz [^`]*`.$'
+      - name: Test
+        run: |
+          OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
+          echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `test-fuzz [^`]*`, which is incompatible with `cargo-test-fuzz [^`]*`.$'
 
   test-newer-test-fuzz:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Install llvm
-      run: sudo apt-get install llvm
+      - name: Install llvm
+        run: sudo apt-get install llvm
 
-    - name: Install afl
-      run: cargo install afl
+      - name: Install afl
+        run: cargo install afl
 
-    - name: Upgrade test-fuzz version
-      run: |
-        sed -i 's/^\(version = "[^.]*\.[^.]*\)\.[^"]*\("\)$/\1.255\2/' test-fuzz/Cargo.toml
-        sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\.[^.]*\)\.[^"]*\(".*}\)$/\1.255\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
-        sed -i 's/^\(version = "[^-]*\)-[^"]*\("\)$/\1\2/' cargo-test-fuzz/Cargo.toml
+      - name: Upgrade test-fuzz version
+        run: |
+          sed -i 's/^\(version = "[^.]*\.[^.]*\)\.[^"]*\("\)$/\1.255\2/' test-fuzz/Cargo.toml
+          sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\.[^.]*\)\.[^"]*\(".*}\)$/\1.255\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
+          sed -i 's/^\(version = "[^-]*\)-[^"]*\("\)$/\1\2/' cargo-test-fuzz/Cargo.toml
 
-    - name: Test
-      run: |
-        OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
-        echo "$OUTPUT" | grep '^`[^`]*` depends on `test-fuzz [^`]*`, which is newer than `cargo-test-fuzz [^`]*`.'
-        echo "$OUTPUT" | grep 'Consider upgrading with `cargo install cargo-test-fuzz --force --version [^`]*`.$'
+      - name: Test
+        run: |
+          OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
+          echo "$OUTPUT" | grep '^`[^`]*` depends on `test-fuzz [^`]*`, which is newer than `cargo-test-fuzz [^`]*`.'
+          echo "$OUTPUT" | grep 'Consider upgrading with `cargo install cargo-test-fuzz --force --version [^`]*`.$'

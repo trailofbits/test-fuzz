@@ -1,6 +1,8 @@
-use internal::{dirs::corpus_directory_from_target, examples};
+use anyhow::ensure;
+use internal::{dirs::corpus_directory_from_target, examples, testing::retry};
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
+use test_env_log::test;
 
 const CRASH_TIMEOUT: &str = "60";
 
@@ -38,27 +40,31 @@ fn consolidate(name: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
 
     assert_eq!(read_dir(&corpus).unwrap().count(), 1);
 
-    let mut args = vec!["--no-ui"];
-    args.extend_from_slice(fuzz_args);
+    retry(3, || {
+        let mut args = vec!["--no-ui"];
+        args.extend_from_slice(fuzz_args);
 
-    examples::test_fuzz(target)
-        .unwrap()
-        .args(args)
-        .assert()
-        .success();
+        examples::test_fuzz(target)
+            .unwrap()
+            .args(args)
+            .assert()
+            .success();
 
-    examples::test_fuzz(target)
-        .unwrap()
-        .args(&["--consolidate"])
-        .assert()
-        .success();
+        examples::test_fuzz(target)
+            .unwrap()
+            .args(&["--consolidate"])
+            .assert()
+            .success();
 
-    assert!(read_dir(&corpus).unwrap().count() > 1);
+        ensure!(read_dir(&corpus).unwrap().count() > 1);
 
-    examples::test_fuzz(target)
-        .unwrap()
-        .args(&["--display-corpus"])
-        .assert()
-        .success()
-        .stdout(predicate::str::contains(pattern));
+        examples::test_fuzz(target)
+            .unwrap()
+            .args(&["--display-corpus"])
+            .assert()
+            .success()
+            .try_stdout(predicate::str::contains(pattern))
+            .map_err(Into::into)
+    })
+    .unwrap();
 }
