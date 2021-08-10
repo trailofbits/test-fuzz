@@ -18,10 +18,10 @@ runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=0.1.
 test-fuzz-macro = { path = "../macro", version = "=0.1.0-alpha.24" }
 
 [dev-dependencies]
-assert_cmd = "1.0.7"
+assert_cmd = "2.0.0"
 cargo_metadata = "0.14.0"
 lazy_static = "1.4.0"
-predicates = "2.0.0"
+predicates = "2.0.1"
 
 [features]
 default = ["serde_bincode"]

@@ -1,7 +1,8 @@
-use internal::{dirs::corpus_directory_from_target, examples, serde_format};
+use internal::{dirs::corpus_directory_from_target, examples, serde_format, testing::retry};
 use lazy_static::lazy_static;
 use predicates::prelude::*;
 use std::{fs::remove_dir_all, sync::Mutex};
+use test_env_log::test;
 
 const NAME: &str = "generic";
 
@@ -52,24 +53,27 @@ fn fuzz(test: &str, success: bool, pattern: &str, timeout: bool) {
         .assert()
         .success();
 
-    let assert = examples::test_fuzz(TARGET)
-        .unwrap()
-        .args(&["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
-        .assert();
+    retry(3, || {
+        let assert = examples::test_fuzz(TARGET)
+            .unwrap()
+            .args(&["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
+            .assert();
 
-    let assert = if success {
-        assert.success()
-    } else {
-        assert.failure()
-    };
+        let assert = if success {
+            assert.success()
+        } else {
+            assert.failure()
+        };
 
-    assert.stdout(
-        predicate::str::contains(pattern).and(predicate::function(|s: &str| {
-            if timeout {
-                s.contains("Time limit was reached")
-            } else {
-                !s.contains("Time limit was reached")
-            }
-        })),
-    );
+        assert.try_stdout(
+            predicate::str::contains(pattern).and(predicate::function(|s: &str| {
+                if timeout {
+                    s.contains("Time limit was reached")
+                } else {
+                    !s.contains("Time limit was reached")
+                }
+            })),
+        )
+    })
+    .unwrap();
 }

@@ -1,6 +1,8 @@
-use internal::{dirs::corpus_directory_from_target, examples};
+use anyhow::ensure;
+use internal::{dirs::corpus_directory_from_target, examples, testing::retry};
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
+use test_env_log::test;
 
 const TIMEOUT: &str = "60";
 
@@ -20,7 +22,7 @@ fn no_auto() {
 
 #[test]
 fn auto_empty() {
-    auto("no_default", "no_default::target", false, "", 0);
+    auto("default", "no_default::target", false, "", 0);
 }
 
 #[test]
@@ -33,18 +35,23 @@ fn auto(krate: &str, target: &str, success: bool, pattern: &str, n: usize) {
 
     remove_dir_all(&corpus).unwrap_or_default();
 
-    let assert = examples::test_fuzz(target)
-        .unwrap()
-        .args(&["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
-        .assert();
+    retry(3, || {
+        let assert = examples::test_fuzz(target)
+            .unwrap()
+            .args(&["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
+            .assert();
 
-    let assert = if success {
-        assert.success()
-    } else {
-        assert.failure()
-    };
+        let assert = if success {
+            assert.success()
+        } else {
+            assert.failure()
+        };
 
-    assert.stderr(predicate::str::contains(pattern));
+        assert.try_stderr(predicate::str::contains(pattern))?;
 
-    assert_eq!(read_dir(corpus).map(Iterator::count).unwrap_or_default(), n);
+        ensure!(read_dir(&corpus).map(Iterator::count).unwrap_or_default() == n);
+
+        Ok(())
+    })
+    .unwrap();
 }

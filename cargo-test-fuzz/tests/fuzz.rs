@@ -1,6 +1,7 @@
-use internal::{dirs::corpus_directory_from_target, examples};
+use internal::{dirs::corpus_directory_from_target, examples, testing::retry};
 use predicates::prelude::*;
 use std::fs::remove_dir_all;
+use test_env_log::test;
 
 const TIMEOUT: &str = "60";
 
@@ -24,16 +25,19 @@ fn fuzz(name: &str, persistent: bool) {
         .assert()
         .success();
 
-    let mut command = examples::test_fuzz(&format!("{}::target", name)).unwrap();
+    retry(3, || {
+        let mut command = examples::test_fuzz(&format!("{}::target", name)).unwrap();
 
-    let mut args = vec!["--no-ui", "--run-until-crash"];
-    if persistent {
-        args.push("--persistent");
-    }
-    args.extend_from_slice(&["--", "-V", TIMEOUT]);
+        let mut args = vec!["--no-ui", "--run-until-crash"];
+        if persistent {
+            args.push("--persistent");
+        }
+        args.extend_from_slice(&["--", "-V", TIMEOUT]);
 
-    command.args(&args).assert().success().stdout(
-        predicate::str::contains("+++ Testing aborted programmatically +++")
-            .and(predicate::str::contains("Time limit was reached").not()),
-    );
+        command.args(&args).assert().success().try_stdout(
+            predicate::str::contains("+++ Testing aborted programmatically +++")
+                .and(predicate::str::contains("Time limit was reached").not()),
+        )
+    })
+    .unwrap();
 }
