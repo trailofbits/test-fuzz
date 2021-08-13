@@ -14,6 +14,7 @@ use syn::{
     AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericMethodArgument, GenericParam,
     Generics, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Pat, Path, PathArguments,
     PathSegment, ReturnType, Signature, Stmt, Type, TypePath, TypeReference, Visibility,
+    WhereClause, WherePredicate,
 };
 use toolchain_find::find_installed_component;
 use unzip_n::unzip_n;
@@ -136,6 +137,8 @@ fn map_method(
 #[derive(Clone, Debug, Default, FromMeta)]
 struct TestFuzzOpts {
     #[darling(default)]
+    bounds: Option<String>,
+    #[darling(default)]
     concretize: Option<String>,
     #[darling(default)]
     concretize_impl: Option<String>,
@@ -224,6 +227,18 @@ fn map_method_or_fn(
 
     let (impl_generics, ty_generics, where_clause) = combined_generics.split_for_impl();
     let (impl_generics_deserializable, _, _) = combined_generics_deserializable.split_for_impl();
+
+    let args_where_clause: Option<WhereClause> = opts.bounds.as_ref().map(|bounds| {
+        let tokens = TokenStream::from_str(bounds).expect("Could not tokenize string");
+        let where_predicates = Parser::parse(
+            Punctuated::<WherePredicate, token::Comma>::parse_terminated,
+            tokens,
+        )
+        .expect("Could not parse type bounds");
+        parse_quote! {
+            where #where_predicates
+        }
+    });
 
     // smoelius: "Constraints don’t count as 'using' a type parameter," as explained by Daniel Keep
     // here: https://users.rust-lang.org/t/error-parameter-t-is-never-used-e0392-but-i-use-it/5673
@@ -445,7 +460,7 @@ fn map_method_or_fn(
                     #[derive(serde::Serialize)]
                     struct Args #ty_generics (
                         #(#pub_arg_tys),*
-                    );
+                    ) #args_where_clause;
                     let args = Args(
                         #(#args_is),*
                     );
@@ -459,7 +474,7 @@ fn map_method_or_fn(
                         #[derive(serde::Deserialize)]
                         struct Args #ty_generics (
                             #(#pub_arg_tys),*
-                        );
+                        ) #args_where_clause;
                         let args = test_fuzz::runtime::read_args::<Args #ty_generics_as_turbofish, _>(#serde_format, reader);
                         args.map(|args| #mod_ident :: Args(
                             #(#args_is),*
@@ -547,7 +562,7 @@ fn map_method_or_fn(
 
                 pub(super) struct Args #ty_generics (
                     #(#pub_arg_tys),*
-                );
+                ) #args_where_clause;
 
                 #mod_items
 
