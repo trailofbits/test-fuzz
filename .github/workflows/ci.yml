@@ -12,8 +12,9 @@ jobs:
       - name: Dylint versions
         run: cargo search dylint | sort | tee dylint_versions
 
-      # smoelius: The `~/.cargo/` entries are from
-      # https://github.com/actions/cache/blob/main/examples.md#rust---cargo.
+      # smoelius: The `~/.cargo/` entries are from:
+      # * https://github.com/actions/cache/blob/main/examples.md#rust---cargo.
+      # * https://doc.rust-lang.org/cargo/guide/cargo-home.html#caching-the-cargo-home-in-ci
       # The rest were added by me.
       - uses: actions/cache@v2
         with:
@@ -42,10 +43,7 @@ jobs:
           ./scripts/check_licenses.sh
 
       - name: Clippy
-        run: |
-          rustup update
-          rustup component add clippy
-          ./scripts/clippy.sh
+        run: ./scripts/clippy.sh
 
       - name: Dylint
         run: |
