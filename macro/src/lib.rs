@@ -2,6 +2,7 @@
 #![deny(clippy::unwrap_used)]
 
 use darling::FromMeta;
+use if_chain::if_chain;
 use internal::serde_format;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
@@ -439,7 +440,7 @@ fn map_method_or_fn(
             quote! {
                 // smoelius: It is tempting to want to put all of these functions under `impl Args`.
                 // But `write_args` and `read args` impose different bounds on their arguments. So
-                // I don't think this would work.
+                // I don't think that idea would work.
                 pub(super) fn write_args #impl_generics (args: Args #ty_generics_as_turbofish) #where_clause {
                     #[derive(serde::Serialize)]
                     struct Args #ty_generics (
@@ -632,24 +633,19 @@ fn map_arg(
 }
 
 fn map_arc_arg(i: &Literal, pat: &Pat, path: &TypePath) -> Option<(Type, Expr, Expr)> {
-    if let Some(PathArguments::AngleBracketed(args)) =
-        util::match_type_path(path, &["std", "sync", "Arc"])
-    {
-        if args.args.len() == 1 {
-            if let GenericArgument::Type(ty) = &args.args[0] {
-                Some((
-                    parse_quote! { #ty },
-                    parse_quote! { (*#pat).clone() },
-                    parse_quote! { std::sync::Arc::new(args.#i) },
-                ))
-            } else {
-                None
-            }
+    if_chain! {
+        if let Some(PathArguments::AngleBracketed(args)) = util::match_type_path(path, &["std", "sync", "Arc"]);
+        if args.args.len() == 1;
+        if let GenericArgument::Type(ty) = &args.args[0];
+        then {
+            Some((
+                parse_quote! { #ty },
+                parse_quote! { (*#pat).clone() },
+                parse_quote! { std::sync::Arc::new(args.#i) },
+            ))
         } else {
             None
         }
-    } else {
-        None
     }
 }
 
