@@ -86,6 +86,8 @@ The primary effects of the `test_fuzz` macro are:
 
 #### Options
 
+- **`bounds = "where_predicates"`** - Impose `where_predicates` (e.g., trait bounds) on the struct used to serialize/deserialize arguments. This may be necessary, e.g., if a target's argument type is an associated type. For an example, see [associated_type.rs](examples/tests/associated_type.rs#L27) in this repository.
+
 - **`concretize = "parameters"`** - Use `parameters` as the target's type parameters when fuzzing. Example:
 
   ```rust
