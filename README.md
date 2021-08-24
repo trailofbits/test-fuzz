@@ -23,7 +23,7 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
 ## Installation
 
 ```sh
-cargo install cargo-test-fuzz --version '>=0.1.0-alpha'
+cargo install cargo-test-fuzz
 ```
 
 ## Usage
@@ -35,7 +35,7 @@ Fuzzing with `test-fuzz` is essentially three steps:\*
    - Add the following `dependencies` to the target crate's `Cargo.toml` file:
      ```toml
      serde = "1.0"
-     test-fuzz = "0.1.0-alpha"
+     test-fuzz = "0.1.0"
      ```
    - Precede the target function with the [`test_fuzz`](#test_fuzz-macro) macro:
      ```rust
