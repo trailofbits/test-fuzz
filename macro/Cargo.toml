@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-macro"
-version = "0.1.0-alpha.24"
+version = "0.1.0"
 edition = "2018"
 
 description = "test-fuzz-macro"
@@ -22,7 +22,7 @@ subprocess = "0.2.7"
 toolchain_find = "0.2.0"
 unzip-n = "0.1.2"
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=0.1.0-alpha.24" }
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=0.1.0" }
 
 [features]
 persistent = []
