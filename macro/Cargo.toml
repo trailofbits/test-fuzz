@@ -17,8 +17,8 @@ darling = "0.13.0"
 if_chain = "1.0.2"
 proc-macro2 = "1.0.28"
 quote = "1.0.9"
-syn = { version = "1.0.75", features = ["full", "parsing", "visit-mut"] }
 subprocess = "0.2.7"
+syn = { version = "1.0.75", features = ["full", "parsing", "visit-mut"] }
 toolchain_find = "0.2.0"
 unzip-n = "0.1.2"
 
