@@ -39,3 +39,19 @@ fn versions_are_exact_and_match() {
         }
     }
 }
+
+#[test]
+fn afl_version_is_exact() {
+    for package in &METADATA.packages {
+        for Dependency { name: dep, req, .. } in &package.dependencies {
+            if dep == "afl" {
+                assert!(
+                    req.to_string().starts_with('='),
+                    "`{}` dependency on `{}` is not exact",
+                    package.name,
+                    dep
+                );
+            }
+        }
+    }
+}
