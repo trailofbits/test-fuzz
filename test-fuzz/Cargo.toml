@@ -11,7 +11,7 @@ repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
 afl = "=0.10.1"
-serde = "1.0.128"
+serde = "1.0.130"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=0.1.0" }
 runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=0.1.0" }
