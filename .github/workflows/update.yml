@@ -1,0 +1,36 @@
+name: Update dependencies
+
+# smoelius: 'Dependabot only makes Rust security updates if "Cargo.lock" exists'
+# https://github.com/dependabot/dependabot-core/issues/2011
+
+# So, every Friday at 3:00 UTC (Thursday at 20:00 EST), run `cargo upgrade` and create a PR.
+
+on:
+  schedule:
+    - cron: "0 3 * * 5"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs
+          # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#push-using-ssh-deploy-keys
+          ssh-key: ${{ secrets.PR_SSH_PRIVATE_KEY }}
+
+      - name: Install cargo-edit
+        run: cargo install cargo-edit
+
+      - name: Update dependencies
+        run: |
+          # smoelius: AFL should not be updated.
+          AFL="$(grep '^afl\>.*$' test-fuzz/Cargo.toml)"
+          find . -name Cargo.toml -exec cargo upgrade --workspace --manifest-path={} \;
+          sed -i "s/^afl\>.*$/$AFL/" test-fuzz/Cargo.toml
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v3
+        with:
+          title: "Update dependencies"
