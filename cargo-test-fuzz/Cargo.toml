@@ -28,7 +28,7 @@ internal = { path = "../internal", package = "test-fuzz-internal", version = "=0
 test-fuzz = { path = "../test-fuzz", version = "=0.1.0", default-features = false }
 
 [dev-dependencies]
-assert_cmd = "2.0.0"
+assert_cmd = "2.0.1"
 lazy_static = "1.4.0"
 predicates = "2.0.2"
 regex = "1.5.4"
