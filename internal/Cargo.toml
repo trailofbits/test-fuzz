@@ -11,7 +11,7 @@ repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
 anyhow = "1.0.43"
-assert_cmd = "2.0.0"
+assert_cmd = "2.0.1"
 cargo_metadata = "0.14.0"
 if_chain = "1.0.2"
 log = "0.4.14"
