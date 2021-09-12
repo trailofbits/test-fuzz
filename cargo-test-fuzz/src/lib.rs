@@ -306,7 +306,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     if !opts.no_instrumentation {
         args.extend_from_slice(&["afl"]);
     }
-    args.extend_from_slice(&["test", "--frozen", "--no-run"]);
+    args.extend_from_slice(&["test", "--frozen", "--offline", "--no-run"]);
     if opts.no_default_features {
         args.extend_from_slice(&["--no-default-features"]);
     }
