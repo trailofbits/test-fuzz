@@ -22,6 +22,7 @@ use std::{
     fmt::{Debug, Formatter},
     fs::{create_dir_all, read, read_dir, remove_dir_all, File},
     io::{BufRead, BufReader, Read},
+    iter,
     path::{Path, PathBuf},
     process::Command,
     time::Duration,
@@ -300,8 +301,6 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
 fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     let metadata = MetadataCommand::new().exec()?;
 
-    // smoelius: Put --message-format=json last so that it is easy to copy-and-paste the command
-    // without it.
     let mut args = vec![];
     if !opts.no_instrumentation {
         args.extend_from_slice(&["afl"]);
@@ -327,44 +326,70 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     if opts.persistent {
         args.extend_from_slice(&["--features", "test-fuzz/persistent"]);
     }
-    args.extend_from_slice(&["--message-format=json"]);
 
     // smoelius: Suppress "Warning: AFL++ tools will need to set AFL_MAP_SIZE..." Setting
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to /dev/null.
     // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when
     // displaying/replaying.
-    let mut exec = Exec::cmd("cargo").args(&args).stdout(Redirection::Pipe);
+    let mut exec = Exec::cmd("cargo")
+        .args(
+            &args
+                .iter()
+                .chain(iter::once(&"--message-format=json"))
+                .collect::<Vec<_>>(),
+        )
+        .stdout(Redirection::Pipe);
     if quiet {
         exec = exec.stderr(NullFile);
     }
     debug!("{:?}", exec);
     let mut popen = exec.clone().popen()?;
-    let messages = popen
+    let artifacts = popen
         .stdout
         .take()
         .map_or(Ok(vec![]), |stream| -> Result<_> {
             let reader = BufReader::new(stream);
-            let messages: Vec<Message> = Message::parse_stream(reader)
+            let artifacts: Vec<Artifact> = Message::parse_stream(reader)
+                .filter_map(|result| match result {
+                    Ok(message) => match message {
+                        Message::CompilerArtifact(artifact) => Some(Ok(artifact)),
+                        _ => None,
+                    },
+                    Err(err) => Some(Err(err)),
+                })
                 .collect::<std::result::Result<_, std::io::Error>>()
                 .with_context(|| format!("`parse_stream` failed for `{:?}`", exec))?;
-            Ok(messages)
+            Ok(artifacts)
         })?;
     let status = popen
         .wait()
         .with_context(|| format!("`wait` failed for `{:?}`", popen))?;
 
-    ensure!(status.success(), "Command failed: {:?}", exec);
+    // smoelius: If the command failed, re-execute it without --message-format=json. This is easier
+    // than trying to capture and colorize `CompilerMessage`s like Cargo does.
+    if !status.success() {
+        let mut popen = Exec::cmd("cargo").args(&args).popen()?;
+        let status = popen
+            .wait()
+            .with_context(|| format!("`wait` failed for `{:?}`", popen))?;
+        ensure!(
+            !status.success(),
+            "Command succeeded unexpectedly: {:?}",
+            exec,
+        );
+        bail!("Command failed: {:?}", exec);
+    }
 
-    Ok(messages
+    Ok(artifacts
         .into_iter()
-        .map(|message| {
-            if let Message::CompilerArtifact(Artifact {
+        .map(|artifact| {
+            if let Artifact {
                 package_id,
                 target: build_target,
                 profile: ArtifactProfile { test: true, .. },
                 executable: Some(executable),
                 ..
-            }) = message
+            } = artifact
             {
                 let (test_fuzz_version, afl_version) =
                     test_fuzz_and_afl_versions(&metadata, &package_id)?;
@@ -961,8 +986,6 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         .status()
         .with_context(|| format!("Could not get status of `{:?}`", command))?;
 
-    // smoelius: When this command fails in a test, the stderr output gets lost. I haven't figured
-    // out why.
     ensure!(status.success(), "Command failed: {:?}", command);
 
     Ok(())
