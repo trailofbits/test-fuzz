@@ -239,6 +239,8 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
 - **`--features <features>`** - Space or comma separated list of features to activate
 
+- **`--manifest-path <path>`** - Path to Cargo.toml
+
 - **`-p, --package <package>`** - Package containing fuzz target
 
 - **`--target <target>`** - String that fuzz target's name must contain

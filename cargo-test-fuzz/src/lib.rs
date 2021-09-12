@@ -98,6 +98,8 @@ struct TestFuzz {
     features: Vec<String>,
     #[clap(long, about = "List fuzz targets")]
     list: bool,
+    #[clap(long, value_name = "PATH", about = "Path to Cargo.toml")]
+    manifest_path: Option<String>,
     #[clap(long, about = "Resume target's last fuzzing session")]
     resume: bool,
     #[clap(long, about = "Do not activate the `default` feature")]
@@ -315,6 +317,9 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     let target_dir_str = target_dir.to_string_lossy();
     if !opts.no_instrumentation {
         args.extend_from_slice(&["--target-dir", &target_dir_str]);
+    }
+    if let Some(path) = &opts.manifest_path {
+        args.extend_from_slice(&["--manifest-path", path]);
     }
     if let Some(package) = &opts.package {
         args.extend_from_slice(&["--package", package]);
