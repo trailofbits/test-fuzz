@@ -6,12 +6,12 @@ use test_env_log::test;
 
 const TIMEOUT: &str = "60";
 
-// smoelius: It would be nice if these first two tests could distinguish how man "auto" tests get
-// run (0 vs. 1). But right now, I can't think of an easy way to do this.
+// smoelius: It would be nice if these first two tests could distinguish how many "auto_generate"
+// tests get run (0 vs. 1). But right now, I can't think of an easy way to do this.
 
 #[test]
-fn no_auto() {
-    auto(
+fn no_auto_generate() {
+    auto_generate(
         "alloc",
         "alloc::target",
         false,
@@ -21,16 +21,16 @@ fn no_auto() {
 }
 
 #[test]
-fn auto_empty() {
-    auto("default", "no_default::target", false, "", 0);
+fn auto_generate_empty() {
+    auto_generate("default", "no_default::target", false, "", 0);
 }
 
 #[test]
-fn auto_nonempty() {
-    auto("assert", "assert::target", true, "Auto-generated", 1);
+fn auto_generate_nonempty() {
+    auto_generate("assert", "assert::target", true, "Auto-generated", 1);
 }
 
-fn auto(krate: &str, target: &str, success: bool, pattern: &str, n: usize) {
+fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usize) {
     let corpus = corpus_directory_from_target(krate, target);
 
     remove_dir_all(&corpus).unwrap_or_default();

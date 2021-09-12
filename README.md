@@ -117,7 +117,7 @@ The primary effects of the `test_fuzz` macro are:
 
   **WARNING**: Setting `enable_in_production` could introduce a denial-of-service vector. For example, setting this option for a function that is called many times with different arguments could fill up the disk. The check of [`TEST_FUZZ_WRITE`](#environment-variables) is meant to provide some defense against this possibility. Nonetheless, consider this option carefully before using it.
 
-- **`no_auto`** - Do not try to [auto-generate corpus files](#auto-generated-corpus-files) for the target.
+- **`no_auto_generate`** - Do not try to [auto-generate corpus files](#auto-generated-corpus-files) for the target.
 
 - **`only_concretizations`** - Record the target's concretizations when running tests, but do not generate corpus files and do not implement a fuzzing harness. This can be useful when the target is a generic function, but it is unclear what type parameters should be used for fuzzing.
 

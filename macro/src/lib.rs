@@ -145,7 +145,7 @@ struct TestFuzzOpts {
     #[darling(default)]
     enable_in_production: bool,
     #[darling(default)]
-    no_auto: bool,
+    no_auto_generate: bool,
     #[darling(default)]
     only_concretizations: bool,
     #[darling(default)]
@@ -345,13 +345,13 @@ fn map_method_or_fn(
             },
         )
     };
-    let auto = if opts.no_auto {
+    let auto_generate = if opts.no_auto_generate {
         quote! {}
     } else {
         quote! {
             #[test]
-            fn auto() {
-                Args #combined_concretization :: auto();
+            fn auto_generate() {
+                Args #combined_concretization :: auto_generate();
             }
         }
     };
@@ -504,7 +504,7 @@ fn map_method_or_fn(
                 impl #impl_generics Args #ty_generics #where_clause {
                     // smoelius: `#autos` could refer to type parameters. Expanding it in a method
                     // definition like this ensures such type parameters resolve.
-                    fn auto() {
+                    fn auto_generate() {
                         if !test_fuzz::runtime::test_fuzz_enabled() {
                             let autos = ( #(#autos,)* );
                             for args in #args_from_autos {
@@ -538,7 +538,7 @@ fn map_method_or_fn(
                     }
                 }
 
-                #auto
+                #auto_generate
             },
             quote! {
                 Args #combined_concretization :: entry();

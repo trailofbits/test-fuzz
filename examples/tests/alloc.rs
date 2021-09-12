@@ -1,5 +1,5 @@
 mod alloc {
-    #[test_fuzz::test_fuzz(no_auto)]
+    #[test_fuzz::test_fuzz(no_auto_generate)]
     fn target(n: usize) {
         let _vec = Vec::<u8>::with_capacity(n);
     }
