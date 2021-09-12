@@ -28,7 +28,7 @@ use std::{
 };
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
 
-const AUTO_SUFFIX: &str = "_fuzz::auto";
+const AUTO_GENERATED_SUFFIX: &str = "_fuzz::auto_generate";
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
 const BASE_ENVS: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
@@ -961,7 +961,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
 
 fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
     let mut command = Command::new(&executable.path);
-    command.args(&["--exact", &(target.to_owned() + AUTO_SUFFIX)]);
+    command.args(&["--exact", &(target.to_owned() + AUTO_GENERATED_SUFFIX)]);
     debug!("{:?}", command);
     let status = command
         .status()

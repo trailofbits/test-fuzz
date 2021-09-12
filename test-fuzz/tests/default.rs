@@ -16,7 +16,7 @@ fn test(name: &str, n: usize) {
 
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test("default", &format!("{}::target_fuzz::auto", name))
+    examples::test("default", &format!("{}::target_fuzz::auto_generate", name))
         .unwrap()
         .assert()
         .success();
