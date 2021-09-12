@@ -7,10 +7,10 @@
 // https://docs.serde.rs/serde_json/#creating-json-by-serializing-data-structures
 
 mod associated_type {
-    use serde::{de, Deserialize, Serialize};
+    use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
     trait Serializable {
-        type Out: Clone + de::DeserializeOwned + Serialize + PartialEq + Eq;
+        type Out: Clone + DeserializeOwned + Serialize + PartialEq + Eq;
         fn serialize(&self) -> Self::Out;
     }
 
@@ -27,7 +27,7 @@ mod associated_type {
     #[test_fuzz::test_fuzz(concretize = "Address", bounds = "T: Serializable")]
     fn serializes_to<T>(x: &T, y: &T::Out) -> bool
     where
-        T: Clone + de::DeserializeOwned + Serialize + Serializable,
+        T: Clone + DeserializeOwned + Serialize + Serializable,
     {
         &<T as Serializable>::serialize(x) == y
     }
