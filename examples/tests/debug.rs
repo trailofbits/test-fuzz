@@ -22,9 +22,9 @@ mod debug_hang {
     #[derive(Clone, Default, Deserialize, Serialize)]
     struct Struct;
 
-    #[allow(clippy::empty_loop)]
     impl Debug for Struct {
         fn fmt(&self, _f: &mut Formatter<'_>) -> Result {
+            #[allow(clippy::empty_loop)]
             loop {}
         }
     }
