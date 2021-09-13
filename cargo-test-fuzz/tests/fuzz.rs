@@ -26,7 +26,7 @@ fn fuzz(name: &str, persistent: bool) {
         .success();
 
     retry(3, || {
-        let mut command = examples::test_fuzz(&format!("{}::target", name)).unwrap();
+        let mut command = examples::test_fuzz(name, &format!("{}::target", name)).unwrap();
 
         let mut args = vec!["--no-ui", "--run-until-crash"];
         if persistent {

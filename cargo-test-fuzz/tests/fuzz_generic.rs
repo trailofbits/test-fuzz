@@ -54,7 +54,7 @@ fn fuzz(test: &str, success: bool, pattern: &str, timeout: bool) {
         .success();
 
     retry(3, || {
-        let assert = examples::test_fuzz(TARGET)
+        let assert = examples::test_fuzz(NAME, TARGET)
             .unwrap()
             .args(&["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
             .assert();

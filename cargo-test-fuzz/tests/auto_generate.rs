@@ -36,7 +36,7 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
     remove_dir_all(&corpus).unwrap_or_default();
 
     retry(3, || {
-        let assert = examples::test_fuzz(target)
+        let assert = examples::test_fuzz(krate, target)
             .unwrap()
             .args(&["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
             .assert();

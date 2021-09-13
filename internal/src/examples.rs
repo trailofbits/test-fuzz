@@ -17,6 +17,8 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
         "test",
         "--package",
         "test-fuzz-examples",
+        "--test",
+        krate,
         "--no-default-features",
         "--features",
         &("test-fuzz/".to_owned() + crate::serde_format().as_feature()),
@@ -81,12 +83,14 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     }
 }
 
-pub fn test_fuzz(target: &str) -> Result<Command> {
+pub fn test_fuzz(krate: &str, target: &str) -> Result<Command> {
     let mut cmd = Command::cargo_bin("cargo-test-fuzz")?;
     cmd.args(&[
         "test-fuzz",
         "--package",
         "test-fuzz-examples",
+        "--test",
+        krate,
         "--no-default-features",
         "--features",
         &("test-fuzz/".to_owned() + crate::serde_format().as_feature()),

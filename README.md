@@ -246,6 +246,8 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
 - **`--target <target>`** - String that fuzz target's name must contain
 
+- **`--test <name>`** - Integration test containing fuzz target
+
 - **`--timeout <timeout>`** - Number of milliseconds to consider a hang when fuzzing or replaying (equivalent to `-- -t <timeout>` when fuzzing)
 
 ### `dont_care!` macro
