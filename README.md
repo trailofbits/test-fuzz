@@ -308,7 +308,12 @@ The traits that `cargo-test-fuzz` currently supports and the values generated fo
 
 ## Environment Variables
 
-- **`TEST_FUZZ_LOG`** - During macro expansion, write instrumented fuzz targets and their associated module definitions to standard output. This can be useful for debugging.
+- **`TEST_FUZZ_LOG`** - During macro expansion:
+
+  - If `TEST_FUZZ_LOG` is set to `1`, write all instrumented fuzz targets and module definitions to standard output.
+  - If `TEST_FUZZ_LOG` is set to a crate name, write that crate's instrumented fuzz targets and module definitions to standard output.
+
+  This can be useful for debugging.
 
 - **`TEST_FUZZ_MANIFEST_PATH`** - When running a target from outside its package directory, find the package's `Cargo.toml` file at this location. One may need to set this environment variable when [`enable_in_production`](#options) is used.
 
