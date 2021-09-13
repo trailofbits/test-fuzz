@@ -15,6 +15,7 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
    - [`test_fuzz` macro](#test_fuzz-macro)
    - [`test_fuzz_impl` macro](#test_fuzz_impl-macro)
    - [`cargo test-fuzz` command](#cargo-test-fuzz-command)
+   - [`dont_care` macro](#dont_care-macro)
 4. [Auto-generated Corpus Files](#auto-generated-corpus-files)
 5. [Environment Variables](#environment-variables)
 6. [Limitations](#limitations)
@@ -247,6 +248,39 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
 - **`--timeout <timeout>`** - Number of milliseconds to consider a hang when fuzzing or replaying (equivalent to `-- -t <timeout>` when fuzzing)
 
+### `dont_care!` macro
+
+The `dont_care!` macro can be used to implement `serde::Serialize`/`serde::Deserialize` for types that are easy to construct and whose values you do not care to record. Intuitively, `dont_care!($ty, $expr)` says:
+
+- Skip values of type `$ty` when serializing.
+- Initialize values of type `$ty` with `$expr` when deserializing.
+
+More specifically, `dont_care!($ty, $expr)` expands to the following:
+
+```rust
+impl serde::Serialize for $ty {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        ().serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for $ty {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        <()>::deserialize(deserializer).map(|_| $expr)
+    }
+}
+```
+
+If `$ty` is a unit struct, then `$expr` can be be omitted. That is, `dont_care!($ty)` is equivalent to `dont_care!($ty, $ty)`.
+
+**Warning:** `dont_care!` is provided for convenience and may be removed in future versions of `test-fuzz`.
+
 ## Auto-generated Corpus Files
 
 `cargo-test-fuzz` can auto-generate values for types that implement certain traits. If all of a target's argument types implement such traits, `cargo-test-fuzz` can auto-generate corpus files for the target.
@@ -295,25 +329,3 @@ The traits that `cargo-test-fuzz` currently supports and the values generated fo
 - If you know the package in which your target resides, passing `-p <package>` to `cargo test`/[`cargo test-fuzz`](#cargo-test-fuzz-command) can significantly reduce build times.
 
 - Rust [won't allow you to](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types) implement `serde::Serialize` for other repositories' types. But you may be able to [patch](https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html) other repositories to make their types serializeble. Also, [`cargo-clone`](https://github.com/JanLikar/cargo-clone) can be useful for grabbing dependencies' repositories.
-
-- If a type `Foo` is easy to construct (say by calling `Foo::new()`), and if you don't care to record `Foo` values, then you may be able to implement `serde::Serialize`/`serde::Deserialize` for `Foo` like this:
-
-  ```rust
-  impl serde::Serialize for Foo {
-      fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-      where
-          S: serde::Serializer,
-      {
-          ().serialize(serializer)
-      }
-  }
-
-  impl<'de> serde::Deserialize<'de> for Foo {
-      fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-      where
-          D: serde::Deserializer<'de>,
-      {
-          <()>::deserialize(deserializer).map(|_| Foo::new())
-      }
-  }
-  ```
