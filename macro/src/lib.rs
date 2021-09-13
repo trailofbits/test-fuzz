@@ -356,17 +356,17 @@ fn map_method_or_fn(
         }
     };
     let input_args = {
-        #[cfg(feature = "persistent")]
+        #[cfg(feature = "__persistent")]
         quote! {}
-        #[cfg(not(feature = "persistent"))]
+        #[cfg(not(feature = "__persistent"))]
         quote! {
             let mut args = UsingReader::<_>::read_args #combined_concretization (std::io::stdin());
         }
     };
     let output_args = {
-        #[cfg(feature = "persistent")]
+        #[cfg(feature = "__persistent")]
         quote! {}
-        #[cfg(not(feature = "persistent"))]
+        #[cfg(not(feature = "__persistent"))]
         quote! {
             args.as_ref().map(|x| {
                 if test_fuzz::runtime::pretty_print_enabled() {
@@ -402,7 +402,7 @@ fn map_method_or_fn(
         }
     };
     let call_with_deserialized_arguments = {
-        #[cfg(feature = "persistent")]
+        #[cfg(feature = "__persistent")]
         quote! {
             test_fuzz::afl::fuzz!(|data: &[u8]| {
                 let mut args = UsingReader::<_>::read_args #combined_concretization (data);
@@ -411,7 +411,7 @@ fn map_method_or_fn(
                 );
             });
         }
-        #[cfg(not(feature = "persistent"))]
+        #[cfg(not(feature = "__persistent"))]
         quote! {
             let ret: Option<<Args #combined_concretization as HasRetTy>::RetTy> = args.map(|mut args|
                 #call
@@ -419,12 +419,12 @@ fn map_method_or_fn(
         }
     };
     let output_ret = {
-        #[cfg(feature = "persistent")]
+        #[cfg(feature = "__persistent")]
         quote! {
             // smoelius: Suppress unused variable warning.
             let _: Option<<Args #combined_concretization as HasRetTy>::RetTy> = None;
         }
-        #[cfg(not(feature = "persistent"))]
+        #[cfg(not(feature = "__persistent"))]
         quote! {
             struct Ret(<Args #combined_concretization as HasRetTy>::RetTy);
             impl std::fmt::Debug for Ret {

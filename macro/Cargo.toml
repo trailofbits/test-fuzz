@@ -25,6 +25,6 @@ unzip-n = "0.1.2"
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=0.1.0" }
 
 [features]
-persistent = []
-serde_bincode = ["internal/serde_bincode"]
-serde_cbor = ["internal/serde_cbor"]
+__persistent = []
+__serde_bincode = ["internal/__serde_bincode"]
+__serde_cbor = ["internal/__serde_cbor"]

@@ -25,9 +25,9 @@ predicates = "2.0.2"
 
 [features]
 default = ["serde_bincode"]
-persistent = ["test-fuzz-macro/persistent"]
-serde_bincode = ["internal/serde_bincode", "runtime/serde_bincode", "test-fuzz-macro/serde_bincode"]
-serde_cbor = ["internal/serde_cbor", "runtime/serde_cbor", "test-fuzz-macro/serde_cbor"]
+serde_bincode = ["internal/__serde_bincode", "runtime/__serde_bincode", "test-fuzz-macro/__serde_bincode"]
+serde_cbor = ["internal/__serde_cbor", "runtime/__serde_cbor", "test-fuzz-macro/__serde_cbor"]
+__persistent = ["test-fuzz-macro/__persistent"]
 
 [package.metadata.cargo-udeps.ignore]
 normal = ["afl"]

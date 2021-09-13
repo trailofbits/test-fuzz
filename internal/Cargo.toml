@@ -23,6 +23,5 @@ strum_macros = "0.21.1"
 subprocess = "0.2.7"
 
 [features]
-default = []
-serde_bincode = []
-serde_cbor = []
+__serde_bincode = []
+__serde_cbor = []

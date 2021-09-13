@@ -35,7 +35,7 @@ fn rename() {
             "--features",
             &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
             "--features",
-            "bar_fuzz",
+            "__bar_fuzz",
         ])
         .assert()
         .failure()

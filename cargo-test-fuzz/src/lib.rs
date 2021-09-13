@@ -324,7 +324,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         args.extend_from_slice(&["--package", package]);
     }
     if opts.persistent {
-        args.extend_from_slice(&["--features", "test-fuzz/persistent"]);
+        args.extend_from_slice(&["--features", "test-fuzz/__persistent"]);
     }
 
     // smoelius: Suppress "Warning: AFL++ tools will need to set AFL_MAP_SIZE..." Setting
