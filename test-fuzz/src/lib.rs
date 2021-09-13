@@ -10,3 +10,5 @@ pub use afl;
 // https://github.com/serde-rs/serde/issues/1465
 
 pub use internal::{serde_format, SerdeFormat};
+
+mod utils;
