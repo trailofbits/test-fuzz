@@ -4,10 +4,11 @@
 use darling::FromMeta;
 use if_chain::if_chain;
 use internal::serde_format;
+use lazy_static::lazy_static;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
-use std::{io::Write, str::FromStr};
+use std::{env::var, io::Write, str::FromStr};
 use subprocess::{Exec, Redirection};
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute,
@@ -20,6 +21,11 @@ use toolchain_find::find_installed_component;
 use unzip_n::unzip_n;
 
 mod type_utils;
+
+lazy_static! {
+    pub(crate) static ref CARGO_CRATE_NAME: String =
+        var("CARGO_CRATE_NAME").expect("Could not get `CARGO_CRATE_NAME`");
+}
 
 #[derive(FromMeta)]
 struct TestFuzzImplOpts {}
@@ -854,5 +860,5 @@ fn log(tokens: &TokenStream2) {
 }
 
 fn log_enabled() -> bool {
-    option_env!("TEST_FUZZ_LOG").map_or(false, |value| value != "0")
+    option_env!("TEST_FUZZ_LOG").map_or(false, |value| value == "1" || value == *CARGO_CRATE_NAME)
 }
