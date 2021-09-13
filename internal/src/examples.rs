@@ -1,35 +1,45 @@
 use anyhow::{bail, ensure, Context, Result};
 use assert_cmd::Command;
-use cargo_metadata::{Artifact, ArtifactProfile, Message, MetadataCommand};
+use cargo_metadata::{Artifact, ArtifactProfile, Message};
 use if_chain::if_chain;
+use lazy_static::lazy_static;
 use log::debug;
-use std::io::BufReader;
+use std::{io::BufReader, path::Path};
 use subprocess::{Exec, Redirection};
+
+lazy_static! {
+    static ref MANIFEST_PATH: String = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("examples")
+        .join("Cargo.toml")
+        .to_string_lossy()
+        .to_string();
+}
 
 // smoelius: We want to reuse the existing features. So we can't do anything that would cause the
 // examples to be rebuilt.
+// smoelius: What was I worried about? What would cause the examples to be rebuilt? Something about
+// the current working directory? Maybe using the manifest path solves that problem?
 pub fn test(krate: &str, test: &str) -> Result<Command> {
-    let metadata = MetadataCommand::new().exec()?;
-
     // smoelius: Put --message-format=json last so that it is easy to copy-and-paste the command
     // without it.
-    let args = [
+    let serde_format_feature = "test-fuzz/".to_owned() + crate::serde_format().as_feature();
+    let mut args = vec![
         "test",
-        "--package",
-        "test-fuzz-examples",
+        "--manifest-path",
+        &*MANIFEST_PATH,
         "--test",
         krate,
         "--no-default-features",
         "--features",
-        &("test-fuzz/".to_owned() + crate::serde_format().as_feature()),
-        "--no-run",
-        "--message-format=json",
+        &serde_format_feature,
     ];
+    if crate::auto_concretize_enabled() {
+        args.extend_from_slice(&["--features", "__auto_concretize"]);
+    }
+    args.extend_from_slice(&["--no-run", "--message-format=json"]);
 
-    let exec = Exec::cmd("cargo")
-        .cwd(metadata.workspace_root)
-        .args(&args)
-        .stdout(Redirection::Pipe);
+    let exec = Exec::cmd("cargo").args(&args).stdout(Redirection::Pipe);
     debug!("{:?}", exec);
     let mut popen = exec.clone().popen()?;
     let messages = popen
@@ -48,7 +58,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
 
     ensure!(status.success(), "Command failed: {:?}", exec);
 
-    let messages = messages
+    let executables = messages
         .into_iter()
         .filter_map(|message| {
             if_chain! {
@@ -69,13 +79,13 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
         .collect::<Vec<_>>();
 
     ensure!(
-        messages.len() <= 1,
+        executables.len() <= 1,
         "Found multiple executables starting with `{}`",
         krate
     );
 
-    if let Some(message) = messages.into_iter().next() {
-        let mut cmd = Command::new(message);
+    if let Some(executable) = executables.into_iter().next() {
+        let mut cmd = Command::new(executable);
         cmd.args(&["--exact", test]);
         Ok(cmd)
     } else {
@@ -84,19 +94,23 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
 }
 
 pub fn test_fuzz(krate: &str, target: &str) -> Result<Command> {
-    let mut cmd = Command::cargo_bin("cargo-test-fuzz")?;
-    cmd.args(&[
+    let serde_format_feature = "test-fuzz/".to_owned() + crate::serde_format().as_feature();
+    let mut args = vec![
         "test-fuzz",
-        "--package",
-        "test-fuzz-examples",
+        "--manifest-path",
+        &*MANIFEST_PATH,
         "--test",
         krate,
         "--no-default-features",
         "--features",
-        &("test-fuzz/".to_owned() + crate::serde_format().as_feature()),
-        "--exact",
-        "--target",
-        target,
-    ]);
+        &serde_format_feature,
+    ];
+    if crate::auto_concretize_enabled() {
+        args.extend_from_slice(&["--features", "__auto_concretize"]);
+    }
+    args.extend_from_slice(&["--exact", "--target", target]);
+
+    let mut cmd = Command::cargo_bin("cargo-test-fuzz")?;
+    cmd.args(&args);
     Ok(cmd)
 }

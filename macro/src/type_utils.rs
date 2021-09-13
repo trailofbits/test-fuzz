@@ -1,9 +1,28 @@
+use crate::CARGO_CRATE_NAME;
+use if_chain::if_chain;
 use proc_macro2::Span;
 use syn::{
     parse_quote,
     visit_mut::{visit_type_mut, VisitMut},
     Ident, Path, PathArguments, PathSegment, Type, TypePath,
 };
+
+pub fn collapse_crate(ty: &Type) -> Type {
+    let mut ty = ty.clone();
+    if_chain! {
+        if let Type::Path(ref mut path) = ty;
+        if path.qself.is_none();
+        if path.path.leading_colon.is_none();
+        let mut iter = path.path.segments.iter_mut();
+        if let Some(ref mut segment) = iter.next();
+        if segment.ident == *CARGO_CRATE_NAME;
+        if segment.arguments == PathArguments::None;
+        then {
+            segment.ident = Ident::new("crate", Span::call_site());
+        }
+    }
+    ty
+}
 
 struct TypeVisitor<'a> {
     pub self_ty: &'a Type,

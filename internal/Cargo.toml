@@ -14,6 +14,7 @@ anyhow = "1.0.43"
 assert_cmd = "2.0.1"
 cargo_metadata = "0.14.0"
 if_chain = "1.0.2"
+lazy_static = "1.4.0"
 log = "0.4.14"
 proc-macro2 = "1.0.29"
 quote = "1.0.9"
@@ -23,5 +24,6 @@ strum_macros = "0.21.1"
 subprocess = "0.2.7"
 
 [features]
+__auto_concretize = []
 __serde_bincode = []
 __serde_cbor = []

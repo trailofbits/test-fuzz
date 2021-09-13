@@ -16,10 +16,11 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
    - [`test_fuzz_impl` macro](#test_fuzz_impl-macro)
    - [`cargo test-fuzz` command](#cargo-test-fuzz-command)
    - [`dont_care` macro](#dont_care-macro)
-4. [Auto-generated Corpus Files](#auto-generated-corpus-files)
-5. [Environment Variables](#environment-variables)
-6. [Limitations](#limitations)
-7. [Tips and Tricks](#tips-and-tricks)
+4. [`test-fuzz` Package Features](#test-fuzz-package-features)
+5. [Auto-generated Corpus Files](#auto-generated-corpus-files)
+6. [Environment Variables](#environment-variables)
+7. [Limitations](#limitations)
+8. [Tips and Tricks](#tips-and-tricks)
 
 ## Installation
 
@@ -282,6 +283,26 @@ impl<'de> serde::Deserialize<'de> for $ty {
 If `$ty` is a unit struct, then `$expr` can be be omitted. That is, `dont_care!($ty)` is equivalent to `dont_care!($ty, $ty)`.
 
 **Warning:** `dont_care!` is provided for convenience and may be removed in future versions of `test-fuzz`.
+
+## `test-fuzz` Package Features
+
+The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#choosing-features). For example, to enable the `auto_concretize` feature, use:
+
+```toml
+test-fuzz = { version = "0.1.0", features = ["auto_concretize"] }
+```
+
+The `test-fuzz` package currently supports the following features:
+
+- **`auto_concretize`** - When this feature is enabled, `test-fuzz` tries to infer `impl` and non-`impl` concretizations. Success requires that a target be called with exactly one `impl` concretization and exactly one non-`impl` concretization during tests. Success is not guaranteed by these conditions, however.
+
+  The implementation of `auto_concretize` uses the unstable language feature [`proc_macro_span`](https://github.com/rust-lang/rust/issues/54725). So enabling `auto_concretize` requires that targets be built with a nightly compiler.
+
+- **Serde formats** - `test-fuzz` can serialize target arguments in multiple Serde formats. The following are the features used to select a format. Note that if a format other than the default is selected, then `default-feature = false` must be specified.
+
+  - **`serde_bincode`** - [Bincode](https://github.com/bincode-org/bincode) (default)
+
+  - **`serde_cbor`** - [Cbor](https://github.com/pyfisch/cbor)
 
 ## Auto-generated Corpus Files
 

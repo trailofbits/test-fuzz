@@ -19,13 +19,14 @@ lazy_static = "1.4.0"
 proc-macro2 = "1.0.29"
 quote = "1.0.9"
 subprocess = "0.2.7"
-syn = { version = "1.0.76", features = ["full", "parsing", "visit-mut"] }
+syn = { version = "1.0.76", features = ["full", "parsing", "visit", "visit-mut"] }
 toolchain_find = "0.2.0"
 unzip-n = "0.1.2"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=0.1.0" }
 
 [features]
+__auto_concretize = []
 __persistent = []
 __serde_bincode = ["internal/__serde_bincode"]
 __serde_cbor = ["internal/__serde_cbor"]

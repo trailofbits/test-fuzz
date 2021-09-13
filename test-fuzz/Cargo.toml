@@ -25,6 +25,7 @@ predicates = "2.0.2"
 
 [features]
 default = ["serde_bincode"]
+auto_concretize = ["internal/__auto_concretize", "test-fuzz-macro/__auto_concretize"]
 serde_bincode = ["internal/__serde_bincode", "runtime/__serde_bincode", "test-fuzz-macro/__serde_bincode"]
 serde_cbor = ["internal/__serde_cbor", "runtime/__serde_cbor", "test-fuzz-macro/__serde_cbor"]
 __persistent = ["test-fuzz-macro/__persistent"]
