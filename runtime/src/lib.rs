@@ -21,7 +21,7 @@ pub use num_traits;
 
 pub mod traits;
 
-#[cfg(feature = "serde_bincode")]
+#[cfg(feature = "__serde_bincode")]
 const BYTE_LIMIT: u64 = 1024 * 1024 * 1024;
 
 // smoelius: TryDebug, etc. use Nikolai Vazquez's trick from `impls`.
@@ -164,7 +164,7 @@ pub fn write_concretization<T>(args: &[&str]) {
 pub fn write_args<T: Serialize>(serde_format: SerdeFormat, args: &T) {
     let corpus = corpus_directory_from_args_type::<T>();
     match serde_format {
-        #[cfg(feature = "serde_bincode")]
+        #[cfg(feature = "__serde_bincode")]
         SerdeFormat::Bincode => {
             use bincode::Options;
             let data = bincode::options()
@@ -173,7 +173,7 @@ pub fn write_args<T: Serialize>(serde_format: SerdeFormat, args: &T) {
                 .unwrap();
             write_data(&corpus, &data).unwrap();
         }
-        #[cfg(feature = "serde_cbor")]
+        #[cfg(feature = "__serde_cbor")]
         SerdeFormat::Cbor => {
             let data = serde_cbor::to_vec(args).unwrap();
             write_data(&corpus, &data).unwrap();
@@ -191,10 +191,9 @@ pub fn write_data(dir: &Path, data: &[u8]) -> io::Result<()> {
     write(path, &data)
 }
 
-#[allow(unused_variables)]
 pub fn read_args<T: DeserializeOwned, R: Read>(serde_format: SerdeFormat, reader: R) -> Option<T> {
     match serde_format {
-        #[cfg(feature = "serde_bincode")]
+        #[cfg(feature = "__serde_bincode")]
         SerdeFormat::Bincode => {
             use bincode::Options;
             bincode::options()
@@ -202,7 +201,7 @@ pub fn read_args<T: DeserializeOwned, R: Read>(serde_format: SerdeFormat, reader
                 .deserialize_from(reader)
                 .ok()
         }
-        #[cfg(feature = "serde_cbor")]
+        #[cfg(feature = "__serde_cbor")]
         SerdeFormat::Cbor => serde_cbor::from_reader(reader).ok(),
     }
 }
