@@ -36,7 +36,7 @@ jobs:
 
       - name: Cargo sort
         run: |
-          cargo install cargo-sort
+          cargo install cargo-sort || true
           find . -name Cargo.toml | xargs -n 1 dirname | xargs -n 1 cargo sort --check --grouped
 
       - name: Format
