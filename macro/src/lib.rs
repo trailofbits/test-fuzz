@@ -19,7 +19,7 @@ use syn::{
 use toolchain_find::find_installed_component;
 use unzip_n::unzip_n;
 
-mod util;
+mod type_utils;
 
 #[derive(FromMeta)]
 struct TestFuzzImplOpts {}
@@ -290,7 +290,7 @@ fn map_method_or_fn(
     let args_from_autos = args_from_autos(&autos);
     let ret_ty = match &sig.output {
         ReturnType::Type(_, ty) => self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
-            util::expand_self(self_ty, trait_path, ty)
+            type_utils::expand_self(self_ty, trait_path, ty)
         }),
         ReturnType::Default => parse_quote! { () },
     };
@@ -618,7 +618,7 @@ fn map_arg(
             FnArg::Typed(pat_ty) => {
                 let pat = &*pat_ty.pat;
                 let ty = self_ty.as_ref().map_or(*pat_ty.ty.clone(), |self_ty| {
-                    util::expand_self(self_ty, &trait_path, &*pat_ty.ty)
+                    type_utils::expand_self(self_ty, &trait_path, &*pat_ty.ty)
                 });
                 let name = format!("{}", pat.to_token_stream());
                 let fmt = parse_quote! {
@@ -649,7 +649,7 @@ fn map_arg(
 
 fn map_arc_arg(i: &Literal, pat: &Pat, path: &TypePath) -> Option<(Type, Expr, Expr)> {
     if_chain! {
-        if let Some(PathArguments::AngleBracketed(args)) = util::match_type_path(path, &["std", "sync", "Arc"]);
+        if let Some(PathArguments::AngleBracketed(args)) = type_utils::match_type_path(path, &["std", "sync", "Arc"]);
         if args.args.len() == 1;
         if let GenericArgument::Type(ty) = &args.args[0];
         then {
@@ -666,11 +666,15 @@ fn map_arc_arg(i: &Literal, pat: &Pat, path: &TypePath) -> Option<(Type, Expr, E
 
 fn map_ref_arg(i: &Literal, pat: &Pat, ty: &TypeReference) -> (Type, Expr, Expr) {
     match &*ty.elem {
-        Type::Path(path) if util::match_type_path(path, &["str"]) == Some(PathArguments::None) => (
-            parse_quote! { String },
-            parse_quote! { #pat.to_owned() },
-            parse_quote! { args.#i.as_str() },
-        ),
+        Type::Path(path)
+            if type_utils::match_type_path(path, &["str"]) == Some(PathArguments::None) =>
+        {
+            (
+                parse_quote! { String },
+                parse_quote! { #pat.to_owned() },
+                parse_quote! { args.#i.as_str() },
+            )
+        }
         Type::Slice(ty) => {
             let ty = &*ty.elem;
             (
