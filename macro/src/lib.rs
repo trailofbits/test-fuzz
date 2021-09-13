@@ -264,7 +264,7 @@ fn map_method_or_fn(
         .as_ref()
         .map(args_as_turbofish);
 
-    let self_ty_base = self_ty.as_ref().map(type_base);
+    let self_ty_base = self_ty.as_ref().map(type_utils::type_base);
 
     let (receiver, mut arg_tys, fmt_args, mut ser_args, de_args) =
         map_args(self_ty, trait_path, sig.inputs.iter());
@@ -798,19 +798,6 @@ fn args_as_turbofish(args: &Punctuated<GenericMethodArgument, token::Comma>) -> 
     quote! {
         ::<#args>
     }
-}
-
-fn type_base(ty: &Type) -> Type {
-    let mut ty = ty.clone();
-
-    if let Type::Path(ref mut path) = ty {
-        if let Some(segment) = path.path.segments.last_mut() {
-            let ident = &segment.ident;
-            *segment = parse_quote! { #ident };
-        }
-    }
-
-    ty
 }
 
 // smoelius: The current strategy for combining auto-generated values is a kind of "round robin."
