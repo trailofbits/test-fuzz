@@ -58,6 +58,7 @@ enum SubCommand {
 }
 
 // smoelius: Wherever possible, try to reuse cargo test and libtest option names.
+#[remain::sorted]
 #[derive(Clap, Clone, Debug, Deserialize, Serialize)]
 #[clap(version = crate_version!())]
 struct TestFuzz {
@@ -101,8 +102,6 @@ struct TestFuzz {
     list: bool,
     #[clap(long, value_name = "PATH", about = "Path to Cargo.toml")]
     manifest_path: Option<String>,
-    #[clap(long, about = "Resume target's last fuzzing session")]
-    resume: bool,
     #[clap(long, about = "Do not activate the `default` feature")]
     no_default_features: bool,
     #[clap(
@@ -114,12 +113,12 @@ struct TestFuzz {
     no_run: bool,
     #[clap(long, about = "Disable user interface")]
     no_ui: bool,
+    #[clap(short, long, about = "Package containing fuzz target")]
+    package: Option<String>,
     #[clap(long, about = "Enable persistent mode fuzzing")]
     persistent: bool,
     #[clap(long, about = "Pretty-print debug output when displaying/replaying")]
     pretty_print: bool,
-    #[clap(short, long, about = "Package containing fuzz target")]
-    package: Option<String>,
     #[clap(
         long,
         about = "Replay corpus using uninstrumented fuzz target; to replay with instrumentation, \
@@ -142,6 +141,8 @@ struct TestFuzz {
     reset: bool,
     #[clap(long, hidden = true)]
     reset_all: bool,
+    #[clap(long, about = "Resume target's last fuzzing session")]
+    resume: bool,
     #[clap(long, about = "Stop fuzzing once a crash is found")]
     run_until_crash: bool,
     #[clap(long, about = "String that fuzz target's name must contain")]
@@ -158,8 +159,8 @@ struct TestFuzz {
         to `-- -t <timeout>` when fuzzing)"
     )]
     timeout: Option<u64>,
-    #[clap(last = true, about = "Arguments for the fuzzer")]
-    args: Vec<String>,
+    #[clap(last = true, name = "args", about = "Arguments for the fuzzer")]
+    zargs: Vec<String>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -977,7 +978,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
             format!("{}", timeout * NANOS_PER_MILLI),
         ]);
     }
-    args.extend(opts.args.clone());
+    args.extend(opts.zargs.clone());
     args.extend(
         vec![
             "--",
