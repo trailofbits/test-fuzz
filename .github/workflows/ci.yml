@@ -67,6 +67,7 @@ jobs:
     strategy:
       matrix:
         serde_format: [bincode, cbor]
+        toolchain: [stable, nightly]
 
     steps:
       - uses: actions/checkout@v2
@@ -78,10 +79,16 @@ jobs:
         run: cargo install afl
 
       - name: Test
-        run: cargo test --workspace --no-default-features --features=test-fuzz/serde_${{ matrix.serde_format }} -- --nocapture
+        run: |
+          AUTO_CONCRETIZE=
+          if [[ ${{ matrix.toolchain }} = nightly ]]; then
+            AUTO_CONCRETIZE='--features=test-fuzz/auto_concretize'
+          fi
+          cargo test --workspace --no-default-features --features=test-fuzz/serde_${{ matrix.serde_format }} $AUTO_CONCRETIZE -- --nocapture
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
           RUST_LOG: warn
+          RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
 
   test-incompatible-cargo-afl:
     runs-on: ubuntu-latest

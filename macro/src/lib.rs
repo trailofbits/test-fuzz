@@ -1,5 +1,6 @@
 #![allow(clippy::default_trait_access)]
 #![deny(clippy::unwrap_used)]
+#![cfg_attr(feature = "__auto_concretize", feature(proc_macro_span))]
 
 use darling::FromMeta;
 use if_chain::if_chain;
@@ -19,6 +20,11 @@ use syn::{
 };
 use toolchain_find::find_installed_component;
 use unzip_n::unzip_n;
+
+mod auto_concretize;
+
+#[cfg(feature = "__auto_concretize")]
+mod mod_utils;
 
 mod type_utils;
 
@@ -206,14 +212,59 @@ fn map_method_or_fn(
     block: &Block,
 ) -> (TokenStream2, Option<ItemMod>) {
     let stmts = &block.stmts;
-    let opts_concretize = opts
-        .concretize
-        .as_ref()
-        .map(|s| parse_generic_method_arguments(s));
+
+    #[allow(unused_mut, unused_variables)]
+    let mut impl_concretization_error: Option<auto_concretize::Error> = None;
+    #[allow(unused_mut, unused_variables)]
+    let mut concretization_error: Option<auto_concretize::Error> = None;
+
     let opts_concretize_impl = opts
         .concretize_impl
         .as_ref()
-        .map(|s| parse_generic_method_arguments(s));
+        .map(|s| parse_generic_method_arguments(s, false))
+        .or_else(|| {
+            #[cfg(feature = "__auto_concretize")]
+            return auto_concretize::unique_impl_concretization(sig)
+                .map(|s| parse_generic_method_arguments(&s, true))
+                .map_err(|error| impl_concretization_error = Some(error.clone()))
+                .ok();
+            #[cfg(not(feature = "__auto_concretize"))]
+            return None;
+        });
+
+    let opts_concretize = opts
+        .concretize
+        .as_ref()
+        .map(|s| parse_generic_method_arguments(s, false))
+        .or_else(|| {
+            #[cfg(feature = "__auto_concretize")]
+            return auto_concretize::unique_concretization(sig)
+                .map(|s| parse_generic_method_arguments(&s, true))
+                .map_err(|error| concretization_error = Some(error.clone()))
+                .ok();
+            #[cfg(not(feature = "__auto_concretize"))]
+            return None;
+        });
+
+    // smoelius: Error early.
+    #[cfg(fuzzing)]
+    if !opts.only_concretizations {
+        if !generics.params.is_empty() && opts_concretize_impl.is_none() {
+            panic!(
+                "`{}` appears in a generic impl but `concretize_impl` was not specified{}",
+                sig.ident.to_string(),
+                impl_concretization_error.map_or("".to_owned(), |error| format!(" and {}", error))
+            );
+        }
+
+        if !sig.generics.params.is_empty() && opts_concretize.is_none() {
+            panic!(
+                "`{}` is generic but `concretize` was not specified{}",
+                sig.ident.to_string(),
+                concretization_error.map_or("".to_owned(), |error| format!(" and {}", error))
+            );
+        }
+    }
 
     let impl_ty_idents = type_idents(generics);
     let ty_idents = type_idents(&sig.generics);
@@ -257,8 +308,6 @@ fn map_method_or_fn(
             parse_quote! { std::marker::PhantomData }
         })
         .collect();
-
-    let ty_generics_as_turbofish = ty_generics.as_turbofish();
 
     let impl_concretization = opts_concretize_impl.as_ref().map(args_as_turbofish);
     let concretization = opts_concretize.as_ref().map(args_as_turbofish);
@@ -304,6 +353,34 @@ fn map_method_or_fn(
     let target_ident = &sig.ident;
     let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
     let mod_ident = Ident::new(&format!("{}_fuzz", renamed_target_ident), Span::call_site());
+
+    // smoelius: This is a hack. When `only_concretizations` is specified, the user should not have
+    // to also specify trait bounds. But `Args` is used to get the module path at runtime via
+    // `type_name`. So when `only_concretizations` is specified, `Args` gets an empty declaration.
+    let empty_generics = Generics {
+        lt_token: None,
+        params: parse_quote! {},
+        gt_token: None,
+        where_clause: None,
+    };
+    let (_, empty_ty_generics, _) = empty_generics.split_for_impl();
+    let (ty_generics_as_turbofish, struct_args) = if opts.only_concretizations {
+        (
+            empty_ty_generics.as_turbofish(),
+            quote! {
+                pub(super) struct Args;
+            },
+        )
+    } else {
+        (
+            ty_generics.as_turbofish(),
+            quote! {
+                pub(super) struct Args #ty_generics (
+                    #(#pub_arg_tys),*
+                ) #args_where_clause;
+            },
+        )
+    };
 
     let serde_format = serde_format();
     let write_concretizations = quote! {
@@ -454,59 +531,72 @@ fn map_method_or_fn(
             eprintln!();
         }
     };
-    let (mod_items, entry_stmts) = if opts.only_concretizations {
+    let mod_items = if opts.only_concretizations {
+        quote! {}
+    } else {
+        quote! {
+            // smoelius: It is tempting to want to put all of these functions under `impl Args`.
+            // But `write_args` and `read args` impose different bounds on their arguments. So
+            // I don't think that idea would work.
+            pub(super) fn write_args #impl_generics (args: Args #ty_generics_as_turbofish) #where_clause {
+                #[derive(serde::Serialize)]
+                struct Args #ty_generics (
+                    #(#pub_arg_tys),*
+                ) #args_where_clause;
+                let args = Args(
+                    #(#args_is),*
+                );
+                test_fuzz::runtime::write_args(#serde_format, &args);
+            }
+
+            struct UsingReader<R>(R);
+
+            impl<R: std::io::Read> UsingReader<R> {
+                pub fn read_args #impl_generics_deserializable (reader: R) -> Option<Args #ty_generics_as_turbofish> #where_clause {
+                    #[derive(serde::Deserialize)]
+                    struct Args #ty_generics (
+                        #(#pub_arg_tys),*
+                    ) #args_where_clause;
+                    let args = test_fuzz::runtime::read_args::<Args #ty_generics_as_turbofish, _>(#serde_format, reader);
+                    args.map(|args| #mod_ident :: Args(
+                        #(#args_is),*
+                    ))
+                }
+            }
+
+            impl #impl_generics std::fmt::Debug for Args #ty_generics #where_clause {
+                fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    use test_fuzz::runtime::TryDebugFallback;
+                    let mut debug_struct = fmt.debug_struct("Args");
+                    #(#fmt_args)*
+                    debug_struct.finish()
+                }
+            }
+
+            // smoelius: Inherent associated types are unstable:
+            // https://github.com/rust-lang/rust/issues/8995
+            trait HasRetTy {
+                type RetTy;
+            }
+
+            impl #impl_generics HasRetTy for Args #ty_generics #where_clause {
+                type RetTy = #ret_ty;
+            }
+        }
+    };
+    // smoelius: The `Args`' implementation and the `auto_generate` test won't compile without
+    // concretizations.
+    //   Also, cargo-test-fuzz finds targets by looking for tests that end with `_fuzz::entry`. So
+    // create such a test regardless. If say `only_concretizations` was specified, then give the
+    // test an empty body.
+    let (concretization_dependent_mod_items, entry_stmts) = if opts.only_concretizations
+        || (!generics.params.is_empty() && impl_concretization.is_none())
+        || (!sig.generics.params.is_empty() && concretization.is_none())
+    {
         (quote! {}, quote! {})
     } else {
         (
             quote! {
-                // smoelius: It is tempting to want to put all of these functions under `impl Args`.
-                // But `write_args` and `read args` impose different bounds on their arguments. So
-                // I don't think that idea would work.
-                pub(super) fn write_args #impl_generics (args: Args #ty_generics_as_turbofish) #where_clause {
-                    #[derive(serde::Serialize)]
-                    struct Args #ty_generics (
-                        #(#pub_arg_tys),*
-                    ) #args_where_clause;
-                    let args = Args(
-                        #(#args_is),*
-                    );
-                    test_fuzz::runtime::write_args(#serde_format, &args);
-                }
-
-                struct UsingReader<R>(R);
-
-                impl<R: std::io::Read> UsingReader<R> {
-                    pub fn read_args #impl_generics_deserializable (reader: R) -> Option<Args #ty_generics_as_turbofish> #where_clause {
-                        #[derive(serde::Deserialize)]
-                        struct Args #ty_generics (
-                            #(#pub_arg_tys),*
-                        ) #args_where_clause;
-                        let args = test_fuzz::runtime::read_args::<Args #ty_generics_as_turbofish, _>(#serde_format, reader);
-                        args.map(|args| #mod_ident :: Args(
-                            #(#args_is),*
-                        ))
-                    }
-                }
-
-                impl #impl_generics std::fmt::Debug for Args #ty_generics #where_clause {
-                    fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                        use test_fuzz::runtime::TryDebugFallback;
-                        let mut debug_struct = fmt.debug_struct("Args");
-                        #(#fmt_args)*
-                        debug_struct.finish()
-                    }
-                }
-
-                // smoelius: Inherent associated types are unstable:
-                // https://github.com/rust-lang/rust/issues/8995
-                trait HasRetTy {
-                    type RetTy;
-                }
-
-                impl #impl_generics HasRetTy for Args #ty_generics #where_clause {
-                    type RetTy = #ret_ty;
-                }
-
                 impl #impl_generics Args #ty_generics #where_clause {
                     // smoelius: `#autos` could refer to type parameters. Expanding it in a method
                     // definition like this ensures such type parameters resolve.
@@ -566,11 +656,11 @@ fn map_method_or_fn(
             mod #mod_ident {
                 use super::*;
 
-                pub(super) struct Args #ty_generics (
-                    #(#pub_arg_tys),*
-                ) #args_where_clause;
+                #struct_args
 
                 #mod_items
+
+                #concretization_dependent_mod_items
 
                 #[test]
                 fn entry() {
@@ -721,11 +811,21 @@ fn is_test_fuzz(attr: &Attribute) -> bool {
         .all(|PathSegment { ident, .. }| ident == "test_fuzz")
 }
 
-fn parse_generic_method_arguments(s: &str) -> Punctuated<GenericMethodArgument, token::Comma> {
+fn parse_generic_method_arguments(
+    s: &str,
+    collapse_crate: bool,
+) -> Punctuated<GenericMethodArgument, token::Comma> {
     let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
     let args = Parser::parse(Punctuated::<Type, token::Comma>::parse_terminated, tokens)
         .expect("Could not parse generic method arguments");
-    args.into_iter().map(GenericMethodArgument::Type).collect()
+    args.into_iter()
+        .map(|mut ty| {
+            if collapse_crate {
+                ty = type_utils::collapse_crate(&ty);
+            }
+            GenericMethodArgument::Type(ty)
+        })
+        .collect()
 }
 
 fn type_idents(generics: &Generics) -> Vec<Ident> {
