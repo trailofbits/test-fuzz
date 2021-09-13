@@ -52,7 +52,7 @@ fn replay(name: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {
         .assert()
         .success();
 
-    examples::test_fuzz(target)
+    examples::test_fuzz(name, target)
         .unwrap()
         .args(&["--reset"])
         .assert()
@@ -62,7 +62,7 @@ fn replay(name: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {
         let mut args = vec!["--no-ui"];
         args.extend_from_slice(fuzz_args);
 
-        examples::test_fuzz(target)
+        examples::test_fuzz(name, target)
             .unwrap()
             .args(args)
             .assert()
@@ -71,7 +71,7 @@ fn replay(name: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {
         // smoelius: The memory limit must be set to replay the crashes, but not the hangs.
         Resource::DATA.set(MEMORY_LIMIT, MEMORY_LIMIT).unwrap();
 
-        let mut command = examples::test_fuzz(target).unwrap();
+        let mut command = examples::test_fuzz(name, target).unwrap();
 
         command
             .args(&[match what {

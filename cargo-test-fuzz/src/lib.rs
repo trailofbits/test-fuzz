@@ -148,6 +148,12 @@ struct TestFuzz {
     target: Option<String>,
     #[clap(
         long,
+        value_name = "NAME",
+        about = "Integration test containing fuzz target"
+    )]
+    test: Option<String>,
+    #[clap(
+        long,
         about = "Number of milliseconds to consider a hang when fuzzing or replaying (equivalent \
         to `-- -t <timeout>` when fuzzing)"
     )]
@@ -325,6 +331,9 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     }
     if opts.persistent {
         args.extend_from_slice(&["--features", "test-fuzz/__persistent"]);
+    }
+    if let Some(name) = &opts.test {
+        args.extend_from_slice(&["--test", name]);
     }
 
     // smoelius: Suppress "Warning: AFL++ tools will need to set AFL_MAP_SIZE..." Setting

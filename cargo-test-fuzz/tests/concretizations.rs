@@ -66,7 +66,7 @@ fn test(name: &str, test: &str, target: &str, impl_expected: &[&str], expected: 
         ("--display-impl-concretizations", impl_expected),
         ("--display-concretizations", expected),
     ] {
-        let assert = &examples::test_fuzz(&format!("{}::{}", name, target))
+        let assert = &examples::test_fuzz(name, &format!("{}::{}", name, target))
             .unwrap()
             .args(&[option])
             .assert()

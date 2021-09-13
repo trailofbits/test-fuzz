@@ -44,13 +44,13 @@ fn consolidate(name: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
         let mut args = vec!["--no-ui"];
         args.extend_from_slice(fuzz_args);
 
-        examples::test_fuzz(target)
+        examples::test_fuzz(name, target)
             .unwrap()
             .args(args)
             .assert()
             .success();
 
-        examples::test_fuzz(target)
+        examples::test_fuzz(name, target)
             .unwrap()
             .args(&["--consolidate"])
             .assert()
@@ -58,7 +58,7 @@ fn consolidate(name: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
 
         ensure!(read_dir(&corpus).unwrap().count() > 1);
 
-        examples::test_fuzz(target)
+        examples::test_fuzz(name, target)
             .unwrap()
             .args(&["--display-corpus"])
             .assert()

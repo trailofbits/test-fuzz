@@ -37,7 +37,7 @@ fn display_debug_hang() {
 fn display(name: &str, test: &str, target: &str, stdout: &str, stderr: &str) {
     examples::test(name, test).unwrap().assert().success();
 
-    examples::test_fuzz(target)
+    examples::test_fuzz(name, target)
         .unwrap()
         .args(&["--display-corpus"])
         .assert()
