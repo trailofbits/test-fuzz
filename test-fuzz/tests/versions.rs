@@ -1,8 +1,16 @@
 use cargo_metadata::{Dependency, Metadata, MetadataCommand, Version};
 use lazy_static::lazy_static;
+use regex::Regex;
+use std::{
+    fs::read_to_string,
+    path::{Path, PathBuf},
+};
 
 lazy_static! {
     static ref METADATA: Metadata = MetadataCommand::new().no_deps().exec().unwrap();
+    static ref README_PATH: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("README.md");
 }
 
 #[test]
@@ -53,5 +61,18 @@ fn afl_version_is_exact() {
                 );
             }
         }
+    }
+}
+
+#[test]
+fn readme_references_current_version() {
+    let re = Regex::new(r#"(test-fuzz|version) = "([^"]*)""#).unwrap();
+    let content = read_to_string(&*README_PATH).unwrap();
+    for group in re.captures_iter(&content) {
+        let matches: Vec<Option<&str>> = group
+            .iter()
+            .map(|match_| match_.map(|match_| match_.as_str()))
+            .collect();
+        assert_eq!(matches.last(), Some(&Some(env!("CARGO_PKG_VERSION"))));
     }
 }

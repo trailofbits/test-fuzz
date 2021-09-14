@@ -86,7 +86,7 @@ The primary effects of the `test_fuzz` macro are:
 - Add instrumentation to the target to serialize its arguments and write them to a corpus file each time the target is called. The instrumentation is guarded by `#[cfg(test)]` so that corpus files are generated only when running tests (however, see [`enable_in_production`](#options) below).
 - Add a test to read and deserialize arguments from standard input and apply the target to them. The test checks an environment variable, set by [`cargo test-fuzz`](#cargo-test-fuzz-command), so that the test does not block trying to read from standard input during a normal invocation of `cargo test`. The test is enclosed in a module to reduce the likelihood of a name collision. Currently, the name of the module is `target_fuzz`, where `target` is the name of the target (however, see [`rename`](#options) below).
 
-#### Options
+#### Arguments
 
 - **`bounds = "where_predicates"`** - Impose `where_predicates` (e.g., trait bounds) on the struct used to serialize/deserialize arguments. This may be necessary, e.g., if a target's argument type is an associated type. For an example, see [associated_type.rs](examples/tests/associated_type.rs#L27) in this repository.
 
@@ -189,67 +189,112 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
    cargo test-fuzz --target foo --replay-crashes
    ```
 
+#### Usage
+
+```
+    cargo test-fuzz [FLAGS] [OPTIONS] [-- <args>...]
+```
+
+#### Args
+
+```
+    <args>...    Arguments for the fuzzer
+```
+
 #### Flags
 
-- **`--backtrace`** - Display backtraces
+```
+        --backtrace
+            Display backtraces
 
-- **`--consolidate`** - Move one target's crashes and work queue to its corpus; to consolidate all targets, use `--consolidate-all`
+        --consolidate
+            Move one target's crashes, hangs, and work queue to its corpus; to consolidate all
+            targets, use --consolidate-all
 
-- **`--display-concretizations`** - Display concretizations
+        --display-concretizations
+            Display concretizations
 
-- **`--display-corpus`** - Display corpus using uninstrumented fuzz target; to display with instrumentation, use `--display-corpus-instrumented`
+        --display-corpus
+            Display corpus using uninstrumented fuzz target; to display with instrumentation, use
+            --display-corpus-instrumented
 
-- **`--display-crashes`** - Display crashes
+        --display-crashes
+            Display crashes
 
-- **`--display-hangs`** - Display hangs
+        --display-hangs
+            Display hangs
 
-- **`--display-impl-concretizations`** - Display `impl` concretizations
+        --display-impl-concretizations
+            Display `impl` concretizations
 
-- **`--display-queue`** - Display work queue
+        --display-queue
+            Display work queue
 
-- **`--exact`** - Target name is an exact name rather than a substring
+        --exact
+            Target name is an exact name rather than a substring
 
-- **`--list`** - List fuzz targets
+    -h, --help
+            Print help information
 
-- **`--no-default-features`** - Do not activate the `default` feature
+        --list
+            List fuzz targets
 
-- **`--no-instrumentation`** - Compile without instrumentation (for testing build process)
+        --no-default-features
+            Do not activate the `default` feature
 
-- **`--no-run`** - Compile, but don't fuzz
+        --no-instrumentation
+            Compile without instrumentation (for testing build process)
 
-- **`--no-ui`** - Disable user interface
+        --no-run
+            Compile, but don't fuzz
 
-- **`--persistent`** - Enable persistent mode fuzzing
+        --no-ui
+            Disable user interface
 
-- **`--pretty-print`** - Pretty-print debug output when displaying/replaying
+        --persistent
+            Enable persistent mode fuzzing
 
-- **`--replay-corpus`** - Replay corpus using uninstrumented fuzz target; to replay with instrumentation, use `--replay-corpus-instrumented`
+        --pretty-print
+            Pretty-print debug output when displaying/replaying
 
-- **`--replay-crashes`** - Replay crashes
+        --replay-corpus
+            Replay corpus using uninstrumented fuzz target; to replay with instrumentation, use
+            --replay-corpus-instrumented
 
-- **`--replay-queue`** - Replay work queue
+        --replay-crashes
+            Replay crashes
 
-- **`--reset`** - Clear fuzzing data for one target, but leave corpus intact; to reset all targets, use `--reset-all`
+        --replay-hangs
+            Replay hangs
 
-- **`--resume`** - Resume target's last fuzzing session
+        --replay-queue
+            Replay work queue
 
-- **`--run-until-crash`** - Stop fuzzing once a crash is found
+        --reset
+            Clear fuzzing data for one target, but leave corpus intact; to reset all targets, use
+            --reset-all
+
+        --resume
+            Resume target's last fuzzing session
+
+        --run-until-crash
+            Stop fuzzing once a crash is found
+
+    -V, --version
+            Print version information
+```
 
 #### Options
 
-- **`-- <args>...`** - Arguments for the fuzzer
-
-- **`--features <features>`** - Space or comma separated list of features to activate
-
-- **`--manifest-path <path>`** - Path to Cargo.toml
-
-- **`-p, --package <package>`** - Package containing fuzz target
-
-- **`--target <target>`** - String that fuzz target's name must contain
-
-- **`--test <name>`** - Integration test containing fuzz target
-
-- **`--timeout <timeout>`** - Number of milliseconds to consider a hang when fuzzing or replaying (equivalent to `-- -t <timeout>` when fuzzing)
+```
+        --features <FEATURES>...    Space or comma separated list of features to activate
+        --manifest-path <PATH>      Path to Cargo.toml
+    -p, --package <PACKAGE>         Package containing fuzz target
+        --target <TARGET>           String that fuzz target's name must contain
+        --test <NAME>               Integration test containing fuzz target
+        --timeout <TIMEOUT>         Number of milliseconds to consider a hang when fuzzing or
+                                    replaying (equivalent to `-- -t <timeout>` when fuzzing)
+```
 
 ### `dont_care!` macro
 

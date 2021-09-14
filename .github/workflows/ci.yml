@@ -42,6 +42,9 @@ jobs:
       - name: Format
         run: cargo fmt && git diff --exit-code
 
+      - name: Format README
+        run: ./scripts/update_README.sh && git diff --exit-code
+
       - name: License
         run: |
           cargo install cargo-license || true
