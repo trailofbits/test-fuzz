@@ -90,6 +90,7 @@ jobs:
           cargo test --workspace --no-default-features --features=test-fuzz/serde_${{ matrix.serde_format }} $AUTO_CONCRETIZE -- --nocapture
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
+          RUST_BACKTRACE: 1
           RUST_LOG: warn
           RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
 

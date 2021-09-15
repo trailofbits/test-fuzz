@@ -1,6 +1,6 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
-use std::path::Path;
+use std::{fs::read_to_string, path::Path};
 use tempfile::tempdir_in;
 
 const SUBSTRATE_NODE_TEMPLATE_URL: &str =
@@ -20,14 +20,16 @@ fn do_something() {
         .assert()
         .success();
 
-    let patch = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("substrate_node_template.patch")
-        .canonicalize()
-        .unwrap();
+    // smoelius: I was getting sporadic `unrecognized input` errors from `git apply` in CI. I don't
+    // know why. Writing the patch directly to `git apply`'s standard input seems to make the
+    // problem go away.
+    let patch_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("substrate_node_template.patch");
+    let patch = read_to_string(patch_path).unwrap();
 
     Command::new("git")
         .current_dir(tempdir.path())
-        .args(&["apply", &patch.to_string_lossy().to_string()])
+        .args(&["apply"])
+        .write_stdin(patch)
         .assert()
         .success();
 
