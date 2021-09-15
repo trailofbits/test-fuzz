@@ -12,3 +12,6 @@ pub use afl;
 pub use internal::{serde_format, SerdeFormat};
 
 mod utils;
+
+mod convert;
+pub use convert::Into;

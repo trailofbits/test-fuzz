@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
-use std::{env::var, io::Write, str::FromStr};
+use std::{collections::BTreeMap, env::var, io::Write, str::FromStr};
 use subprocess::{Exec, Redirection};
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute,
@@ -26,7 +26,12 @@ mod auto_concretize;
 #[cfg(feature = "__auto_concretize")]
 mod mod_utils;
 
+mod path_utils;
+use path_utils::OrdPath;
+
 mod type_utils;
+
+type Conversions = BTreeMap<OrdPath, Path>;
 
 lazy_static! {
     pub(crate) static ref CARGO_CRATE_NAME: String =
@@ -110,6 +115,8 @@ fn map_impl_item(
     }
 }
 
+// smoelius: This function is slightly misnamed. The mapped item could actually be an associated
+// function. I am keeping this name to be consistent with `ImplItem::Method`.
 fn map_method(
     generics: &Generics,
     trait_path: &Option<Path>,
@@ -154,6 +161,8 @@ struct TestFuzzOpts {
     concretize: Option<String>,
     #[darling(default)]
     concretize_impl: Option<String>,
+    #[darling(multiple)]
+    convert: Vec<String>,
     #[darling(default)]
     enable_in_production: bool,
     #[darling(default)]
@@ -212,6 +221,20 @@ fn map_method_or_fn(
     block: &Block,
 ) -> (TokenStream2, Option<ItemMod>) {
     let stmts = &block.stmts;
+
+    let mut conversions = Conversions::new();
+    opts.convert.iter().for_each(|s| {
+        let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
+        let args = Parser::parse(Punctuated::<Path, token::Comma>::parse_terminated, tokens)
+            .expect("Could not parse `convert` argument");
+        if args.len() != 2 {
+            panic!("Could not parse `convert` argument");
+        }
+        let mut iter = args.into_iter();
+        let key = iter.next().expect("Should have two `convert` arguments");
+        let value = iter.next().expect("Should have two `convert` arguments");
+        conversions.insert(path_utils::OrdPath(key), value);
+    });
 
     #[allow(unused_mut, unused_variables)]
     let mut impl_concretization_error: Option<auto_concretize::Error> = None;
@@ -322,7 +345,7 @@ fn map_method_or_fn(
     let self_ty_base = self_ty.as_ref().map(type_utils::type_base);
 
     let (receiver, mut arg_tys, fmt_args, mut ser_args, de_args) =
-        map_args(self_ty, trait_path, sig.inputs.iter());
+        map_args(&conversions, self_ty, trait_path, sig.inputs.iter());
     arg_tys.extend_from_slice(&phantom_tys);
     ser_args.extend_from_slice(&phantoms);
     let pub_arg_tys: Vec<TokenStream2> = arg_tys.iter().map(|ty| quote! { pub #ty }).collect();
@@ -672,6 +695,7 @@ fn map_method_or_fn(
 }
 
 fn map_args<'a, I>(
+    conversions: &Conversions,
     self_ty: &Option<Type>,
     trait_path: &Option<Path>,
     inputs: I,
@@ -683,7 +707,7 @@ where
 
     let (receiver, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
         .enumerate()
-        .map(map_arg(self_ty, trait_path))
+        .map(map_arg(conversions, self_ty, trait_path))
         .unzip_n();
 
     let receiver = receiver.first().map_or(false, |&x| x);
@@ -692,9 +716,11 @@ where
 }
 
 fn map_arg(
+    conversions: &Conversions,
     self_ty: &Option<Type>,
     trait_path: &Option<Path>,
 ) -> impl Fn((usize, &FnArg)) -> (bool, Type, Stmt, Expr, Expr) {
+    let conversions = conversions.clone();
     let self_ty = self_ty.clone();
     let trait_path = trait_path.clone();
     move |(i, arg)| {
@@ -731,6 +757,7 @@ fn map_arg(
                 );
                 match &ty {
                     Type::Path(path) => map_arc_arg(&i, pat, path)
+                        .or_else(|| map_path_arg(&conversions, &i, pat, path))
                         .map_or(default, |(ty, ser, de)| (false, ty, fmt, ser, de)),
                     Type::Reference(ty) => {
                         let (ty, ser, de) = map_ref_arg(&i, pat, ty);
@@ -753,6 +780,27 @@ fn map_arc_arg(i: &Literal, pat: &Pat, path: &TypePath) -> Option<(Type, Expr, E
                 parse_quote! { #ty },
                 parse_quote! { (*#pat).clone() },
                 parse_quote! { std::sync::Arc::new(args.#i) },
+            ))
+        } else {
+            None
+        }
+    }
+}
+
+fn map_path_arg(
+    conversions: &Conversions,
+    i: &Literal,
+    pat: &Pat,
+    path: &TypePath,
+) -> Option<(Type, Expr, Expr)> {
+    if_chain! {
+        if path.qself.is_none();
+        if let Some(ty) = conversions.get(&OrdPath(path.path.clone()));
+        then {
+            Some((
+                parse_quote! { #ty },
+                parse_quote! { <#ty as From::<#path>>::from(#pat.clone()) },
+                parse_quote! { <_ as test_fuzz::Into::<_>>::into(args.#i) },
             ))
         } else {
             None
