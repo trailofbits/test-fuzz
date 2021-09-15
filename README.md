@@ -139,6 +139,13 @@ The primary effects of the `test_fuzz` macro are:
 
   **WARNING**: Setting `enable_in_production` could introduce a denial-of-service vector. For example, setting this option for a function that is called many times with different arguments could fill up the disk. The check of [`TEST_FUZZ_WRITE`](#environment-variables) is meant to provide some defense against this possibility. Nonetheless, consider this option carefully before using it.
 
+- **`execute_with = "function"`** - Rather than call the target directly:
+
+  - construct a closure of type `FnOnce() -> R`, where `R` is the target's return type, so that calling the closure calls the target;
+  - call `function` with the closure.
+
+  Calling the target in this way allows `function` to set up the call's environment. This can be useful, e.g., for fuzzing [Substrate externalities](https://substrate.dev/docs/en/knowledgebase/runtime/tests#mock-runtime-storage).
+
 - **`no_auto_generate`** - Do not try to [auto-generate corpus files](#auto-generated-corpus-files) for the target.
 
 - **`only_concretizations`** - Record the target's concretizations when running tests, but do not generate corpus files and do not implement a fuzzing harness. This can be useful when the target is a generic function, but it is unclear what type parameters should be used for fuzzing.
