@@ -147,8 +147,8 @@ jobs:
 
       - name: Downgrade test-fuzz version
         run: |
-          sed -i 's/^\(version = "[^.]*\)\.[^.]*\.\([^"]*"\)$/\1.0.\2/' test-fuzz/Cargo.toml
-          sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\)\.[^.]*\.\([^"]*".*}\)$/\1.0.\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
+          sed -i 's/^\(version = "\)[^.]*\.[^.]*\.\([^"]*"\)$/\10.0.\2/' test-fuzz/Cargo.toml
+          sed -i 's/^\(test-fuzz = {.*\<version = "=\)[^.]*\.[^.]*\.\([^"]*".*}\)$/\10.0.\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
 
       - name: Test
         run: |
