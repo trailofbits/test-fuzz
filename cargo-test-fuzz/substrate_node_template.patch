@@ -1,0 +1,113 @@
+diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
+index 2dd95b0..812e684 100644
+--- a/pallets/template/Cargo.toml
++++ b/pallets/template/Cargo.toml
+@@ -13,19 +13,19 @@ version = '3.0.0-monthly-2021-09+1'
+ [package.metadata.docs.rs]
+ targets = ['x86_64-unknown-linux-gnu']
+ 
+-[dev-dependencies.sp-core]
++[dependencies.sp-core]
+ default-features = false
+ git = 'https://github.com/paritytech/substrate.git'
+ tag = 'monthly-2021-09+1'
+ version = '4.0.0-dev'
+ 
+-[dev-dependencies.sp-io]
++[dependencies.sp-io]
+ default-features = false
+ git = 'https://github.com/paritytech/substrate.git'
+ tag = 'monthly-2021-09+1'
+ version = '4.0.0-dev'
+ 
+-[dev-dependencies.sp-runtime]
++[dependencies.sp-runtime]
+ default-features = false
+ git = 'https://github.com/paritytech/substrate.git'
+ tag = 'monthly-2021-09+1'
+@@ -66,3 +66,9 @@ std = [
+     'frame-benchmarking/std',
+ ]
+ try-runtime = ['frame-support/try-runtime']
++
++[dependencies.test-fuzz]
++path = "../../../../test-fuzz"
++
++[dependencies.serde]
++version = '1.0.130'
+diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
+index 7a9830a..88e9947 100644
+--- a/pallets/template/src/lib.rs
++++ b/pallets/template/src/lib.rs
+@@ -5,7 +5,7 @@
+ /// <https://substrate.dev/docs/en/knowledgebase/runtime/frame>
+ pub use pallet::*;
+ 
+-#[cfg(test)]
++// #[cfg(test)]
+ mod mock;
+ 
+ #[cfg(test)]
+@@ -19,6 +19,31 @@ pub mod pallet {
+ 	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
+ 	use frame_system::pallet_prelude::*;
+ 
++	test_fuzz::dont_care!(crate::mock::Test);
++
++	type AccountIdFor<T> = <T as frame_system::Config>::AccountId;
++
++	#[derive(Clone, serde::Deserialize, serde::Serialize)]
++	struct SerializableAccountId<AccountId>(Option<AccountId>);
++
++	impl<Origin, AccountId> From<Origin> for SerializableAccountId<AccountId>
++	where
++		Origin: Into<Result<frame_system::RawOrigin<AccountId>, Origin>>,
++	{
++		fn from(origin: Origin) -> Self {
++			Self(ensure_signed(origin).ok())
++		}
++	}
++
++	impl<Origin, AccountId> test_fuzz::Into<Origin> for SerializableAccountId<AccountId>
++	where
++		Origin: From<frame_system::RawOrigin<AccountId>>,
++	{
++		fn into(self) -> Origin {
++			frame_system::RawOrigin::from(self.0).into()
++		}
++	}
++
+ 	/// Configure the pallet by specifying the parameters and types on which it depends.
+ 	#[pallet::config]
+ 	pub trait Config: frame_system::Config {
+@@ -62,10 +87,20 @@ pub mod pallet {
+ 	// These functions materialize as "extrinsics", which are often compared to transactions.
+ 	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
+ 	#[pallet::call]
+-	impl<T: Config> Pallet<T> {
++	#[test_fuzz::test_fuzz_impl]
++	impl<T: Config> Pallet<T>
++	where
++		T: serde::Serialize,
++	{
+ 		/// An example dispatchable that takes a singles value as a parameter, writes the value to
+ 		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
+ 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
++		#[test_fuzz::test_fuzz(
++			bounds = "T: frame_system::Config",
++			concretize_impl = "crate::mock::Test",
++			convert = "OriginFor<T>, SerializableAccountId<AccountIdFor<T>>",
++			execute_with = "crate::mock::new_test_ext().execute_with"
++		)]
+ 		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
+ 			// Check that the extrinsic was signed and get the signer.
+ 			// This function will return an error if the extrinsic is not signed.
+@@ -96,7 +131,7 @@ pub mod pallet {
+ 					// Update the value in storage with the incremented result.
+ 					<Something<T>>::put(new);
+ 					Ok(())
+-				},
++				}
+ 			}
+ 		}
+ 	}

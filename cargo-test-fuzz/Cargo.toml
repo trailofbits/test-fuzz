@@ -34,6 +34,7 @@ lazy_static = "1.4.0"
 predicates = "2.0.2"
 regex = "1.5.4"
 rlimit = "0.6.2"
+tempfile = "3.2.0"
 test-env-log = "0.2.7"
 
 [features]
