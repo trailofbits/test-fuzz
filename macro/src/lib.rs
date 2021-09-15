@@ -12,11 +12,11 @@ use quote::{quote, ToTokens};
 use std::{collections::BTreeMap, env::var, io::Write, str::FromStr};
 use subprocess::{Exec, Redirection};
 use syn::{
-    parse::Parser, parse_macro_input, parse_quote, punctuated::Punctuated, token, Attribute,
-    AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericMethodArgument, GenericParam,
-    Generics, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Pat, Path, PathArguments,
-    PathSegment, ReturnType, Signature, Stmt, Type, TypePath, TypeReference, Visibility,
-    WhereClause, WherePredicate,
+    parse::Parser, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated, token,
+    Attribute, AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericMethodArgument,
+    GenericParam, Generics, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Pat, Path,
+    PathArguments, PathSegment, ReturnType, Signature, Stmt, Type, TypePath, TypeReference,
+    Visibility, WhereClause, WherePredicate,
 };
 use toolchain_find::find_installed_component;
 use unzip_n::unzip_n;
@@ -165,6 +165,8 @@ struct TestFuzzOpts {
     convert: Vec<String>,
     #[darling(default)]
     enable_in_production: bool,
+    #[darling(default)]
+    execute_with: Option<String>,
     #[darling(default)]
     no_auto_generate: bool,
     #[darling(default)]
@@ -507,20 +509,28 @@ fn map_method_or_fn(
             )
         }
     };
-    let call_with_deserialized_arguments = {
+    let call_in_environment = if let Some(s) = &opts.execute_with {
+        let execute_with: Expr = parse_str(s).expect("Could not parse `execute_with` argument");
+        parse_quote! {
+            #execute_with (|| #call)
+        }
+    } else {
+        call
+    };
+    let call_in_environment_with_deserialized_arguments = {
         #[cfg(feature = "__persistent")]
         quote! {
             test_fuzz::afl::fuzz!(|data: &[u8]| {
                 let mut args = UsingReader::<_>::read_args #combined_concretization (data);
                 let ret: Option<<Args #combined_concretization as HasRetTy>::RetTy> = args.map(|mut args|
-                    #call
+                    #call_in_environment
                 );
             });
         }
         #[cfg(not(feature = "__persistent"))]
         quote! {
             let ret: Option<<Args #combined_concretization as HasRetTy>::RetTy> = args.map(|mut args|
-                #call
+                #call_in_environment
             );
         }
     };
@@ -644,13 +654,13 @@ fn map_method_or_fn(
                                     #output_args
                                 }
                                 if test_fuzz::runtime::replay_enabled() {
-                                    #call_with_deserialized_arguments
+                                    #call_in_environment_with_deserialized_arguments
                                     #output_ret
                                 }
                             } else {
                                 std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
                                 #input_args
-                                #call_with_deserialized_arguments
+                                #call_in_environment_with_deserialized_arguments
                                 let _ = std::panic::take_hook();
                             }
                         }
