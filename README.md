@@ -115,6 +115,26 @@ The primary effects of the `test_fuzz` macro are:
 
   Note: The target's arguments must be serializable for **every** instantiation of its `Self` type parameters. But the target's arguments are required to be deserializable only when the target's `Self` is instantiated with `parameters`.
 
+- **`convert = "X, Y"`** - When serializing the target's arguments, convert values of type `X` to type `Y` using `Y`'s implementation of `From<X>`. When deserializing, convert those values back to type `X` using `Y`'s implementation of the non-standard trait `test_fuzz::Into<X>`.
+
+  That is, use of `convert = "X, Y"` should be accompanied by the following implementations:
+
+  ```rust
+  impl From<X> for Y {
+      fn from(x: X) -> Self {
+          ...
+      }
+  }
+
+  impl test_fuzz::Into<X> for Y {
+      fn into(self) -> X {
+          ...
+      }
+  }
+  ```
+
+  The definition of `test_fuzz::Into` is identical to that of `std::conversion::Into`. The reason for using a non-standard trait is to avoid conflicts that could arise from blanket implementations of standard traits.
+
 - **`enable_in_production`** - Generate corpus files when not running tests, provided the environment variable [`TEST_FUZZ_WRITE`](#environment-variables) is set. The default is to generate corpus files only when running tests, regardless of whether [`TEST_FUZZ_WRITE`](#environment-variables) is set. When running a target from outside its package directory, set [`TEST_FUZZ_MANIFEST_PATH`](#environment-variables) to the path of the package's `Cargo.toml` file.
 
   **WARNING**: Setting `enable_in_production` could introduce a denial-of-service vector. For example, setting this option for a function that is called many times with different arguments could fill up the disk. The check of [`TEST_FUZZ_WRITE`](#environment-variables) is meant to provide some defense against this possibility. Nonetheless, consider this option carefully before using it.
