@@ -16,11 +16,11 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
    - [`test_fuzz_impl` macro](#test_fuzz_impl-macro)
    - [`cargo test-fuzz` command](#cargo-test-fuzz-command)
    - [`dont_care` macro](#dont_care-macro)
-4. [`test-fuzz` Package Features](#test-fuzz-package-features)
-5. [Auto-generated Corpus Files](#auto-generated-corpus-files)
-6. [Environment Variables](#environment-variables)
+4. [`test-fuzz` package features](#test-fuzz-package-features)
+5. [Auto-generated corpus files](#auto-generated-corpus-files)
+6. [Environment variables](#environment-variables)
 7. [Limitations](#limitations)
-8. [Tips and Tricks](#tips-and-tricks)
+8. [Tips and tricks](#tips-and-tricks)
 
 ## Installation
 
@@ -356,7 +356,7 @@ If `$ty` is a unit struct, then `$expr` can be be omitted. That is, `dont_care!(
 
 **Warning:** `dont_care!` is provided for convenience and may be removed in future versions of `test-fuzz`.
 
-## `test-fuzz` Package Features
+## `test-fuzz` package features
 
 The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#choosing-features). For example, to enable the `auto_concretize` feature, use:
 
@@ -376,7 +376,7 @@ The `test-fuzz` package currently supports the following features:
 
   - **`serde_cbor`** - [Cbor](https://github.com/pyfisch/cbor)
 
-## Auto-generated Corpus Files
+## Auto-generated corpus files
 
 `cargo-test-fuzz` can auto-generate values for types that implement certain traits. If all of a target's argument types implement such traits, `cargo-test-fuzz` can auto-generate corpus files for the target.
 
@@ -401,7 +401,7 @@ The traits that `cargo-test-fuzz` currently supports and the values generated fo
 - `Sub` - [`core::ops::Sub`](https://doc.rust-lang.org/beta/core/ops/trait.Sub.html)
 - `Two` - `test_fuzz::runtime::traits::Two` (essentially `Add + One`)
 
-## Environment Variables
+## Environment variables
 
 - **`TEST_FUZZ_LOG`** - During macro expansion:
 
