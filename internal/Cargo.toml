@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
-anyhow = "1.0.43"
+anyhow = "1.0.44"
 assert_cmd = "2.0.1"
 cargo_metadata = "0.14.0"
 if_chain = "1.0.2"
