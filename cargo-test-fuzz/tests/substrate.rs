@@ -25,6 +25,7 @@ fn do_something() {
     // problem go away.
     let patch_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("substrate_node_template.patch");
     let patch = read_to_string(patch_path).unwrap();
+    println!("{}", patch);
 
     Command::new("git")
         .current_dir(tempdir.path())
