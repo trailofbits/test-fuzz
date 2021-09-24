@@ -21,7 +21,7 @@ quote = "1.0.9"
 retry = "1.3.0"
 serde = "1.0.130"
 strum_macros = "0.21.1"
-subprocess = "0.2.7"
+subprocess = "0.2.8"
 
 [features]
 __auto_concretize = []
