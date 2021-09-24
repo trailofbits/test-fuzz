@@ -23,7 +23,7 @@ log = "0.4.14"
 remain = "0.2.2"
 semver = "1.0.4"
 serde = { version = "1.0.130", features = ["derive"] }
-subprocess = "0.2.7"
+subprocess = "0.2.8"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=1.0.0" }
 test-fuzz = { path = "../test-fuzz", version = "=1.0.0", default-features = false }
