@@ -1,3 +1,6 @@
+// smoelius: This example is due to @disconnect3d.
+// See: https://rustsec.org/advisories/RUSTSEC-2021-0041.html
+
 mod parse_duration {
     use parse_duration::parse::Error;
     use std::time::Duration;
