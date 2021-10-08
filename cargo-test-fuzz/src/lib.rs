@@ -966,6 +966,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
             &input_dir,
             "-o",
             &output_dir.to_string_lossy(),
+            "-D",
             "-M",
             "default",
         ]
