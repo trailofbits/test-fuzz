@@ -11,16 +11,16 @@ repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
 anyhow = "1.0.44"
-assert_cmd = "2.0.1"
+assert_cmd = "2.0.2"
 cargo_metadata = "0.14.0"
 if_chain = "1.0.2"
 lazy_static = "1.4.0"
 log = "0.4.14"
-proc-macro2 = "1.0.29"
-quote = "1.0.9"
+proc-macro2 = "1.0.30"
+quote = "1.0.10"
 retry = "1.3.0"
 serde = "1.0.130"
-strum_macros = "0.21.1"
+strum_macros = "0.22.0"
 subprocess = "0.2.8"
 
 [features]
