@@ -8,6 +8,7 @@ enum Kind {
     Multiple,
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct Error {
     impl_: bool,
