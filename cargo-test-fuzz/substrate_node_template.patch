@@ -1,34 +1,37 @@
 diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
-index 2dd95b0..812e684 100644
+index 84a8660..673bba6 100644
 --- a/pallets/template/Cargo.toml
 +++ b/pallets/template/Cargo.toml
-@@ -13,19 +13,19 @@ version = '3.0.0-monthly-2021-09+1'
- [package.metadata.docs.rs]
- targets = ['x86_64-unknown-linux-gnu']
+@@ -42,19 +42,19 @@ default-features = false
+ features = ['derive']
+ version = '1.0'
  
 -[dev-dependencies.sp-core]
 +[dependencies.sp-core]
  default-features = false
  git = 'https://github.com/paritytech/substrate.git'
- tag = 'monthly-2021-09+1'
+ tag = 'monthly-2021-10'
  version = '4.0.0-dev'
  
 -[dev-dependencies.sp-io]
 +[dependencies.sp-io]
  default-features = false
  git = 'https://github.com/paritytech/substrate.git'
- tag = 'monthly-2021-09+1'
+ tag = 'monthly-2021-10'
  version = '4.0.0-dev'
  
 -[dev-dependencies.sp-runtime]
 +[dependencies.sp-runtime]
  default-features = false
  git = 'https://github.com/paritytech/substrate.git'
- tag = 'monthly-2021-09+1'
-@@ -66,3 +66,9 @@ std = [
+ tag = 'monthly-2021-10'
+@@ -70,4 +70,10 @@ std = [
+     'frame-system/std',
      'frame-benchmarking/std',
  ]
- try-runtime = ['frame-support/try-runtime']
+-try-runtime = ['frame-support/try-runtime']
+\ No newline at end of file
++try-runtime = ['frame-support/try-runtime']
 +
 +[dependencies.test-fuzz]
 +path = "../../../../test-fuzz"
@@ -36,11 +39,11 @@ index 2dd95b0..812e684 100644
 +[dependencies.serde]
 +version = '1.0.130'
 diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
-index 7a9830a..88e9947 100644
+index 0d0e297..0c0dd41 100644
 --- a/pallets/template/src/lib.rs
 +++ b/pallets/template/src/lib.rs
 @@ -5,7 +5,7 @@
- /// <https://substrate.dev/docs/en/knowledgebase/runtime/frame>
+ /// <https://docs.substrate.io/v3/runtime/frame>
  pub use pallet::*;
  
 -#[cfg(test)]
@@ -80,7 +83,7 @@ index 7a9830a..88e9947 100644
  	/// Configure the pallet by specifying the parameters and types on which it depends.
  	#[pallet::config]
  	pub trait Config: frame_system::Config {
-@@ -62,10 +87,20 @@ pub mod pallet {
+@@ -61,10 +86,20 @@ pub mod pallet {
  	// These functions materialize as "extrinsics", which are often compared to transactions.
  	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
  	#[pallet::call]
@@ -102,7 +105,7 @@ index 7a9830a..88e9947 100644
  		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
  			// Check that the extrinsic was signed and get the signer.
  			// This function will return an error if the extrinsic is not signed.
-@@ -96,7 +131,7 @@ pub mod pallet {
+@@ -95,7 +130,7 @@ pub mod pallet {
  					// Update the value in storage with the incremented result.
  					<Something<T>>::put(new);
  					Ok(())
