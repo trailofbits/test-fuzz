@@ -16,10 +16,10 @@ proc-macro = true
 darling = "0.13.0"
 if_chain = "1.0.2"
 lazy_static = "1.4.0"
-proc-macro2 = "1.0.29"
-quote = "1.0.9"
+proc-macro2 = "1.0.30"
+quote = "1.0.10"
 subprocess = "0.2.8"
-syn = { version = "1.0.77", features = ["full", "parsing", "visit", "visit-mut"] }
+syn = { version = "1.0.80", features = ["full", "parsing", "visit", "visit-mut"] }
 toolchain_find = "0.2.0"
 unzip-n = "0.1.2"
 

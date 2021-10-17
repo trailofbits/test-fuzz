@@ -18,10 +18,10 @@ runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=1.0.
 test-fuzz-macro = { path = "../macro", version = "=1.0.0" }
 
 [dev-dependencies]
-assert_cmd = "2.0.1"
+assert_cmd = "2.0.2"
 cargo_metadata = "0.14.0"
 lazy_static = "1.4.0"
-predicates = "2.0.2"
+predicates = "2.0.3"
 regex = "1.5.4"
 
 [features]
