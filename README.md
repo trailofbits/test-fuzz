@@ -219,7 +219,7 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 #### Usage
 
 ```
-    cargo test-fuzz [FLAGS] [OPTIONS] [-- <args>...]
+    cargo test-fuzz [OPTIONS] [-- <args>...]
 ```
 
 #### Args
@@ -228,7 +228,7 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
     <args>...    Arguments for the fuzzer
 ```
 
-#### Flags
+#### Options
 
 ```
         --backtrace
@@ -260,11 +260,17 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
         --exact
             Target name is an exact name rather than a substring
 
+        --features <FEATURES>...
+            Space or comma separated list of features to activate
+
     -h, --help
             Print help information
 
         --list
             List fuzz targets
+
+        --manifest-path <PATH>
+            Path to Cargo.toml
 
         --no-default-features
             Do not activate the `default` feature
@@ -277,6 +283,9 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
         --no-ui
             Disable user interface
+
+    -p, --package <PACKAGE>
+            Package containing fuzz target
 
         --persistent
             Enable persistent mode fuzzing
@@ -307,20 +316,18 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
         --run-until-crash
             Stop fuzzing once a crash is found
 
+        --target <TARGET>
+            String that fuzz target's name must contain
+
+        --test <NAME>
+            Integration test containing fuzz target
+
+        --timeout <TIMEOUT>
+            Number of milliseconds to consider a hang when fuzzing or replaying (equivalent to `--
+            -t <timeout>` when fuzzing)
+
     -V, --version
             Print version information
-```
-
-#### Options
-
-```
-        --features <FEATURES>...    Space or comma separated list of features to activate
-        --manifest-path <PATH>      Path to Cargo.toml
-    -p, --package <PACKAGE>         Package containing fuzz target
-        --target <TARGET>           String that fuzz target's name must contain
-        --test <NAME>               Integration test containing fuzz target
-        --timeout <TIMEOUT>         Number of milliseconds to consider a hang when fuzzing or
-                                    replaying (equivalent to `-- -t <timeout>` when fuzzing)
 ```
 
 ### `dont_care!` macro

@@ -11,7 +11,6 @@ cd "$(dirname "$0")"/..
 
 USAGE="$(mktemp)"
 ARGS="$(mktemp)"
-FLAGS="$(mktemp)"
 OPTIONS="$(mktemp)"
 README="$(mktemp)"
 
@@ -22,16 +21,10 @@ head -n -2 |
 cat > "$USAGE"
 
 cargo run -p cargo-test-fuzz -- test-fuzz --help |
-sed -n '/^ARGS:/,/^FLAGS:/p' |
+sed -n '/^ARGS:/,/^OPTIONS:/p' |
 tail -n +2 |
 head -n -2 |
 cat > "$ARGS"
-
-cargo run -p cargo-test-fuzz -- test-fuzz --help |
-sed -n '/^FLAGS:/,/^OPTIONS:/p' |
-tail -n +2 |
-head -n -2 |
-cat > "$FLAGS"
 
 cargo run -p cargo-test-fuzz -- test-fuzz --help |
 sed -n '/^OPTIONS:/,$ p' |
@@ -57,8 +50,6 @@ while read -r X; do
         NEXT='USAGE'
     elif [[ "$X" = '#### Args' ]]; then
         NEXT='ARGS'
-    elif [[ "$X" = '#### Flags' ]]; then
-        NEXT='FLAGS'
     elif [[ "$X" = '#### Options' ]]; then
         NEXT='OPTIONS'
     elif [[ "$X" = '```' ]]; then
