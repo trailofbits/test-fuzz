@@ -24,6 +24,8 @@ lazy_static = "1.4.0"
 predicates = "2.0.3"
 regex = "1.5.4"
 
+testing = { path = "../testing", package = "test-fuzz-testing", version = "=1.0.0" }
+
 [features]
 default = ["serde_bincode"]
 auto_concretize = ["internal/__auto_concretize", "test-fuzz-macro/__auto_concretize"]

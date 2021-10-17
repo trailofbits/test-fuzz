@@ -37,5 +37,7 @@ rlimit = "0.6.2"
 tempfile = "3.2.0"
 test-env-log = "0.2.7"
 
+testing = { path = "../testing", package = "test-fuzz-testing", version = "=1.0.0" }
+
 [features]
 default = ["test-fuzz/serde_bincode"]

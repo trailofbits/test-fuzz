@@ -1,5 +1,6 @@
-use internal::{dirs::corpus_directory_from_target, examples};
+use internal::dirs::corpus_directory_from_target;
 use std::fs::{read_dir, remove_dir_all};
+use testing::examples;
 
 #[test]
 fn signed() {
