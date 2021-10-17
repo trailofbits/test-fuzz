@@ -7,7 +7,7 @@ use bitflags::bitflags;
 use cargo_metadata::{
     Artifact, ArtifactProfile, Message, Metadata, MetadataCommand, Package, PackageId, Version,
 };
-use clap::{crate_version, Clap};
+use clap::{crate_version, Parser};
 use internal::dirs::{
     concretizations_directory_from_target, corpus_directory_from_target,
     crashes_directory_from_target, hangs_directory_from_target,
@@ -45,21 +45,21 @@ bitflags! {
     }
 }
 
-#[derive(Clap, Debug)]
+#[derive(Debug, Parser)]
 #[clap(bin_name = "cargo")]
 struct Opts {
     #[clap(subcommand)]
     subcmd: SubCommand,
 }
 
-#[derive(Clap, Debug)]
+#[derive(Debug, Parser)]
 enum SubCommand {
     TestFuzz(TestFuzz),
 }
 
 // smoelius: Wherever possible, try to reuse cargo test and libtest option names.
 #[remain::sorted]
-#[derive(Clap, Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Parser, Serialize)]
 #[clap(version = crate_version!())]
 struct TestFuzz {
     #[clap(long, about = "Display backtraces")]
