@@ -84,10 +84,12 @@ jobs:
       - name: Test
         run: |
           AUTO_CONCRETIZE=
+          SHUFFLE=
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
             AUTO_CONCRETIZE='--features=test-fuzz/auto_concretize'
+            SHUFFLE='-Z unstable-options --shuffle'
           fi
-          cargo test --workspace --no-default-features --features=test-fuzz/serde_${{ matrix.serde_format }} $AUTO_CONCRETIZE -- --nocapture
+          cargo test --workspace --no-default-features --features=test-fuzz/serde_${{ matrix.serde_format }} $AUTO_CONCRETIZE -- --nocapture $SHUFFLE
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
           RUST_BACKTRACE: 1
