@@ -1,8 +1,8 @@
-use internal::{
-    dirs::{concretizations_directory_from_target, impl_concretizations_directory_from_target},
-    examples,
+use internal::dirs::{
+    concretizations_directory_from_target, impl_concretizations_directory_from_target,
 };
 use std::fs::remove_dir_all;
+use testing::examples;
 
 #[test]
 fn generic() {

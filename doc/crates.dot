@@ -1,10 +1,13 @@
 digraph {
     "cargo-test-fuzz" -> "internal"
     "cargo-test-fuzz" -> "test-fuzz"
+    "cargo-test-fuzz" -> "testing"
     "macro" -> "internal"
     "macro-generated-code" -> "test-fuzz"
     "runtime" -> "internal"
     "test-fuzz" -> "internal"
-    "test-fuzz" -> "runtime"
     "test-fuzz" -> "macro"
+    "test-fuzz" -> "runtime"
+    "test-fuzz" -> "testing"
+    "testing" -> "internal"
 }

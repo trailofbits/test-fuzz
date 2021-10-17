@@ -1,5 +1,5 @@
-use internal::examples;
 use predicates::prelude::*;
+use testing::examples;
 
 #[test]
 fn display_qwerty() {

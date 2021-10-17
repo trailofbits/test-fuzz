@@ -1,0 +1,17 @@
+[package]
+name = "test-fuzz-testing"
+version = "1.0.0"
+edition = "2018"
+publish = false
+
+[dependencies]
+anyhow = "1.0.44"
+assert_cmd = "2.0.2"
+cargo_metadata = "0.14.0"
+if_chain = "1.0.2"
+lazy_static = "1.4.0"
+log = "0.4.14"
+retry = "1.3.0"
+subprocess = "0.2.8"
+
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=1.0.0" }

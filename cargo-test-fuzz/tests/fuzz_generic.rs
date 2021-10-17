@@ -1,8 +1,9 @@
-use internal::{dirs::corpus_directory_from_target, examples, serde_format, testing::retry};
+use internal::{dirs::corpus_directory_from_target, serde_format};
 use lazy_static::lazy_static;
 use predicates::prelude::*;
 use std::{fs::remove_dir_all, sync::Mutex};
 use test_env_log::test;
+use testing::{examples, retry};
 
 const NAME: &str = "generic";
 

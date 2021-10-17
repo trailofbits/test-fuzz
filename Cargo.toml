@@ -6,6 +6,7 @@ members = [
     "macro",
     "runtime",
     "test-fuzz",
+    "testing",
 ]
 
 [workspace.metadata.dylint]

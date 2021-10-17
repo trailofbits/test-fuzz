@@ -3,9 +3,9 @@ mod tests {
     use internal::{
         auto_concretize_enabled,
         dirs::{concretizations_directory_from_target, impl_concretizations_directory_from_target},
-        examples,
     };
     use std::fs::remove_dir_all;
+    use testing::examples;
 
     #[test]
     fn auto_concretize() {
