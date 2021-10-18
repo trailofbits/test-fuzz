@@ -31,7 +31,7 @@ jobs:
               cat "$TMP" |
               tee /dev/stderr |
               tail -n 1 |
-              grep '^error: [^:]*: crate version `[^`]*` is already uploaded$'
+              grep '^.*: crate version `[^`]*` is already uploaded$'
             )
             # smoelius: Give `crates.io` a chance to update.
             sleep 1m
