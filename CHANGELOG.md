@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.1
+
+- Bump AFL version ([#54](https://github.com/trailofbits/test-fuzz/pull/54))
+- Improve build times ([#55](https://github.com/trailofbits/test-fuzz/pull/55))
+
 ## 1.0.0
 
 - Add `auto_concretize` feature ([408e4c2](https://github.com/trailofbits/test-fuzz/commit/408e4c2bb7049095dea2e05a2a7fe76ba0931a6d))
