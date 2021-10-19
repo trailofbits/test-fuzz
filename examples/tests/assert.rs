@@ -1,11 +1,9 @@
-mod assert {
-    #[test_fuzz::test_fuzz]
-    fn target(x: bool) {
-        assert!(!x);
-    }
+#[test_fuzz::test_fuzz]
+fn target(x: bool) {
+    assert!(!x);
+}
 
-    #[test]
-    fn test() {
-        target(false);
-    }
+#[test]
+fn test() {
+    target(false);
 }

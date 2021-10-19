@@ -1,4 +1,4 @@
-mod debug_crash {
+mod crash {
     use serde::{Deserialize, Serialize};
     use std::fmt::{Debug, Formatter, Result};
 
@@ -15,7 +15,7 @@ mod debug_crash {
     fn target(s: &Struct) {}
 }
 
-mod debug_hang {
+mod hang {
     use serde::{Deserialize, Serialize};
     use std::fmt::{Debug, Formatter, Result};
 

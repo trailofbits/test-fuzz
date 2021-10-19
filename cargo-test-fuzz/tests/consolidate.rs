@@ -13,7 +13,7 @@ const HANG_TIMEOUT: &str = "120";
 fn consolidate_crashes() {
     consolidate(
         "assert",
-        "assert::target",
+        "target",
         &["--run-until-crash", "--", "-V", CRASH_TIMEOUT],
         "Args { x: true }",
     );
@@ -23,21 +23,18 @@ fn consolidate_crashes() {
 fn consolidate_hangs() {
     consolidate(
         "parse_duration",
-        "parse_duration::parse",
+        "parse",
         &["--persistent", "--", "-V", HANG_TIMEOUT],
         "",
     );
 }
 
-fn consolidate(name: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
-    let corpus = corpus_directory_from_target(name, target);
+fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
+    let corpus = corpus_directory_from_target(krate, target);
 
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test(name, &format!("{}::test", name))
-        .unwrap()
-        .assert()
-        .success();
+    examples::test(krate, "test").unwrap().assert().success();
 
     assert_eq!(read_dir(&corpus).unwrap().count(), 1);
 
@@ -45,13 +42,13 @@ fn consolidate(name: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
         let mut args = vec!["--no-ui"];
         args.extend_from_slice(fuzz_args);
 
-        examples::test_fuzz(name, target)
+        examples::test_fuzz(krate, target)
             .unwrap()
             .args(args)
             .assert()
             .success();
 
-        examples::test_fuzz(name, target)
+        examples::test_fuzz(krate, target)
             .unwrap()
             .args(&["--consolidate"])
             .assert()
@@ -59,7 +56,7 @@ fn consolidate(name: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
 
         ensure!(read_dir(&corpus).unwrap().count() > 1);
 
-        examples::test_fuzz(name, target)
+        examples::test_fuzz(krate, target)
             .unwrap()
             .args(&["--display-corpus"])
             .assert()

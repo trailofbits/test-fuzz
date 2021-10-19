@@ -19,7 +19,7 @@ enum What {
 fn replay_crashes() {
     replay(
         "alloc",
-        "alloc::target",
+        "target",
         &[
             "--run-until-crash",
             "--",
@@ -36,24 +36,21 @@ fn replay_crashes() {
 fn replay_hangs() {
     replay(
         "parse_duration",
-        "parse_duration::parse",
+        "parse",
         &["--persistent", "--", "-V", TIMEOUT],
         &What::Hangs,
         r"Timeout\n",
     );
 }
 
-fn replay(name: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {
-    let corpus = corpus_directory_from_target(name, target);
+fn replay(krate: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {
+    let corpus = corpus_directory_from_target(krate, target);
 
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test(name, &format!("{}::test", name))
-        .unwrap()
-        .assert()
-        .success();
+    examples::test(krate, "test").unwrap().assert().success();
 
-    examples::test_fuzz(name, target)
+    examples::test_fuzz(krate, target)
         .unwrap()
         .args(&["--reset"])
         .assert()
@@ -63,7 +60,7 @@ fn replay(name: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {
         let mut args = vec!["--no-ui"];
         args.extend_from_slice(fuzz_args);
 
-        examples::test_fuzz(name, target)
+        examples::test_fuzz(krate, target)
             .unwrap()
             .args(args)
             .assert()
@@ -72,7 +69,7 @@ fn replay(name: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {
         // smoelius: The memory limit must be set to replay the crashes, but not the hangs.
         Resource::DATA.set(MEMORY_LIMIT, MEMORY_LIMIT).unwrap();
 
-        let mut command = examples::test_fuzz(name, target).unwrap();
+        let mut command = examples::test_fuzz(krate, target).unwrap();
 
         command
             .args(&[match what {
