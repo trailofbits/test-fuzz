@@ -14,7 +14,7 @@ const TIMEOUT: &str = "60";
 fn no_auto_generate() {
     auto_generate(
         "alloc",
-        "alloc::target",
+        "target",
         false,
         "Could not find or auto-generate",
         0,
@@ -28,7 +28,7 @@ fn auto_generate_empty() {
 
 #[test]
 fn auto_generate_nonempty() {
-    auto_generate("assert", "assert::target", true, "Auto-generated", 1);
+    auto_generate("assert", "target", true, "Auto-generated", 1);
 }
 
 fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usize) {

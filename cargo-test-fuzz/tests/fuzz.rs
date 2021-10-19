@@ -16,18 +16,15 @@ fn fuzz_qwerty() {
     fuzz("qwerty", true);
 }
 
-fn fuzz(name: &str, persistent: bool) {
-    let corpus = corpus_directory_from_target(name, &format!("{}::target", name));
+fn fuzz(krate: &str, persistent: bool) {
+    let corpus = corpus_directory_from_target(krate, "target");
 
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test(name, &format!("{}::test", name))
-        .unwrap()
-        .assert()
-        .success();
+    examples::test(krate, "test").unwrap().assert().success();
 
     retry(3, || {
-        let mut command = examples::test_fuzz(name, &format!("{}::target", name)).unwrap();
+        let mut command = examples::test_fuzz(krate, "target").unwrap();
 
         let mut args = vec!["--no-ui", "--run-until-crash"];
         if persistent {

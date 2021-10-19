@@ -6,7 +6,7 @@ use testing::examples;
 
 #[test]
 fn build_no_instrumentation() {
-    examples::test_fuzz("assert", "assert::target")
+    examples::test_fuzz("assert", "target")
         .unwrap()
         .args(&["--no-run", "--no-instrumentation"])
         .assert()
@@ -15,7 +15,7 @@ fn build_no_instrumentation() {
 
 #[test]
 fn build() {
-    examples::test_fuzz("assert", "assert::target")
+    examples::test_fuzz("assert", "target")
         .unwrap()
         .args(&["--no-run"])
         .assert()
@@ -24,7 +24,7 @@ fn build() {
 
 #[test]
 fn build_pesistent() {
-    examples::test_fuzz("assert", "assert::target")
+    examples::test_fuzz("assert", "target")
         .unwrap()
         .args(&["--no-run", "--persistent"])
         .assert()

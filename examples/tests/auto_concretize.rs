@@ -1,24 +1,23 @@
-#[cfg(feature = "__auto_concretize")]
-mod auto_concretize {
-    use serde::{de::DeserializeOwned, Deserialize, Serialize};
+#![cfg(feature = "__auto_concretize")]
 
-    #[derive(Clone, Deserialize, Serialize)]
-    struct Foo<T>(T);
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
-    #[test_fuzz::test_fuzz_impl]
-    impl<T: Clone + DeserializeOwned + Serialize> Foo<T> {
-        #[test_fuzz::test_fuzz]
-        fn target<U: Clone + DeserializeOwned + Serialize>(x: &U) {}
-    }
+#[derive(Clone, Deserialize, Serialize)]
+struct Foo<T>(T);
 
-    #[derive(Clone, Deserialize, Serialize)]
-    struct Bar;
+#[test_fuzz::test_fuzz_impl]
+impl<T: Clone + DeserializeOwned + Serialize> Foo<T> {
+    #[test_fuzz::test_fuzz]
+    fn target<U: Clone + DeserializeOwned + Serialize>(x: &U) {}
+}
 
-    #[derive(Clone, Deserialize, Serialize)]
-    struct Baz;
+#[derive(Clone, Deserialize, Serialize)]
+struct Bar;
 
-    #[test]
-    fn test() {
-        Foo::<Bar>::target(&Baz)
-    }
+#[derive(Clone, Deserialize, Serialize)]
+struct Baz;
+
+#[test]
+fn test() {
+    Foo::<Bar>::target(&Baz)
 }

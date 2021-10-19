@@ -6,11 +6,8 @@ use testing::examples;
 
 #[test]
 fn generic() {
-    let impl_expected = ["generic::generic::Bar", "generic::generic::Foo"];
-    let expected = [
-        "generic::generic::Baz<generic::generic::Bar>",
-        "generic::generic::Baz<generic::generic::Foo>",
-    ];
+    let impl_expected = ["generic::Bar", "generic::Foo"];
+    let expected = ["generic::Baz<generic::Bar>", "generic::Baz<generic::Foo>"];
     test(
         "generic",
         "test_bound",
@@ -37,7 +34,7 @@ fn generic() {
 #[test]
 fn unserde() {
     let impl_expected = [""];
-    let expected = ["unserde::unserde::Struct"];
+    let expected = ["unserde::Struct"];
     test("unserde", "test", "target", &impl_expected, &expected);
     test(
         "unserde",
@@ -48,25 +45,22 @@ fn unserde() {
     );
 }
 
-fn test(name: &str, test: &str, target: &str, impl_expected: &[&str], expected: &[&str]) {
-    let impl_concretizations = impl_concretizations_directory_from_target(name, target);
+fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected: &[&str]) {
+    let impl_concretizations = impl_concretizations_directory_from_target(krate, target);
 
     remove_dir_all(&impl_concretizations).unwrap_or_default();
 
-    let concretizations = concretizations_directory_from_target(name, target);
+    let concretizations = concretizations_directory_from_target(krate, target);
 
     remove_dir_all(&concretizations).unwrap_or_default();
 
-    examples::test(name, &format!("{}::{}", name, test))
-        .unwrap()
-        .assert()
-        .success();
+    examples::test(krate, test).unwrap().assert().success();
 
     for (option, expected) in &[
         ("--display-impl-concretizations", impl_expected),
         ("--display-concretizations", expected),
     ] {
-        let assert = &examples::test_fuzz(name, &format!("{}::{}", name, target))
+        let assert = &examples::test_fuzz(krate, target)
             .unwrap()
             .args(&[option])
             .assert()

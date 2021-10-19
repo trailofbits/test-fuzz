@@ -5,10 +5,6 @@ use std::{fs::remove_dir_all, sync::Mutex};
 use test_env_log::test;
 use testing::{examples, retry};
 
-const NAME: &str = "generic";
-
-const TARGET: &str = "generic::target";
-
 const TIMEOUT: &str = "60";
 
 #[test]
@@ -45,17 +41,14 @@ lazy_static! {
 fn fuzz(test: &str, success: bool, pattern: &str, timeout: bool) {
     let _guard = LOCK.lock().unwrap();
 
-    let corpus = corpus_directory_from_target(NAME, TARGET);
+    let corpus = corpus_directory_from_target("generic", "target");
 
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test(NAME, &format!("{}::{}", NAME, test))
-        .unwrap()
-        .assert()
-        .success();
+    examples::test("generic", test).unwrap().assert().success();
 
     retry(3, || {
-        let assert = examples::test_fuzz(NAME, TARGET)
+        let assert = examples::test_fuzz("generic", "target")
             .unwrap()
             .args(&["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
             .assert();
