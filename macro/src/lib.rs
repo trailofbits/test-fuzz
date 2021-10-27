@@ -13,10 +13,10 @@ use std::{collections::BTreeMap, env::var, io::Write, str::FromStr};
 use subprocess::{Exec, Redirection};
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated, token,
-    Attribute, AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericMethodArgument,
-    GenericParam, Generics, Ident, ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Pat, Path,
-    PathArguments, PathSegment, ReturnType, Signature, Stmt, Type, TypePath, TypeReference,
-    Visibility, WhereClause, WherePredicate,
+    Attribute, AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericParam, Generics, Ident,
+    ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Pat, Path, PathArguments, PathSegment,
+    ReturnType, Signature, Stmt, Type, TypePath, TypeReference, Visibility, WhereClause,
+    WherePredicate,
 };
 use toolchain_find::find_installed_component;
 use unzip_n::unzip_n;
@@ -246,11 +246,11 @@ fn map_method_or_fn(
     let opts_concretize_impl = opts
         .concretize_impl
         .as_ref()
-        .map(|s| parse_generic_method_arguments(s, false))
+        .map(|s| parse_generic_arguments(s, false))
         .or_else(|| {
             #[cfg(feature = "__auto_concretize")]
             return auto_concretize::unique_impl_concretization(sig)
-                .map(|s| parse_generic_method_arguments(&s, true))
+                .map(|s| parse_generic_arguments(&s, true))
                 .map_err(|error| impl_concretization_error = Some(error.clone()))
                 .ok();
             #[cfg(not(feature = "__auto_concretize"))]
@@ -260,11 +260,11 @@ fn map_method_or_fn(
     let opts_concretize = opts
         .concretize
         .as_ref()
-        .map(|s| parse_generic_method_arguments(s, false))
+        .map(|s| parse_generic_arguments(s, false))
         .or_else(|| {
             #[cfg(feature = "__auto_concretize")]
             return auto_concretize::unique_concretization(sig)
-                .map(|s| parse_generic_method_arguments(&s, true))
+                .map(|s| parse_generic_arguments(&s, true))
                 .map_err(|error| concretization_error = Some(error.clone()))
                 .ok();
             #[cfg(not(feature = "__auto_concretize"))]
@@ -274,7 +274,7 @@ fn map_method_or_fn(
     // smoelius: Error early.
     #[cfg(fuzzing)]
     if !opts.only_concretizations {
-        if !generics.params.is_empty() && opts_concretize_impl.is_none() {
+        if is_generic(generics) && opts_concretize_impl.is_none() {
             panic!(
                 "`{}` appears in a generic impl but `concretize_impl` was not specified{}",
                 sig.ident.to_string(),
@@ -282,7 +282,7 @@ fn map_method_or_fn(
             );
         }
 
-        if !sig.generics.params.is_empty() && opts_concretize.is_none() {
+        if is_generic(&sig.generics) && opts_concretize.is_none() {
             panic!(
                 "`{}` is generic but `concretize` was not specified{}",
                 sig.ident.to_string(),
@@ -869,21 +869,38 @@ fn is_test_fuzz(attr: &Attribute) -> bool {
         .all(|PathSegment { ident, .. }| ident == "test_fuzz")
 }
 
-fn parse_generic_method_arguments(
+fn parse_generic_arguments(
     s: &str,
     collapse_crate: bool,
-) -> Punctuated<GenericMethodArgument, token::Comma> {
+) -> Punctuated<GenericArgument, token::Comma> {
     let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
-    let args = Parser::parse(Punctuated::<Type, token::Comma>::parse_terminated, tokens)
-        .expect("Could not parse generic method arguments");
-    args.into_iter()
-        .map(|mut ty| {
-            if collapse_crate {
-                ty = type_utils::collapse_crate(&ty);
-            }
-            GenericMethodArgument::Type(ty)
-        })
-        .collect()
+    let args = Parser::parse(
+        Punctuated::<GenericArgument, token::Comma>::parse_terminated,
+        tokens,
+    )
+    .expect("Could not parse generic arguments");
+    if collapse_crate {
+        args.into_iter()
+            .map(|mut arg| {
+                if let GenericArgument::Type(ref mut ty) = arg {
+                    *ty = type_utils::collapse_crate(ty);
+                }
+                arg
+            })
+            .collect()
+    } else {
+        args
+    }
+}
+
+#[cfg(fuzzing)]
+fn is_generic(generics: &Generics) -> bool {
+    generics
+        .params
+        .iter()
+        .filter(|param| !matches!(param, GenericParam::Lifetime(_)))
+        .next()
+        .is_some()
 }
 
 fn type_idents(generics: &Generics) -> Vec<Ident> {
@@ -958,7 +975,7 @@ fn type_generic_phantom_types(generics: &Generics) -> Vec<Type> {
         .collect()
 }
 
-fn args_as_turbofish(args: &Punctuated<GenericMethodArgument, token::Comma>) -> TokenStream2 {
+fn args_as_turbofish(args: &Punctuated<GenericArgument, token::Comma>) -> TokenStream2 {
     quote! {
         ::<#args>
     }

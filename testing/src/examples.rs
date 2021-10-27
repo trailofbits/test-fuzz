@@ -94,14 +94,12 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     }
 }
 
-pub fn test_fuzz(krate: &str, target: &str) -> Result<Command> {
+pub fn test_fuzz_all() -> Result<Command> {
     let serde_format_feature = "test-fuzz/".to_owned() + serde_format().as_feature();
     let mut args = vec![
         "test-fuzz",
         "--manifest-path",
         &*MANIFEST_PATH,
-        "--test",
-        krate,
         "--no-default-features",
         "--features",
         &serde_format_feature,
@@ -109,9 +107,15 @@ pub fn test_fuzz(krate: &str, target: &str) -> Result<Command> {
     if auto_concretize_enabled() {
         args.extend_from_slice(&["--features", "__auto_concretize"]);
     }
-    args.extend_from_slice(&["--exact", "--target", target]);
 
     let mut cmd = Command::cargo_bin("cargo-test-fuzz")?;
     cmd.args(&args);
     Ok(cmd)
+}
+
+pub fn test_fuzz(krate: &str, target: &str) -> Result<Command> {
+    test_fuzz_all().map(|mut command| {
+        command.args(&["--test", krate, "--exact", "--target", target]);
+        command
+    })
 }
