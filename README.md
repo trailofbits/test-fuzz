@@ -427,7 +427,9 @@ The traits that `cargo-test-fuzz` currently supports and the values generated fo
 
 - **Serializable / deserializable arguments** - In general, a target's arguments must implement the [`serde::Serialize`](https://docs.serde.rs/serde/trait.Serialize.html) and [`serde::Deserialize`](https://docs.serde.rs/serde/trait.Deserialize.html) traits, e.g., by [deriving them](https://serde.rs/derive.html). We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable/deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`concretize` and `concretize_impl`](#options) above.
 
-- **Global variables** - The fuzzing harnesses that `test-fuzz` implements do not initialize global variables. No general purpose solution for this problem currently exists. So, to fuzz a function that relies on global variables using `test-fuzz`, ad-hoc methods must be used.
+- **Global variables** - The fuzzing harnesses that `test-fuzz` implements do not initialize global variables. While [`execute_with`](#options) provides some remedy, it is not a complete solution. In general, fuzzing a function that relies on global variables requires ad-hoc methods.
+
+- **[`convert`](#options) and [`concretize`](#options) / [`concretize_impl`](#options)** - These options are incompatible in the following sense. If a fuzz target's argument type is a type parameter, [`convert`](#options) will try to match the type parameter, not the type to which it is concretized. Supporting the latter would seem to require simulating type substitution as the compiler would perform it. However, this is not currently implemented.
 
 ## Tips and tricks
 
