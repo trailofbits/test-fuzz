@@ -14,7 +14,7 @@ use subprocess::{Exec, Redirection};
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated, token,
     Attribute, AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericParam, Generics, Ident,
-    ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Pat, Path, PathArguments, PathSegment,
+    ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Path, PathArguments, PathSegment,
     ReturnType, Signature, Stmt, Type, TypePath, TypeReference, Visibility, WhereClause,
     WherePredicate,
 };
@@ -26,12 +26,12 @@ mod auto_concretize;
 #[cfg(feature = "__auto_concretize")]
 mod mod_utils;
 
-mod path_utils;
-use path_utils::OrdPath;
+mod ord_type;
+use ord_type::OrdType;
 
 mod type_utils;
 
-type Conversions = BTreeMap<OrdPath, Path>;
+type Conversions = BTreeMap<OrdType, Type>;
 
 lazy_static! {
     pub(crate) static ref CARGO_CRATE_NAME: String =
@@ -227,7 +227,7 @@ fn map_method_or_fn(
     let mut conversions = Conversions::new();
     opts.convert.iter().for_each(|s| {
         let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
-        let args = Parser::parse(Punctuated::<Path, token::Comma>::parse_terminated, tokens)
+        let args = Parser::parse(Punctuated::<Type, token::Comma>::parse_terminated, tokens)
             .expect("Could not parse `convert` argument");
         if args.len() != 2 {
             panic!("Could not parse `convert` argument");
@@ -235,7 +235,7 @@ fn map_method_or_fn(
         let mut iter = args.into_iter();
         let key = iter.next().expect("Should have two `convert` arguments");
         let value = iter.next().expect("Should have two `convert` arguments");
-        conversions.insert(path_utils::OrdPath(key), value);
+        conversions.insert(OrdType(key), value);
     });
 
     #[allow(unused_mut, unused_variables)]
@@ -749,6 +749,7 @@ fn map_arg(
             ),
             FnArg::Typed(pat_ty) => {
                 let pat = &*pat_ty.pat;
+                let expr = parse_quote! { #pat };
                 let ty = self_ty.as_ref().map_or(*pat_ty.ty.clone(), |self_ty| {
                     type_utils::expand_self(self_ty, &trait_path, &*pat_ty.ty)
                 });
@@ -758,97 +759,107 @@ fn map_arg(
                         debug_struct.field(#name, value);
                     });
                 };
-                let default = (
-                    false,
-                    parse_quote! { #ty },
-                    parse_quote! { #fmt },
-                    parse_quote! { #pat.clone() },
-                    parse_quote! { args.#i },
-                );
-                match &ty {
-                    Type::Path(path) => map_arc_arg(&i, pat, path)
-                        .or_else(|| map_path_arg(&conversions, &i, pat, path))
-                        .map_or(default, |(ty, ser, de)| (false, ty, fmt, ser, de)),
-                    Type::Reference(ty) => {
-                        let (ty, ser, de) = map_ref_arg(&i, pat, ty);
-                        (false, ty, fmt, ser, de)
-                    }
-                    _ => default,
-                }
+                let (ty, ser, de) = map_typed_arg(&conversions, &i, &expr, &ty);
+                (false, ty, fmt, ser, de)
             }
         }
     }
 }
 
-fn map_arc_arg(i: &Literal, pat: &Pat, path: &TypePath) -> Option<(Type, Expr, Expr)> {
-    if_chain! {
-        if let Some(PathArguments::AngleBracketed(args)) = type_utils::match_type_path(path, &["std", "sync", "Arc"]);
-        if args.args.len() == 1;
-        if let GenericArgument::Type(ty) = &args.args[0];
-        then {
-            Some((
-                parse_quote! { #ty },
-                parse_quote! { (*#pat).clone() },
-                parse_quote! { std::sync::Arc::new(args.#i) },
-            ))
-        } else {
-            None
-        }
+fn map_typed_arg(
+    conversions: &Conversions,
+    i: &Literal,
+    expr: &Expr,
+    ty: &Type,
+) -> (Type, Expr, Expr) {
+    if let Some(arg_ty) = conversions.get(&OrdType(ty.clone())) {
+        return (
+            parse_quote! { #arg_ty },
+            parse_quote! { <#arg_ty as From::<#ty>>::from(#expr.clone()) },
+            parse_quote! { <_ as test_fuzz::Into::<_>>::into(args.#i) },
+        );
+    }
+    match &ty {
+        Type::Path(path) => map_path_arg(conversions, i, expr, path),
+        Type::Reference(ty) => map_ref_arg(conversions, i, expr, ty),
+        _ => (
+            parse_quote! { #ty },
+            parse_quote! { #expr.clone() },
+            parse_quote! { args.#i },
+        ),
     }
 }
 
 fn map_path_arg(
     conversions: &Conversions,
     i: &Literal,
-    pat: &Pat,
+    expr: &Expr,
     path: &TypePath,
-) -> Option<(Type, Expr, Expr)> {
+) -> (Type, Expr, Expr) {
     if_chain! {
-        if path.qself.is_none();
-        if let Some(ty) = conversions.get(&OrdPath(path.path.clone()));
+        if let Some(PathArguments::AngleBracketed(args)) = type_utils::match_type_path(path, &["std", "sync", "Arc"]);
+        if args.args.len() == 1;
+        if let GenericArgument::Type(ty) = &args.args[0];
         then {
-            Some((
-                parse_quote! { #ty },
-                parse_quote! { <#ty as From::<#path>>::from(#pat.clone()) },
-                parse_quote! { <_ as test_fuzz::Into::<_>>::into(args.#i) },
-            ))
-        } else {
-            None
+            return map_arc_arg(conversions, i, expr, ty);
         }
     }
+    (
+        parse_quote! { #path },
+        parse_quote! { #expr.clone() },
+        parse_quote! { args.#i },
+    )
 }
 
-fn map_ref_arg(i: &Literal, pat: &Pat, ty: &TypeReference) -> (Type, Expr, Expr) {
-    match &*ty.elem {
-        Type::Path(path)
-            if type_utils::match_type_path(path, &["str"]) == Some(PathArguments::None) =>
-        {
-            (
-                parse_quote! { String },
-                parse_quote! { #pat.to_owned() },
-                parse_quote! { args.#i.as_str() },
-            )
+fn map_arc_arg(
+    conversions: &Conversions,
+    i: &Literal,
+    expr: &Expr,
+    ty: &Type,
+) -> (Type, Expr, Expr) {
+    let expr = parse_quote! { (*#expr) };
+    let (ty, ser, de) = map_typed_arg(conversions, i, &expr, ty);
+    (ty, ser, parse_quote! { std::sync::Arc::new( #de ) })
+}
+
+fn map_ref_arg(
+    conversions: &Conversions,
+    i: &Literal,
+    expr: &Expr,
+    ty: &TypeReference,
+) -> (Type, Expr, Expr) {
+    let mutability = if ty.mutability.is_some() {
+        quote! { mut }
+    } else {
+        quote! {}
+    };
+    let ty = &*ty.elem;
+    match ty {
+        Type::Path(path) => {
+            if type_utils::match_type_path(path, &["str"]) == Some(PathArguments::None) {
+                (
+                    parse_quote! { String },
+                    parse_quote! { #expr.to_owned() },
+                    parse_quote! { args.#i.as_str() },
+                )
+            } else {
+                let expr = parse_quote! { (*#expr) };
+                let (ty, ser, de) = map_path_arg(conversions, i, &expr, path);
+                (ty, ser, parse_quote! { & #mutability #de })
+            }
         }
         Type::Slice(ty) => {
             let ty = &*ty.elem;
             (
                 parse_quote! { Vec<#ty> },
-                parse_quote! { #pat.to_vec() },
+                parse_quote! { #expr.to_vec() },
                 parse_quote! { args.#i.as_slice() },
             )
         }
         _ => {
-            let mutability = if ty.mutability.is_some() {
-                quote! { mut }
-            } else {
-                quote! {}
-            };
-            let ty = &*ty.elem;
-            (
-                parse_quote! { #ty },
-                parse_quote! { (*#pat).clone() },
-                parse_quote! { & #mutability args.#i },
-            )
+            let expr = parse_quote! { (*#expr) };
+            let (ty, ser, de) = map_typed_arg(conversions, i, &expr, ty);
+            (ty, ser, parse_quote! { & #mutability #de })
         }
     }
 }
