@@ -111,6 +111,7 @@ jobs:
       - name: Test
         run: |
           OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
+          echo "$OUTPUT"
           echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `afl [^`]*`, which is incompatible with `cargo-afl [^`]*`.$'
 
   test-newer-afl:
@@ -132,6 +133,7 @@ jobs:
       - name: Test
         run: |
           OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
+          echo "$OUTPUT"
           echo "$OUTPUT" | grep '^`[^`]*` depends on `afl [^`]*`, which is newer than `cargo-afl [^`]*`.'
           echo "$OUTPUT" | grep 'Consider upgrading with `cargo install afl --force --version [^`]*`.$'
 
@@ -155,6 +157,7 @@ jobs:
       - name: Test
         run: |
           OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
+          echo "$OUTPUT"
           echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `test-fuzz [^`]*`, which is incompatible with `cargo-test-fuzz [^`]*`.$'
 
   test-newer-test-fuzz:
@@ -178,5 +181,6 @@ jobs:
       - name: Test
         run: |
           OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --features=test-fuzz/serde_bincode --no-run 2>&1 1>/dev/null || true`"
+          echo "$OUTPUT"
           echo "$OUTPUT" | grep '^`[^`]*` depends on `test-fuzz [^`]*`, which is newer than `cargo-test-fuzz [^`]*`.'
           echo "$OUTPUT" | grep 'Consider upgrading with `cargo install cargo-test-fuzz --force --version [^`]*`.$'
