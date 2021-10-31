@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2
+
+- Support lifetime arguments ([beae251](https://github.com/trailofbits/test-fuzz/commit/beae251a4b3d915f0d7fae7a4a1ce9fb091baa0d))
+- Allow conversion of types beyond path types ([6a1595f](https://github.com/trailofbits/test-fuzz/commit/6a1595f201ca52ee81a56a9567476363d0c69fec))
+- Fully qualify Result in dont_care macro ([fe598af](https://github.com/trailofbits/test-fuzz/commit/fe598af32768a9ceecb8090fb1dd1efcef91a6fb))
+
 ## 1.0.1
 
 - Bump AFL version ([#54](https://github.com/trailofbits/test-fuzz/pull/54))
