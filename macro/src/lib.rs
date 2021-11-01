@@ -133,24 +133,25 @@ fn map_method(
 
     let mut attrs = attrs.clone();
 
-    if let Some(i) = attrs.iter().position(is_test_fuzz) {
-        let attr = attrs.remove(i);
-        let opts = opts_from_attr(&attr);
-        let (method, module) = map_method_or_fn(
-            &generics.clone(),
-            trait_path,
-            &Some(self_ty.clone()),
-            &opts,
-            &attrs,
-            vis,
-            defaultness,
-            sig,
-            block,
-        );
-        (parse_quote!( #method ), module)
-    } else {
-        (parse_quote!( #method ), None)
-    }
+    attrs.iter().position(is_test_fuzz).map_or_else(
+        || (parse_quote!( #method ), None),
+        |i| {
+            let attr = attrs.remove(i);
+            let opts = opts_from_attr(&attr);
+            let (method, module) = map_method_or_fn(
+                &generics.clone(),
+                trait_path,
+                &Some(self_ty.clone()),
+                &opts,
+                &attrs,
+                vis,
+                defaultness,
+                sig,
+                block,
+            );
+            (parse_quote!( #method ), module)
+        },
+    )
 }
 
 #[derive(Clone, Debug, Default, FromMeta)]
@@ -229,9 +230,7 @@ fn map_method_or_fn(
         let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
         let args = Parser::parse(Punctuated::<Type, token::Comma>::parse_terminated, tokens)
             .expect("Could not parse `convert` argument");
-        if args.len() != 2 {
-            panic!("Could not parse `convert` argument");
-        }
+        assert!(args.len() == 2, "Could not parse `convert` argument");
         let mut iter = args.into_iter();
         let key = iter.next().expect("Should have two `convert` arguments");
         let value = iter.next().expect("Should have two `convert` arguments");
