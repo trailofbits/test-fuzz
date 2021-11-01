@@ -34,7 +34,7 @@ impl<'a> VisitMut for TypeVisitor<'a> {
         // smoelius: Rewrite this using if-let-guards once the feature is stable.
         // https://rust-lang.github.io/rfcs/2294-if-let-guard.html
         if let Type::Path(path) = ty {
-            if let Some(PathArguments::None) = match_type_path(path, &["Self"]) {
+            if match_type_path(path, &["Self"]) == Some(PathArguments::None) {
                 *ty = self.self_ty.clone();
                 return;
             } else if path.qself.is_none()
