@@ -24,7 +24,7 @@ use std::{
     io::{BufRead, BufReader, Read},
     iter,
     path::{Path, PathBuf},
-    process::Command,
+    process::{exit, Command},
     time::Duration,
 };
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
@@ -92,6 +92,12 @@ struct TestFuzz {
     display_queue: bool,
     #[clap(long, about = "Target name is an exact name rather than a substring")]
     exact: bool,
+    #[clap(
+        long,
+        about = "Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 \
+        if an error occurred; implies --no-ui, does not imply --run-until-crash or -- -V <seconds>"
+    )]
+    exit_code: bool,
     #[clap(
         long,
         multiple_occurrences = true,
@@ -195,6 +201,9 @@ impl Debug for Executable {
 pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     let opts = {
         let SubCommand::TestFuzz(mut opts) = Opts::parse_from(args).subcmd;
+        if opts.exit_code {
+            opts.no_ui = true;
+        }
         if opts.list
             || opts.display_corpus
             || opts.replay_corpus
@@ -302,7 +311,13 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         return Ok(());
     }
 
-    fuzz(&opts, &executable, &target)
+    fuzz(&opts, &executable, &target).map_err(|error| {
+        if opts.exit_code {
+            eprintln!("{:?}", error);
+            exit(2);
+        }
+        error
+    })
 }
 
 fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
@@ -947,8 +962,6 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
     let output_dir = output_directory_from_target(&executable.name, target);
     create_dir_all(&output_dir).unwrap_or_default();
 
-    let mut command = Command::new("cargo");
-
     let mut envs = BASE_ENVS.to_vec();
     if opts.no_ui {
         envs.push(("AFL_NO_UI", "1"));
@@ -991,13 +1004,50 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         .map(String::from),
     );
 
-    command.envs(envs).args(args);
-    debug!("{:?}", command);
-    let status = command
-        .status()
-        .with_context(|| format!("Could not get status of `{:?}`", command))?;
+    if !opts.exit_code {
+        let mut command = Command::new("cargo");
+        command.envs(envs).args(args);
+        debug!("{:?}", command);
+        let status = command
+            .status()
+            .with_context(|| format!("Could not get status of `{:?}`", command))?;
 
-    ensure!(status.success(), "Command failed: {:?}", command);
+        ensure!(status.success(), "Command failed: {:?}", command);
+    } else {
+        let exec = Exec::cmd("cargo")
+            .env_extend(&envs)
+            .args(&args)
+            .stdout(Redirection::Pipe);
+        debug!("{:?}", exec);
+        let mut popen = exec.clone().popen()?;
+        let stdout = popen
+            .stdout
+            .take()
+            .ok_or_else(|| anyhow!("Could not get output of `{:?}`", exec))?;
+        let mut time_limit_was_reached = false;
+        let mut testing_aborted_programmatically = false;
+        for line in BufReader::new(stdout).lines() {
+            let line = line.with_context(|| format!("Could not get output of `{:?}`", exec))?;
+            if line.contains("Time limit was reached") {
+                time_limit_was_reached = true;
+            }
+            if line.contains("+++ Testing aborted programmatically +++") {
+                testing_aborted_programmatically = true;
+            }
+            println!("{}", line);
+        }
+        let status = popen
+            .wait()
+            .with_context(|| format!("`wait` failed for `{:?}`", popen))?;
+
+        if !testing_aborted_programmatically || !status.success() {
+            bail!("Command failed: {:?}", exec);
+        }
+
+        if !time_limit_was_reached {
+            exit(1);
+        }
+    }
 
     Ok(())
 }

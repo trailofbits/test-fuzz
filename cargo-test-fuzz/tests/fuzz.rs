@@ -26,16 +26,13 @@ fn fuzz(krate: &str, persistent: bool) {
     retry(3, || {
         let mut command = examples::test_fuzz(krate, "target").unwrap();
 
-        let mut args = vec!["--no-ui", "--run-until-crash"];
+        let mut args = vec!["--exit-code", "--run-until-crash"];
         if persistent {
             args.push("--persistent");
         }
         args.extend_from_slice(&["--", "-V", TIMEOUT]);
 
-        command.args(&args).assert().success().try_stdout(
-            predicate::str::contains("+++ Testing aborted programmatically +++")
-                .and(predicate::str::contains("Time limit was reached").not()),
-        )
+        command.args(&args).assert().try_code(predicate::eq(1))
     })
     .unwrap();
 }
