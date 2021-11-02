@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+- Add `--exit-code` option ([8bcbc2f](https://github.com/trailofbits/test-fuzz/commit/8bcbc2ff539d553984dc5a645a65213e9b4f3adc))
+
 ## 1.0.2
 
 - Support lifetime arguments ([beae251](https://github.com/trailofbits/test-fuzz/commit/beae251a4b3d915f0d7fae7a4a1ce9fb091baa0d))

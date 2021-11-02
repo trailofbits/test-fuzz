@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-internal"
-version = "1.0.2"
+version = "1.0.3"
 edition = "2018"
 
 description = "test-fuzz-internal"
