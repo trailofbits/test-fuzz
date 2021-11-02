@@ -12,25 +12,15 @@ fn fuzz_foo_qwerty() {
     // smoelius: When `bincode` is enabled, `cargo-afl` fails because "the program crashed with one
     // of the test cases provided."
     if serde_format().to_string() == "Bincode" {
-        fuzz("test_foo_qwerty", false, "", false);
+        fuzz("test_foo_qwerty", 2);
     } else {
-        fuzz(
-            "test_foo_qwerty",
-            true,
-            "+++ Testing aborted programmatically +++",
-            false,
-        );
+        fuzz("test_foo_qwerty", 1);
     };
 }
 
 #[test]
 fn fuzz_bar_asdfgh() {
-    fuzz(
-        "test_bar_asdfgh",
-        true,
-        "+++ Testing aborted programmatically +++",
-        true,
-    );
+    fuzz("test_bar_asdfgh", 0);
 }
 
 #[cfg(test)]
@@ -38,7 +28,7 @@ lazy_static! {
     static ref LOCK: Mutex<()> = Mutex::new(());
 }
 
-fn fuzz(test: &str, success: bool, pattern: &str, timeout: bool) {
+fn fuzz(test: &str, code: i32) {
     let _guard = LOCK.lock().unwrap();
 
     let corpus = corpus_directory_from_target("generic", "target");
@@ -48,26 +38,11 @@ fn fuzz(test: &str, success: bool, pattern: &str, timeout: bool) {
     examples::test("generic", test).unwrap().assert().success();
 
     retry(3, || {
-        let assert = examples::test_fuzz("generic", "target")
+        examples::test_fuzz("generic", "target")
             .unwrap()
-            .args(&["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
-            .assert();
-
-        let assert = if success {
-            assert.success()
-        } else {
-            assert.failure()
-        };
-
-        assert.try_stdout(
-            predicate::str::contains(pattern).and(predicate::function(|s: &str| {
-                if timeout {
-                    s.contains("Time limit was reached")
-                } else {
-                    !s.contains("Time limit was reached")
-                }
-            })),
-        )
+            .args(&["--exit-code", "--run-until-crash", "--", "-V", TIMEOUT])
+            .assert()
+            .try_code(predicate::eq(code))
     })
     .unwrap();
 }

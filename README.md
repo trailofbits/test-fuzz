@@ -260,6 +260,10 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
         --exact
             Target name is an exact name rather than a substring
 
+        --exit-code
+            Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 if an
+            error occurred; implies --no-ui, does not imply --run-until-crash or -- -V <seconds>
+
         --features <FEATURES>...
             Space or comma separated list of features to activate
 
