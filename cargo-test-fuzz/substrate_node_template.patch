@@ -1,32 +1,29 @@
 diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
-index 84a8660..673bba6 100644
+index 810599f..31537d6 100644
 --- a/pallets/template/Cargo.toml
 +++ b/pallets/template/Cargo.toml
-@@ -42,19 +42,19 @@ default-features = false
- features = ['derive']
+@@ -43,5 +43,5 @@ features = ['derive']
  version = '1.0'
  
 -[dev-dependencies.sp-core]
 +[dependencies.sp-core]
  default-features = false
  git = 'https://github.com/paritytech/substrate.git'
- tag = 'monthly-2021-10'
+@@ -49,5 +49,5 @@ tag = 'monthly-2021-11'
  version = '4.0.0-dev'
  
 -[dev-dependencies.sp-io]
 +[dependencies.sp-io]
  default-features = false
  git = 'https://github.com/paritytech/substrate.git'
- tag = 'monthly-2021-10'
+@@ -55,5 +55,5 @@ tag = 'monthly-2021-11'
  version = '4.0.0-dev'
  
 -[dev-dependencies.sp-runtime]
 +[dependencies.sp-runtime]
  default-features = false
  git = 'https://github.com/paritytech/substrate.git'
- tag = 'monthly-2021-10'
-@@ -70,4 +70,10 @@ std = [
-     'frame-system/std',
+@@ -71,3 +71,9 @@ std = [
      'frame-benchmarking/std',
  ]
 -try-runtime = ['frame-support/try-runtime']
@@ -39,20 +36,17 @@ index 84a8660..673bba6 100644
 +[dependencies.serde]
 +version = '1.0.130'
 diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
-index 0d0e297..0c0dd41 100644
+index 1859916..1ed613e 100644
 --- a/pallets/template/src/lib.rs
 +++ b/pallets/template/src/lib.rs
-@@ -5,7 +5,7 @@
- /// <https://docs.substrate.io/v3/runtime/frame>
+@@ -6,5 +6,5 @@
  pub use pallet::*;
  
 -#[cfg(test)]
 +// #[cfg(test)]
  mod mock;
  
- #[cfg(test)]
-@@ -19,6 +19,31 @@ pub mod pallet {
- 	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
+@@ -20,4 +20,29 @@ pub mod pallet {
  	use frame_system::pallet_prelude::*;
  
 +	test_fuzz::dont_care!(crate::mock::Test);
@@ -82,9 +76,7 @@ index 0d0e297..0c0dd41 100644
 +
  	/// Configure the pallet by specifying the parameters and types on which it depends.
  	#[pallet::config]
- 	pub trait Config: frame_system::Config {
-@@ -61,10 +86,20 @@ pub mod pallet {
- 	// These functions materialize as "extrinsics", which are often compared to transactions.
+@@ -62,8 +87,18 @@ pub mod pallet {
  	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
  	#[pallet::call]
 -	impl<T: Config> Pallet<T> {
@@ -104,13 +96,10 @@ index 0d0e297..0c0dd41 100644
 +		)]
  		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
  			// Check that the extrinsic was signed and get the signer.
- 			// This function will return an error if the extrinsic is not signed.
-@@ -95,7 +130,7 @@ pub mod pallet {
- 					// Update the value in storage with the incremented result.
+@@ -96,5 +131,5 @@ pub mod pallet {
  					<Something<T>>::put(new);
  					Ok(())
 -				},
 +				}
  			}
  		}
- 	}
