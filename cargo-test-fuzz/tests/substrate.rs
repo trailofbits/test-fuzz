@@ -8,6 +8,9 @@ const SUBSTRATE_NODE_TEMPLATE_URL: &str =
 
 const PACKAGE: &str = "pallet-template";
 
+// smoelius: This should match `scripts/update_substrate_node_template_patch.sh`.
+const LINES_OF_CONTEXT: u32 = 2;
+
 #[test]
 fn do_something() {
     // smoelius: `substrate_node_template.patch` expects test-fuzz to be an ancestor of the
@@ -76,7 +79,7 @@ fn patch_is_current() {
 
     let assert = Command::new("git")
         .current_dir(tempdir.path())
-        .args(&["diff"])
+        .args(&["diff", &format!("--unified={}", LINES_OF_CONTEXT)])
         .assert()
         .success();
 
