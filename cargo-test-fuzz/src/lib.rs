@@ -5,7 +5,8 @@
 use anyhow::{anyhow, bail, ensure, Context, Result};
 use bitflags::bitflags;
 use cargo_metadata::{
-    Artifact, ArtifactProfile, Message, Metadata, MetadataCommand, Package, PackageId, Version,
+    Artifact, ArtifactProfile, CargoOpt, Message, Metadata, MetadataCommand, Package, PackageId,
+    Version,
 };
 use clap::{crate_version, Parser};
 use internal::dirs::{
@@ -321,7 +322,7 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
 }
 
 fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
-    let metadata = MetadataCommand::new().exec()?;
+    let metadata = metadata(opts)?;
 
     let mut args = vec![];
     if !opts.no_instrumentation {
@@ -432,6 +433,18 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         .into_iter()
         .flatten()
         .collect())
+}
+
+fn metadata(opts: &TestFuzz) -> Result<Metadata> {
+    let mut command = MetadataCommand::new();
+    if opts.no_default_features {
+        command.features(CargoOpt::NoDefaultFeatures);
+    }
+    command.features(CargoOpt::SomeFeatures(opts.features.clone()));
+    if let Some(path) = &opts.manifest_path {
+        command.manifest_path(path);
+    }
+    command.exec().map_err(Into::into)
 }
 
 fn test_fuzz_and_afl_versions(
