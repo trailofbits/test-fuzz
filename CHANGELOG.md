@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4
+
+- Account for features and manifest path when obtaining Cargo metadata ([#64](https://github.com/trailofbits/test-fuzz/pull/64))
+
 ## 1.0.3
 
 - Add `--exit-code` option ([8bcbc2f](https://github.com/trailofbits/test-fuzz/commit/8bcbc2ff539d553984dc5a645a65213e9b4f3adc))
