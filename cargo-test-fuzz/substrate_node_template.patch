@@ -1,5 +1,5 @@
 diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
-index 810599f..31537d6 100644
+index b6c027a..d77af88 100644
 --- a/pallets/template/Cargo.toml
 +++ b/pallets/template/Cargo.toml
 @@ -43,5 +43,5 @@ features = ['derive']
@@ -9,14 +9,14 @@ index 810599f..31537d6 100644
 +[dependencies.sp-core]
  default-features = false
  git = 'https://github.com/paritytech/substrate.git'
-@@ -49,5 +49,5 @@ tag = 'monthly-2021-11'
+@@ -49,5 +49,5 @@ tag = 'monthly-2021-11-1'
  version = '4.0.0-dev'
  
 -[dev-dependencies.sp-io]
 +[dependencies.sp-io]
  default-features = false
  git = 'https://github.com/paritytech/substrate.git'
-@@ -55,5 +55,5 @@ tag = 'monthly-2021-11'
+@@ -55,5 +55,5 @@ tag = 'monthly-2021-11-1'
  version = '4.0.0-dev'
  
 -[dev-dependencies.sp-runtime]
