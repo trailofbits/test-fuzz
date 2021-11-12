@@ -15,7 +15,7 @@ test-fuzz = { path = "../test-fuzz", version = "=1.0.4", default-features = fals
 [dev-dependencies]
 lazy_static = "1.4.0"
 parse_duration = "2.1.1"
-serde_json = "1.0.68"
+serde_json = "1.0.69"
 
 [features]
 __auto_concretize = ["test-fuzz/auto_concretize"]
