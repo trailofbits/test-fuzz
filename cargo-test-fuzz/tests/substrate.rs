@@ -30,7 +30,7 @@ fn do_something() {
 
     Command::new("git")
         .current_dir(tempdir.path())
-        .args(&["apply", &patch.to_string_lossy().to_string()])
+        .args(&["apply", &patch.to_string_lossy()])
         .assert()
         .success();
 
