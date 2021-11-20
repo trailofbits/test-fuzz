@@ -24,8 +24,10 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
 
 ## Installation
 
+Install `cargo-test-fuzz` and [`afl.rs`](https://github.com/rust-fuzz/afl.rs) with the following command:
+
 ```sh
-cargo install cargo-test-fuzz
+cargo install cargo-test-fuzz afl
 ```
 
 ## Usage
