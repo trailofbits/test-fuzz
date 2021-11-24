@@ -27,7 +27,7 @@ fn replay_crashes() {
             &format!("{}", MEMORY_LIMIT / 1024),
         ],
         &What::Crashes,
-        r"memory allocation of \d{10,} bytes failed\n",
+        r"(?m)\bmemory allocation of \d{10,} bytes failed$",
     );
 }
 
@@ -39,7 +39,7 @@ fn replay_hangs() {
         "parse",
         &["--persistent", "--", "-V", TIMEOUT],
         &What::Hangs,
-        r"Timeout\n",
+        r"(?m)\bTimeout$",
     );
 }
 

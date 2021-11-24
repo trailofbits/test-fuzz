@@ -1,6 +1,13 @@
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+
+  pull_request:
+
+  # smoelius: Every Thursday at 3:00 UTC (Wednesday at 20:00 EST), run `cargo test -- --ignored`.
+  schedule:
+    - cron: "0 3 * * 4"
 
 jobs:
   lint:
@@ -75,26 +82,39 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Set toolchain
+        run: rustup default ${{ matrix.toolchain }}
+
       - name: Install llvm
         run: sudo apt-get install llvm
 
       - name: Install afl
         run: cargo install afl
 
+      # smoelius: The nightly toolchain and wasm32 target are needed for some Substrate tests,
+      # regardless of the toolchain used to build test-fuzz.
+      - name: Add nightly toolchain and wasm32 target
+        run: |
+          rustup toolchain install nightly
+          rustup +nightly target add wasm32-unknown-unknown
+
       - name: Test
         run: |
           AUTO_CONCRETIZE=
+          IGNORED=
           SHUFFLE=
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
             AUTO_CONCRETIZE='--features=test-fuzz/auto_concretize'
-            SHUFFLE='-Z unstable-options --shuffle'
+            SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
           fi
-          cargo test --workspace --no-default-features --features=test-fuzz/serde_${{ matrix.serde_format }} $AUTO_CONCRETIZE -- --nocapture $SHUFFLE
+          if [[ ${{ github.event_name }} = schedule ]]; then
+            IGNORED='--ignored'
+          fi
+          cargo test --workspace --no-default-features --features=test-fuzz/serde_${{ matrix.serde_format }} $AUTO_CONCRETIZE -- --nocapture $IGNORED $SHUFFLE
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
           RUST_BACKTRACE: 1
           RUST_LOG: warn
-          RUSTUP_TOOLCHAIN: ${{ matrix.toolchain }}
 
   test-incompatible-cargo-afl:
     runs-on: ubuntu-latest
