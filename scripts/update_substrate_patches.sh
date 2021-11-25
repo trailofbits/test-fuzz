@@ -9,13 +9,13 @@ if [[ $# -ne 0 ]]; then
 fi
 
 URLS=(
-    https://github.com/substrate-developer-hub/substrate-node-template
     https://github.com/paritytech/substrate
+    https://github.com/substrate-developer-hub/substrate-node-template
 )
 
 PATCHES=(
-    substrate_node_template.patch
     substrate_client_transaction_pool.patch
+    substrate_node_template.patch
 )
 
 # smoelius: This should match `cargo-test-fuzz/tests/substrate.rs`.
