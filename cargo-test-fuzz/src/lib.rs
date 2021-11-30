@@ -410,7 +410,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         bail!("Command failed: {:?}", exec);
     }
 
-    Ok(artifacts
+    let executables = artifacts
         .into_iter()
         .map(|artifact| {
             if let Artifact {
@@ -433,10 +433,8 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
                 Ok(None)
             }
         })
-        .collect::<Result<Vec<_>>>()?
-        .into_iter()
-        .flatten()
-        .collect())
+        .collect::<Result<Vec<_>>>()?;
+    Ok(executables.into_iter().flatten().collect())
 }
 
 fn metadata(opts: &TestFuzz) -> Result<Metadata> {
@@ -459,12 +457,12 @@ fn test_fuzz_and_afl_versions(
     let afl = test_fuzz
         .as_ref()
         .map(|package_id| package_dependency(metadata, package_id, "afl"))
-        .transpose()?
-        .flatten();
+        .transpose()?;
     let test_fuzz_version = test_fuzz
         .map(|package_id| package_version(metadata, &package_id))
         .transpose()?;
     let afl_version = afl
+        .flatten()
         .map(|package_id| package_version(metadata, &package_id))
         .transpose()?;
     Ok((test_fuzz_version, afl_version))
@@ -484,14 +482,17 @@ fn package_dependency(
         .iter()
         .find(|node| node.id == *package_id)
         .ok_or_else(|| anyhow!("Could not find package `{}`", package_id))?;
-    Ok(node
+    let package_ids_and_names = node
         .dependencies
         .iter()
-        .map(|package_id| package_name(metadata, package_id).map(|s| (package_id, s == name)))
-        .collect::<Result<Vec<_>>>()?
+        .map(|package_id| {
+            package_name(metadata, package_id).map(|package_name| (package_id, package_name))
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok(package_ids_and_names
         .into_iter()
-        .find_map(|(package_id, found)| {
-            if found {
+        .find_map(|(package_id, package_name)| {
+            if package_name == name {
                 Some(package_id.clone())
             } else {
                 None
