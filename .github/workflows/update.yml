@@ -3,7 +3,7 @@ name: Update dependencies
 # smoelius: 'Dependabot only makes Rust security updates if "Cargo.lock" exists'
 # https://github.com/dependabot/dependabot-core/issues/2011
 
-# So, every Friday at 3:00 UTC (Thursday at 20:00 EST), run `cargo upgrade` and create a PR.
+# So, every Friday at 3:00 UTC (Thursday at 22:00 EST), run `cargo upgrade` and create a PR.
 
 on:
   schedule:
