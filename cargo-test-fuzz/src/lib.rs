@@ -15,6 +15,7 @@ use internal::dirs::{
     impl_concretizations_directory_from_target, output_directory_from_target,
     queue_directory_from_target, target_directory,
 };
+use lazy_static::lazy_static;
 use log::debug;
 use semver::VersionReq;
 use serde::{Deserialize, Serialize};
@@ -26,6 +27,7 @@ use std::{
     iter,
     path::{Path, PathBuf},
     process::{exit, Command},
+    sync::Mutex,
     time::Duration,
 };
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
@@ -215,6 +217,8 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         }
         opts
     };
+
+    cache_cargo_afl_version()?;
 
     let display = opts.display_corpus
         || opts.display_corpus_instrumented
@@ -631,11 +635,11 @@ fn match_message(opts: &TestFuzz) -> String {
     })
 }
 
+#[allow(clippy::expect_used)]
 fn check_test_fuzz_and_afl_versions(
     executable_targets: &[(Executable, Vec<String>)],
 ) -> Result<()> {
     let cargo_test_fuzz_version = Version::parse(crate_version!())?;
-    let cargo_afl_version = cargo_afl_version()?;
     for (executable, _) in executable_targets {
         check_dependency_version(
             &executable.name,
@@ -650,11 +654,28 @@ fn check_test_fuzz_and_afl_versions(
             "afl",
             executable.afl_version.as_ref(),
             "cargo-afl",
-            &cargo_afl_version,
+            CARGO_AFL_VERSION
+                .lock()
+                .expect("Could not lock `CARGO_AFL_VERSION`")
+                .as_ref()
+                .expect("Could not determine `cargo-afl` version"),
             "afl",
         )?;
     }
     Ok(())
+}
+
+fn cache_cargo_afl_version() -> Result<()> {
+    let cargo_afl_version = cargo_afl_version()?;
+    let mut lock = CARGO_AFL_VERSION
+        .lock()
+        .map_err(|error| anyhow!(error.to_string()))?;
+    *lock = Some(cargo_afl_version);
+    Ok(())
+}
+
+lazy_static! {
+    static ref CARGO_AFL_VERSION: Mutex<Option<Version>> = Mutex::new(None);
 }
 
 fn cargo_afl_version() -> Result<Version> {
