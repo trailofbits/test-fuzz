@@ -1,25 +1,28 @@
-use serde::{Deserialize, Serialize};
-use std::path::Path;
+mod path {
+    use std::path::Path;
+    use test_fuzz::leak;
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
-struct PathBufWrapper(std::path::PathBuf);
+    leak!(Path, LeakedPath);
 
-impl From<&Path> for PathBufWrapper {
-    fn from(path: &Path) -> Self {
-        Self(path.to_path_buf())
+    #[test_fuzz::test_fuzz(convert = "&Path, LeakedPath")]
+    fn target(path: &Path) {}
+
+    #[test]
+    fn test() {
+        target(Path::new("/"));
     }
 }
 
-impl test_fuzz::Into<&Path> for PathBufWrapper {
-    fn into(self) -> &'static Path {
-        Box::leak(Box::new(self.0))
+mod array {
+    use test_fuzz::leak;
+
+    leak!([String], LeakedArray);
+
+    #[test_fuzz::test_fuzz(convert = "&[String], LeakedArray")]
+    fn target(path: &[String]) {}
+
+    #[test]
+    fn test() {
+        target(&[String::from("x")]);
     }
-}
-
-#[test_fuzz::test_fuzz(convert = "&Path, PathBufWrapper")]
-fn target(path: &Path) {}
-
-#[test]
-fn test() {
-    target(Path::new("/"));
 }
