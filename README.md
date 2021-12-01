@@ -15,7 +15,7 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
    - [`test_fuzz` macro](#test_fuzz-macro)
    - [`test_fuzz_impl` macro](#test_fuzz_impl-macro)
    - [`cargo test-fuzz` command](#cargo-test-fuzz-command)
-   - [`dont_care` macro](#dont_care-macro)
+   - [Convenience macros](#convenience-macros)
 4. [`test-fuzz` package features](#test-fuzz-package-features)
 5. [Auto-generated corpus files](#auto-generated-corpus-files)
 6. [Environment variables](#environment-variables)
@@ -135,7 +135,7 @@ The primary effects of the `test_fuzz` macro are:
   }
   ```
 
-  The definition of `test_fuzz::Into` is identical to that of `std::conversion::Into`. The reason for using a non-standard trait is to avoid conflicts that could arise from blanket implementations of standard traits.
+  The definition of `test_fuzz::Into` is identical to that of [`std::convert::Into`](https://doc.rust-lang.org/std/convert/trait.Into.html). The reason for using a non-standard trait is to avoid conflicts that could arise from blanket implementations of standard traits.
 
 - **`enable_in_production`** - Generate corpus files when not running tests, provided the environment variable [`TEST_FUZZ_WRITE`](#environment-variables) is set. The default is to generate corpus files only when running tests, regardless of whether [`TEST_FUZZ_WRITE`](#environment-variables) is set. When running a target from outside its package directory, set [`TEST_FUZZ_MANIFEST_PATH`](#environment-variables) to the path of the package's `Cargo.toml` file.
 
@@ -336,38 +336,77 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
             Print version information
 ```
 
-### `dont_care!` macro
+### Convenience macros
 
-The `dont_care!` macro can be used to implement `serde::Serialize`/`serde::Deserialize` for types that are easy to construct and whose values you do not care to record. Intuitively, `dont_care!($ty, $expr)` says:
+**Warning:** These macros excluded from semantic versioning and may be removed in future versions of `test-fuzz`.
 
-- Skip values of type `$ty` when serializing.
-- Initialize values of type `$ty` with `$expr` when deserializing.
+- **`dont_care!`**
 
-More specifically, `dont_care!($ty, $expr)` expands to the following:
+  The `dont_care!` macro can be used to implement `serde::Serialize`/`serde::Deserialize` for types that are easy to construct and whose values you do not care to record. Intuitively, `dont_care!($ty, $expr)` says:
 
-```rust
-impl serde::Serialize for $ty {
-    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        ().serialize(serializer)
-    }
-}
+  - Skip values of type `$ty` when serializing.
+  - Initialize values of type `$ty` with `$expr` when deserializing.
 
-impl<'de> serde::Deserialize<'de> for $ty {
-    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        <()>::deserialize(deserializer).map(|_| $expr)
-    }
-}
-```
+  More specifically, `dont_care!($ty, $expr)` expands to the following:
 
-If `$ty` is a unit struct, then `$expr` can be be omitted. That is, `dont_care!($ty)` is equivalent to `dont_care!($ty, $ty)`.
+  ```rust
+  impl serde::Serialize for $ty {
+      fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+      where
+          S: serde::Serializer,
+      {
+          ().serialize(serializer)
+      }
+  }
 
-**Warning:** `dont_care!` is provided for convenience and may be removed in future versions of `test-fuzz`.
+  impl<'de> serde::Deserialize<'de> for $ty {
+      fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+      where
+          D: serde::Deserializer<'de>,
+      {
+          <()>::deserialize(deserializer).map(|_| $expr)
+      }
+  }
+  ```
+
+  If `$ty` is a unit struct, then `$expr` can be be omitted. That is, `dont_care!($ty)` is equivalent to `dont_care!($ty, $ty)`.
+
+- **`leak!`**
+
+  The `leak!` macro can help to serialize target arguments that are references and whose types implement the [`ToOwned`](https://doc.rust-lang.org/std/borrow/trait.ToOwned.html) trait. It is meant to be used with the [`convert`](#arguments) option.
+
+  Specifically, an invocation of the following form declares a type `LeakedX`, and implements the `From` and `test_fuzz::Into` traits for it:
+
+  ```rust
+  leak!(X, LeakedX);
+  ```
+
+  One can then use `LeakedX` with the `convert` option as follows:
+
+  ```rust
+  #[test_fuzz::test_fuzz(convert = "&X, LeakedX")
+  ```
+
+  An example where `X` is [`Path`](https://doc.rust-lang.org/std/path/struct.Path.html) appears in [conversion.rs](examples/tests/conversion.rs#L5) in this repository.
+
+  More generally, an invocation of the form `leak!($ty, $ident)` expands to the following:
+
+  ```rust
+  #[derive(Clone, std::fmt::Debug, serde::Deserialize, serde::Serialize)]
+  struct $ident(<$ty as ToOwned>::Owned);
+
+  impl From<&$ty> for $ident {
+      fn from(ty: &$ty) -> Self {
+          Self(ty.to_owned())
+      }
+  }
+
+  impl test_fuzz::Into<&$ty> for $ident {
+      fn into(self) -> &'static $ty {
+          Box::leak(Box::new(self.0))
+      }
+  }
+  ```
 
 ## `test-fuzz` package features
 

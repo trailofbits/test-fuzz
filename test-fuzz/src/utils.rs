@@ -1,8 +1,8 @@
+//! **Warning:** The macros in `test_fuzz::utils` are provided for convenience and may be removed in
+//! future versions of `test-fuzz`.
+
 /// Skip values of type `$ty` when serializing. Initialize values of type `$ty` with `$expr` when
 /// deserializing.
-///
-/// **Warning:** `dont_care!` is provided for convenience and may be removed in future versions of
-/// `test-fuzz`.
 #[macro_export]
 macro_rules! dont_care {
     ($ty:path, $expr:expr) => {
@@ -26,5 +26,43 @@ macro_rules! dont_care {
     };
     ($ty:path) => {
         $crate::dont_care!($ty, $ty);
+    };
+}
+
+/// Wrap `<$ty as ToOwned>::Owned` in a type `$ident` and implement `From` and `test_fuzz::Into`
+/// for `$ident` so that `convert = "&$ty, $ident"` can be used.
+#[macro_export]
+macro_rules! leak {
+    ($ty:ty, $ident:ident) => {
+        #[derive(Clone, std::fmt::Debug, serde::Deserialize, serde::Serialize)]
+        struct $ident(<$ty as ToOwned>::Owned);
+
+        impl From<&$ty> for $ident {
+            fn from(ty: &$ty) -> Self {
+                Self(ty.to_owned())
+            }
+        }
+
+        impl test_fuzz::Into<&$ty> for $ident {
+            fn into(self) -> &'static $ty {
+                Box::leak(Box::new(self.0))
+            }
+        }
+    };
+    ([$ty:ty], $ident:ident) => {
+        #[derive(Clone, std::fmt::Debug, serde::Deserialize, serde::Serialize)]
+        struct $ident(<[$ty] as ToOwned>::Owned);
+
+        impl From<&[$ty]> for $ident {
+            fn from(ty: &[$ty]) -> Self {
+                Self(ty.to_owned())
+            }
+        }
+
+        impl test_fuzz::Into<&[$ty]> for $ident {
+            fn into(self) -> &'static [$ty] {
+                Box::leak(Box::new(self.0))
+            }
+        }
     };
 }
