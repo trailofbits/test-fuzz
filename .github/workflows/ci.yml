@@ -5,7 +5,7 @@ on:
 
   pull_request:
 
-  # smoelius: Every Thursday at 3:00 UTC (Wednesday at 20:00 EST), run `cargo test -- --ignored`.
+  # smoelius: Every Thursday at 3:00 UTC (Wednesday at 22:00 EST), run `cargo test -- --ignored`.
   schedule:
     - cron: "0 3 * * 4"
 
