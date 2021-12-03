@@ -20,7 +20,7 @@ index 3d2a450c41..13284ea3be 100644
  
  [dev-dependencies]
 diff --git a/client/transaction-pool/src/graph/base_pool.rs b/client/transaction-pool/src/graph/base_pool.rs
-index 2c8becdfb2..02104238b1 100644
+index cf634c3213..b319950cd5 100644
 --- a/client/transaction-pool/src/graph/base_pool.rs
 +++ b/client/transaction-pool/src/graph/base_pool.rs
 @@ -85,5 +85,5 @@ pub struct PruneStatus<Hash, Ex> {
@@ -94,31 +94,7 @@ index 2c8becdfb2..02104238b1 100644
 +			return Err(error::Error::CycleDetected);
  		}
  
-@@ -400,6 +405,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> BasePool<Hash,
- 				match minimal {
- 					None => Some(transaction.clone()),
--					Some(ref tx) if tx.insertion_id > transaction.insertion_id =>
--						Some(transaction.clone()),
-+					Some(ref tx) if tx.insertion_id > transaction.insertion_id => {
-+						Some(transaction.clone())
-+					}
- 					other => other,
- 				}
-@@ -409,5 +415,5 @@ impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> BasePool<Hash,
- 				removed.append(&mut self.remove_subtree(&[minimal.transaction.hash.clone()]))
- 			} else {
--				break
-+				break;
- 			}
- 		}
-@@ -424,5 +430,5 @@ impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> BasePool<Hash,
- 				removed.append(&mut self.remove_subtree(&[minimal.transaction.hash.clone()]))
- 			} else {
--				break
-+				break;
- 			}
- 		}
-@@ -481,5 +487,5 @@ impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> BasePool<Hash,
+@@ -493,5 +498,5 @@ impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> BasePool<Hash,
  					warn!(target: "txpool", "[{:?}] Failed to promote during pruning: {:?}", hash, e);
  					failed.push(hash)
 -				},
