@@ -1,3 +1,4 @@
+use test_log::test;
 use testing::examples;
 
 #[test]
