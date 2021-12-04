@@ -26,14 +26,14 @@ impl fmt::Display for Error {
                 "either (1) tests have not been run or (2) tests produced no {}concretizations for \
                 `{}`",
                 if self.impl_ { "impl " } else { "" },
-                self.sig.ident,
+                self.target,
             ),
             Kind::Multiple => write!(
                 f,
                 "tests produced multiple {}concretizations for {}. View them with \
                 `--target {} --exact --display-{}concretizations`.",
                 if self.impl_ { "impl " } else { "" },
-                self.sig.ident,
+                self.target,
                 self.target,
                 if self.impl_ { "impl-" } else { "" },
             ),
