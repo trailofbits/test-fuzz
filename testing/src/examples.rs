@@ -86,9 +86,9 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     );
 
     if let Some(executable) = executables.into_iter().next() {
-        let mut cmd = Command::new(executable);
-        cmd.args(&["--exact", test]);
-        Ok(cmd)
+        let mut command = Command::new(executable);
+        command.args(&["--exact", test]);
+        Ok(command)
     } else {
         bail!("Found no executables starting with `{}`", krate)
     }
@@ -108,9 +108,9 @@ pub fn test_fuzz_all() -> Result<Command> {
         args.extend_from_slice(&["--features", "__auto_concretize"]);
     }
 
-    let mut cmd = Command::cargo_bin("cargo-test-fuzz")?;
-    cmd.args(&args);
-    Ok(cmd)
+    let mut command = Command::cargo_bin("cargo-test-fuzz")?;
+    command.args(&args);
+    Ok(command)
 }
 
 pub fn test_fuzz(krate: &str, target: &str) -> Result<Command> {
