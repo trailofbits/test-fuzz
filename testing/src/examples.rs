@@ -115,7 +115,7 @@ pub fn test_fuzz_all() -> Result<Command> {
 
 pub fn test_fuzz(krate: &str, target: &str) -> Result<Command> {
     test_fuzz_all().map(|mut command| {
-        command.args(&["--test", krate, "--exact", "--target", target]);
+        command.args(&["--test", krate, "--exact", target]);
         command
     })
 }

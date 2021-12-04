@@ -98,7 +98,7 @@ struct TestFuzz {
     #[clap(
         long,
         about = "Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 \
-        if an error occurred; implies --no-ui, does not imply --run-until-crash or -- -V <seconds>"
+        if an error occurred; implies --no-ui, does not imply --run-until-crash or -- -V <SECONDS>"
     )]
     exit_code: bool,
     #[clap(
@@ -154,7 +154,11 @@ struct TestFuzz {
     resume: bool,
     #[clap(long, about = "Stop fuzzing once a crash is found")]
     run_until_crash: bool,
-    #[clap(long, about = "String that fuzz target's name must contain")]
+    #[clap(
+        long,
+        value_name = "TARGETNAME",
+        about = "DEPRECATED: Use just <TARGETNAME>"
+    )]
     target: Option<String>,
     #[clap(
         long,
@@ -165,11 +169,16 @@ struct TestFuzz {
     #[clap(
         long,
         about = "Number of milliseconds to consider a hang when fuzzing or replaying (equivalent \
-        to `-- -t <timeout>` when fuzzing)"
+        to -- -t <TIMEOUT> when fuzzing)"
     )]
     timeout: Option<u64>,
+    #[clap(
+        value_name = "TARGETNAME",
+        about = "String that fuzz target's name must contain"
+    )]
+    ztarget: Option<String>,
     #[clap(last = true, name = "args", about = "Arguments for the fuzzer")]
-    zargs: Vec<String>,
+    zzargs: Vec<String>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -215,6 +224,10 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         {
             opts.no_instrumentation = true;
         }
+        if let Some(target_name) = opts.target.take() {
+            eprintln!("`--target <TARGETNAME>` is deprecated. Use just `<TARGETNAME>`.");
+            opts.ztarget = opts.ztarget.or(Some(target_name));
+        }
         opts
     };
 
@@ -238,7 +251,7 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
 
     let mut executable_targets = executable_targets(&executables)?;
 
-    if let Some(pat) = &opts.target {
+    if let Some(pat) = &opts.ztarget {
         executable_targets = filter_executable_targets(&opts, pat, &executable_targets);
     }
 
@@ -627,7 +640,7 @@ fn executable_target(
 }
 
 fn match_message(opts: &TestFuzz) -> String {
-    opts.target.as_ref().map_or("".to_owned(), |pat| {
+    opts.ztarget.as_ref().map_or("".to_owned(), |pat| {
         format!(
             " {} `{}`",
             if opts.exact { "equal to" } else { "containing" },
@@ -1027,7 +1040,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
             format!("{}", timeout * NANOS_PER_MILLI),
         ]);
     }
-    args.extend(opts.zargs.clone());
+    args.extend(opts.zzargs.clone());
     args.extend(
         vec![
             "--",
@@ -1115,7 +1128,6 @@ mod tests {
             &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
             "--no-run",
             "--no-instrumentation",
-            "--target",
             "target",
         ])
         .unwrap();
