@@ -2,6 +2,7 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use std::{fs::read_to_string, path::Path};
 use tempfile::tempdir_in;
+use test_log::test;
 
 struct Test<'a> {
     expensive: bool,
