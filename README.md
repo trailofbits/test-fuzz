@@ -57,7 +57,7 @@ Fuzzing with `test-fuzz` is essentially three steps:\*
 
 3. **Fuzz your target** by running [`cargo test-fuzz`](#cargo-test-fuzz-command):
    ```
-   $ cargo test-fuzz --target foo
+   $ cargo test-fuzz foo
    ```
 
 \* Some additional steps may be necessary following a reboot. AFL requires the following commands to be run as root:
@@ -204,30 +204,31 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 2. Display target `foo`'s corpus
 
    ```
-   cargo test-fuzz --target foo --display-corpus
+   cargo test-fuzz foo --display-corpus
    ```
 
 3. Fuzz target `foo`
 
    ```
-   cargo test-fuzz --target foo
+   cargo test-fuzz foo
    ```
 
 4. Replay crashes found for target `foo`
    ```
-   cargo test-fuzz --target foo --replay-crashes
+   cargo test-fuzz foo --replay-crashes
    ```
 
 #### Usage
 
 ```
-    cargo test-fuzz [OPTIONS] [-- <args>...]
+    cargo test-fuzz [OPTIONS] [TARGETNAME] [-- <args>...]
 ```
 
 #### Args
 
 ```
-    <args>...    Arguments for the fuzzer
+    <TARGETNAME>    String that fuzz target's name must contain
+    <args>...       Arguments for the fuzzer
 ```
 
 #### Options
@@ -264,7 +265,7 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
         --exit-code
             Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 if an
-            error occurred; implies --no-ui, does not imply --run-until-crash or -- -V <seconds>
+            error occurred; implies --no-ui, does not imply --run-until-crash or -- -V <SECONDS>
 
         --features <FEATURES>...
             Space or comma separated list of features to activate
@@ -322,15 +323,15 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
         --run-until-crash
             Stop fuzzing once a crash is found
 
-        --target <TARGET>
-            String that fuzz target's name must contain
+        --target <TARGETNAME>
+            DEPRECATED: Use just <TARGETNAME>
 
         --test <NAME>
             Integration test containing fuzz target
 
         --timeout <TIMEOUT>
-            Number of milliseconds to consider a hang when fuzzing or replaying (equivalent to `--
-            -t <timeout>` when fuzzing)
+            Number of milliseconds to consider a hang when fuzzing or replaying (equivalent to -- -t
+            <TIMEOUT> when fuzzing)
 
     -V, --version
             Print version information
