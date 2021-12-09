@@ -15,7 +15,7 @@ hex = "0.4.3"
 num-traits = "0.2.14"
 serde = { version = "1.0.130", features = ["derive"] }
 serde_cbor = { version = "0.11.2", optional = true }
-sha-1 = "0.9.8"
+sha-1 = "0.10.0"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=1.0.4" }
 
