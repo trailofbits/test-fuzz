@@ -65,119 +65,119 @@ enum SubCommand {
 #[derive(Clone, Debug, Deserialize, Parser, Serialize)]
 #[clap(version = crate_version!())]
 struct TestFuzz {
-    #[clap(long, about = "Display backtraces")]
+    #[clap(long, help = "Display backtraces")]
     backtrace: bool,
     #[clap(
         long,
-        about = "Move one target's crashes, hangs, and work queue to its corpus; to consolidate \
+        help = "Move one target's crashes, hangs, and work queue to its corpus; to consolidate \
         all targets, use --consolidate-all"
     )]
     consolidate: bool,
-    #[clap(long, hidden = true)]
+    #[clap(long, hide = true)]
     consolidate_all: bool,
-    #[clap(long, about = "Display concretizations")]
+    #[clap(long, help = "Display concretizations")]
     display_concretizations: bool,
     #[clap(
         long,
-        about = "Display corpus using uninstrumented fuzz target; to display with instrumentation, \
+        help = "Display corpus using uninstrumented fuzz target; to display with instrumentation, \
         use --display-corpus-instrumented"
     )]
     display_corpus: bool,
-    #[clap(long, hidden = true)]
+    #[clap(long, hide = true)]
     display_corpus_instrumented: bool,
-    #[clap(long, about = "Display crashes")]
+    #[clap(long, help = "Display crashes")]
     display_crashes: bool,
-    #[clap(long, about = "Display hangs")]
+    #[clap(long, help = "Display hangs")]
     display_hangs: bool,
-    #[clap(long, about = "Display `impl` concretizations")]
+    #[clap(long, help = "Display `impl` concretizations")]
     display_impl_concretizations: bool,
-    #[clap(long, about = "Display work queue")]
+    #[clap(long, help = "Display work queue")]
     display_queue: bool,
-    #[clap(long, about = "Target name is an exact name rather than a substring")]
+    #[clap(long, help = "Target name is an exact name rather than a substring")]
     exact: bool,
     #[clap(
         long,
-        about = "Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 \
+        help = "Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 \
         if an error occurred; implies --no-ui, does not imply --run-until-crash or -- -V <SECONDS>"
     )]
     exit_code: bool,
     #[clap(
         long,
         multiple_occurrences = true,
-        about = "Space or comma separated list of features to activate"
+        help = "Space or comma separated list of features to activate"
     )]
     features: Vec<String>,
-    #[clap(long, about = "List fuzz targets")]
+    #[clap(long, help = "List fuzz targets")]
     list: bool,
-    #[clap(long, value_name = "PATH", about = "Path to Cargo.toml")]
+    #[clap(long, value_name = "PATH", help = "Path to Cargo.toml")]
     manifest_path: Option<String>,
-    #[clap(long, about = "Do not activate the `default` feature")]
+    #[clap(long, help = "Do not activate the `default` feature")]
     no_default_features: bool,
     #[clap(
         long,
-        about = "Compile without instrumentation (for testing build process)"
+        help = "Compile without instrumentation (for testing build process)"
     )]
     no_instrumentation: bool,
-    #[clap(long, about = "Compile, but don't fuzz")]
+    #[clap(long, help = "Compile, but don't fuzz")]
     no_run: bool,
-    #[clap(long, about = "Disable user interface")]
+    #[clap(long, help = "Disable user interface")]
     no_ui: bool,
-    #[clap(short, long, about = "Package containing fuzz target")]
+    #[clap(short, long, help = "Package containing fuzz target")]
     package: Option<String>,
-    #[clap(long, about = "Enable persistent mode fuzzing")]
+    #[clap(long, help = "Enable persistent mode fuzzing")]
     persistent: bool,
-    #[clap(long, about = "Pretty-print debug output when displaying/replaying")]
+    #[clap(long, help = "Pretty-print debug output when displaying/replaying")]
     pretty_print: bool,
     #[clap(
         long,
-        about = "Replay corpus using uninstrumented fuzz target; to replay with instrumentation, \
+        help = "Replay corpus using uninstrumented fuzz target; to replay with instrumentation, \
         use --replay-corpus-instrumented"
     )]
     replay_corpus: bool,
-    #[clap(long, hidden = true)]
+    #[clap(long, hide = true)]
     replay_corpus_instrumented: bool,
-    #[clap(long, about = "Replay crashes")]
+    #[clap(long, help = "Replay crashes")]
     replay_crashes: bool,
-    #[clap(long, about = "Replay hangs")]
+    #[clap(long, help = "Replay hangs")]
     replay_hangs: bool,
-    #[clap(long, about = "Replay work queue")]
+    #[clap(long, help = "Replay work queue")]
     replay_queue: bool,
     #[clap(
         long,
-        about = "Clear fuzzing data for one target, but leave corpus intact; to reset all \
+        help = "Clear fuzzing data for one target, but leave corpus intact; to reset all \
         targets, use --reset-all"
     )]
     reset: bool,
-    #[clap(long, hidden = true)]
+    #[clap(long, hide = true)]
     reset_all: bool,
-    #[clap(long, about = "Resume target's last fuzzing session")]
+    #[clap(long, help = "Resume target's last fuzzing session")]
     resume: bool,
-    #[clap(long, about = "Stop fuzzing once a crash is found")]
+    #[clap(long, help = "Stop fuzzing once a crash is found")]
     run_until_crash: bool,
     #[clap(
         long,
         value_name = "TARGETNAME",
-        about = "DEPRECATED: Use just <TARGETNAME>"
+        help = "DEPRECATED: Use just <TARGETNAME>"
     )]
     target: Option<String>,
     #[clap(
         long,
         value_name = "NAME",
-        about = "Integration test containing fuzz target"
+        help = "Integration test containing fuzz target"
     )]
     test: Option<String>,
     #[clap(
         long,
-        about = "Number of milliseconds to consider a hang when fuzzing or replaying (equivalent \
+        help = "Number of milliseconds to consider a hang when fuzzing or replaying (equivalent \
         to -- -t <TIMEOUT> when fuzzing)"
     )]
     timeout: Option<u64>,
     #[clap(
         value_name = "TARGETNAME",
-        about = "String that fuzz target's name must contain"
+        help = "String that fuzz target's name must contain"
     )]
     ztarget: Option<String>,
-    #[clap(last = true, name = "args", about = "Arguments for the fuzzer")]
+    #[clap(last = true, name = "args", help = "Arguments for the fuzzer")]
     zzargs: Vec<String>,
 }
 
