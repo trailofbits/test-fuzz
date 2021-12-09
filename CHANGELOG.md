@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0
+
+- Add `leak!` convenience macro ([cc74b10](https://github.com/trailofbits/test-fuzz/commit/cc74b10a645819dc3b983c03cc6a6f4c05a952a5))
+- Properly handle case of uninstalled `cargo-afl` ([436bc6e](https://github.com/trailofbits/test-fuzz/commit/436bc6e9e7b32ce1ffb3a05bce766b83b9ade329))
+- DEPRECATED: `--target` is no longer needed to name targets ([117580a](https://github.com/trailofbits/test-fuzz/commit/117580a19b70b7c0fd4e05e7ef8ffd4b7d4fe7b8))
+- BREAKING CHANGE: Retire builtin serialization/deserialization support for `Arc` in favor of `serde`'s ([31c41b2](https://github.com/trailofbits/test-fuzz/commit/31c41b249d266e9327e48353454289ce49d80e30))
+
 ## 1.0.4
 
 - Account for features and manifest path when obtaining Cargo metadata ([#64](https://github.com/trailofbits/test-fuzz/pull/64))
