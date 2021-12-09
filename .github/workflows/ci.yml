@@ -69,7 +69,7 @@ jobs:
         run: |
           rustup toolchain install nightly
           cargo install cargo-udeps || true
-          cargo +nightly udeps --workspace --tests
+          cargo clean && cargo +nightly udeps --workspace --tests
 
   test:
     runs-on: ubuntu-latest
