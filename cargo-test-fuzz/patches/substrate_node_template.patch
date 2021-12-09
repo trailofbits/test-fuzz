@@ -1,13 +1,10 @@
 diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
-index cfb7240..f78f1a6 100644
+index 8327e6d..4cb2078 100644
 --- a/pallets/template/Cargo.toml
 +++ b/pallets/template/Cargo.toml
-@@ -71,3 +71,9 @@ std = [
-     'frame-benchmarking/std',
+@@ -72,2 +72,8 @@ std = [
  ]
--try-runtime = ['frame-support/try-runtime']
-\ No newline at end of file
-+try-runtime = ['frame-support/try-runtime']
+ try-runtime = ['frame-support/try-runtime']
 +
 +[dependencies.test-fuzz]
 +path = "../../../../test-fuzz"
@@ -15,7 +12,7 @@ index cfb7240..f78f1a6 100644
 +[dependencies.serde]
 +version = '1.0.130'
 diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
-index 1859916..42dc6cd 100644
+index f5ce8c5..7ad2e63 100644
 --- a/pallets/template/src/lib.rs
 +++ b/pallets/template/src/lib.rs
 @@ -20,4 +20,30 @@ pub mod pallet {
