@@ -35,7 +35,9 @@ for (( I=0; I<$N; I++ )) {
 
     git clone "$URL" .
 
-    git apply "$DIR"/cargo-test-fuzz/patches/"$PATCH"
+    git apply --reject "$DIR"/cargo-test-fuzz/patches/"$PATCH" || true
+
+    find "$PWD" -name '*.rej'
 
     git diff --unified="$LINES_OF_CONTEXT" > "$DIR"/cargo-test-fuzz/patches/"$PATCH"
 

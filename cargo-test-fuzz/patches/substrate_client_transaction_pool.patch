@@ -1,19 +1,19 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index b3a7095fcb..5215544747 100644
+index 43a368145a..41e4d80850 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
 @@ -20,5 +20,5 @@ intervalier = "0.4.0"
  log = "0.4.8"
  parity-util-mem = { version = "0.10.2", default-features = false, features = ["primitive-types"] }
--parking_lot = "0.11.1"
+-parking_lot = "0.11.2"
 +parking_lot = { version = "0.11.1", features = ["serde"] }
  prometheus-endpoint = { package = "substrate-prometheus-endpoint", path = "../../utils/prometheus", version = "0.10.0-dev"}
  sc-client-api = { version = "4.0.0-dev", path = "../api" }
 @@ -31,7 +31,8 @@ sc-transaction-pool-api = { version = "4.0.0-dev", path = "./api" }
  sp-blockchain = { version = "4.0.0-dev", path = "../../primitives/blockchain" }
  sc-utils = { version = "4.0.0-dev", path = "../utils" }
--serde = { version = "1.0.126", features = ["derive"] }
-+serde = { version = "1.0.126", features = ["derive", "rc"] }
+-serde = { version = "1.0.132", features = ["derive"] }
++serde = { version = "1.0.132", features = ["derive", "rc"] }
  linked-hash-map = "0.5.4"
  retain_mut = "0.1.4"
 +test-fuzz = { path = "../../../../test-fuzz" }
@@ -342,7 +342,7 @@ index cf5d925975..4174dfc4a2 100644
  pub enum TransactionSource {
  	/// Transaction is already included in block.
 diff --git a/test-utils/runtime/src/lib.rs b/test-utils/runtime/src/lib.rs
-index 7b78880c2c..2b2c268dbf 100644
+index 03e39be324..f5058a8051 100644
 --- a/test-utils/runtime/src/lib.rs
 +++ b/test-utils/runtime/src/lib.rs
 @@ -179,4 +179,16 @@ impl serde::Serialize for Extrinsic {
@@ -437,7 +437,7 @@ index 7b78880c2c..2b2c268dbf 100644
 +			return Some(pallet_babe::Pallet::<Runtime>::crate_version());
  		}
  
-@@ -661,5 +674,5 @@ fn code_using_trie() -> u64 {
+@@ -658,5 +671,5 @@ fn code_using_trie() -> u64 {
  			let val: &[u8] = &v[i].1;
  			if !t.insert(key, val).is_ok() {
 -				return 101
