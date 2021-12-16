@@ -9,6 +9,10 @@ on:
   schedule:
     - cron: "0 3 * * 4"
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     runs-on: ubuntu-latest
