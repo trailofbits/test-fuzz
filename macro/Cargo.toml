@@ -16,7 +16,7 @@ proc-macro = true
 darling = "0.13.1"
 if_chain = "1.0.2"
 lazy_static = "1.4.0"
-proc-macro2 = "1.0.33"
+proc-macro2 = "1.0.34"
 quote = "1.0.10"
 subprocess = "0.2.8"
 syn = { version = "1.0.82", features = ["full", "parsing", "visit", "visit-mut"] }
