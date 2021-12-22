@@ -1123,7 +1123,6 @@ mod tests {
     #[test]
     fn build_no_instrumentation_with_target() {
         cargo_test_fuzz(&[
-            "--no-default-features",
             "--features",
             &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
             "--no-run",

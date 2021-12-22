@@ -423,7 +423,7 @@ The `test-fuzz` package currently supports the following features:
 
   The implementation of `auto_concretize` uses the unstable language feature [`proc_macro_span`](https://github.com/rust-lang/rust/issues/54725). So enabling `auto_concretize` requires that targets be built with a nightly compiler.
 
-- **Serde formats** - `test-fuzz` can serialize target arguments in multiple Serde formats. The following are the features used to select a format. Note that if a format other than the default is selected, then `default-feature = false` must be specified.
+- **Serde formats** - `test-fuzz` can serialize target arguments in multiple Serde formats. The following are the features used to select a format.
 
   - **`serde_bincode`** - [Bincode](https://github.com/bincode-org/bincode) (default)
 

@@ -31,7 +31,6 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
         &*MANIFEST_PATH,
         "--test",
         krate,
-        "--no-default-features",
         "--features",
         &serde_format_feature,
     ];
@@ -100,7 +99,6 @@ pub fn test_fuzz_all() -> Result<Command> {
         "test-fuzz",
         "--manifest-path",
         &*MANIFEST_PATH,
-        "--no-default-features",
         "--features",
         &serde_format_feature,
     ];

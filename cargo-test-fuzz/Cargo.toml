@@ -27,7 +27,7 @@ serde = { version = "1.0.132", features = ["derive"] }
 subprocess = "0.2.8"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=2.0.0" }
-test-fuzz = { path = "../test-fuzz", version = "=2.0.0", default-features = false }
+test-fuzz = { path = "../test-fuzz", version = "=2.0.0" }
 
 [dev-dependencies]
 assert_cmd = "2.0.2"
@@ -38,6 +38,3 @@ tempfile = "3.2.0"
 test-log = "0.2.8"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
-
-[features]
-default = ["test-fuzz/serde_bincode"]

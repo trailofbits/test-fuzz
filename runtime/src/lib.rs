@@ -21,7 +21,7 @@ pub use num_traits;
 
 pub mod traits;
 
-#[cfg(feature = "__serde_bincode")]
+#[cfg(any(serde_default, feature = "__serde_bincode"))]
 const BYTE_LIMIT: u64 = 1024 * 1024 * 1024;
 
 // smoelius: TryDebug, etc. use Nikolai Vazquez's trick from `impls`.
@@ -164,7 +164,7 @@ pub fn write_concretization<T>(args: &[&str]) {
 pub fn write_args<T: Serialize>(serde_format: SerdeFormat, args: &T) {
     let corpus = corpus_directory_from_args_type::<T>();
     match serde_format {
-        #[cfg(feature = "__serde_bincode")]
+        #[cfg(any(serde_default, feature = "__serde_bincode"))]
         SerdeFormat::Bincode => {
             use bincode::Options;
             let data = bincode::options()
@@ -193,7 +193,7 @@ pub fn write_data(dir: &Path, data: &[u8]) -> io::Result<()> {
 
 pub fn read_args<T: DeserializeOwned, R: Read>(serde_format: SerdeFormat, reader: R) -> Option<T> {
     match serde_format {
-        #[cfg(feature = "__serde_bincode")]
+        #[cfg(any(serde_default, feature = "__serde_bincode"))]
         SerdeFormat::Bincode => {
             use bincode::Options;
             bincode::options()

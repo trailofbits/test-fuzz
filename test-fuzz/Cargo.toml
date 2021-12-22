@@ -26,8 +26,10 @@ regex = "1.5.4"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
 
+# smoelius: A list of formats we might support can be found here:
+# https://github.com/djkoloski/rust_serialization_benchmark
+
 [features]
-default = ["serde_bincode"]
 auto_concretize = ["internal/__auto_concretize", "test-fuzz-macro/__auto_concretize"]
 serde_bincode = ["internal/__serde_bincode", "runtime/__serde_bincode", "test-fuzz-macro/__serde_bincode"]
 serde_cbor = ["internal/__serde_cbor", "runtime/__serde_cbor", "test-fuzz-macro/__serde_cbor"]
