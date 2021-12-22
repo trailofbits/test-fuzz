@@ -9,8 +9,14 @@ authors = ["Samuel E. Moelius III <sam@moeli.us>"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/trailofbits/test-fuzz"
 
+# smoelius: https://github.com/rust-lang/cargo/issues/1839
+# Because of the above issue, the crate for the default format (bincode) must be included regardless
+# of whether it is selected. A test-fuzz test (`link`) verifies that the crate's code is not linked
+# in when another format is selected.
+
 [dependencies]
-bincode = { version = "1.3.3", optional = true }
+bincode = { version = "1.3.3" }
+cbor4ii = { version = "0.2.2", features = ["serde1", "use_std"], optional = true }
 hex = "0.4.3"
 num-traits = "0.2.14"
 serde = { version = "1.0.132", features = ["derive"] }
@@ -20,5 +26,8 @@ sha-1 = "0.10.0"
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=2.0.0" }
 
 [features]
-__serde_bincode = ["bincode"]
+__serde_bincode = []
 __serde_cbor = ["serde_cbor"]
+
+[package.metadata.cargo-udeps.ignore]
+normal = ["bincode"]

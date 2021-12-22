@@ -4,7 +4,7 @@ use strum_macros::Display;
 
 #[derive(Copy, Clone, Debug, Display, Eq, PartialEq)]
 pub enum SerdeFormat {
-    #[cfg(feature = "__serde_bincode")]
+    #[cfg(any(serde_default, feature = "__serde_bincode"))]
     Bincode,
     #[cfg(feature = "__serde_cbor")]
     Cbor,
@@ -14,7 +14,7 @@ pub enum SerdeFormat {
 #[must_use]
 pub fn serde_format() -> SerdeFormat {
     let mut formats = vec![];
-    #[cfg(feature = "__serde_bincode")]
+    #[cfg(any(serde_default, feature = "__serde_bincode"))]
     formats.push(SerdeFormat::Bincode);
     #[cfg(feature = "__serde_cbor")]
     formats.push(SerdeFormat::Cbor);
@@ -30,7 +30,7 @@ impl SerdeFormat {
     #[must_use]
     pub fn as_feature(self) -> &'static str {
         match self {
-            #[cfg(feature = "__serde_bincode")]
+            #[cfg(any(serde_default, feature = "__serde_bincode"))]
             SerdeFormat::Bincode => "serde_bincode",
             #[cfg(feature = "__serde_cbor")]
             SerdeFormat::Cbor => "serde_cbor",
