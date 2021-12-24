@@ -8,6 +8,8 @@ pub enum SerdeFormat {
     Bincode,
     #[cfg(feature = "__serde_cbor")]
     Cbor,
+    #[cfg(feature = "__serde_cbor4ii")]
+    Cbor4ii,
 }
 
 #[allow(clippy::vec_init_then_push)]
@@ -18,6 +20,8 @@ pub fn serde_format() -> SerdeFormat {
     formats.push(SerdeFormat::Bincode);
     #[cfg(feature = "__serde_cbor")]
     formats.push(SerdeFormat::Cbor);
+    #[cfg(feature = "__serde_cbor4ii")]
+    formats.push(SerdeFormat::Cbor4ii);
     assert!(
         formats.len() <= 1,
         "Multiple serde formats selected: {:?}",
@@ -34,6 +38,8 @@ impl SerdeFormat {
             SerdeFormat::Bincode => "serde_bincode",
             #[cfg(feature = "__serde_cbor")]
             SerdeFormat::Cbor => "serde_cbor",
+            #[cfg(feature = "__serde_cbor4ii")]
+            SerdeFormat::Cbor4ii => "serde_cbor4ii",
         }
     }
 }

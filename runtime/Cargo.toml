@@ -28,6 +28,7 @@ internal = { path = "../internal", package = "test-fuzz-internal", version = "=2
 [features]
 __serde_bincode = []
 __serde_cbor = ["serde_cbor"]
+__serde_cbor4ii = ["cbor4ii"]
 
 [package.metadata.cargo-udeps.ignore]
 normal = ["bincode"]

@@ -80,7 +80,7 @@ jobs:
 
     strategy:
       matrix:
-        serde_format: [bincode, cbor]
+        serde_format: [bincode, cbor, cbor4ii]
         toolchain: [stable, nightly]
 
     steps:
