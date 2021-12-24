@@ -20,3 +20,4 @@ strum_macros = "0.23.1"
 __auto_concretize = []
 __serde_bincode = []
 __serde_cbor = []
+__serde_cbor4ii = []

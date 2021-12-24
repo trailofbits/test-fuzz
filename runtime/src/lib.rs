@@ -163,22 +163,25 @@ pub fn write_concretization<T>(args: &[&str]) {
 #[allow(unused_variables)]
 pub fn write_args<T: Serialize>(serde_format: SerdeFormat, args: &T) {
     let corpus = corpus_directory_from_args_type::<T>();
-    match serde_format {
+    let data = match serde_format {
         #[cfg(any(serde_default, feature = "__serde_bincode"))]
         SerdeFormat::Bincode => {
             use bincode::Options;
-            let data = bincode::options()
+            bincode::options()
                 .with_limit(BYTE_LIMIT)
                 .serialize(args)
-                .unwrap();
-            write_data(&corpus, &data).unwrap();
+                .unwrap()
         }
         #[cfg(feature = "__serde_cbor")]
-        SerdeFormat::Cbor => {
-            let data = serde_cbor::to_vec(args).unwrap();
-            write_data(&corpus, &data).unwrap();
+        SerdeFormat::Cbor => serde_cbor::to_vec(args).unwrap(),
+        #[cfg(feature = "__serde_cbor4ii")]
+        SerdeFormat::Cbor4ii => {
+            let mut data = Vec::new();
+            cbor4ii::serde::to_writer(&mut data, args).unwrap();
+            data
         }
     };
+    write_data(&corpus, &data).unwrap();
 }
 
 pub fn write_data(dir: &Path, data: &[u8]) -> io::Result<()> {
@@ -203,5 +206,10 @@ pub fn read_args<T: DeserializeOwned, R: Read>(serde_format: SerdeFormat, reader
         }
         #[cfg(feature = "__serde_cbor")]
         SerdeFormat::Cbor => serde_cbor::from_reader(reader).ok(),
+        #[cfg(feature = "__serde_cbor4ii")]
+        SerdeFormat::Cbor4ii => {
+            let reader = std::io::BufReader::new(reader);
+            cbor4ii::serde::from_reader(reader).ok()
+        }
     }
 }

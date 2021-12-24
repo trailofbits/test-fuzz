@@ -427,7 +427,9 @@ The `test-fuzz` package currently supports the following features:
 
   - **`serde_bincode`** - [Bincode](https://github.com/bincode-org/bincode) (default)
 
-  - **`serde_cbor`** - [Cbor](https://github.com/pyfisch/cbor)
+  - **`serde_cbor`** - [Serde CBOR](https://github.com/pyfisch/cbor)
+
+  - **`serde_cbor4ii`** - [CBOR 0x(4+4)9 0x49](https://github.com/quininer/cbor4ii)
 
 ## Auto-generated corpus files
 
