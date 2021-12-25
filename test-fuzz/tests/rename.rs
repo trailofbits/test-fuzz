@@ -1,16 +1,7 @@
 use assert_cmd::prelude::*;
-use lazy_static::lazy_static;
 use predicates::prelude::*;
-use std::{path::Path, process::Command};
-
-lazy_static! {
-    static ref MANIFEST_PATH: String = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
-        .join("examples")
-        .join("Cargo.toml")
-        .to_string_lossy()
-        .to_string();
-}
+use std::process::Command;
+use testing::examples::MANIFEST_PATH;
 
 #[test]
 fn rename() {
