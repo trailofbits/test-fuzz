@@ -992,8 +992,8 @@ fn args_from_autos(autos: &[Expr]) -> Expr {
         .collect();
     parse_quote! {{
         let lens = [ #(#lens),* ];
-        let max = if std::array::IntoIter::new(lens).min().unwrap_or(1) > 0 {
-            std::array::IntoIter::new(lens).max().unwrap_or(1)
+        let max = if lens.iter().copied().min().unwrap_or(1) > 0 {
+            lens.iter().copied().max().unwrap_or(1)
         } else {
             0
         };
