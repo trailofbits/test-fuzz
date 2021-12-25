@@ -9,7 +9,7 @@ use std::{io::BufReader, path::Path};
 use subprocess::{Exec, Redirection};
 
 lazy_static! {
-    static ref MANIFEST_PATH: String = Path::new(env!("CARGO_MANIFEST_DIR"))
+    pub static ref MANIFEST_PATH: String = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("examples")
         .join("Cargo.toml")
