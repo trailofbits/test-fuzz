@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+- It is no longer necessary to specify `default-feature = false` when selecting a Serde format. ([#81](https://github.com/trailofbits/test-fuzz/pull/81) and [#85](https://github.com/trailofbits/test-fuzz/pull/85))
+- Add [`cbor4ii`](https://github.com/quininer/cbor4ii) as a Serde format ([0518100](https://github.com/trailofbits/test-fuzz/commit/05181001f6bd9ee235174c1d63d24d9e7475e4b1))
+
 ## 2.0.0
 
 - Add `leak!` convenience macro ([cc74b10](https://github.com/trailofbits/test-fuzz/commit/cc74b10a645819dc3b983c03cc6a6f4c05a952a5))
