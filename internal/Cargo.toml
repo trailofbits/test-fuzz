@@ -13,7 +13,7 @@ repository = "https://github.com/trailofbits/test-fuzz"
 cargo_metadata = "0.14.1"
 proc-macro2 = "1.0.36"
 quote = "1.0.14"
-serde = "1.0.132"
+serde = "1.0.133"
 strum_macros = "0.23.1"
 
 [features]
