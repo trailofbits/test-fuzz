@@ -10,5 +10,5 @@ fi
 
 cargo license |
 while read X; do
-    echo "$X" | grep -w 'Apache\|ISC\|MIT\|N/A'
+    echo "$X" | grep -w 'Apache\|BSD-3-Clause\|ISC\|MIT\|N/A'
 done
