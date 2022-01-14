@@ -6,7 +6,7 @@ publish = false
 
 [dependencies]
 anyhow = "1.0.52"
-assert_cmd = "2.0.2"
+assert_cmd = "2.0.4"
 cargo_metadata = "0.14.1"
 if_chain = "1.0.2"
 lazy_static = "1.4.0"
