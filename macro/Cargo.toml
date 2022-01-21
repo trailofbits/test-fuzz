@@ -19,7 +19,7 @@ lazy_static = "1.4.0"
 proc-macro2 = "1.0.36"
 quote = "1.0.14"
 subprocess = "0.2.8"
-syn = { version = "1.0.85", features = ["full", "parsing", "visit", "visit-mut"] }
+syn = { version = "1.0.86", features = ["full", "parsing", "visit", "visit-mut"] }
 toolchain_find = "0.2.0"
 unzip-n = "0.1.2"
 
