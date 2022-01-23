@@ -1,5 +1,5 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index a98dfac620..9a298c4c2d 100644
+index 73ec7cfff7..53ff3c1456 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
 @@ -20,5 +20,5 @@ futures-timer = "3.0.2"
@@ -342,10 +342,10 @@ index 29c8b54231..c1b3516442 100644
  pub enum TransactionSource {
  	/// Transaction is already included in block.
 diff --git a/test-utils/runtime/src/lib.rs b/test-utils/runtime/src/lib.rs
-index b03998621b..c62beee33c 100644
+index 5c9dfeca0a..a2ead89189 100644
 --- a/test-utils/runtime/src/lib.rs
 +++ b/test-utils/runtime/src/lib.rs
-@@ -179,4 +179,16 @@ impl serde::Serialize for Extrinsic {
+@@ -177,4 +177,16 @@ impl serde::Serialize for Extrinsic {
  }
  
 +#[cfg(feature = "std")]
@@ -362,14 +362,14 @@ index b03998621b..c62beee33c 100644
 +
  impl BlindCheckable for Extrinsic {
  	type Checked = Self;
-@@ -185,5 +197,5 @@ impl BlindCheckable for Extrinsic {
+@@ -183,5 +195,5 @@ impl BlindCheckable for Extrinsic {
  		match self {
  			Extrinsic::AuthoritiesChange(new_auth) => Ok(Extrinsic::AuthoritiesChange(new_auth)),
 -			Extrinsic::Transfer { transfer, signature, exhaust_resources_when_not_first } =>
 +			Extrinsic::Transfer { transfer, signature, exhaust_resources_when_not_first } => {
  				if sp_runtime::verify_encoded_lazy(&signature, &transfer, &transfer.from) {
  					Ok(Extrinsic::Transfer {
-@@ -194,5 +206,6 @@ impl BlindCheckable for Extrinsic {
+@@ -192,5 +204,6 @@ impl BlindCheckable for Extrinsic {
  				} else {
  					Err(InvalidTransaction::BadProof.into())
 -				},
@@ -377,7 +377,7 @@ index b03998621b..c62beee33c 100644
 +			}
  			Extrinsic::IncludeData(v) => Ok(Extrinsic::IncludeData(v)),
  			Extrinsic::StorageChange(key, value) => Ok(Extrinsic::StorageChange(key, value)),
-@@ -499,11 +512,11 @@ impl frame_support::traits::PalletInfo for Runtime {
+@@ -497,11 +510,11 @@ impl frame_support::traits::PalletInfo for Runtime {
  		let type_id = sp_std::any::TypeId::of::<P>();
  		if type_id == sp_std::any::TypeId::of::<system::Pallet<Runtime>>() {
 -			return Some(0)
@@ -392,7 +392,7 @@ index b03998621b..c62beee33c 100644
 +			return Some(2);
  		}
  
-@@ -513,11 +526,11 @@ impl frame_support::traits::PalletInfo for Runtime {
+@@ -511,11 +524,11 @@ impl frame_support::traits::PalletInfo for Runtime {
  		let type_id = sp_std::any::TypeId::of::<P>();
  		if type_id == sp_std::any::TypeId::of::<system::Pallet<Runtime>>() {
 -			return Some("System")
@@ -407,7 +407,7 @@ index b03998621b..c62beee33c 100644
 +			return Some("Babe");
  		}
  
-@@ -527,11 +540,11 @@ impl frame_support::traits::PalletInfo for Runtime {
+@@ -525,11 +538,11 @@ impl frame_support::traits::PalletInfo for Runtime {
  		let type_id = sp_std::any::TypeId::of::<P>();
  		if type_id == sp_std::any::TypeId::of::<system::Pallet<Runtime>>() {
 -			return Some("system")
@@ -422,7 +422,7 @@ index b03998621b..c62beee33c 100644
 +			return Some("pallet_babe");
  		}
  
-@@ -542,11 +555,11 @@ impl frame_support::traits::PalletInfo for Runtime {
+@@ -540,11 +553,11 @@ impl frame_support::traits::PalletInfo for Runtime {
  		let type_id = sp_std::any::TypeId::of::<P>();
  		if type_id == sp_std::any::TypeId::of::<system::Pallet<Runtime>>() {
 -			return Some(system::Pallet::<Runtime>::crate_version())
@@ -437,10 +437,3 @@ index b03998621b..c62beee33c 100644
 +			return Some(pallet_babe::Pallet::<Runtime>::crate_version());
  		}
  
-@@ -658,5 +671,5 @@ fn code_using_trie() -> u64 {
- 			let val: &[u8] = &v[i].1;
- 			if !t.insert(key, val).is_ok() {
--				return 101
-+				return 101;
- 			}
- 		}

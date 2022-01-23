@@ -1,10 +1,10 @@
 diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
-index 8327e6d..4cb2078 100644
+index da92f0c..79aba87 100644
 --- a/pallets/template/Cargo.toml
 +++ b/pallets/template/Cargo.toml
-@@ -72,2 +72,8 @@ std = [
- ]
- try-runtime = ['frame-support/try-runtime']
+@@ -39,2 +39,8 @@ std = [
+ runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
+ try-runtime = ["frame-support/try-runtime"]
 +
 +[dependencies.test-fuzz]
 +path = "../../../../test-fuzz"
