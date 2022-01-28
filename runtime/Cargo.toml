@@ -16,10 +16,10 @@ repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
 bincode = "1.3.3"
-cbor4ii = { version = "0.2.5", features = ["serde1", "use_std"], optional = true }
+cbor4ii = { version = "0.2.6", features = ["serde1", "use_std"], optional = true }
 hex = "0.4.3"
 num-traits = "0.2.14"
-serde = { version = "1.0.133", features = ["derive"] }
+serde = { version = "1.0.136", features = ["derive"] }
 serde_cbor = { version = "0.11.2", optional = true }
 sha-1 = "0.10.0"
 
