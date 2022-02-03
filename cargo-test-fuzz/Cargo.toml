@@ -13,6 +13,9 @@ repository = "https://github.com/trailofbits/test-fuzz"
 name = "cargo-test-fuzz"
 path = "src/bin/cargo_test_fuzz.rs"
 
+[lib]
+doctest = false
+
 [dependencies]
 anyhow = "1.0.53"
 bitflags = "1.3.2"
