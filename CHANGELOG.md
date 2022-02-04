@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.2
+
+- Update afl requirement from =0.11.1 to =0.12.0 ([77a837d](https://github.com/trailofbits/test-fuzz/commit/77a837db9f92f921b58ad63fa3ee099c5e1d95ff))
+
 ## 2.0.1
 
 - It is no longer necessary to specify `default-feature = false` when selecting a Serde format. ([#81](https://github.com/trailofbits/test-fuzz/pull/81) and [#85](https://github.com/trailofbits/test-fuzz/pull/85))
