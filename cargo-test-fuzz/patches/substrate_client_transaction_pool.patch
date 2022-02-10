@@ -1,5 +1,5 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index 06fc8298f0..28229c3981 100644
+index 42172ce723..95b379bee2 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
 @@ -20,5 +20,5 @@ futures-timer = "3.0.2"
@@ -12,8 +12,8 @@ index 06fc8298f0..28229c3981 100644
 @@ -31,7 +31,8 @@ sc-transaction-pool-api = { version = "4.0.0-dev", path = "./api" }
  sp-blockchain = { version = "4.0.0-dev", path = "../../primitives/blockchain" }
  sc-utils = { version = "4.0.0-dev", path = "../utils" }
--serde = { version = "1.0.132", features = ["derive"] }
-+serde = { version = "1.0.132", features = ["derive", "rc"] }
+-serde = { version = "1.0.136", features = ["derive"] }
++serde = { version = "1.0.136", features = ["derive", "rc"] }
  linked-hash-map = "0.5.4"
  retain_mut = "0.1.4"
 +test-fuzz = { path = "../../../../test-fuzz" }
@@ -342,7 +342,7 @@ index 29c8b54231..c1b3516442 100644
  pub enum TransactionSource {
  	/// Transaction is already included in block.
 diff --git a/test-utils/runtime/src/lib.rs b/test-utils/runtime/src/lib.rs
-index 5c9dfeca0a..a2ead89189 100644
+index 861d95efb3..63cc0ba177 100644
 --- a/test-utils/runtime/src/lib.rs
 +++ b/test-utils/runtime/src/lib.rs
 @@ -177,4 +177,16 @@ impl serde::Serialize for Extrinsic {
