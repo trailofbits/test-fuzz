@@ -339,7 +339,7 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
 ### Convenience macros
 
-**Warning:** These macros excluded from semantic versioning and may be removed in future versions of `test-fuzz`.
+**Warning:** These macros are excluded from semantic versioning and may be removed in future versions of `test-fuzz`.
 
 - **`dont_care!`**
 
