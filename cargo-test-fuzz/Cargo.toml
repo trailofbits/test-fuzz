@@ -36,7 +36,7 @@ test-fuzz = { path = "../test-fuzz", version = "=2.0.2" }
 assert_cmd = "2.0.4"
 predicates = "2.1.1"
 regex = "1.5.4"
-rlimit = "0.6.2"
+rlimit = "0.7.0"
 tempfile = "3.3.0"
 test-log = "0.2.8"
 
