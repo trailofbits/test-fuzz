@@ -69,6 +69,14 @@ fn run_test(test: &Test) {
         .assert()
         .success();
 
+    // smoelius: Right now, Substrate's lockfile refers to `pin-project:0.4.27`, which is
+    // incompatible with `syn:1.0.84`.
+    Command::new("cargo")
+        .current_dir(tempdir.path())
+        .args(&["update"])
+        .assert()
+        .success();
+
     Command::new("cargo")
         .current_dir(tempdir.path())
         .args(&["test", "--package", test.package, "--", "--nocapture"])
