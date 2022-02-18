@@ -19,7 +19,7 @@ test-fuzz-macro = { path = "../macro", version = "=2.0.2" }
 
 [dev-dependencies]
 assert_cmd = "2.0.4"
-cargo_metadata = "0.14.1"
+cargo_metadata = "0.14.2"
 lazy_static = "1.4.0"
 predicates = "2.1.1"
 regex = "1.5.4"
