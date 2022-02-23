@@ -5,6 +5,8 @@ use std::fs::remove_dir_all;
 use test_log::test;
 use testing::examples;
 
+#[allow(unknown_lints)]
+#[allow(nonreentrant_function_in_test)]
 #[test]
 fn generic() {
     let impl_expected = ["generic::Bar", "generic::Foo"];
@@ -32,6 +34,8 @@ fn generic() {
     );
 }
 
+#[allow(unknown_lints)]
+#[allow(nonreentrant_function_in_test)]
 #[test]
 fn unserde() {
     let impl_expected = [""];
@@ -49,10 +53,15 @@ fn unserde() {
 fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected: &[&str]) {
     let impl_concretizations = impl_concretizations_directory_from_target(krate, target);
 
+    // smoelius: `corpus` is distinct for all tests. So there is no race here.
+    #[allow(unknown_lints)]
+    #[allow(nonreentrant_function_in_test)]
     remove_dir_all(&impl_concretizations).unwrap_or_default();
 
     let concretizations = concretizations_directory_from_target(krate, target);
 
+    #[allow(unknown_lints)]
+    #[allow(nonreentrant_function_in_test)]
     remove_dir_all(&concretizations).unwrap_or_default();
 
     examples::test(krate, test).unwrap().assert().success();

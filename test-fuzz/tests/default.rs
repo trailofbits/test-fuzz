@@ -2,11 +2,15 @@ use internal::dirs::corpus_directory_from_target;
 use std::fs::{read_dir, remove_dir_all};
 use testing::examples;
 
+#[allow(unknown_lints)]
+#[allow(nonreentrant_function_in_test)]
 #[test]
 fn no_default() {
     test("no_default", 0);
 }
 
+#[allow(unknown_lints)]
+#[allow(nonreentrant_function_in_test)]
 #[test]
 fn default() {
     test("default", 1);
@@ -15,6 +19,9 @@ fn default() {
 fn test(name: &str, n: usize) {
     let corpus = corpus_directory_from_target("default", &format!("{}::target", name));
 
+    // smoelius: `corpus` is distinct for all tests. So there is no race here.
+    #[allow(unknown_lints)]
+    #[allow(nonreentrant_function_in_test)]
     remove_dir_all(&corpus).unwrap_or_default();
 
     examples::test("default", &format!("{}::target_fuzz::auto_generate", name))

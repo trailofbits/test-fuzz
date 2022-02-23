@@ -6,11 +6,15 @@ use testing::{examples, retry};
 
 const TIMEOUT: &str = "60";
 
+#[allow(unknown_lints)]
+#[allow(nonreentrant_function_in_test)]
 #[test]
 fn fuzz_assert() {
     fuzz("assert", false);
 }
 
+#[allow(unknown_lints)]
+#[allow(nonreentrant_function_in_test)]
 #[test]
 fn fuzz_qwerty() {
     fuzz("qwerty", true);
@@ -19,6 +23,9 @@ fn fuzz_qwerty() {
 fn fuzz(krate: &str, persistent: bool) {
     let corpus = corpus_directory_from_target(krate, "target");
 
+    // smoelius: `corpus` is distinct for all tests. So there is no race here.
+    #[allow(unknown_lints)]
+    #[allow(nonreentrant_function_in_test)]
     remove_dir_all(&corpus).unwrap_or_default();
 
     examples::test(krate, "test").unwrap().assert().success();

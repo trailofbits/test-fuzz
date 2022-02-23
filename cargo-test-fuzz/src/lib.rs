@@ -1120,6 +1120,8 @@ mod tests {
     use super::cargo_test_fuzz as cargo;
     use anyhow::Result;
 
+    #[allow(unknown_lints)]
+    #[allow(nonreentrant_function_in_test)]
     #[test]
     fn build_no_instrumentation_with_target() {
         cargo_test_fuzz(&[

@@ -15,6 +15,8 @@ enum What {
     Hangs,
 }
 
+#[allow(unknown_lints)]
+#[allow(nonreentrant_function_in_test)]
 #[test]
 fn replay_crashes() {
     replay(
@@ -31,6 +33,8 @@ fn replay_crashes() {
     );
 }
 
+#[allow(unknown_lints)]
+#[allow(nonreentrant_function_in_test)]
 #[allow(clippy::trivial_regex)]
 #[test]
 fn replay_hangs() {
@@ -46,6 +50,9 @@ fn replay_hangs() {
 fn replay(krate: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {
     let corpus = corpus_directory_from_target(krate, target);
 
+    // smoelius: `corpus` is distinct for all tests. So there is no race here.
+    #[allow(unknown_lints)]
+    #[allow(nonreentrant_function_in_test)]
     remove_dir_all(&corpus).unwrap_or_default();
 
     examples::test(krate, "test").unwrap().assert().success();
