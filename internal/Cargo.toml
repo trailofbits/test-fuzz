@@ -14,7 +14,7 @@ cargo_metadata = "0.14.2"
 proc-macro2 = "1.0.36"
 quote = "1.0.15"
 serde = "1.0.136"
-strum_macros = "0.23.1"
+strum_macros = "0.24.0"
 
 [features]
 __auto_concretize = []
