@@ -1,12 +1,12 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index 42172ce723..95b379bee2 100644
+index a5d6d4e1bf..3ea881cd7a 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
 @@ -20,5 +20,5 @@ futures-timer = "3.0.2"
  log = "0.4.8"
- parity-util-mem = { version = "0.10.2", default-features = false, features = ["primitive-types"] }
--parking_lot = "0.11.2"
-+parking_lot = { version = "0.11.1", features = ["serde"] }
+ parity-util-mem = { version = "0.11.0", default-features = false, features = ["primitive-types"] }
+-parking_lot = "0.12.0"
++parking_lot = { version = "0.12.0", features = ["serde"] }
  prometheus-endpoint = { package = "substrate-prometheus-endpoint", path = "../../utils/prometheus", version = "0.10.0-dev"}
  sc-client-api = { version = "4.0.0-dev", path = "../api" }
 @@ -31,7 +31,8 @@ sc-transaction-pool-api = { version = "4.0.0-dev", path = "./api" }
