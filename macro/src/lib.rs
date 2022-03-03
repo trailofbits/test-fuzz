@@ -8,7 +8,7 @@ use lazy_static::lazy_static;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
-use std::{collections::BTreeMap, env::var, io::Write, str::FromStr};
+use std::{collections::BTreeMap, convert::TryFrom, env::var, io::Write, str::FromStr};
 use subprocess::{Exec, Redirection};
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated, token,
@@ -334,13 +334,31 @@ fn map_method_or_fn(
 
     let impl_concretization = opts_concretize_impl.as_ref().map(args_as_turbofish);
     let concretization = opts_concretize.as_ref().map(args_as_turbofish);
-    let combined_concretization =
+    let combined_concretization_base =
         combine_options(opts_concretize_impl, opts_concretize, |mut left, right| {
             left.extend(right);
             left
-        })
-        .as_ref()
-        .map(args_as_turbofish);
+        });
+    let combined_concretization = combined_concretization_base.as_ref().map(args_as_turbofish);
+    // smoelius: The macro generates code like this:
+    //  struct Ret(<Args as HasRetTy>::RetTy);
+    // If `Args` has lifetime parameters, this code won't compile. Insert `'static` for each
+    // parameter that is not filled.
+    let combined_concretization_with_dummy_lifetimes = {
+        let mut args = combined_concretization_base.unwrap_or_default();
+        let n_lifetime_params = combined_generics.lifetimes().count();
+        let n_lifetime_args = args
+            .iter()
+            .filter(|arg| matches!(arg, GenericArgument::Lifetime(..)))
+            .count();
+        #[allow(clippy::cast_possible_wrap)]
+        let n_missing_lifetime_args =
+            usize::try_from(n_lifetime_params as isize - n_lifetime_args as isize)
+                .expect("n_lifetime_params < n_lifetime_args");
+        let dummy_lifetime = GenericArgument::Lifetime(parse_quote! { 'static });
+        args.extend(std::iter::repeat(dummy_lifetime).take(n_missing_lifetime_args));
+        args_as_turbofish(&args)
+    };
 
     let self_ty_base = self_ty.as_ref().map(type_utils::type_base);
 
@@ -484,6 +502,9 @@ fn map_method_or_fn(
             eprintln!();
         }
     };
+    let args_ret_ty: Type = parse_quote! {
+        <Args #combined_concretization_with_dummy_lifetimes as HasRetTy>::RetTy
+    };
     let call: Expr = if receiver {
         let mut de_args = de_args.iter();
         let self_arg = de_args
@@ -520,14 +541,14 @@ fn map_method_or_fn(
         quote! {
             test_fuzz::afl::fuzz!(|data: &[u8]| {
                 let mut args = UsingReader::<_>::read_args #combined_concretization (data);
-                let ret: Option<<Args #combined_concretization as HasRetTy>::RetTy> = args.map(|mut args|
+                let ret: Option< #args_ret_ty > = args.map(|mut args|
                     #call_in_environment
                 );
             });
         }
         #[cfg(not(feature = "__persistent"))]
         quote! {
-            let ret: Option<<Args #combined_concretization as HasRetTy>::RetTy> = args.map(|mut args|
+            let ret: Option< #args_ret_ty > = args.map(|mut args|
                 #call_in_environment
             );
         }
@@ -536,11 +557,11 @@ fn map_method_or_fn(
         #[cfg(feature = "__persistent")]
         quote! {
             // smoelius: Suppress unused variable warning.
-            let _: Option<<Args #combined_concretization as HasRetTy>::RetTy> = None;
+            let _: Option< #args_ret_ty > = None;
         }
         #[cfg(not(feature = "__persistent"))]
         quote! {
-            struct Ret(<Args #combined_concretization as HasRetTy>::RetTy);
+            struct Ret( #args_ret_ty );
             impl std::fmt::Debug for Ret {
                 fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                     use test_fuzz::runtime::TryDebugFallback;
@@ -621,8 +642,8 @@ fn map_method_or_fn(
     // create such a test regardless. If say `only_concretizations` was specified, then give the
     // test an empty body.
     let (concretization_dependent_mod_items, entry_stmts) = if opts.only_concretizations
-        || (!generics.params.is_empty() && impl_concretization.is_none())
-        || (!sig.generics.params.is_empty() && concretization.is_none())
+        || (generics.type_params().next().is_some() && impl_concretization.is_none())
+        || (sig.generics.type_params().next().is_some() && concretization.is_none())
     {
         (quote! {}, quote! {})
     } else {
