@@ -123,6 +123,9 @@ jobs:
   test-uninstalled-cargo-afl:
     runs-on: ubuntu-latest
 
+    env:
+      RUSTUP_TOOLCHAIN: nightly
+
     steps:
       - uses: actions/checkout@v2
 
@@ -135,6 +138,9 @@ jobs:
   test-incompatible-cargo-afl:
     runs-on: ubuntu-latest
 
+    env:
+      RUSTUP_TOOLCHAIN: nightly
+
     steps:
       - uses: actions/checkout@v2
 
@@ -142,7 +148,7 @@ jobs:
         run: sudo apt-get install llvm
 
       - name: Install older afl
-        run: cargo install afl --version=0.8.0
+        run: cargo install afl --version=0.11.0
 
       - name: Test
         run: |
@@ -153,18 +159,21 @@ jobs:
   test-newer-afl:
     runs-on: ubuntu-latest
 
+    env:
+      RUSTUP_TOOLCHAIN: nightly
+
     steps:
       - uses: actions/checkout@v2
 
       - name: Install llvm
         run: sudo apt-get install llvm
 
-      - name: Install afl 0.10.0
-        run: cargo install afl --version=0.10.0
+      - name: Install afl 0.12.1
+        run: cargo install afl --version=0.12.1
 
-      - name: Require afl 0.10.1
+      - name: Require afl 0.12.2
         run: |
-          sed -i 's/afl = "[^"]*"/afl = "=0.10.1"/' test-fuzz/Cargo.toml
+          sed -i 's/afl = "[^"]*"/afl = "=0.12.2"/' test-fuzz/Cargo.toml
 
       - name: Test
         run: |
@@ -175,6 +184,9 @@ jobs:
 
   test-incompatible-test-fuzz:
     runs-on: ubuntu-latest
+
+    env:
+      RUSTUP_TOOLCHAIN: nightly
 
     steps:
       - uses: actions/checkout@v2
@@ -198,6 +210,9 @@ jobs:
 
   test-newer-test-fuzz:
     runs-on: ubuntu-latest
+
+    env:
+      RUSTUP_TOOLCHAIN: nightly
 
     steps:
       - uses: actions/checkout@v2
