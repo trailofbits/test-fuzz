@@ -37,6 +37,9 @@ jobs:
             sleep 1m
           done
 
+      - name: Create release notes
+        run: git log -p -1 CHANGELOG.md | grep '^+\($\|[^+]\)' | cut -c 2- | tee body.md
+
       - name: Create release
         uses: actions/create-release@v1
         env:
@@ -44,5 +47,6 @@ jobs:
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
+          body_path: body.md
           draft: false
           prerelease: ${{ contains(github.ref, 'pre') || contains(github.ref, 'rc') }}
