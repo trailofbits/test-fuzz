@@ -935,15 +935,18 @@ fn for_each_entry(
             }
             output = true;
         }
-        if let Some(status) = status {
-            if !flags.contains(Flags::RAW) && buffer.is_empty() {
-                println!("{:?}", status);
-            }
-            failure |= !status.success();
-        } else {
-            println!("Timeout");
-            timeout = true;
-        }
+        status.map_or_else(
+            || {
+                println!("Timeout");
+                timeout = true;
+            },
+            |status| {
+                if !flags.contains(Flags::RAW) && buffer.is_empty() {
+                    println!("{:?}", status);
+                }
+                failure |= !status.success();
+            },
+        );
 
         nonempty = true;
     }
