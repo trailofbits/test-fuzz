@@ -1026,22 +1026,25 @@ fn args_from_autos(autos: &[Expr]) -> Expr {
 
 fn log(tokens: &TokenStream2) {
     if log_enabled() {
-        if let Some(rustfmt) = find_installed_component("rustfmt") {
-            let mut popen = Exec::cmd(rustfmt)
-                .stdin(Redirection::Pipe)
-                .popen()
-                .expect("`popen` failed");
-            let mut stdin = popen
-                .stdin
-                .take()
-                .expect("Could not take `rustfmt`'s standard input");
-            write!(stdin, "{}", tokens).expect("Could not write to `rustfmt`'s standard input");
-            drop(stdin);
-            let status = popen.wait().expect("`wait` failed");
-            assert!(status.success(), "`rustfmt` failed");
-        } else {
-            println!("{}", tokens);
-        }
+        find_installed_component("rustfmt").map_or_else(
+            || {
+                println!("{}", tokens);
+            },
+            |rustfmt| {
+                let mut popen = Exec::cmd(rustfmt)
+                    .stdin(Redirection::Pipe)
+                    .popen()
+                    .expect("`popen` failed");
+                let mut stdin = popen
+                    .stdin
+                    .take()
+                    .expect("Could not take `rustfmt`'s standard input");
+                write!(stdin, "{}", tokens).expect("Could not write to `rustfmt`'s standard input");
+                drop(stdin);
+                let status = popen.wait().expect("`wait` failed");
+                assert!(status.success(), "`rustfmt` failed");
+            },
+        );
     }
 }
 

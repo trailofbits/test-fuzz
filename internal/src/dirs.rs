@@ -101,5 +101,5 @@ fn path_from_args_type<T>() -> String {
 
 #[must_use]
 fn path_from_target(krate: &str, target: &str) -> String {
-    krate.replace("-", "_") + "::" + target
+    krate.replace('-', "_") + "::" + target
 }
