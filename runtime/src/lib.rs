@@ -113,7 +113,7 @@ macro_rules! auto {
                 vec![T::min_value_add_one()]
             ),
         ];
-        std::array::IntoIter::new(xss).flatten()
+        IntoIterator::into_iter(xss).flatten()
     }};
 }
 
