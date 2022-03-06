@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.4
+
+- Eliminate use of `std::array::IntoIter::new` ([#106](https://github.com/trailofbits/test-fuzz/pull/106))
+
 ## 2.0.3
 
 - Handle structs with lifetime parameters ([#103](https://github.com/trailofbits/test-fuzz/pull/103))
