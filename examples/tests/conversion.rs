@@ -26,3 +26,37 @@ mod array {
         target(&[String::from("x")]);
     }
 }
+
+mod receiver {
+    use serde::{Deserialize, Serialize};
+
+    struct X;
+
+    #[derive(Clone, Deserialize, Serialize)]
+    struct Y;
+
+    impl From<&X> for Y {
+        fn from(_: &X) -> Self {
+            Y
+        }
+    }
+
+    impl test_fuzz::Into<&'static X> for Y {
+        fn into(self) -> &'static X {
+            Box::leak(Box::new(X))
+        }
+    }
+
+    // smoelius: FIXME
+    #[allow(clippy::use_self)]
+    #[test_fuzz::test_fuzz_impl]
+    impl X {
+        #[test_fuzz::test_fuzz(convert = "&X, Y")]
+        fn target(&self) {}
+    }
+
+    #[test]
+    fn test() {
+        X.target();
+    }
+}
