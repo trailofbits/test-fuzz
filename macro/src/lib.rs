@@ -14,7 +14,7 @@ use syn::{
     parse::Parser, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated, token,
     Attribute, AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericParam, Generics, Ident,
     ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Path, PathArguments, PathSegment,
-    ReturnType, Signature, Stmt, Type, TypePath, TypeReference, Visibility, WhereClause,
+    Receiver, ReturnType, Signature, Stmt, Type, TypePath, TypeReference, Visibility, WhereClause,
     WherePredicate,
 };
 use toolchain_find::find_installed_component;
@@ -511,7 +511,7 @@ fn map_method_or_fn(
             .next()
             .expect("Should have at least one deserialized argument");
         parse_quote! {
-            #self_arg . #target_ident #concretization (
+            ( #self_arg ). #target_ident #concretization (
                 #(#de_args),*
             )
         }
@@ -754,18 +754,24 @@ fn map_arg(
     let trait_path = trait_path.clone();
     move |(i, arg)| {
         let i = Literal::usize_unsuffixed(i);
-        match arg {
-            FnArg::Receiver(_) => (
-                true,
-                parse_quote! { #self_ty },
-                parse_quote! {
+        let (receiver, expr, ty, fmt) = match arg {
+            FnArg::Receiver(Receiver {
+                reference,
+                mutability,
+                ..
+            }) => {
+                let expr = parse_quote! { self };
+                let reference = reference
+                    .as_ref()
+                    .map(|(and, lifetime)| quote! { #and #lifetime });
+                let ty = parse_quote! { #reference #mutability #self_ty };
+                let fmt = parse_quote! {
                     test_fuzz::runtime::TryDebug(&self.#i).apply(&mut |value| {
                         debug_struct.field("self", value);
                     });
-                },
-                parse_quote! { self.clone() },
-                parse_quote! { args.#i },
-            ),
+                };
+                (true, expr, ty, fmt)
+            }
             FnArg::Typed(pat_ty) => {
                 let pat = &*pat_ty.pat;
                 let expr = parse_quote! { #pat };
@@ -778,10 +784,11 @@ fn map_arg(
                         debug_struct.field(#name, value);
                     });
                 };
-                let (ty, ser, de) = map_typed_arg(&conversions, &i, &expr, &ty);
-                (false, ty, fmt, ser, de)
+                (false, expr, ty, fmt)
             }
-        }
+        };
+        let (ty, ser, de) = map_typed_arg(&conversions, &i, &expr, &ty);
+        (receiver, ty, fmt, ser, de)
     }
 }
 
