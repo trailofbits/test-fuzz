@@ -13,9 +13,9 @@ use subprocess::{Exec, Redirection};
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated, token,
     Attribute, AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericParam, Generics, Ident,
-    ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, Path, PathArguments, PathSegment,
-    Receiver, ReturnType, Signature, Stmt, Type, TypePath, TypeReference, Visibility, WhereClause,
-    WherePredicate,
+    ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, PatType, Path, PathArguments, PathSegment,
+    Receiver, ReturnType, Signature, Stmt, Type, TypeParam, TypePath, TypeReference, TypeSlice,
+    Visibility, WhereClause, WherePredicate,
 };
 use toolchain_find::find_installed_component;
 use unzip_n::unzip_n;
@@ -772,11 +772,10 @@ fn map_arg(
                 };
                 (true, expr, ty, fmt)
             }
-            FnArg::Typed(pat_ty) => {
-                let pat = &*pat_ty.pat;
+            FnArg::Typed(PatType { pat, ty, .. }) => {
                 let expr = parse_quote! { #pat };
-                let ty = self_ty.as_ref().map_or(*pat_ty.ty.clone(), |self_ty| {
-                    type_utils::expand_self(self_ty, &trait_path, &*pat_ty.ty)
+                let ty = self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
+                    type_utils::expand_self(self_ty, &trait_path, ty)
                 });
                 let name = format!("{}", pat.to_token_stream());
                 let fmt = parse_quote! {
@@ -855,14 +854,11 @@ fn map_ref_arg(
                 (ty, ser, parse_quote! { & #mutability #de })
             }
         }
-        Type::Slice(ty) => {
-            let ty = &*ty.elem;
-            (
-                parse_quote! { Vec<#ty> },
-                parse_quote! { #expr.to_vec() },
-                parse_quote! { args.#i.as_slice() },
-            )
-        }
+        Type::Slice(TypeSlice { elem, .. }) => (
+            parse_quote! { Vec<#elem> },
+            parse_quote! { #expr.to_vec() },
+            parse_quote! { args.#i.as_slice() },
+        ),
         _ => {
             let expr = parse_quote! { (*#expr) };
             let (ty, ser, de) = map_typed_arg(conversions, i, &expr, ty);
@@ -983,8 +979,7 @@ fn type_generic_phantom_types(generics: &Generics) -> Vec<Type> {
         .params
         .iter()
         .filter_map(|param| {
-            if let GenericParam::Type(ty_param) = param {
-                let ident = &ty_param.ident;
+            if let GenericParam::Type(TypeParam { ident, .. }) = param {
                 Some(parse_quote! { std::marker::PhantomData< #ident > })
             } else {
                 None
