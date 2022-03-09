@@ -335,6 +335,9 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
     -V, --version
             Print version information
+
+        --verbose
+            Show build output when displaying/replaying
 ```
 
 ### Convenience macros

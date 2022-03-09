@@ -172,6 +172,8 @@ struct TestFuzz {
         to -- -t <TIMEOUT> when fuzzing)"
     )]
     timeout: Option<u64>,
+    #[clap(long, help = "Show build output when displaying/replaying")]
+    verbose: bool,
     #[clap(
         value_name = "TARGETNAME",
         help = "String that fuzz target's name must contain"
@@ -382,7 +384,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
                 .collect::<Vec<_>>(),
         )
         .stdout(Redirection::Pipe);
-    if quiet {
+    if quiet && !opts.verbose {
         exec = exec.stderr(NullFile);
     }
     debug!("{:?}", exec);
