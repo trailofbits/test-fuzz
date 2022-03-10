@@ -8,7 +8,13 @@ use lazy_static::lazy_static;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
-use std::{collections::BTreeMap, convert::TryFrom, env::var, io::Write, str::FromStr};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    convert::TryFrom,
+    env::var,
+    io::Write,
+    str::FromStr,
+};
 use subprocess::{Exec, Redirection};
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated, token,
@@ -30,7 +36,7 @@ use ord_type::OrdType;
 
 mod type_utils;
 
-type Conversions = BTreeMap<OrdType, Type>;
+type Conversions = BTreeMap<OrdType, (Type, bool)>;
 
 lazy_static! {
     pub(crate) static ref CARGO_CRATE_NAME: String =
@@ -233,7 +239,7 @@ fn map_method_or_fn(
         let mut iter = args.into_iter();
         let key = iter.next().expect("Should have two `convert` arguments");
         let value = iter.next().expect("Should have two `convert` arguments");
-        conversions.insert(OrdType(key), value);
+        conversions.insert(OrdType(key), (value, false));
     });
 
     #[allow(unused_mut, unused_variables)]
@@ -362,8 +368,26 @@ fn map_method_or_fn(
 
     let self_ty_base = self_ty.as_ref().map(type_utils::type_base);
 
-    let (receiver, mut arg_tys, fmt_args, mut ser_args, de_args) =
-        map_args(&conversions, self_ty, trait_path, sig.inputs.iter());
+    let (receiver, mut arg_tys, fmt_args, mut ser_args, de_args) = {
+        let mut candidates = BTreeSet::new();
+        let result = map_args(
+            &mut conversions,
+            &mut candidates,
+            self_ty,
+            trait_path,
+            sig.inputs.iter(),
+        );
+        for (from, (to, used)) in conversions {
+            assert!(
+                used,
+                r#"Conversion "{}" -> "{}" does not apply to the following cadidates: {:#?}"#,
+                from,
+                OrdType(to),
+                candidates
+            );
+        }
+        result
+    };
     arg_tys.extend_from_slice(&phantom_tys);
     ser_args.extend_from_slice(&phantoms);
     let pub_arg_tys: Vec<TokenStream2> = arg_tys.iter().map(|ty| quote! { pub #ty }).collect();
@@ -724,7 +748,8 @@ fn map_method_or_fn(
 }
 
 fn map_args<'a, I>(
-    conversions: &Conversions,
+    conversions: &mut Conversions,
+    candidates: &mut BTreeSet<OrdType>,
     self_ty: &Option<Type>,
     trait_path: &Option<Path>,
     inputs: I,
@@ -736,7 +761,7 @@ where
 
     let (receiver, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
         .enumerate()
-        .map(map_arg(conversions, self_ty, trait_path))
+        .map(map_arg(conversions, candidates, self_ty, trait_path))
         .unzip_n();
 
     let receiver = receiver.first().map_or(false, |&x| x);
@@ -744,12 +769,12 @@ where
     (receiver, ty, fmt, ser, de)
 }
 
-fn map_arg(
-    conversions: &Conversions,
+fn map_arg<'a>(
+    conversions: &'a mut Conversions,
+    candidates: &'a mut BTreeSet<OrdType>,
     self_ty: &Option<Type>,
     trait_path: &Option<Path>,
-) -> impl Fn((usize, &FnArg)) -> (bool, Type, Stmt, Expr, Expr) {
-    let conversions = conversions.clone();
+) -> impl FnMut((usize, &FnArg)) -> (bool, Type, Stmt, Expr, Expr) + 'a {
     let self_ty = self_ty.clone();
     let trait_path = trait_path.clone();
     move |(i, arg)| {
@@ -786,18 +811,21 @@ fn map_arg(
                 (false, expr, ty, fmt)
             }
         };
-        let (ty, ser, de) = map_typed_arg(&conversions, &i, &expr, &ty);
+        let (ty, ser, de) = map_typed_arg(conversions, candidates, &i, &expr, &ty);
         (receiver, ty, fmt, ser, de)
     }
 }
 
 fn map_typed_arg(
-    conversions: &Conversions,
+    conversions: &mut Conversions,
+    candidates: &mut BTreeSet<OrdType>,
     i: &Literal,
     expr: &Expr,
     ty: &Type,
 ) -> (Type, Expr, Expr) {
-    if let Some(arg_ty) = conversions.get(&OrdType(ty.clone())) {
+    candidates.insert(OrdType(ty.clone()));
+    if let Some((arg_ty, used)) = conversions.get_mut(&OrdType(ty.clone())) {
+        *used = true;
         return (
             parse_quote! { #arg_ty },
             parse_quote! { <#arg_ty as From::<#ty>>::from(#expr.clone()) },
@@ -805,8 +833,8 @@ fn map_typed_arg(
         );
     }
     match &ty {
-        Type::Path(path) => map_path_arg(conversions, i, expr, path),
-        Type::Reference(ty) => map_ref_arg(conversions, i, expr, ty),
+        Type::Path(path) => map_path_arg(conversions, candidates, i, expr, path),
+        Type::Reference(ty) => map_ref_arg(conversions, candidates, i, expr, ty),
         _ => (
             parse_quote! { #ty },
             parse_quote! { #expr.clone() },
@@ -816,7 +844,8 @@ fn map_typed_arg(
 }
 
 fn map_path_arg(
-    _conversions: &Conversions,
+    _conversions: &mut Conversions,
+    _candidates: &mut BTreeSet<OrdType>,
     i: &Literal,
     expr: &Expr,
     path: &TypePath,
@@ -829,7 +858,8 @@ fn map_path_arg(
 }
 
 fn map_ref_arg(
-    conversions: &Conversions,
+    conversions: &mut Conversions,
+    candidates: &mut BTreeSet<OrdType>,
     i: &Literal,
     expr: &Expr,
     ty: &TypeReference,
@@ -850,7 +880,7 @@ fn map_ref_arg(
                 )
             } else {
                 let expr = parse_quote! { (*#expr) };
-                let (ty, ser, de) = map_path_arg(conversions, i, &expr, path);
+                let (ty, ser, de) = map_path_arg(conversions, candidates, i, &expr, path);
                 (ty, ser, parse_quote! { & #mutability #de })
             }
         }
@@ -861,7 +891,7 @@ fn map_ref_arg(
         ),
         _ => {
             let expr = parse_quote! { (*#expr) };
-            let (ty, ser, de) = map_typed_arg(conversions, i, &expr, ty);
+            let (ty, ser, de) = map_typed_arg(conversions, candidates, i, &expr, ty);
             (ty, ser, parse_quote! { & #mutability #de })
         }
     }
