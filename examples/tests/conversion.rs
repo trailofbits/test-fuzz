@@ -60,3 +60,40 @@ mod receiver {
         X.target();
     }
 }
+
+#[cfg(feature = "__inapplicable_conversion")]
+mod inapplicable_conversion {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Clone)]
+    struct X;
+
+    #[derive(Clone)]
+    struct Y;
+
+    #[derive(Clone, Deserialize, Serialize)]
+    struct Z;
+
+    impl From<Y> for Z {
+        fn from(_: Y) -> Self {
+            Z
+        }
+    }
+
+    impl test_fuzz::Into<Y> for Z {
+        fn into(self) -> Y {
+            Y
+        }
+    }
+
+    #[test_fuzz::test_fuzz_impl]
+    impl X {
+        #[test_fuzz::test_fuzz(convert = "Y, Z")]
+        fn target(self) {}
+    }
+
+    #[test]
+    fn test() {
+        X.target();
+    }
+}
