@@ -22,7 +22,7 @@ assert_cmd = "2.0.4"
 cargo_metadata = "0.14.2"
 lazy_static = "1.4.0"
 predicates = "2.1.1"
-regex = "1.5.4"
+regex = "1.5.5"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
 
