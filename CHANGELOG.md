@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.5
+
+- Improvements and bug fixes related to the `convert` option ([#107](https://github.com/trailofbits/test-fuzz/pull/107), [#109](https://github.com/trailofbits/test-fuzz/pull/109), and [#111](https://github.com/trailofbits/test-fuzz/pull/111))
+- Add `--verbose` option ([#108](https://github.com/trailofbits/test-fuzz/pull/108))
+
 ## 2.0.4
 
 - Eliminate use of `std::array::IntoIter::new` ([#106](https://github.com/trailofbits/test-fuzz/pull/106))
