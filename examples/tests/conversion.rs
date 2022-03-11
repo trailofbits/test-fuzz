@@ -30,6 +30,7 @@ mod array {
 mod receiver {
     use serde::{Deserialize, Serialize};
 
+    #[derive(Clone)]
     struct X;
 
     #[derive(Clone, Deserialize, Serialize)]
@@ -52,12 +53,16 @@ mod receiver {
     #[test_fuzz::test_fuzz_impl]
     impl X {
         #[test_fuzz::test_fuzz(convert = "&X, Y")]
-        fn target(&self) {}
+        fn target_self(&self) {}
+
+        #[test_fuzz::test_fuzz(convert = "&X, Y")]
+        fn target_other(other: &X) {}
     }
 
     #[test]
     fn test() {
-        X.target();
+        X.target_self();
+        X::target_other(&X);
     }
 }
 
