@@ -54,8 +54,8 @@ fn versions_are_exact_and_match() {
     }
 }
 
-#[test]
-#[ignore]
+// #[test]
+#[allow(dead_code)]
 fn afl_version_is_exact() {
     for package in &METADATA.packages {
         for Dependency { name: dep, req, .. } in &package.dependencies {
