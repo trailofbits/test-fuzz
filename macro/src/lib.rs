@@ -800,7 +800,7 @@ fn map_typed_arg(
     if let Some(arg_ty) = conversions.get(&OrdType(ty.clone())) {
         return (
             parse_quote! { #arg_ty },
-            parse_quote! { <#arg_ty as From::<#ty>>::from(#expr.clone()) },
+            parse_quote! { <#arg_ty as From::<#ty>>::from(<#ty as Clone>::clone( & #expr )) },
             parse_quote! { <_ as test_fuzz::Into::<_>>::into(args.#i) },
         );
     }
