@@ -23,7 +23,7 @@ cargo_metadata = "0.14.2"
 clap = { version = "3.1.6", features = ["cargo", "derive"] }
 env_logger = "0.9.0"
 lazy_static = "1.4.0"
-log = "0.4.14"
+log = "0.4.16"
 remain = "0.2.2"
 semver = "1.0.6"
 serde = { version = "1.0.136", features = ["derive"] }
@@ -38,6 +38,6 @@ predicates = "2.1.1"
 regex = "1.5.5"
 rlimit = "0.7.0"
 tempfile = "3.3.0"
-test-log = "0.2.8"
+test-log = "0.2.10"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
