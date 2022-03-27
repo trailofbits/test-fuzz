@@ -10,7 +10,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
-afl = "0.12.2"
+afl = { version = "0.12.2", optional = true }
 serde = "1.0.136"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=2.0.5" }
@@ -34,7 +34,7 @@ auto_concretize = ["internal/__auto_concretize", "test-fuzz-macro/__auto_concret
 serde_bincode = ["internal/__serde_bincode", "runtime/__serde_bincode", "test-fuzz-macro/__serde_bincode"]
 serde_cbor = ["internal/__serde_cbor", "runtime/__serde_cbor", "test-fuzz-macro/__serde_cbor"]
 serde_cbor4ii = ["internal/__serde_cbor4ii", "runtime/__serde_cbor4ii", "test-fuzz-macro/__serde_cbor4ii"]
-__persistent = ["test-fuzz-macro/__persistent"]
+__persistent = ["afl", "test-fuzz-macro/__persistent"]
 
 [package.metadata.cargo-udeps.ignore]
 normal = ["afl"]
