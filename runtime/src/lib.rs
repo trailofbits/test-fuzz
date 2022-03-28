@@ -167,6 +167,12 @@ pub fn write_args<T: Serialize>(serde_format: SerdeFormat, args: &T) {
         #[cfg(any(serde_default, feature = "__serde_bincode"))]
         SerdeFormat::Bincode => {
             use bincode::Options;
+            // smoelius: From
+            // https://github.com/bincode-org/bincode/blob/c44b5e364e7084cdbabf9f94b63a3c7f32b8fb68/src/lib.rs#L102-L103 :
+            // /// **Warning:** the default configuration used by [`bincode::serialize`] is not
+            // /// the same as that used by the `DefaultOptions` struct. ...
+            // The point is that `bincode::serialize(..)` and `bincode::options().serialize(..)` use
+            // different encodings, even though the latter uses "default" options.
             bincode::options()
                 .with_limit(BYTE_LIMIT)
                 .serialize(args)
