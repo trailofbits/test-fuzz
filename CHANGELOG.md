@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.0
+
+- BREAKING CHANGE: Make `afl` an optional depdency enabled by `--persistent`. This is a breaking change in the following sense. If one tries to use `cargo-test-fuzz` 2.0.x with a target compiled with the new version of `test-fuzz`, one will recieve a `` ... does not depend on `afl` `` error. ([#114](https://github.com/trailofbits/test-fuzz/pull/114))
+
 ## 2.0.5
 
 - Improvements and bug fixes related to the `convert` option ([#107](https://github.com/trailofbits/test-fuzz/pull/107), [#109](https://github.com/trailofbits/test-fuzz/pull/109), and [#111](https://github.com/trailofbits/test-fuzz/pull/111))
