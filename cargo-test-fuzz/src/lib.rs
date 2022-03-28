@@ -457,7 +457,9 @@ fn metadata(opts: &TestFuzz) -> Result<Metadata> {
     if opts.no_default_features {
         command.features(CargoOpt::NoDefaultFeatures);
     }
-    command.features(CargoOpt::SomeFeatures(opts.features.clone()));
+    let mut features = opts.features.clone();
+    features.push("test-fuzz/__persistent".to_owned());
+    command.features(CargoOpt::SomeFeatures(features));
     if let Some(path) = &opts.manifest_path {
         command.manifest_path(path);
     }
