@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-macro"
-version = "3.0.0"
+version = "3.0.1"
 edition = "2018"
 
 description = "test-fuzz-macro"
@@ -23,7 +23,7 @@ syn = { version = "1.0.89", features = ["full", "parsing", "visit", "visit-mut"]
 toolchain_find = "0.2.0"
 unzip-n = "0.1.2"
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.0.0" }
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.0.1" }
 
 [features]
 __auto_concretize = []
