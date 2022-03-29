@@ -19,9 +19,9 @@ use subprocess::{Exec, Redirection};
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated, token,
     Attribute, AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericParam, Generics, Ident,
-    ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, PatType, Path, PathArguments, PathSegment,
-    Receiver, ReturnType, Signature, Stmt, Type, TypeParam, TypePath, TypeReference, TypeSlice,
-    Visibility, WhereClause, WherePredicate,
+    ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, LifetimeDef, PatType, Path, PathArguments,
+    PathSegment, Receiver, ReturnType, Signature, Stmt, Type, TypeParam, TypePath, TypeReference,
+    TypeSlice, Visibility, WhereClause, WherePredicate,
 };
 use toolchain_find::find_installed_component;
 use unzip_n::unzip_n;
@@ -1008,12 +1008,14 @@ fn type_generic_phantom_types(generics: &Generics) -> Vec<Type> {
     generics
         .params
         .iter()
-        .filter_map(|param| {
-            if let GenericParam::Type(TypeParam { ident, .. }) = param {
+        .filter_map(|param| match param {
+            GenericParam::Type(TypeParam { ident, .. }) => {
                 Some(parse_quote! { std::marker::PhantomData< #ident > })
-            } else {
-                None
             }
+            GenericParam::Lifetime(LifetimeDef { lifetime, .. }) => {
+                Some(parse_quote! { std::marker::PhantomData< & #lifetime () > })
+            }
+            GenericParam::Const(_) => None,
         })
         .collect()
 }

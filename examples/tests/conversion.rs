@@ -38,7 +38,7 @@ mod receiver {
 
     impl From<&X> for Y {
         fn from(_: &X) -> Self {
-            Y
+            Self
         }
     }
 
@@ -66,6 +66,36 @@ mod receiver {
     }
 }
 
+mod lifetime {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Clone)]
+    struct X<'a>(&'a bool);
+
+    #[derive(Clone, Deserialize, Serialize)]
+    struct Y(bool);
+
+    impl<'a> From<X<'a>> for Y {
+        fn from(x: X) -> Self {
+            Self(*x.0)
+        }
+    }
+
+    impl test_fuzz::Into<X<'static>> for Y {
+        fn into(self) -> X<'static> {
+            X(Box::leak(Box::new(self.0)))
+        }
+    }
+
+    #[test_fuzz::test_fuzz(convert = "X<'a>, Y")]
+    fn target<'a>(x: X<'a>) {}
+
+    #[test]
+    fn test() {
+        target(X(&false));
+    }
+}
+
 #[cfg(feature = "__inapplicable_conversion")]
 mod inapplicable_conversion {
     use serde::{Deserialize, Serialize};
@@ -81,7 +111,7 @@ mod inapplicable_conversion {
 
     impl From<Y> for Z {
         fn from(_: Y) -> Self {
-            Z
+            Self
         }
     }
 
