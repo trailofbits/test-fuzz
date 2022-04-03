@@ -10,33 +10,16 @@ fi
 
 # cargo clean
 
-TMP="$(mktemp)"
-
-cargo clippy --workspace --tests --message-format=json -- \
-    -W clippy::style \
-    -W clippy::complexity \
-    -W clippy::perf \
+cargo clippy --workspace --tests -- \
+    -D warnings \
     -W clippy::pedantic \
     -W clippy::nursery \
     -W clippy::cargo \
-|
-jq -r 'select(.reason == "compiler-message") | .message | select(.code != null) | .code | .code' |
-sort -u |
-while read X; do
-    if ! grep "^$X$" "$(dirname "$0")"/allow.txt >/dev/null; then
-        echo "$X"
-    fi
-done |
-cat > "$TMP"
-
-if [[ ! -s "$TMP" ]]; then
-    exit
-fi
-
-cargo clean
-
-cat "$TMP" |
-while read X; do
-    echo -D "$X"
-done |
-xargs cargo clippy --workspace --tests --
+    -A clippy::cargo-common-metadata \
+    -A clippy::cognitive-complexity \
+    -A clippy::if-not-else \
+    -A clippy::missing-const-for-fn \
+    -A clippy::missing-errors-doc \
+    -A clippy::missing-panics-doc \
+    -A clippy::struct-excessive-bools \
+    -A clippy::too-many-lines
