@@ -15,7 +15,7 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
    - [`test_fuzz` macro](#test_fuzz-macro)
    - [`test_fuzz_impl` macro](#test_fuzz_impl-macro)
    - [`cargo test-fuzz` command](#cargo-test-fuzz-command)
-   - [Convenience macros](#convenience-macros)
+   - [Convenience functions and macros](#convenience-functions-and-macros)
 4. [`test-fuzz` package features](#test-fuzz-package-features)
 5. [Auto-generated corpus files](#auto-generated-corpus-files)
 6. [Environment variables](#environment-variables)
@@ -340,9 +340,9 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
             Show build output when displaying/replaying
 ```
 
-### Convenience macros
+### Convenience functions and macros
 
-**Warning:** These macros are excluded from semantic versioning and may be removed in future versions of `test-fuzz`.
+**Warning:** These utilties are excluded from semantic versioning and may be removed in future versions of `test-fuzz`.
 
 - **`dont_care!`**
 
@@ -409,6 +409,29 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
       fn into(self) -> &'static $ty {
           Box::leak(Box::new(self.0))
       }
+  }
+  ```
+
+- **`serialize_ref` / `deserialize_ref`**
+
+  `serialize_ref` and `deserialize_ref` function similar to `leak!`, but they are meant to be used wth Serde's [`serialize_with`](https://serde.rs/field-attrs.html#serialize_with) and [`deserialize_with`](https://serde.rs/field-attrs.html#deserialize_with) field attributes (respectively).
+
+  ```rust
+  fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
+  where
+      S: serde::Serializer,
+      T: serde::Serialize,
+  {
+      <T as serde::Serialize>::serialize(*x, serializer)
+  }
+
+  fn deserialize_ref<'de, D, T>(deserializer: D) -> Result<&'static T, D::Error>
+  where
+      D: serde::Deserializer<'de>,
+      T: serde::de::DeserializeOwned + std::fmt::Debug,
+  {
+      let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
+      Ok(Box::leak(Box::new(x)))
   }
   ```
 
