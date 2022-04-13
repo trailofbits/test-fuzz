@@ -12,7 +12,7 @@ index 6612937..7f71e08 100644
 +[dependencies.serde]
 +version = '1.0.130'
 diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
-index f5ce8c5..7ad2e63 100644
+index f5ce8c5..4781b7d 100644
 --- a/pallets/template/src/lib.rs
 +++ b/pallets/template/src/lib.rs
 @@ -20,4 +20,30 @@ pub mod pallet {
@@ -66,10 +66,3 @@ index f5ce8c5..7ad2e63 100644
 +		)]
  		pub fn do_something(origin: OriginFor<T>, something: u32) -> DispatchResult {
  			// Check that the extrinsic was signed and get the signer.
-@@ -96,5 +132,5 @@ pub mod pallet {
- 					<Something<T>>::put(new);
- 					Ok(())
--				},
-+				}
- 			}
- 		}
