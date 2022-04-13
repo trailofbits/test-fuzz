@@ -34,7 +34,7 @@ fn display(krate: &str, test: &str, target: &str, stdout: &str, stderr: &str) {
 
     examples::test_fuzz(krate, target)
         .unwrap()
-        .args(&["--display-corpus"])
+        .args(&["--display=corpus"])
         .assert()
         .success()
         .stdout(predicate::str::contains(stdout))

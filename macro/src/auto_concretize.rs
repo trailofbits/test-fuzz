@@ -31,7 +31,7 @@ impl fmt::Display for Error {
             Kind::Multiple => write!(
                 f,
                 "tests produced multiple {}concretizations for {}. View them with \
-                `--display-{}concretizations --exact {}`.",
+                `--display={}concretizations --exact {}`.",
                 if self.impl_ { "impl " } else { "" },
                 self.target,
                 self.target,

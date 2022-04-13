@@ -1,3 +1,5 @@
+#![allow(deprecated)]
+
 use anyhow::Result;
 use cargo_test_fuzz::cargo_test_fuzz;
 use std::env;

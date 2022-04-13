@@ -92,7 +92,7 @@ fn run_test(test: &Test) {
     Command::cargo_bin("cargo-test-fuzz")
         .unwrap()
         .current_dir(tempdir.path())
-        .args(&["test-fuzz", "--package", test.package, "--display-corpus"])
+        .args(&["test-fuzz", "--package", test.package, "--display=corpus"])
         .assert()
         .success()
         .stdout(predicate::str::is_match(r#"(?m)^[[:xdigit:]]{40}:"#).unwrap());
@@ -100,7 +100,7 @@ fn run_test(test: &Test) {
     Command::cargo_bin("cargo-test-fuzz")
         .unwrap()
         .current_dir(tempdir.path())
-        .args(&["test-fuzz", "--package", test.package, "--replay-corpus"])
+        .args(&["test-fuzz", "--package", test.package, "--replay=corpus"])
         .assert()
         .success()
         .stdout(predicate::str::is_match(r#"(?m)^[[:xdigit:]]{40}: Ret\(Ok\(.*\)\)$"#).unwrap());
