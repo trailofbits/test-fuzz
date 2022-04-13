@@ -8,7 +8,8 @@ use cargo_metadata::{
     Artifact, ArtifactProfile, CargoOpt, Message, Metadata, MetadataCommand, Package, PackageId,
     Version,
 };
-use clap::{crate_version, Parser};
+use clap::{crate_version, ArgEnum};
+use heck::ToKebabCase;
 use internal::dirs::{
     concretizations_directory_from_target, corpus_directory_from_target,
     crashes_directory_from_target, hangs_directory_from_target,
@@ -30,7 +31,12 @@ use std::{
     sync::Mutex,
     time::Duration,
 };
+use strum_macros::Display;
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
+
+mod transition;
+#[allow(deprecated)]
+pub use transition::cargo_test_fuzz;
 
 const AUTO_GENERATED_SUFFIX: &str = "_fuzz::auto_generate";
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
@@ -48,138 +54,46 @@ bitflags! {
     }
 }
 
-#[derive(Debug, Parser)]
-#[clap(bin_name = "cargo")]
-struct Opts {
-    #[clap(subcommand)]
-    subcmd: SubCommand,
-}
-
-#[derive(Debug, Parser)]
-enum SubCommand {
-    TestFuzz(TestFuzz),
-}
-
-// smoelius: Wherever possible, try to reuse cargo test and libtest option names.
+#[derive(ArgEnum, Clone, Copy, Debug, Display, Deserialize, PartialEq, Eq, Serialize)]
 #[remain::sorted]
-#[derive(Clone, Debug, Deserialize, Parser, Serialize)]
-#[clap(version = crate_version!())]
+enum Object {
+    Concretizations,
+    Corpus,
+    CorpusInstrumented,
+    Crashes,
+    Hangs,
+    ImplConcretizations,
+    Queue,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[remain::sorted]
 struct TestFuzz {
-    #[clap(long, help = "Display backtraces")]
     backtrace: bool,
-    #[clap(
-        long,
-        help = "Move one target's crashes, hangs, and work queue to its corpus; to consolidate \
-        all targets, use --consolidate-all"
-    )]
     consolidate: bool,
-    #[clap(long, hide = true)]
     consolidate_all: bool,
-    #[clap(long, help = "Display concretizations")]
-    display_concretizations: bool,
-    #[clap(
-        long,
-        help = "Display corpus using uninstrumented fuzz target; to display with instrumentation, \
-        use --display-corpus-instrumented"
-    )]
-    display_corpus: bool,
-    #[clap(long, hide = true)]
-    display_corpus_instrumented: bool,
-    #[clap(long, help = "Display crashes")]
-    display_crashes: bool,
-    #[clap(long, help = "Display hangs")]
-    display_hangs: bool,
-    #[clap(long, help = "Display `impl` concretizations")]
-    display_impl_concretizations: bool,
-    #[clap(long, help = "Display work queue")]
-    display_queue: bool,
-    #[clap(long, help = "Target name is an exact name rather than a substring")]
+    display: Option<Object>,
     exact: bool,
-    #[clap(
-        long,
-        help = "Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 \
-        if an error occurred; implies --no-ui, does not imply --run-until-crash or -- -V <SECONDS>"
-    )]
     exit_code: bool,
-    #[clap(
-        long,
-        multiple_occurrences = true,
-        help = "Space or comma separated list of features to activate"
-    )]
     features: Vec<String>,
-    #[clap(long, help = "List fuzz targets")]
     list: bool,
-    #[clap(long, value_name = "PATH", help = "Path to Cargo.toml")]
     manifest_path: Option<String>,
-    #[clap(long, help = "Do not activate the `default` feature")]
     no_default_features: bool,
-    #[clap(
-        long,
-        help = "Compile without instrumentation (for testing build process)"
-    )]
     no_instrumentation: bool,
-    #[clap(long, help = "Compile, but don't fuzz")]
     no_run: bool,
-    #[clap(long, help = "Disable user interface")]
     no_ui: bool,
-    #[clap(short, long, help = "Package containing fuzz target")]
     package: Option<String>,
-    #[clap(long, help = "Enable persistent mode fuzzing")]
     persistent: bool,
-    #[clap(long, help = "Pretty-print debug output when displaying/replaying")]
     pretty_print: bool,
-    #[clap(
-        long,
-        help = "Replay corpus using uninstrumented fuzz target; to replay with instrumentation, \
-        use --replay-corpus-instrumented"
-    )]
-    replay_corpus: bool,
-    #[clap(long, hide = true)]
-    replay_corpus_instrumented: bool,
-    #[clap(long, help = "Replay crashes")]
-    replay_crashes: bool,
-    #[clap(long, help = "Replay hangs")]
-    replay_hangs: bool,
-    #[clap(long, help = "Replay work queue")]
-    replay_queue: bool,
-    #[clap(
-        long,
-        help = "Clear fuzzing data for one target, but leave corpus intact; to reset all \
-        targets, use --reset-all"
-    )]
+    replay: Option<Object>,
     reset: bool,
-    #[clap(long, hide = true)]
     reset_all: bool,
-    #[clap(long, help = "Resume target's last fuzzing session")]
     resume: bool,
-    #[clap(long, help = "Stop fuzzing once a crash is found")]
     run_until_crash: bool,
-    #[clap(
-        long,
-        value_name = "TARGETNAME",
-        help = "DEPRECATED: Use just <TARGETNAME>"
-    )]
-    target: Option<String>,
-    #[clap(
-        long,
-        value_name = "NAME",
-        help = "Integration test containing fuzz target"
-    )]
     test: Option<String>,
-    #[clap(
-        long,
-        help = "Number of milliseconds to consider a hang when fuzzing or replaying (equivalent \
-        to -- -t <TIMEOUT> when fuzzing)"
-    )]
     timeout: Option<u64>,
-    #[clap(long, help = "Show build output when displaying/replaying")]
     verbose: bool,
-    #[clap(
-        value_name = "TARGETNAME",
-        help = "String that fuzz target's name must contain"
-    )]
     ztarget: Option<String>,
-    #[clap(last = true, name = "args", help = "Arguments for the fuzzer")]
     zzargs: Vec<String>,
 }
 
@@ -212,42 +126,40 @@ impl Debug for Executable {
     }
 }
 
-pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
+fn run(opts: TestFuzz) -> Result<()> {
     let opts = {
-        let SubCommand::TestFuzz(mut opts) = Opts::parse_from(args).subcmd;
+        let mut opts = opts;
         if opts.exit_code {
             opts.no_ui = true;
         }
         if opts.list
-            || opts.display_corpus
-            || opts.replay_corpus
-            || opts.display_impl_concretizations
-            || opts.display_concretizations
+            || matches!(
+                opts.display,
+                Some(Object::Corpus | Object::ImplConcretizations | Object::Concretizations)
+            )
+            || opts.replay == Some(Object::Corpus)
         {
             opts.no_instrumentation = true;
-        }
-        if let Some(target_name) = opts.target.take() {
-            eprintln!("`--target <TARGETNAME>` is deprecated. Use just `<TARGETNAME>`.");
-            opts.ztarget = opts.ztarget.or(Some(target_name));
         }
         opts
     };
 
+    if let Some(object) = opts.replay {
+        ensure!(
+            !matches!(
+                object,
+                Object::ImplConcretizations | Object::Concretizations
+            ),
+            "`--replay {}` is invalid.",
+            object.to_string().to_kebab_case()
+        );
+    }
+
     cache_cargo_afl_version()?;
 
-    let display = opts.display_corpus
-        || opts.display_corpus_instrumented
-        || opts.display_crashes
-        || opts.display_hangs
-        || opts.display_queue
-        || opts.display_impl_concretizations
-        || opts.display_concretizations;
+    let display = opts.display.is_some();
 
-    let replay = opts.replay_corpus
-        || opts.replay_corpus_instrumented
-        || opts.replay_crashes
-        || opts.replay_hangs
-        || opts.replay_queue;
+    let replay = opts.replay.is_some();
 
     let executables = build(&opts, display || replay)?;
 
@@ -284,43 +196,16 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
         return reset(&opts, &executable_targets);
     }
 
-    let (flags, dir) = if opts.display_corpus
-        || opts.display_corpus_instrumented
-        || opts.replay_corpus
-        || opts.replay_corpus_instrumented
-    {
-        (
-            Flags::REQUIRES_CARGO_TEST,
-            corpus_directory_from_target(&executable.name, &target),
-        )
-    } else if opts.display_crashes || opts.replay_crashes {
-        (
-            Flags::empty(),
-            crashes_directory_from_target(&executable.name, &target),
-        )
-    } else if opts.display_hangs || opts.replay_hangs {
-        (
-            Flags::empty(),
-            hangs_directory_from_target(&executable.name, &target),
-        )
-    } else if opts.display_queue || opts.replay_queue {
-        (
-            Flags::empty(),
-            queue_directory_from_target(&executable.name, &target),
-        )
-    } else if opts.display_impl_concretizations {
-        (
-            Flags::REQUIRES_CARGO_TEST | Flags::RAW,
-            impl_concretizations_directory_from_target(&executable.name, &target),
-        )
-    } else if opts.display_concretizations {
-        (
-            Flags::REQUIRES_CARGO_TEST | Flags::RAW,
-            concretizations_directory_from_target(&executable.name, &target),
-        )
-    } else {
-        (Flags::empty(), PathBuf::default())
-    };
+    let (flags, dir) = None
+        .or_else(|| {
+            opts.display
+                .map(|object| flags_and_dir(object, &executable.name, &target))
+        })
+        .or_else(|| {
+            opts.replay
+                .map(|object| flags_and_dir(object, &executable.name, &target))
+        })
+        .unwrap_or((Flags::empty(), PathBuf::default()));
 
     if display || replay {
         return for_each_entry(&opts, &executable, &target, display, replay, flags, &dir);
@@ -823,6 +708,26 @@ fn reset(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> R
     Ok(())
 }
 
+fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) {
+    match object {
+        Object::Corpus | Object::CorpusInstrumented => (
+            Flags::REQUIRES_CARGO_TEST,
+            corpus_directory_from_target(krate, target),
+        ),
+        Object::Crashes => (Flags::empty(), crashes_directory_from_target(krate, target)),
+        Object::Hangs => (Flags::empty(), hangs_directory_from_target(krate, target)),
+        Object::Queue => (Flags::empty(), queue_directory_from_target(krate, target)),
+        Object::ImplConcretizations => (
+            Flags::REQUIRES_CARGO_TEST | Flags::RAW,
+            impl_concretizations_directory_from_target(krate, target),
+        ),
+        Object::Concretizations => (
+            Flags::REQUIRES_CARGO_TEST | Flags::RAW,
+            concretizations_directory_from_target(krate, target),
+        ),
+    }
+}
+
 fn for_each_entry(
     opts: &TestFuzz,
     executable: &Executable,
@@ -1122,6 +1027,7 @@ fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
+    #![allow(deprecated)]
     #![allow(clippy::unwrap_used)]
 
     use super::cargo_test_fuzz as cargo;

@@ -67,8 +67,8 @@ fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected:
     examples::test(krate, test).unwrap().assert().success();
 
     for (option, expected) in &[
-        ("--display-impl-concretizations", impl_expected),
-        ("--display-concretizations", expected),
+        ("--display=impl-concretizations", impl_expected),
+        ("--display=concretizations", expected),
     ] {
         let assert = &examples::test_fuzz(krate, target)
             .unwrap()

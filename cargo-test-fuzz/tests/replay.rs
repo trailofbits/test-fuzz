@@ -10,7 +10,8 @@ const MEMORY_LIMIT: u64 = 1024 * 1024 * 1024;
 
 const TIMEOUT: &str = "120";
 
-enum What {
+#[derive(Clone, Copy)]
+enum Object {
     Crashes,
     Hangs,
 }
@@ -28,7 +29,7 @@ fn replay_crashes() {
             "-m",
             &format!("{}", MEMORY_LIMIT / 1024),
         ],
-        &What::Crashes,
+        Object::Crashes,
         r"(?m)\bmemory allocation of \d{10,} bytes failed$",
     );
 }
@@ -42,12 +43,12 @@ fn replay_hangs() {
         "parse_duration",
         "parse",
         &["--persistent", "--", "-V", TIMEOUT],
-        &What::Hangs,
+        Object::Hangs,
         r"(?m)\bTimeout$",
     );
 }
 
-fn replay(krate: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) {
+fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &str) {
     let corpus = corpus_directory_from_target(krate, target);
 
     // smoelius: `corpus` is distinct for all tests. So there is no race here.
@@ -79,9 +80,9 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], what: &What, re: &str) 
         let mut command = examples::test_fuzz(krate, target).unwrap();
 
         command
-            .args(&[match what {
-                What::Crashes => "--replay-crashes",
-                What::Hangs => "--replay-hangs",
+            .args(&[match object {
+                Object::Crashes => "--replay=crashes",
+                Object::Hangs => "--replay=hangs",
             }])
             .assert()
             .success()
