@@ -1,0 +1,31 @@
+name: Dependabot Workflow
+
+on: [pull_request]
+
+jobs:
+  dependabot:
+    if: ${{ github.actor == 'dependabot[bot]' }}
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Check updated files
+        # smoelius: Dependabot should update only manifest and/or lockfiles. Hard error otherwise.
+        run: |
+          git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -m 1 .
+          ! git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -v '^Cargo\.\(lock\|toml\)$'
+
+      - uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.PR_GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '@dependabot merge'
+            })
