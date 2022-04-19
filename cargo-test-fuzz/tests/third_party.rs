@@ -19,6 +19,12 @@ const TESTS: &[Test] = &[
         package: "sc-transaction-pool",
     },
     Test {
+        expensive: true,
+        url: "https://github.com/solana-labs/solana",
+        patch: "solana.patch",
+        package: "solana-bpf-loader-program",
+    },
+    Test {
         expensive: false,
         url: "https://github.com/substrate-developer-hub/substrate-node-template",
         patch: "substrate_node_template.patch",
@@ -26,7 +32,7 @@ const TESTS: &[Test] = &[
     },
 ];
 
-// smoelius: This should match `scripts/update_substrate_patches.sh`.
+// smoelius: This should match `scripts/update_patches.sh`.
 const LINES_OF_CONTEXT: u32 = 2;
 
 #[test]

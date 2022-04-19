@@ -1,0 +1,360 @@
+diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
+index 19c6c440be..7b2c198a55 100644
+--- a/program-runtime/Cargo.toml
++++ b/program-runtime/Cargo.toml
+@@ -27,4 +27,6 @@ thiserror = "1.0"
+ enum-iterator = "0.7.0"
+ 
++test-fuzz = { path = "../../../test-fuzz" }
++
+ [dev-dependencies]
+ solana-logger = { path = "../logger", version = "=1.11.0" }
+diff --git a/program-runtime/src/accounts_data_meter.rs b/program-runtime/src/accounts_data_meter.rs
+index 2c3f926ea7..60f688a0f5 100644
+--- a/program-runtime/src/accounts_data_meter.rs
++++ b/program-runtime/src/accounts_data_meter.rs
+@@ -11,5 +11,5 @@ pub const MAX_ACCOUNTS_DATA_LEN: u64 = 128_000_000_000;
+ 
+ /// Meter and track the amount of available accounts data space
+-#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
++#[derive(Debug, Default, Clone, Copy, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+ pub struct AccountsDataMeter {
+     /// The maximum amount of accounts data space that can be used (in bytes)
+diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
+index dfacf2a57b..2333751f91 100644
+--- a/program-runtime/src/compute_budget.rs
++++ b/program-runtime/src/compute_budget.rs
+@@ -20,5 +20,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
+ }
+ 
+-#[derive(Clone, Copy, Debug, PartialEq)]
++#[derive(Clone, Copy, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+ pub struct ComputeBudget {
+     /// Number of compute units that an instruction is allowed.  Compute units
+diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
+index 9cfb3605b2..2eff830b7a 100644
+--- a/program-runtime/src/invoke_context.rs
++++ b/program-runtime/src/invoke_context.rs
+@@ -130,4 +130,5 @@ impl TransactionExecutor {
+ 
+ /// Compute meter
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
+ pub struct ComputeMeter {
+     remaining: u64,
+@@ -179,4 +180,5 @@ impl fmt::Display for AllocErr {
+ )]
+ #[allow(deprecated)]
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
+ pub struct StackFrame<'a> {
+     pub number_of_program_accounts: usize,
+@@ -205,6 +207,31 @@ impl<'a> StackFrame<'a> {
+     }
+ }
++pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
++where
++    S: serde::Serializer,
++    T: serde::Serialize,
++{
++    <T as serde::Serialize>::serialize(*x, serializer)
++}
++
++pub fn deserialize_ref_mut<'de, D, T>(deserializer: D) -> Result<&'static mut T, D::Error>
++where
++    D: serde::Deserializer<'de>,
++    T: serde::de::DeserializeOwned + std::fmt::Debug,
++{
++    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
++    Ok(Box::leak(Box::new(x)))
++}
+ 
++fn default_builtin_programs() -> &'static [BuiltinProgram] {
++    Box::leak(Box::new([]))
++}
++
++#[derive(serde::Deserialize, serde::Serialize)]
+ pub struct InvokeContext<'a> {
++    #[serde(
++        serialize_with = "serialize_ref_mut",
++        deserialize_with = "deserialize_ref_mut"
++    )]
+     pub transaction_context: &'a mut TransactionContext,
+     #[allow(deprecated)]
+@@ -212,4 +239,5 @@ pub struct InvokeContext<'a> {
+     rent: Rent,
+     pre_accounts: Vec<PreAccount>,
++    #[serde(skip, default = "default_builtin_programs")]
+     builtin_programs: &'a [BuiltinProgram],
+     pub sysvar_cache: Cow<'a, SysvarCache>,
+@@ -219,4 +247,5 @@ pub struct InvokeContext<'a> {
+     compute_meter: Rc<RefCell<ComputeMeter>>,
+     accounts_data_meter: AccountsDataMeter,
++    #[serde(skip)]
+     executors: Rc<RefCell<Executors>>,
+     pub feature_set: Arc<FeatureSet>,
+@@ -227,7 +256,27 @@ pub struct InvokeContext<'a> {
+     check_size: bool,
+     orig_account_lengths: Vec<Option<Vec<usize>>>,
++    #[serde(skip)]
+     allocators: Vec<Option<Rc<RefCell<dyn Alloc>>>>,
+ }
+ 
++impl<'a> Clone for InvokeContext<'a> {
++    fn clone(&self) -> Self {
++        Self {
++            transaction_context: Box::leak(Box::new(self.transaction_context.clone())),
++            invoke_stack: self.invoke_stack.clone(),
++            pre_accounts: self.pre_accounts.clone(),
++            sysvar_cache: self.sysvar_cache.clone(),
++            log_collector: self.log_collector.clone(),
++            compute_meter: self.compute_meter.clone(),
++            executors: self.executors.clone(),
++            feature_set: self.feature_set.clone(),
++            timings: self.timings.clone(),
++            orig_account_lengths: self.orig_account_lengths.clone(),
++            allocators: self.allocators.clone(),
++            ..*self
++        }
++    }
++}
++
+ impl<'a> InvokeContext<'a> {
+     #[allow(clippy::too_many_arguments)]
+diff --git a/program-runtime/src/log_collector.rs b/program-runtime/src/log_collector.rs
+index 57ac1cede6..aacc5cf434 100644
+--- a/program-runtime/src/log_collector.rs
++++ b/program-runtime/src/log_collector.rs
+@@ -4,4 +4,5 @@ use std::{cell::RefCell, rc::Rc};
+ const LOG_MESSAGES_BYTES_LIMIT: usize = 10 * 1000;
+ 
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
+ pub struct LogCollector {
+     messages: Vec<String>,
+diff --git a/program-runtime/src/pre_account.rs b/program-runtime/src/pre_account.rs
+index 842d5ae670..dc0aff5a26 100644
+--- a/program-runtime/src/pre_account.rs
++++ b/program-runtime/src/pre_account.rs
+@@ -14,5 +14,5 @@ use {
+ // The relevant state of an account before an Instruction executes, used
+ // to verify account integrity after the Instruction completes
+-#[derive(Clone, Debug, Default)]
++#[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
+ pub struct PreAccount {
+     key: Pubkey,
+diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
+index 9469b94ab2..62bad26076 100644
+--- a/program-runtime/src/sysvar_cache.rs
++++ b/program-runtime/src/sysvar_cache.rs
+@@ -24,5 +24,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for SysvarCache {
+ }
+ 
+-#[derive(Default, Clone, Debug)]
++#[derive(Default, Clone, Debug, serde::Deserialize, serde::Serialize)]
+ pub struct SysvarCache {
+     clock: Option<Arc<Clock>>,
+diff --git a/program-runtime/src/timings.rs b/program-runtime/src/timings.rs
+index 1a22706716..dfa790bfc9 100644
+--- a/program-runtime/src/timings.rs
++++ b/program-runtime/src/timings.rs
+@@ -9,5 +9,5 @@ use {
+ };
+ 
+-#[derive(Default, Debug, PartialEq)]
++#[derive(Default, Debug, PartialEq, Clone, serde::Deserialize, serde::Serialize)]
+ pub struct ProgramTiming {
+     pub accumulated_us: u64,
+@@ -157,5 +157,5 @@ impl ExecuteAccessoryTimings {
+ }
+ 
+-#[derive(Default, Debug, PartialEq)]
++#[derive(Default, Debug, PartialEq, Clone, serde::Deserialize, serde::Serialize)]
+ pub struct ExecuteDetailsTimings {
+     pub serialize_us: u64,
+diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
+index 6cafcf8faf..64673f0b7a 100644
+--- a/programs/bpf_loader/Cargo.toml
++++ b/programs/bpf_loader/Cargo.toml
+@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.25"
+ thiserror = "1.0"
+ 
++serde = "1.0.136"
++test-fuzz = { path = "../../../../test-fuzz" }
++
+ [dev-dependencies]
+ rand = "0.7.3"
+diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
+index 0a30af23f5..264c4ea98a 100644
+--- a/programs/bpf_loader/src/lib.rs
++++ b/programs/bpf_loader/src/lib.rs
+@@ -265,7 +265,8 @@ pub fn create_vm<'a, 'b>(
+ }
+ 
+-pub fn process_instruction(
++#[test_fuzz::test_fuzz]
++pub fn process_instruction<'a>(
+     first_instruction_account: usize,
+-    invoke_context: &mut InvokeContext,
++    invoke_context: &mut InvokeContext<'a>,
+ ) -> Result<(), InstructionError> {
+     process_instruction_common(first_instruction_account, invoke_context, false)
+diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
+index b0e4e4cbf7..bf0b8d29f1 100644
+--- a/sdk/Cargo.toml
++++ b/sdk/Cargo.toml
+@@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
+ rand_chacha = { version = "0.2.2", optional = true }
+ rustversion = "1.0.6"
+-serde = "1.0.136"
++serde = { version = "1.0.136", features = ["rc"] }
+ serde_bytes = "0.11"
+ serde_derive = "1.0.103"
+@@ -81,4 +81,6 @@ uriparse = "0.6.4"
+ wasm-bindgen = "0.2"
+ 
++test-fuzz = { path = "../../../test-fuzz" }
++
+ [target.'cfg(target_arch = "wasm32")'.dependencies]
+ js-sys = "0.3.55"
+diff --git a/sdk/src/account.rs b/sdk/src/account.rs
+index a480cfa0a6..3ad1ea1bf6 100644
+--- a/sdk/src/account.rs
++++ b/sdk/src/account.rs
+@@ -95,5 +95,5 @@ impl Serialize for AccountSharedData {
+ /// This will be the in-memory representation of the 'Account' struct data.
+ /// The existing 'Account' structure cannot easily change due to downstream projects.
+-#[derive(PartialEq, Eq, Clone, Default, AbiExample)]
++#[derive(PartialEq, Eq, Clone, Default, AbiExample, serde::Deserialize)]
+ pub struct AccountSharedData {
+     /// lamports in the account
+diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
+index b9b52245af..8ef20e996a 100644
+--- a/sdk/src/feature_set.rs
++++ b/sdk/src/feature_set.rs
+@@ -472,5 +472,5 @@ lazy_static! {
+ 
+ /// `FeatureSet` holds the set of currently active/inactive runtime features
+-#[derive(AbiExample, Debug, Clone)]
++#[derive(AbiExample, Debug, Clone, serde::Deserialize, serde::Serialize)]
+ pub struct FeatureSet {
+     pub active: HashMap<Pubkey, Slot>,
+diff --git a/sdk/src/keyed_account.rs b/sdk/src/keyed_account.rs
+index f21876ddaa..b4a0628ef4 100644
+--- a/sdk/src/keyed_account.rs
++++ b/sdk/src/keyed_account.rs
+@@ -17,10 +17,39 @@ use {
+ };
+ 
++fn serialize_account<'a, S>(
++    account: &&'a RefCell<AccountSharedData>,
++    serializer: S,
++) -> Result<S::Ok, S::Error>
++where
++    S: serde::Serializer,
++{
++    <RefCell<AccountSharedData> as serde::Serialize>::serialize(&*account, serializer)
++}
++
++fn deserialize_account<'de, D>(
++    deserializer: D,
++) -> Result<&'static RefCell<AccountSharedData>, D::Error>
++where
++    D: serde::Deserializer<'de>,
++{
++    let account =
++        <RefCell<AccountSharedData> as serde::de::Deserialize>::deserialize(deserializer)?;
++    Ok(Box::leak(Box::new(Rc::new(account))))
++}
++
+ #[repr(C)]
+-#[derive(Debug, Clone)]
++#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+ pub struct KeyedAccount<'a> {
+     is_signer: bool, // Transaction was signed by this account's key
+     is_writable: bool,
++    #[serde(
++        serialize_with = "test_fuzz::serialize_ref",
++        deserialize_with = "test_fuzz::deserialize_ref"
++    )]
+     key: &'a Pubkey,
++    #[serde(
++        serialize_with = "serialize_account",
++        deserialize_with = "deserialize_account"
++    )]
+     pub account: &'a RefCell<AccountSharedData>,
+ }
+diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
+index 90db0ed3c4..a2d05277c3 100644
+--- a/sdk/src/transaction_context.rs
++++ b/sdk/src/transaction_context.rs
+@@ -17,5 +17,5 @@ use {
+ pub type TransactionAccount = (Pubkey, AccountSharedData);
+ 
+-#[derive(Clone, Debug)]
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+ pub struct InstructionAccount {
+     pub index_in_transaction: usize,
+@@ -25,10 +25,57 @@ pub struct InstructionAccount {
+ }
+ 
++fn serialize_account_keys<'a, S>(
++    account_keys: &Pin<Box<[Pubkey]>>,
++    serializer: S,
++) -> Result<S::Ok, S::Error>
++where
++    S: serde::Serializer,
++{
++    <[Pubkey] as serde::Serialize>::serialize(&**account_keys, serializer)
++}
++
++fn deserialize_account_keys<'de, D>(deserializer: D) -> Result<Pin<Box<[Pubkey]>>, D::Error>
++where
++    D: serde::Deserializer<'de>,
++{
++    let account_keys = <Vec<Pubkey> as serde::de::Deserialize>::deserialize(deserializer)?;
++    Ok(Pin::new(account_keys.into_boxed_slice()))
++}
++
++fn serialize_accounts<'a, S>(
++    accounts: &Pin<Box<[RefCell<AccountSharedData>]>>,
++    serializer: S,
++) -> Result<S::Ok, S::Error>
++where
++    S: serde::Serializer,
++{
++    <[RefCell<AccountSharedData>] as serde::Serialize>::serialize(&**accounts, serializer)
++}
++
++fn deserialize_accounts<'de, D>(
++    deserializer: D,
++) -> Result<Pin<Box<[RefCell<AccountSharedData>]>>, D::Error>
++where
++    D: serde::Deserializer<'de>,
++{
++    let accounts =
++        <Vec<RefCell<AccountSharedData>> as serde::de::Deserialize>::deserialize(deserializer)?;
++    Ok(Pin::new(accounts.into_boxed_slice()))
++}
++
+ /// Loaded transaction shared between runtime and programs.
+ ///
+ /// This context is valid for the entire duration of a transaction being processed.
+-#[derive(Debug)]
++#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+ pub struct TransactionContext {
++    #[serde(
++        serialize_with = "serialize_account_keys",
++        deserialize_with = "deserialize_account_keys"
++    )]
+     account_keys: Pin<Box<[Pubkey]>>,
++    #[serde(
++        serialize_with = "serialize_accounts",
++        deserialize_with = "deserialize_accounts"
++    )]
+     accounts: Pin<Box<[RefCell<AccountSharedData>]>>,
+     instruction_context_capacity: usize,
+@@ -253,5 +300,5 @@ pub type InstructionTrace = Vec<Vec<InstructionContext>>;
+ ///
+ /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
+-#[derive(Debug, Clone)]
++#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+ pub struct InstructionContext {
+     nesting_level: usize,

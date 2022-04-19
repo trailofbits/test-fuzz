@@ -10,15 +10,17 @@ fi
 
 URLS=(
     https://github.com/paritytech/substrate
+    https://github.com/solana-labs/solana
     https://github.com/substrate-developer-hub/substrate-node-template
 )
 
 PATCHES=(
     substrate_client_transaction_pool.patch
+    solana.patch
     substrate_node_template.patch
 )
 
-# smoelius: This should match `cargo-test-fuzz/tests/substrate.rs`.
+# smoelius: This should match `cargo-test-fuzz/tests/third_party.rs`.
 LINES_OF_CONTEXT=2
 
 DIR="$(dirname "$(realpath "$0")")/.."
