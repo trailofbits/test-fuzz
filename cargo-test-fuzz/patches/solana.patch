@@ -226,10 +226,10 @@ index a480cfa0a6..3ad1ea1bf6 100644
  pub struct AccountSharedData {
      /// lamports in the account
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index b9b52245af..8ef20e996a 100644
+index 470aa3833e..9159428e18 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -472,5 +472,5 @@ lazy_static! {
+@@ -477,5 +477,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
