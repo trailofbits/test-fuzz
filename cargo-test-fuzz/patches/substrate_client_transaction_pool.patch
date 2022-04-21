@@ -1,9 +1,9 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index df309760b84..e5c68c444fe 100644
+index f651b202203..a38d4fc6357 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
 @@ -20,5 +20,5 @@ futures-timer = "3.0.2"
- log = "0.4.8"
+ log = "0.4.16"
  parity-util-mem = { version = "0.11.0", default-features = false, features = ["primitive-types"] }
 -parking_lot = "0.12.0"
 +parking_lot = { version = "0.12.0", features = ["serde"] }
