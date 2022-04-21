@@ -29,11 +29,11 @@ lazy_static! {
         .join("Cargo.toml")
         .to_string_lossy()
         .to_string();
-    static ref LOCK: Mutex<()> = Mutex::new(());
+    static ref MUTEX: Mutex<()> = Mutex::new(());
 }
 
 fn test(write: bool, n: usize) {
-    let _guard = LOCK.lock().unwrap();
+    let _lock = MUTEX.lock().unwrap();
 
     let corpus = corpus_directory_from_target("hello-world", "target");
 
