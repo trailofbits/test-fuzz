@@ -170,10 +170,10 @@ index 1a22706716..dfa790bfc9 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 6cafcf8faf..64673f0b7a 100644
+index 31269b53a8..bfd4575dd4 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.25"
+@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.26"
  thiserror = "1.0"
  
 +serde = "1.0.136"
@@ -182,10 +182,10 @@ index 6cafcf8faf..64673f0b7a 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 0a30af23f5..264c4ea98a 100644
+index 2e6383b9c7..6fa7d91a6d 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -265,7 +265,8 @@ pub fn create_vm<'a, 'b>(
+@@ -268,7 +268,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -226,10 +226,10 @@ index a480cfa0a6..3ad1ea1bf6 100644
  pub struct AccountSharedData {
      /// lamports in the account
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 470aa3833e..9159428e18 100644
+index ba829dc4d5..2f2cc3d876 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -477,5 +477,5 @@ lazy_static! {
+@@ -487,5 +487,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
