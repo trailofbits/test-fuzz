@@ -29,11 +29,11 @@ fn fuzz_bar_asdfgh() {
 
 #[cfg(test)]
 lazy_static! {
-    static ref LOCK: Mutex<()> = Mutex::new(());
+    static ref MUTEX: Mutex<()> = Mutex::new(());
 }
 
 fn fuzz(test: &str, code: i32) {
-    let _guard = LOCK.lock().unwrap();
+    let _lock = MUTEX.lock().unwrap();
 
     let corpus = corpus_directory_from_target("generic", "target");
 
