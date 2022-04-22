@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.2
+
+- Simplify command line interface ([#120](https://github.com/trailofbits/test-fuzz/pull/120))
+
 ## 3.0.1
 
 - Handle unused lifetime parameters ([#116](https://github.com/trailofbits/test-fuzz/pull/116))
