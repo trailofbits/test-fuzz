@@ -197,7 +197,7 @@ index 2e6383b9c7..6fa7d91a6d 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 5bd3783d70..3b85481d30 100644
+index 6c3df44a33..6c78780ec2 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
