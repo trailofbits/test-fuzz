@@ -44,11 +44,10 @@ jobs:
 
       - name: Create release
         uses: actions/create-release@v1
-        env:
-          github-token: ${{ secrets.RELEASE_GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
           body_path: body.md
           draft: false
           prerelease: ${{ contains(github.ref, 'pre') || contains(github.ref, 'rc') }}
+          token: ${{ secrets.RELEASE_GITHUB_TOKEN }}
