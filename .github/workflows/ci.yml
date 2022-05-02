@@ -9,6 +9,8 @@ on:
   schedule:
     - cron: "0 3 * * 4"
 
+  workflow_dispatch:
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
