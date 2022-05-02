@@ -32,22 +32,22 @@ index dfacf2a57b..2333751f91 100644
  pub struct ComputeBudget {
      /// Number of compute units that an instruction is allowed.  Compute units
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 9cfb3605b2..2eff830b7a 100644
+index 44debd277a..b941a06462 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -130,4 +130,5 @@ impl TransactionExecutor {
+@@ -131,4 +131,5 @@ impl TransactionExecutor {
  
  /// Compute meter
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct ComputeMeter {
      remaining: u64,
-@@ -179,4 +180,5 @@ impl fmt::Display for AllocErr {
+@@ -180,4 +181,5 @@ impl fmt::Display for AllocErr {
  )]
  #[allow(deprecated)]
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct StackFrame<'a> {
      pub number_of_program_accounts: usize,
-@@ -205,6 +207,31 @@ impl<'a> StackFrame<'a> {
+@@ -206,6 +208,31 @@ impl<'a> StackFrame<'a> {
      }
  }
 +pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
@@ -79,19 +79,19 @@ index 9cfb3605b2..2eff830b7a 100644
 +    )]
      pub transaction_context: &'a mut TransactionContext,
      #[allow(deprecated)]
-@@ -212,4 +239,5 @@ pub struct InvokeContext<'a> {
+@@ -213,4 +240,5 @@ pub struct InvokeContext<'a> {
      rent: Rent,
      pre_accounts: Vec<PreAccount>,
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -219,4 +247,5 @@ pub struct InvokeContext<'a> {
+@@ -220,4 +248,5 @@ pub struct InvokeContext<'a> {
      compute_meter: Rc<RefCell<ComputeMeter>>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      executors: Rc<RefCell<Executors>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -227,7 +256,27 @@ pub struct InvokeContext<'a> {
+@@ -228,7 +257,27 @@ pub struct InvokeContext<'a> {
      check_size: bool,
      orig_account_lengths: Vec<Option<Vec<usize>>>,
 +    #[serde(skip)]
@@ -170,10 +170,10 @@ index 1a22706716..dfa790bfc9 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 31269b53a8..bfd4575dd4 100644
+index e4f142110c..ac120b5201 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.26"
+@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.28"
  thiserror = "1.0"
  
 +serde = "1.0.136"
@@ -182,10 +182,10 @@ index 31269b53a8..bfd4575dd4 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 2e6383b9c7..6fa7d91a6d 100644
+index a6555bdd2b..f255b4e51b 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -268,7 +268,8 @@ pub fn create_vm<'a, 'b>(
+@@ -272,7 +272,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -197,7 +197,7 @@ index 2e6383b9c7..6fa7d91a6d 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 6c3df44a33..6c78780ec2 100644
+index 6321d99ca0..d0d579dafa 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
@@ -215,7 +215,7 @@ index 6c3df44a33..6c78780ec2 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.57"
 diff --git a/sdk/src/account.rs b/sdk/src/account.rs
-index a480cfa0a6..3ad1ea1bf6 100644
+index 9ba920cb4e..cfb4e82647 100644
 --- a/sdk/src/account.rs
 +++ b/sdk/src/account.rs
 @@ -95,5 +95,5 @@ impl Serialize for AccountSharedData {
@@ -226,10 +226,10 @@ index a480cfa0a6..3ad1ea1bf6 100644
  pub struct AccountSharedData {
      /// lamports in the account
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index ba829dc4d5..2f2cc3d876 100644
+index 696b5315ee..28941bfa84 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -487,5 +487,5 @@ lazy_static! {
+@@ -502,5 +502,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
