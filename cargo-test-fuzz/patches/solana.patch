@@ -21,7 +21,7 @@ index 2c3f926ea7..60f688a0f5 100644
  pub struct AccountsDataMeter {
      /// The maximum amount of accounts data space that can be used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index dfacf2a57b..2333751f91 100644
+index 733632ad3e..21aae220bd 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -20,5 +20,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -170,7 +170,7 @@ index 1a22706716..dfa790bfc9 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index e4f142110c..ac120b5201 100644
+index 3d7d8c570e..2cad50086a 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -23,4 +23,7 @@ solana_rbpf = "=0.2.28"
@@ -182,7 +182,7 @@ index e4f142110c..ac120b5201 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index a6555bdd2b..f255b4e51b 100644
+index 0f06e2f846..6688d7f200 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -272,7 +272,8 @@ pub fn create_vm<'a, 'b>(
@@ -197,14 +197,14 @@ index a6555bdd2b..f255b4e51b 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 6321d99ca0..d0d579dafa 100644
+index 751c30c66d..55e2578b08 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
  rand_chacha = { version = "0.2.2", optional = true }
  rustversion = "1.0.6"
--serde = "1.0.136"
-+serde = { version = "1.0.136", features = ["rc"] }
+-serde = "1.0.137"
++serde = { version = "1.0.137", features = ["rc"] }
  serde_bytes = "0.11"
  serde_derive = "1.0.103"
 @@ -81,4 +81,6 @@ uriparse = "0.6.4"
@@ -226,10 +226,10 @@ index 9ba920cb4e..cfb4e82647 100644
  pub struct AccountSharedData {
      /// lamports in the account
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 696b5315ee..28941bfa84 100644
+index 04187b29c5..3f8a3c034b 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -502,5 +502,5 @@ lazy_static! {
+@@ -512,5 +512,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
