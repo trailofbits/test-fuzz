@@ -1,0 +1,139 @@
+diff --git a/src/program-rust/Cargo.toml b/src/program-rust/Cargo.toml
+index ad27085..5678eb7 100644
+--- a/src/program-rust/Cargo.toml
++++ b/src/program-rust/Cargo.toml
+@@ -18,4 +18,9 @@ borsh-derive = "0.9.1"
+ solana-program = "~1.8.14"
+ 
++serde = "1.0"
++
++[target.'cfg(not(target_arch = "bpf"))'.dependencies]
++test-fuzz = "3.0.2"
++
+ [dev-dependencies]
+ solana-program-test = "~1.8.14"
+diff --git a/src/program-rust/src/lib.rs b/src/program-rust/src/lib.rs
+index 88714a8..026b733 100644
+--- a/src/program-rust/src/lib.rs
++++ b/src/program-rust/src/lib.rs
+@@ -19,8 +19,108 @@ pub struct GreetingAccount {
+ entrypoint!(process_instruction);
+ 
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
++struct AccountInfoElem {
++    key: Pubkey,
++    is_signer: bool,
++    is_writable: bool,
++    lamports: u64,
++    data: Vec<u8>,
++    owner: Pubkey,
++    executable: bool,
++    rent_epoch: solana_program::clock::Epoch,
++}
++
++impl<'a> From<AccountInfo<'a>> for AccountInfoElem {
++    fn from(account_info: AccountInfo<'a>) -> Self {
++        let AccountInfo {
++            key,
++            is_signer,
++            is_writable,
++            lamports,
++            data,
++            owner,
++            executable,
++            rent_epoch,
++        } = account_info;
++        let key = *key;
++        let lamports = **lamports.borrow();
++        let data = (*data.borrow()).to_vec();
++        let owner = *owner;
++        Self {
++            key,
++            is_signer,
++            is_writable,
++            lamports,
++            data,
++            owner,
++            executable,
++            rent_epoch,
++        }
++    }
++}
++
++#[cfg(not(target_arch = "bpf"))]
++impl<'a> test_fuzz::Into<AccountInfo<'a>> for AccountInfoElem {
++    fn into(self) -> AccountInfo<'a> {
++        let Self {
++            key,
++            is_signer,
++            is_writable,
++            lamports,
++            data,
++            owner,
++            executable,
++            rent_epoch,
++        } = self;
++        AccountInfo {
++            key: Box::leak(Box::new(key)),
++            is_signer,
++            is_writable,
++            lamports: std::rc::Rc::new(std::cell::RefCell::new(Box::leak(Box::new(lamports)))),
++            data: std::rc::Rc::new(std::cell::RefCell::new(
++                Box::leak(Box::new(data)).as_mut_slice(),
++            )),
++            owner: Box::leak(Box::new(owner)),
++            executable,
++            rent_epoch,
++        }
++    }
++}
++
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
++struct AccountInfoVec(Vec<AccountInfoElem>);
++
++impl<'a> From<&[AccountInfo<'a>]> for AccountInfoVec {
++    fn from(account_infos: &[AccountInfo<'a>]) -> Self {
++        Self(
++            account_infos
++                .iter()
++                .map(|account_info| AccountInfoElem::from(account_info.clone()))
++                .collect(),
++        )
++    }
++}
++
++#[cfg(not(target_arch = "bpf"))]
++impl<'a> test_fuzz::Into<&'static [AccountInfo<'a>]> for AccountInfoVec {
++    fn into(self) -> &'static [AccountInfo<'a>] {
++        Box::leak(Box::new(
++            self.0
++                .into_iter()
++                .map(test_fuzz::Into::into)
++                .collect::<Vec<_>>(),
++        ))
++        .as_slice()
++    }
++}
++
+ // Program entrypoint's implementation
+-pub fn process_instruction(
++#[cfg_attr(
++    not(target_arch = "bpf"),
++    test_fuzz::test_fuzz(convert = "&[AccountInfo<'a>], AccountInfoVec")
++)]
++pub fn process_instruction<'a>(
+     program_id: &Pubkey, // Public key of the account the hello world program was loaded into
+-    accounts: &[AccountInfo], // The account to say hello to
++    accounts: &[AccountInfo<'a>], // The account to say hello to
+     _instruction_data: &[u8], // Ignored, all helloworld instructions are hellos
+ ) -> ProgramResult {
+@@ -41,5 +141,8 @@ pub fn process_instruction(
+     // Increment and store the number of times the account has been greeted
+     let mut greeting_account = GreetingAccount::try_from_slice(&account.data.borrow())?;
+-    greeting_account.counter += 1;
++    greeting_account.counter = greeting_account
++        .counter
++        .checked_add(1)
++        .ok_or(ProgramError::InvalidAccountData)?;
+     greeting_account.serialize(&mut &mut account.data.borrow_mut()[..])?;
+ 
