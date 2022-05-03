@@ -10,12 +10,14 @@ fi
 
 URLS=(
     https://github.com/paritytech/substrate
+    https://github.com/solana-labs/example-helloworld
     https://github.com/solana-labs/solana
     https://github.com/substrate-developer-hub/substrate-node-template
 )
 
 PATCHES=(
     substrate_client_transaction_pool.patch
+    example-helloworld.patch
     solana.patch
     substrate_node_template.patch
 )
