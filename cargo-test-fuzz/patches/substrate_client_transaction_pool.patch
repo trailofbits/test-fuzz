@@ -1,9 +1,9 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index 5d4996a424f..96dfa474649 100644
+index cabde4b6307..4377581d53c 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
 @@ -20,7 +20,7 @@ linked-hash-map = "0.5.4"
- log = "0.4.16"
+ log = "0.4.17"
  parity-util-mem = { version = "0.11.0", default-features = false, features = ["primitive-types"] }
 -parking_lot = "0.12.0"
 +parking_lot = { version = "0.12.0", features = ["serde"] }
@@ -213,23 +213,13 @@ index 29c8b542319..edb08e09cb0 100644
  pub enum TransactionSource {
  	/// Transaction is already included in block.
 diff --git a/test-utils/runtime/src/lib.rs b/test-utils/runtime/src/lib.rs
-index 94325ae9c1a..0177733be49 100644
+index aef061d952a..ef85d41772a 100644
 --- a/test-utils/runtime/src/lib.rs
 +++ b/test-utils/runtime/src/lib.rs
-@@ -177,4 +177,16 @@ impl serde::Serialize for Extrinsic {
- }
- 
-+#[cfg(feature = "std")]
-+impl<'de> serde::Deserialize<'de> for Extrinsic {
-+	fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-+	where
-+		D: serde::Deserializer<'de>,
-+	{
-+		let mut bytes = <Vec<u8>>::deserialize(deserializer)?;
-+		let mut slice = &bytes[..];
-+		Self::decode(&mut slice).map_err(serde::de::Error::custom)
-+	}
-+}
-+
- impl BlindCheckable for Extrinsic {
- 	type Checked = Self;
+@@ -184,5 +184,5 @@ impl<'a> serde::Deserialize<'a> for Extrinsic {
+ 		D: serde::Deserializer<'a>,
+ 	{
+-		let r = sp_core::bytes::deserialize(de)?;
++		let r = <Vec<u8>>::deserialize(de)?;
+ 		Decode::decode(&mut &r[..])
+ 			.map_err(|e| serde::de::Error::custom(format!("Decode error: {}", e)))
