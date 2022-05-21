@@ -1,16 +1,16 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 19c6c440be..7b2c198a55 100644
+index 91936e4d22..fe1b081cdf 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -27,4 +27,6 @@ thiserror = "1.0"
- enum-iterator = "0.7.0"
+ enum-iterator = "0.8.1"
  
 +test-fuzz = { path = "../../../test-fuzz" }
 +
  [dev-dependencies]
  solana-logger = { path = "../logger", version = "=1.11.0" }
 diff --git a/program-runtime/src/accounts_data_meter.rs b/program-runtime/src/accounts_data_meter.rs
-index 2c3f926ea7..60f688a0f5 100644
+index 244ce9b118..27cd88e8b2 100644
 --- a/program-runtime/src/accounts_data_meter.rs
 +++ b/program-runtime/src/accounts_data_meter.rs
 @@ -11,5 +11,5 @@ pub const MAX_ACCOUNTS_DATA_LEN: u64 = 128_000_000_000;
@@ -21,18 +21,18 @@ index 2c3f926ea7..60f688a0f5 100644
  pub struct AccountsDataMeter {
      /// The maximum amount of accounts data space that can be used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 733632ad3e..21aae220bd 100644
+index 0adbc64db7..5174f357cb 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
-@@ -20,5 +20,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
+@@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
  }
  
--#[derive(Clone, Copy, Debug, PartialEq)]
-+#[derive(Clone, Copy, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
++#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
  pub struct ComputeBudget {
-     /// Number of compute units that an instruction is allowed.  Compute units
+     /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 44debd277a..b941a06462 100644
+index 4581ba4f80..086e74508e 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -131,4 +131,5 @@ impl TransactionExecutor {
@@ -47,9 +47,33 @@ index 44debd277a..b941a06462 100644
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct StackFrame<'a> {
      pub number_of_program_accounts: usize,
-@@ -206,6 +208,31 @@ impl<'a> StackFrame<'a> {
-     }
+@@ -207,12 +209,55 @@ impl<'a> StackFrame<'a> {
  }
+ 
++struct DummyAllocator;
++
++impl Alloc for DummyAllocator {
++    fn alloc(&mut self, _layout: Layout) -> Result<u64, AllocErr> {
++        std::process::exit(0);
++    }
++    fn dealloc(&mut self, _addr: u64, _layout: Layout) {
++        std::process::exit(0);
++    }
++}
++
++fn dummy_allocator() -> Rc<RefCell<dyn Alloc>> {
++    Rc::new(RefCell::new(DummyAllocator))
++}
++
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
+ struct SyscallContext {
+     check_aligned: bool,
+     check_size: bool,
+     orig_account_lengths: Vec<usize>,
++    #[serde(skip, default = "dummy_allocator")]
+     allocator: Rc<RefCell<dyn Alloc>>,
+ }
+ 
 +pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
 +where
 +    S: serde::Serializer,
@@ -66,7 +90,7 @@ index 44debd277a..b941a06462 100644
 +    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
 +    Ok(Box::leak(Box::new(x)))
 +}
- 
++
 +fn default_builtin_programs() -> &'static [BuiltinProgram] {
 +    Box::leak(Box::new([]))
 +}
@@ -79,23 +103,19 @@ index 44debd277a..b941a06462 100644
 +    )]
      pub transaction_context: &'a mut TransactionContext,
      #[allow(deprecated)]
-@@ -213,4 +240,5 @@ pub struct InvokeContext<'a> {
+@@ -220,4 +265,5 @@ pub struct InvokeContext<'a> {
      rent: Rent,
      pre_accounts: Vec<PreAccount>,
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -220,4 +248,5 @@ pub struct InvokeContext<'a> {
+@@ -227,4 +273,5 @@ pub struct InvokeContext<'a> {
      compute_meter: Rc<RefCell<ComputeMeter>>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      executors: Rc<RefCell<Executors>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -228,7 +257,27 @@ pub struct InvokeContext<'a> {
-     check_size: bool,
-     orig_account_lengths: Vec<Option<Vec<usize>>>,
-+    #[serde(skip)]
-     allocators: Vec<Option<Rc<RefCell<dyn Alloc>>>>,
+@@ -235,4 +282,22 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -110,8 +130,7 @@ index 44debd277a..b941a06462 100644
 +            executors: self.executors.clone(),
 +            feature_set: self.feature_set.clone(),
 +            timings: self.timings.clone(),
-+            orig_account_lengths: self.orig_account_lengths.clone(),
-+            allocators: self.allocators.clone(),
++            syscall_context: self.syscall_context.clone(),
 +            ..*self
 +        }
 +    }
@@ -152,28 +171,28 @@ index 9469b94ab2..62bad26076 100644
  pub struct SysvarCache {
      clock: Option<Arc<Clock>>,
 diff --git a/program-runtime/src/timings.rs b/program-runtime/src/timings.rs
-index 1a22706716..dfa790bfc9 100644
+index f342b9d5ca..83a700ad77 100644
 --- a/program-runtime/src/timings.rs
 +++ b/program-runtime/src/timings.rs
 @@ -9,5 +9,5 @@ use {
  };
  
--#[derive(Default, Debug, PartialEq)]
-+#[derive(Default, Debug, PartialEq, Clone, serde::Deserialize, serde::Serialize)]
+-#[derive(Default, Debug, PartialEq, Eq)]
++#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
  pub struct ProgramTiming {
      pub accumulated_us: u64,
-@@ -157,5 +157,5 @@ impl ExecuteAccessoryTimings {
+@@ -154,5 +154,5 @@ impl ExecuteAccessoryTimings {
  }
  
--#[derive(Default, Debug, PartialEq)]
-+#[derive(Default, Debug, PartialEq, Clone, serde::Deserialize, serde::Serialize)]
+-#[derive(Default, Debug, PartialEq, Eq)]
++#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 3d7d8c570e..2cad50086a 100644
+index f517009d6f..9ddafeb401 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.28"
+@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.29"
  thiserror = "1.0"
  
 +serde = "1.0"
@@ -182,10 +201,10 @@ index 3d7d8c570e..2cad50086a 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 0f06e2f846..6688d7f200 100644
+index c2f02b3157..77f9196511 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -272,7 +272,8 @@ pub fn create_vm<'a, 'b>(
+@@ -276,7 +276,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -226,10 +245,10 @@ index 9ba920cb4e..cfb4e82647 100644
  pub struct AccountSharedData {
      /// lamports in the account
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 04187b29c5..3f8a3c034b 100644
+index eaa1982a3e..bf6fe98835 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -512,5 +512,5 @@ lazy_static! {
+@@ -542,5 +542,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
@@ -282,7 +301,7 @@ index f21876ddaa..b4a0628ef4 100644
      pub account: &'a RefCell<AccountSharedData>,
  }
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 90db0ed3c4..a2d05277c3 100644
+index 67e06708e8..747ecf9753 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -17,5 +17,5 @@ use {
