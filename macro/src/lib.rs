@@ -1,4 +1,3 @@
-#![allow(clippy::default_trait_access)]
 #![deny(clippy::unwrap_used)]
 #![cfg_attr(feature = "__auto_concretize", feature(proc_macro_span))]
 

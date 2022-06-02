@@ -1,3 +1,5 @@
+#![allow(clippy::use_self)]
+
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, ToTokens, TokenStreamExt};
 use strum_macros::Display;
@@ -35,11 +37,11 @@ impl SerdeFormat {
     pub fn as_feature(self) -> &'static str {
         match self {
             #[cfg(any(serde_default, feature = "__serde_bincode"))]
-            SerdeFormat::Bincode => "serde_bincode",
+            Self::Bincode => "serde_bincode",
             #[cfg(feature = "__serde_cbor")]
-            SerdeFormat::Cbor => "serde_cbor",
+            Self::Cbor => "serde_cbor",
             #[cfg(feature = "__serde_cbor4ii")]
-            SerdeFormat::Cbor4ii => "serde_cbor4ii",
+            Self::Cbor4ii => "serde_cbor4ii",
         }
     }
 }

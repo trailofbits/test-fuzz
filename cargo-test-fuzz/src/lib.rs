@@ -1,3 +1,5 @@
+#![cfg_attr(dylint_lib = "crate_wide_allow", allow(crate_wide_allow))]
+#![allow(clippy::use_self)]
 #![deny(clippy::expect_used)]
 #![deny(clippy::unwrap_used)]
 #![warn(clippy::panic)]
@@ -24,7 +26,7 @@ use std::{
     ffi::OsStr,
     fmt::{Debug, Formatter},
     fs::{create_dir_all, read, read_dir, remove_dir_all, File},
-    io::{BufRead, BufReader, Read},
+    io::{BufRead, Read},
     iter,
     path::{Path, PathBuf},
     process::{exit, Command},
@@ -278,7 +280,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         .stdout
         .take()
         .map_or(Ok(vec![]), |stream| -> Result<_> {
-            let reader = BufReader::new(stream);
+            let reader = std::io::BufReader::new(stream);
             let artifacts: Vec<Artifact> = Message::parse_stream(reader)
                 .filter_map(|result| match result {
                     Ok(message) => match message {
@@ -444,7 +446,7 @@ fn targets(executable: &Path) -> Result<Vec<String>> {
     // smoelius: A test executable's --list output ends with an empty line followed by
     // "M tests, N benchmarks." Stop at the empty line.
     let mut targets = Vec::<String>::default();
-    for line in BufReader::new(stream).lines() {
+    for line in std::io::BufReader::new(stream).lines() {
         let line = line.with_context(|| format!("Could not get output of `{:?}`", exec))?;
         if line.is_empty() {
             break;
@@ -986,7 +988,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
             .ok_or_else(|| anyhow!("Could not get output of `{:?}`", exec))?;
         let mut time_limit_was_reached = false;
         let mut testing_aborted_programmatically = false;
-        for line in BufReader::new(stdout).lines() {
+        for line in std::io::BufReader::new(stdout).lines() {
             let line = line.with_context(|| format!("Could not get output of `{:?}`", exec))?;
             if line.contains("Time limit was reached") {
                 time_limit_was_reached = true;
@@ -1033,8 +1035,10 @@ mod tests {
     use super::cargo_test_fuzz as cargo;
     use anyhow::Result;
 
-    #[allow(unknown_lints)]
-    #[allow(nonreentrant_function_in_test)]
+    #[cfg_attr(
+        dylint_lib = "non_thread_safe_call_in_test",
+        allow(non_thread_safe_call_in_test)
+    )]
     #[test]
     fn build_no_instrumentation_with_target() {
         cargo_test_fuzz(&[

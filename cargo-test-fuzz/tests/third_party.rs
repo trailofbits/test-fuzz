@@ -34,7 +34,8 @@ const TESTS: &[Test] = &[
         subdir: ".",
         package: "sc-transaction-pool",
     },
-    Test {
+    // smoelius: Disable this test for now: https://github.com/solana-labs/solana/issues/25474
+    /* Test {
         // https://github.com/bitflags/bitflags/issues/180#issuecomment-499302965
         flags: Flags::from_bits_truncate(
             Flags::REQUIRES_ISOLATION.bits() | Flags::SKIP_NIGHTLY.bits(),
@@ -43,7 +44,7 @@ const TESTS: &[Test] = &[
         patch: "example-helloworld.patch",
         subdir: "src/program-rust",
         package: "solana-bpf-helloworld",
-    },
+    }, */
     Test {
         flags: Flags::EXPENSIVE,
         url: "https://github.com/solana-labs/solana",
@@ -93,6 +94,8 @@ fn expensive_tests() {
 fn run_test(test: &Test) {
     // smoelius: Each patch expects test-fuzz to be an ancestor of the directory in which the patch
     // is applied.
+    #[allow(unknown_lints)]
+    #[allow(env_cargo_path)]
     let tempdir = tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();
 
     Command::new("git")
@@ -101,6 +104,8 @@ fn run_test(test: &Test) {
         .assert()
         .success();
 
+    #[allow(unknown_lints)]
+    #[allow(env_cargo_path)]
     let patch = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("patches")
         .join(test.patch)

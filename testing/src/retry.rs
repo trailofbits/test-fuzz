@@ -1,5 +1,5 @@
 use log::{error, info, warn};
-use retry::{delay::Fixed, retry_with_index, OperationResult};
+use retry::delay::Fixed;
 use std::fmt::Debug;
 
 pub fn retry<O, T, E>(n: u64, operation: O) -> Result<T, retry::Error<E>>
@@ -10,21 +10,21 @@ where
 {
     assert!(n >= 1);
 
-    retry_with_index(Fixed::from_millis(0), |i| {
+    retry::retry_with_index(Fixed::from_millis(0), |i| {
         let result = match operation() {
-            Ok(value) => OperationResult::Ok(value),
+            Ok(value) => retry::OperationResult::Ok(value),
             Err(error) => {
                 if i < n {
-                    OperationResult::Retry(error)
+                    retry::OperationResult::Retry(error)
                 } else {
-                    OperationResult::Err(error)
+                    retry::OperationResult::Err(error)
                 }
             }
         };
         match result {
-            OperationResult::Ok(_) => info!("{:#?}", result),
-            OperationResult::Retry(_) => warn!("{:#?}", result),
-            OperationResult::Err(_) => error!("{:#?}", result),
+            retry::OperationResult::Ok(_) => info!("{:#?}", result),
+            retry::OperationResult::Retry(_) => warn!("{:#?}", result),
+            retry::OperationResult::Err(_) => error!("{:#?}", result),
         }
         result
     })

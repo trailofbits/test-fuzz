@@ -9,15 +9,19 @@ use std::{
     sync::Mutex,
 };
 
-#[allow(unknown_lints)]
-#[allow(nonreentrant_function_in_test)]
+#[cfg_attr(
+    dylint_lib = "non_thread_safe_call_in_test",
+    allow(non_thread_safe_call_in_test)
+)]
 #[test]
 fn no_write() {
     test(false, 0);
 }
 
-#[allow(unknown_lints)]
-#[allow(nonreentrant_function_in_test)]
+#[cfg_attr(
+    dylint_lib = "non_thread_safe_call_in_test",
+    allow(non_thread_safe_call_in_test)
+)]
 #[test]
 fn write() {
     test(true, 1);
@@ -38,8 +42,10 @@ fn test(write: bool, n: usize) {
     let corpus = corpus_directory_from_target("hello-world", "target");
 
     // smoelius: This call to `remove_dir_all` is protected by the mutex above.
-    #[allow(unknown_lints)]
-    #[allow(nonreentrant_function_in_test)]
+    #[cfg_attr(
+        dylint_lib = "non_thread_safe_call_in_test",
+        allow(non_thread_safe_call_in_test)
+    )]
     remove_dir_all(&corpus).unwrap_or_default();
 
     let mut command = Command::cargo_bin("hello-world").unwrap();
