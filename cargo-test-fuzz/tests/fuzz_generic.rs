@@ -7,8 +7,10 @@ use testing::{examples, retry};
 
 const TIMEOUT: &str = "60";
 
-#[allow(unknown_lints)]
-#[allow(nonreentrant_function_in_test)]
+#[cfg_attr(
+    dylint_lib = "non_thread_safe_call_in_test",
+    allow(non_thread_safe_call_in_test)
+)]
 #[test]
 fn fuzz_foo_qwerty() {
     // smoelius: When `bincode` is enabled, `cargo-afl` fails because "the program crashed with one
@@ -20,8 +22,10 @@ fn fuzz_foo_qwerty() {
     };
 }
 
-#[allow(unknown_lints)]
-#[allow(nonreentrant_function_in_test)]
+#[cfg_attr(
+    dylint_lib = "non_thread_safe_call_in_test",
+    allow(non_thread_safe_call_in_test)
+)]
 #[test]
 fn fuzz_bar_asdfgh() {
     fuzz("test_bar_asdfgh", 0);
@@ -38,8 +42,10 @@ fn fuzz(test: &str, code: i32) {
     let corpus = corpus_directory_from_target("generic", "target");
 
     // smoelius: This call to `remove_dir_all` is protected by the mutex above.
-    #[allow(unknown_lints)]
-    #[allow(nonreentrant_function_in_test)]
+    #[cfg_attr(
+        dylint_lib = "non_thread_safe_call_in_test",
+        allow(non_thread_safe_call_in_test)
+    )]
     remove_dir_all(&corpus).unwrap_or_default();
 
     examples::test("generic", test).unwrap().assert().success();

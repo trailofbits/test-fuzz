@@ -1,3 +1,4 @@
+#![cfg_attr(dylint_lib = "crate_wide_allow", allow(crate_wide_allow))]
 #![allow(clippy::blacklisted_name)]
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};

@@ -32,22 +32,22 @@ index 0adbc64db7..5174f357cb 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 5fa10b7fc6..7d0a090500 100644
+index 584d2ee652..77b84a32af 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -132,4 +132,5 @@ impl TransactionExecutor {
+@@ -139,4 +139,5 @@ impl TransactionExecutor {
  
  /// Compute meter
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct ComputeMeter {
      remaining: u64,
-@@ -181,4 +182,5 @@ impl fmt::Display for AllocErr {
+@@ -188,4 +189,5 @@ impl fmt::Display for AllocErr {
  )]
  #[allow(deprecated)]
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct StackFrame<'a> {
      pub number_of_program_accounts: usize,
-@@ -208,12 +210,55 @@ impl<'a> StackFrame<'a> {
+@@ -215,12 +217,55 @@ impl<'a> StackFrame<'a> {
  }
  
 +struct DummyAllocator;
@@ -103,19 +103,19 @@ index 5fa10b7fc6..7d0a090500 100644
 +    )]
      pub transaction_context: &'a mut TransactionContext,
      #[allow(deprecated)]
-@@ -221,4 +266,5 @@ pub struct InvokeContext<'a> {
+@@ -228,4 +273,5 @@ pub struct InvokeContext<'a> {
      rent: Rent,
      pre_accounts: Vec<PreAccount>,
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -228,4 +274,5 @@ pub struct InvokeContext<'a> {
+@@ -235,4 +281,5 @@ pub struct InvokeContext<'a> {
      compute_meter: Rc<RefCell<ComputeMeter>>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      executors: Rc<RefCell<Executors>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -236,4 +283,22 @@ pub struct InvokeContext<'a> {
+@@ -243,4 +290,22 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -245,10 +245,10 @@ index 9ba920cb4e..cfb4e82647 100644
  pub struct AccountSharedData {
      /// lamports in the account
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index c7f5c5fd2b..b6582c8e32 100644
+index 244d2b70f3..69d8fb1cfd 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -547,5 +547,5 @@ lazy_static! {
+@@ -552,5 +552,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]

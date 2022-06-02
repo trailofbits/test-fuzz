@@ -1,3 +1,4 @@
+#![cfg_attr(dylint_lib = "crate_wide_allow", allow(crate_wide_allow))]
 #![allow(clippy::blacklisted_name)]
 #![allow(clippy::ptr_arg)]
 #![allow(clippy::too_many_arguments)]
@@ -183,6 +184,8 @@ mod unit_struct {
 }
 
 mod unit_variant {
+    #![allow(clippy::use_self)]
+
     use serde::{Deserialize, Serialize};
     #[derive(Clone, Deserialize, Serialize)]
     enum UnitVariant {

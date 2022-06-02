@@ -69,7 +69,7 @@ jobs:
       - name: Dylint
         run: |
           cargo install cargo-dylint dylint-link || true
-          DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all --workspace
+          DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all --workspace -- --tests
 
       - name: Udeps
         run: |

@@ -10,8 +10,10 @@ const TIMEOUT: &str = "60";
 // smoelius: It would be nice if these first two tests could distinguish how many "auto_generate"
 // tests get run (0 vs. 1). But right now, I can't think of an easy way to do this.
 
-#[allow(unknown_lints)]
-#[allow(nonreentrant_function_in_test)]
+#[cfg_attr(
+    dylint_lib = "non_thread_safe_call_in_test",
+    allow(non_thread_safe_call_in_test)
+)]
 #[test]
 fn no_auto_generate() {
     auto_generate(
@@ -23,15 +25,19 @@ fn no_auto_generate() {
     );
 }
 
-#[allow(unknown_lints)]
-#[allow(nonreentrant_function_in_test)]
+#[cfg_attr(
+    dylint_lib = "non_thread_safe_call_in_test",
+    allow(non_thread_safe_call_in_test)
+)]
 #[test]
 fn auto_generate_empty() {
     auto_generate("default", "no_default::target", false, "", 0);
 }
 
-#[allow(unknown_lints)]
-#[allow(nonreentrant_function_in_test)]
+#[cfg_attr(
+    dylint_lib = "non_thread_safe_call_in_test",
+    allow(non_thread_safe_call_in_test)
+)]
 #[test]
 fn auto_generate_nonempty() {
     auto_generate("assert", "target", true, "Auto-generated", 1);
@@ -41,8 +47,10 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
     let corpus = corpus_directory_from_target(krate, target);
 
     // smoelius: `corpus` is distinct for all tests. So there is no race here.
-    #[allow(unknown_lints)]
-    #[allow(nonreentrant_function_in_test)]
+    #[cfg_attr(
+        dylint_lib = "non_thread_safe_call_in_test",
+        allow(non_thread_safe_call_in_test)
+    )]
     remove_dir_all(&corpus).unwrap_or_default();
 
     retry(3, || {

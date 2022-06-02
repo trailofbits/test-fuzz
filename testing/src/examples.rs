@@ -5,7 +5,7 @@ use if_chain::if_chain;
 use internal::{auto_concretize_enabled, serde_format};
 use lazy_static::lazy_static;
 use log::debug;
-use std::{io::BufReader, path::Path};
+use std::path::Path;
 use subprocess::{Exec, Redirection};
 
 lazy_static! {
@@ -46,7 +46,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
         .stdout
         .take()
         .map_or(Ok(vec![]), |stream| -> Result<_> {
-            let reader = BufReader::new(stream);
+            let reader = std::io::BufReader::new(stream);
             let messages: Vec<Message> = Message::parse_stream(reader)
                 .collect::<std::result::Result<_, std::io::Error>>()
                 .with_context(|| format!("`parse_stream` failed for `{:?}`", exec))?;
