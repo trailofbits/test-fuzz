@@ -1,5 +1,5 @@
 diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
-index 8ab1cc5..4edd2c2 100644
+index b1d657c..fbd6688 100644
 --- a/pallets/template/Cargo.toml
 +++ b/pallets/template/Cargo.toml
 @@ -39,2 +39,8 @@ std = [
