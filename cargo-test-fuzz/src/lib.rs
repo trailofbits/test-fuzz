@@ -8,7 +8,6 @@ use anyhow::{anyhow, bail, ensure, Context, Result};
 use bitflags::bitflags;
 use cargo_metadata::{
     Artifact, ArtifactProfile, CargoOpt, Message, Metadata, MetadataCommand, Package, PackageId,
-    Version,
 };
 use clap::{crate_version, ArgEnum};
 use heck::ToKebabCase;
@@ -20,6 +19,7 @@ use internal::dirs::{
 };
 use lazy_static::lazy_static;
 use log::debug;
+use semver::Version;
 use semver::VersionReq;
 use serde::{Deserialize, Serialize};
 use std::{
