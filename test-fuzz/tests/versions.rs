@@ -1,6 +1,7 @@
-use cargo_metadata::{Dependency, DependencyKind, Metadata, MetadataCommand, Version};
+use cargo_metadata::{Dependency, DependencyKind, Metadata, MetadataCommand};
 use lazy_static::lazy_static;
 use regex::Regex;
+use semver::Version;
 use std::{
     fs::read_to_string,
     path::{Path, PathBuf},

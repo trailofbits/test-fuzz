@@ -41,6 +41,7 @@ predicates = "2.1.1"
 regex = "1.5.5"
 rlimit = "0.8.3"
 rustc_version = "0.4.0"
+semver = "1.0.10"
 tempfile = "3.3.0"
 test-log = "0.2.10"
 

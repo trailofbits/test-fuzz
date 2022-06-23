@@ -23,6 +23,7 @@ cargo_metadata = "0.15.0"
 lazy_static = "1.4.0"
 predicates = "2.1.1"
 regex = "1.5.5"
+semver = "1.0.10"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
 
