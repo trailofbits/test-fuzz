@@ -1,8 +1,8 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 99201beeba..13f324ef13 100644
+index 0ba4b59be6..ff4562c55c 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
-@@ -27,4 +27,6 @@ thiserror = "1.0"
+@@ -29,4 +29,6 @@ thiserror = "1.0"
  enum-iterator = "0.8.1"
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -32,7 +32,7 @@ index 31432f387f..3e97d3a734 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 0d4bbf3b1f..71949aeaf2 100644
+index 3a2f86c6d5..f1e0bbd709 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -136,4 +136,5 @@ impl TransactionExecutor {
@@ -171,7 +171,7 @@ index 79ea90dc70..194e6f30a2 100644
  pub struct SysvarCache {
      clock: Option<Arc<Clock>>,
 diff --git a/program-runtime/src/timings.rs b/program-runtime/src/timings.rs
-index f342b9d5ca..83a700ad77 100644
+index 41a850f31d..295cf5755d 100644
 --- a/program-runtime/src/timings.rs
 +++ b/program-runtime/src/timings.rs
 @@ -9,5 +9,5 @@ use {
@@ -181,7 +181,7 @@ index f342b9d5ca..83a700ad77 100644
 +#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
  pub struct ProgramTiming {
      pub accumulated_us: u64,
-@@ -154,5 +154,5 @@ impl ExecuteAccessoryTimings {
+@@ -401,5 +401,5 @@ impl ExecuteAccessoryTimings {
  }
  
 -#[derive(Default, Debug, PartialEq, Eq)]
@@ -216,14 +216,14 @@ index 4abb581ff3..2786379131 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 27b3db48e3..d764e14eec 100644
+index e826a14917..bc1ea4c61e 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
  rand_chacha = { version = "0.2.2", optional = true }
  rustversion = "1.0.6"
--serde = "1.0.137"
-+serde = { version = "1.0.137", features = ["rc"] }
+-serde = "1.0.138"
++serde = { version = "1.0.138", features = ["rc"] }
  serde_bytes = "0.11"
  serde_derive = "1.0.103"
 @@ -81,4 +81,6 @@ uriparse = "0.6.4"
@@ -234,10 +234,10 @@ index 27b3db48e3..d764e14eec 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.57"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index fbb226c6cd..d5c4b1dd7d 100644
+index a40180a696..26b2c6f502 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -588,5 +588,5 @@ lazy_static! {
+@@ -593,5 +593,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
@@ -290,7 +290,7 @@ index f21876ddaa..b4a0628ef4 100644
      pub account: &'a RefCell<AccountSharedData>,
  }
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 4dfd10ef9a..48596652ef 100644
+index d073c91898..9e7d016dcd 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -19,5 +19,5 @@ pub type TransactionAccount = (Pubkey, AccountSharedData);
@@ -359,7 +359,7 @@ index 4dfd10ef9a..48596652ef 100644
 +    )]
      accounts: Pin<Box<[RefCell<AccountSharedData>]>>,
      instruction_context_capacity: usize,
-@@ -265,5 +312,5 @@ pub type InstructionTrace = Vec<Vec<InstructionContext>>;
+@@ -282,5 +329,5 @@ pub type InstructionTrace = Vec<Vec<InstructionContext>>;
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone)]
