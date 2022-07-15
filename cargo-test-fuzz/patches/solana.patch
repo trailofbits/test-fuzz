@@ -1,5 +1,5 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 0ba4b59be6..ff4562c55c 100644
+index a90ae30ba5..4ec40b4528 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -29,4 +29,6 @@ thiserror = "1.0"
@@ -8,7 +8,7 @@ index 0ba4b59be6..ff4562c55c 100644
 +test-fuzz = { path = "../../../test-fuzz" }
 +
  [dev-dependencies]
- solana-logger = { path = "../logger", version = "=1.11.2" }
+ solana-logger = { path = "../logger", version = "=1.11.4" }
 diff --git a/program-runtime/src/accounts_data_meter.rs b/program-runtime/src/accounts_data_meter.rs
 index 244ce9b118..27cd88e8b2 100644
 --- a/program-runtime/src/accounts_data_meter.rs
@@ -32,7 +32,7 @@ index 31432f387f..3e97d3a734 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 3a2f86c6d5..f1e0bbd709 100644
+index b392d3f27e..da08e56784 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -136,4 +136,5 @@ impl TransactionExecutor {
@@ -189,7 +189,7 @@ index 41a850f31d..295cf5755d 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index ffa81b8776..04342ab9a4 100644
+index ffa96accfa..306339a659 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -23,4 +23,7 @@ solana_rbpf = "=0.2.31"
@@ -201,10 +201,10 @@ index ffa81b8776..04342ab9a4 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 4abb581ff3..2786379131 100644
+index ef539df08f..b071ef43b1 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -310,7 +310,8 @@ pub fn create_vm<'a, 'b>(
+@@ -311,7 +311,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -216,12 +216,12 @@ index 4abb581ff3..2786379131 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index e826a14917..bc1ea4c61e 100644
+index 24c9c7c6b3..67ef8790e0 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
  rand_chacha = { version = "0.2.2", optional = true }
- rustversion = "1.0.6"
+ rustversion = "1.0.7"
 -serde = "1.0.138"
 +serde = { version = "1.0.138", features = ["rc"] }
  serde_bytes = "0.11"
@@ -232,12 +232,12 @@ index e826a14917..bc1ea4c61e 100644
 +test-fuzz = { path = "../../../test-fuzz" }
 +
  [target.'cfg(target_arch = "wasm32")'.dependencies]
- js-sys = "0.3.57"
+ js-sys = "0.3.58"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index a40180a696..26b2c6f502 100644
+index cdbe902bcf..742baef984 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -593,5 +593,5 @@ lazy_static! {
+@@ -603,5 +603,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
@@ -290,7 +290,7 @@ index f21876ddaa..b4a0628ef4 100644
      pub account: &'a RefCell<AccountSharedData>,
  }
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index d073c91898..9e7d016dcd 100644
+index 51bc4c7267..103bf7df46 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -19,5 +19,5 @@ pub type TransactionAccount = (Pubkey, AccountSharedData);
@@ -359,7 +359,7 @@ index d073c91898..9e7d016dcd 100644
 +    )]
      accounts: Pin<Box<[RefCell<AccountSharedData>]>>,
      instruction_context_capacity: usize,
-@@ -282,5 +329,5 @@ pub type InstructionTrace = Vec<Vec<InstructionContext>>;
+@@ -267,5 +314,5 @@ pub type InstructionTrace = Vec<Vec<InstructionContext>>;
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone)]
