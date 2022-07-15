@@ -21,5 +21,7 @@ cargo clippy --workspace --tests -- \
     -A clippy::missing-const-for-fn \
     -A clippy::missing-errors-doc \
     -A clippy::missing-panics-doc \
+    -A clippy::redundant-pub-crate \
     -A clippy::struct-excessive-bools \
+    -A clippy::type-repetition-in-bounds \
     -A clippy::too-many-lines
