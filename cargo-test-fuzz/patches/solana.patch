@@ -32,22 +32,22 @@ index 31432f387f..3e97d3a734 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index b392d3f27e..da08e56784 100644
+index 8eb418ce8a..c430729579 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -136,4 +136,5 @@ impl TransactionExecutor {
+@@ -137,4 +137,5 @@ impl TransactionExecutor {
  
  /// Compute meter
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct ComputeMeter {
      remaining: u64,
-@@ -185,4 +186,5 @@ impl fmt::Display for AllocErr {
+@@ -186,4 +187,5 @@ impl fmt::Display for AllocErr {
  )]
  #[allow(deprecated)]
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct StackFrame<'a> {
      pub number_of_program_accounts: usize,
-@@ -212,12 +214,55 @@ impl<'a> StackFrame<'a> {
+@@ -213,12 +215,55 @@ impl<'a> StackFrame<'a> {
  }
  
 +struct DummyAllocator;
@@ -103,19 +103,19 @@ index b392d3f27e..da08e56784 100644
 +    )]
      pub transaction_context: &'a mut TransactionContext,
      #[allow(deprecated)]
-@@ -225,4 +270,5 @@ pub struct InvokeContext<'a> {
+@@ -226,4 +271,5 @@ pub struct InvokeContext<'a> {
      rent: Rent,
      pre_accounts: Vec<PreAccount>,
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -232,4 +278,5 @@ pub struct InvokeContext<'a> {
+@@ -233,4 +279,5 @@ pub struct InvokeContext<'a> {
      compute_meter: Rc<RefCell<ComputeMeter>>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      executors: Rc<RefCell<Executors>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -240,4 +287,22 @@ pub struct InvokeContext<'a> {
+@@ -241,4 +288,22 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -234,10 +234,10 @@ index 24c9c7c6b3..67ef8790e0 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.58"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index cdbe902bcf..742baef984 100644
+index 7828db99b0..ed9c9b1bff 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -603,5 +603,5 @@ lazy_static! {
+@@ -608,5 +608,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
@@ -290,17 +290,17 @@ index f21876ddaa..b4a0628ef4 100644
      pub account: &'a RefCell<AccountSharedData>,
  }
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 51bc4c7267..103bf7df46 100644
+index ba1eba71c9..4a542a141b 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
-@@ -19,5 +19,5 @@ pub type TransactionAccount = (Pubkey, AccountSharedData);
+@@ -21,5 +21,5 @@ pub type TransactionAccount = (Pubkey, AccountSharedData);
  ///
  /// It also contains indices to other structures for faster lookup.
 -#[derive(Clone, Debug)]
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct InstructionAccount {
      /// Points to the account and its key in the `TransactionContext`
-@@ -37,10 +37,57 @@ pub struct InstructionAccount {
+@@ -39,10 +39,57 @@ pub struct InstructionAccount {
  }
  
 +fn serialize_account_keys<'a, S>(
@@ -358,8 +358,8 @@ index 51bc4c7267..103bf7df46 100644
 +        deserialize_with = "deserialize_accounts"
 +    )]
      accounts: Pin<Box<[RefCell<AccountSharedData>]>>,
-     instruction_context_capacity: usize,
-@@ -267,5 +314,5 @@ pub type InstructionTrace = Vec<Vec<InstructionContext>>;
+     account_touched_flags: RefCell<Pin<Box<[bool]>>>,
+@@ -360,5 +407,5 @@ pub type InstructionTrace = Vec<Vec<InstructionContext>>;
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone)]
