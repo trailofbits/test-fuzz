@@ -21,7 +21,7 @@ index 244ce9b118..27cd88e8b2 100644
  pub struct AccountsDataMeter {
      /// The maximum amount of accounts data space that can be used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 31432f387f..3e97d3a734 100644
+index b36c8325b4..352c8fa978 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -32,22 +32,22 @@ index 31432f387f..3e97d3a734 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 8eb418ce8a..c430729579 100644
+index 52c860bb63..a6f92710ec 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -137,4 +137,5 @@ impl TransactionExecutor {
+@@ -134,4 +134,5 @@ impl TransactionExecutor {
  
  /// Compute meter
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct ComputeMeter {
      remaining: u64,
-@@ -186,4 +187,5 @@ impl fmt::Display for AllocErr {
+@@ -183,4 +184,5 @@ impl fmt::Display for AllocErr {
  )]
  #[allow(deprecated)]
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct StackFrame<'a> {
      pub number_of_program_accounts: usize,
-@@ -213,12 +215,55 @@ impl<'a> StackFrame<'a> {
+@@ -210,12 +212,55 @@ impl<'a> StackFrame<'a> {
  }
  
 +struct DummyAllocator;
@@ -103,19 +103,19 @@ index 8eb418ce8a..c430729579 100644
 +    )]
      pub transaction_context: &'a mut TransactionContext,
      #[allow(deprecated)]
-@@ -226,4 +271,5 @@ pub struct InvokeContext<'a> {
+@@ -223,4 +268,5 @@ pub struct InvokeContext<'a> {
      rent: Rent,
      pre_accounts: Vec<PreAccount>,
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -233,4 +279,5 @@ pub struct InvokeContext<'a> {
+@@ -230,4 +276,5 @@ pub struct InvokeContext<'a> {
      compute_meter: Rc<RefCell<ComputeMeter>>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      executors: Rc<RefCell<Executors>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -241,4 +288,22 @@ pub struct InvokeContext<'a> {
+@@ -238,4 +285,22 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -160,10 +160,10 @@ index e01c35fbc0..acbd4d3474 100644
  pub struct PreAccount {
      key: Pubkey,
 diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
-index 79ea90dc70..194e6f30a2 100644
+index 8c142fee17..a770279120 100644
 --- a/program-runtime/src/sysvar_cache.rs
 +++ b/program-runtime/src/sysvar_cache.rs
-@@ -24,5 +24,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for SysvarCache {
+@@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for SysvarCache {
  }
  
 -#[derive(Default, Clone, Debug)]
@@ -201,7 +201,7 @@ index ffa96accfa..306339a659 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index ef539df08f..b071ef43b1 100644
+index 741f5ea553..d382c9ae9a 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -311,7 +311,8 @@ pub fn create_vm<'a, 'b>(
@@ -216,7 +216,7 @@ index ef539df08f..b071ef43b1 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 24c9c7c6b3..67ef8790e0 100644
+index 1954008354..c5522d0239 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
@@ -234,10 +234,10 @@ index 24c9c7c6b3..67ef8790e0 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.58"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 7828db99b0..ed9c9b1bff 100644
+index 995ad89167..8f1c7ceb8c 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -608,5 +608,5 @@ lazy_static! {
+@@ -618,5 +618,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
@@ -290,7 +290,7 @@ index f21876ddaa..b4a0628ef4 100644
      pub account: &'a RefCell<AccountSharedData>,
  }
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index ba1eba71c9..4a542a141b 100644
+index eabd59c176..947e8bd4ef 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -21,5 +21,5 @@ pub type TransactionAccount = (Pubkey, AccountSharedData);
@@ -300,7 +300,7 @@ index ba1eba71c9..4a542a141b 100644
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct InstructionAccount {
      /// Points to the account and its key in the `TransactionContext`
-@@ -39,10 +39,57 @@ pub struct InstructionAccount {
+@@ -39,11 +39,80 @@ pub struct InstructionAccount {
  }
  
 +fn serialize_account_keys<'a, S>(
@@ -342,6 +342,24 @@ index ba1eba71c9..4a542a141b 100644
 +    Ok(Pin::new(accounts.into_boxed_slice()))
 +}
 +
++fn serialize_touched_flags<'a, S>(
++    touched_flags: &RefCell<Pin<Box<[bool]>>>,
++    serializer: S,
++) -> Result<S::Ok, S::Error>
++where
++    S: serde::Serializer,
++{
++    <[bool] as serde::Serialize>::serialize(&**touched_flags.borrow(), serializer)
++}
++
++fn deserialize_touched_flags<'de, D>(deserializer: D) -> Result<RefCell<Pin<Box<[bool]>>>, D::Error>
++where
++    D: serde::Deserializer<'de>,
++{
++    let touched_flags = <Vec<bool> as serde::de::Deserialize>::deserialize(deserializer)?;
++    Ok(RefCell::new(Pin::new(touched_flags.into_boxed_slice())))
++}
++
  /// Loaded transaction shared between runtime and programs.
  ///
  /// This context is valid for the entire duration of a transaction being processed.
@@ -358,8 +376,13 @@ index ba1eba71c9..4a542a141b 100644
 +        deserialize_with = "deserialize_accounts"
 +    )]
      accounts: Pin<Box<[RefCell<AccountSharedData>]>>,
++    #[serde(
++        serialize_with = "serialize_touched_flags",
++        deserialize_with = "deserialize_touched_flags"
++    )]
      account_touched_flags: RefCell<Pin<Box<[bool]>>>,
-@@ -360,5 +407,5 @@ pub type InstructionTrace = Vec<Vec<InstructionContext>>;
+     instruction_context_capacity: usize,
+@@ -347,5 +416,5 @@ pub type InstructionTrace = Vec<Vec<InstructionContext>>;
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone)]
