@@ -21,7 +21,7 @@ index 244ce9b118..27cd88e8b2 100644
  pub struct AccountsDataMeter {
      /// The maximum amount of accounts data space that can be used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index b36c8325b4..352c8fa978 100644
+index 31432f387f..3e97d3a734 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
