@@ -1,5 +1,5 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index a90ae30ba5..4ec40b4528 100644
+index 27e5c11751..16b4d74c8a 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -29,4 +29,6 @@ thiserror = "1.0"
@@ -8,20 +8,20 @@ index a90ae30ba5..4ec40b4528 100644
 +test-fuzz = { path = "../../../test-fuzz" }
 +
  [dev-dependencies]
- solana-logger = { path = "../logger", version = "=1.11.4" }
+ solana-logger = { path = "../logger", version = "=1.12.0" }
 diff --git a/program-runtime/src/accounts_data_meter.rs b/program-runtime/src/accounts_data_meter.rs
-index 244ce9b118..27cd88e8b2 100644
+index 3e0553d1e6..5136a8bb69 100644
 --- a/program-runtime/src/accounts_data_meter.rs
 +++ b/program-runtime/src/accounts_data_meter.rs
-@@ -11,5 +11,5 @@ pub const MAX_ACCOUNTS_DATA_LEN: u64 = 128_000_000_000;
+@@ -10,5 +10,5 @@ pub const MAX_ACCOUNTS_DATA_LEN: u64 = 128_000_000_000;
  
  /// Meter and track the amount of available accounts data space
 -#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
 +#[derive(Debug, Default, Clone, Copy, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct AccountsDataMeter {
-     /// The maximum amount of accounts data space that can be used (in bytes)
+     /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 31432f387f..3e97d3a734 100644
+index 60e21b2e99..001f393f76 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -32,22 +32,22 @@ index 31432f387f..3e97d3a734 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 52c860bb63..a6f92710ec 100644
+index a827cc51da..00c453c4bd 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -134,4 +134,5 @@ impl TransactionExecutor {
+@@ -132,4 +132,5 @@ impl TransactionExecutor {
  
  /// Compute meter
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct ComputeMeter {
      remaining: u64,
-@@ -183,4 +184,5 @@ impl fmt::Display for AllocErr {
+@@ -181,4 +182,5 @@ impl fmt::Display for AllocErr {
  )]
  #[allow(deprecated)]
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct StackFrame<'a> {
      pub number_of_program_accounts: usize,
-@@ -210,12 +212,55 @@ impl<'a> StackFrame<'a> {
+@@ -208,12 +210,55 @@ impl<'a> StackFrame<'a> {
  }
  
 +struct DummyAllocator;
@@ -103,19 +103,19 @@ index 52c860bb63..a6f92710ec 100644
 +    )]
      pub transaction_context: &'a mut TransactionContext,
      #[allow(deprecated)]
-@@ -223,4 +268,5 @@ pub struct InvokeContext<'a> {
+@@ -221,4 +266,5 @@ pub struct InvokeContext<'a> {
      rent: Rent,
      pre_accounts: Vec<PreAccount>,
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -230,4 +276,5 @@ pub struct InvokeContext<'a> {
+@@ -228,4 +274,5 @@ pub struct InvokeContext<'a> {
      compute_meter: Rc<RefCell<ComputeMeter>>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      executors: Rc<RefCell<Executors>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -238,4 +285,22 @@ pub struct InvokeContext<'a> {
+@@ -236,4 +283,22 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -189,7 +189,7 @@ index 41a850f31d..295cf5755d 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index ffa96accfa..306339a659 100644
+index 49167df6d4..69178e6baa 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -23,4 +23,7 @@ solana_rbpf = "=0.2.31"
@@ -216,13 +216,13 @@ index 741f5ea553..d382c9ae9a 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 1954008354..c5522d0239 100644
+index 8956d98a35..642602755c 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
  rand_chacha = { version = "0.2.2", optional = true }
- rustversion = "1.0.7"
--serde = "1.0.138"
+ rustversion = "1.0.9"
+-serde = "1.0.143"
 +serde = { version = "1.0.138", features = ["rc"] }
  serde_bytes = "0.11"
  serde_derive = "1.0.103"
@@ -232,12 +232,12 @@ index 1954008354..c5522d0239 100644
 +test-fuzz = { path = "../../../test-fuzz" }
 +
  [target.'cfg(target_arch = "wasm32")'.dependencies]
- js-sys = "0.3.58"
+ js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 020bd46a52..e9e71d10f8 100644
+index 0c14aa18ed..a5c1a37bd2 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -623,5 +623,5 @@ lazy_static! {
+@@ -663,5 +663,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
