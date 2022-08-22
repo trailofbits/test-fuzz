@@ -32,22 +32,16 @@ index 60e21b2e99..001f393f76 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index a827cc51da..00c453c4bd 100644
+index ca3582c7ae..2367bc06b9 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -132,4 +132,5 @@ impl TransactionExecutor {
+@@ -130,4 +130,5 @@ impl TransactionExecutor {
  
  /// Compute meter
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct ComputeMeter {
      remaining: u64,
-@@ -181,4 +182,5 @@ impl fmt::Display for AllocErr {
- )]
- #[allow(deprecated)]
-+#[derive(Clone, serde::Deserialize, serde::Serialize)]
- pub struct StackFrame<'a> {
-     pub number_of_program_accounts: usize,
-@@ -208,12 +210,55 @@ impl<'a> StackFrame<'a> {
+@@ -174,15 +175,59 @@ impl fmt::Display for AllocErr {
  }
  
 +struct DummyAllocator;
@@ -102,27 +96,24 @@ index a827cc51da..00c453c4bd 100644
 +        deserialize_with = "deserialize_ref_mut"
 +    )]
      pub transaction_context: &'a mut TransactionContext,
-     #[allow(deprecated)]
-@@ -221,4 +266,5 @@ pub struct InvokeContext<'a> {
      rent: Rent,
      pre_accounts: Vec<PreAccount>,
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -228,4 +274,5 @@ pub struct InvokeContext<'a> {
+@@ -192,4 +237,5 @@ pub struct InvokeContext<'a> {
      compute_meter: Rc<RefCell<ComputeMeter>>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      executors: Rc<RefCell<Executors>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -236,4 +283,22 @@ pub struct InvokeContext<'a> {
+@@ -200,4 +246,21 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
 +    fn clone(&self) -> Self {
 +        Self {
 +            transaction_context: Box::leak(Box::new(self.transaction_context.clone())),
-+            invoke_stack: self.invoke_stack.clone(),
 +            pre_accounts: self.pre_accounts.clone(),
 +            sysvar_cache: self.sysvar_cache.clone(),
 +            log_collector: self.log_collector.clone(),
@@ -189,10 +180,10 @@ index 41a850f31d..295cf5755d 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 49167df6d4..69178e6baa 100644
+index 8366265ef6..8958ffb3d9 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.31"
+@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.32"
  thiserror = "1.0"
  
 +serde = "1.0"
@@ -201,10 +192,10 @@ index 49167df6d4..69178e6baa 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 741f5ea553..d382c9ae9a 100644
+index ee629bc915..ec1ab287b6 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -311,7 +311,8 @@ pub fn create_vm<'a, 'b>(
+@@ -305,7 +305,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -234,63 +225,18 @@ index 8956d98a35..642602755c 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 0c14aa18ed..a5c1a37bd2 100644
+index f3c8694807..7221ed5499 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -663,5 +663,5 @@ lazy_static! {
+@@ -661,5 +661,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
 +#[derive(AbiExample, Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
-diff --git a/sdk/src/keyed_account.rs b/sdk/src/keyed_account.rs
-index f21876ddaa..b4a0628ef4 100644
---- a/sdk/src/keyed_account.rs
-+++ b/sdk/src/keyed_account.rs
-@@ -17,10 +17,39 @@ use {
- };
- 
-+fn serialize_account<'a, S>(
-+    account: &&'a RefCell<AccountSharedData>,
-+    serializer: S,
-+) -> Result<S::Ok, S::Error>
-+where
-+    S: serde::Serializer,
-+{
-+    <RefCell<AccountSharedData> as serde::Serialize>::serialize(&*account, serializer)
-+}
-+
-+fn deserialize_account<'de, D>(
-+    deserializer: D,
-+) -> Result<&'static RefCell<AccountSharedData>, D::Error>
-+where
-+    D: serde::Deserializer<'de>,
-+{
-+    let account =
-+        <RefCell<AccountSharedData> as serde::de::Deserialize>::deserialize(deserializer)?;
-+    Ok(Box::leak(Box::new(Rc::new(account))))
-+}
-+
- #[repr(C)]
--#[derive(Debug, Clone)]
-+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
- pub struct KeyedAccount<'a> {
-     is_signer: bool, // Transaction was signed by this account's key
-     is_writable: bool,
-+    #[serde(
-+        serialize_with = "test_fuzz::serialize_ref",
-+        deserialize_with = "test_fuzz::deserialize_ref"
-+    )]
-     key: &'a Pubkey,
-+    #[serde(
-+        serialize_with = "serialize_account",
-+        deserialize_with = "deserialize_account"
-+    )]
-     pub account: &'a RefCell<AccountSharedData>,
- }
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index eabd59c176..947e8bd4ef 100644
+index d22a91372b..df3f0d20e5 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -21,5 +21,5 @@ pub type TransactionAccount = (Pubkey, AccountSharedData);
@@ -382,7 +328,7 @@ index eabd59c176..947e8bd4ef 100644
 +    )]
      account_touched_flags: RefCell<Pin<Box<[bool]>>>,
      instruction_context_capacity: usize,
-@@ -347,5 +416,5 @@ pub type InstructionTrace = Vec<Vec<InstructionContext>>;
+@@ -325,5 +394,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone)]

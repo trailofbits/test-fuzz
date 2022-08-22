@@ -1,5 +1,5 @@
 diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
-index c5517bd..d57ca90 100644
+index ff7d85b..ddaf6aa 100644
 --- a/pallets/template/Cargo.toml
 +++ b/pallets/template/Cargo.toml
 @@ -38,2 +38,8 @@ std = [
@@ -12,11 +12,11 @@ index c5517bd..d57ca90 100644
 +[dependencies.serde]
 +version = '1.0.130'
 diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
-index 2c33714..0808200 100644
+index f1519ef..7b1a57b 100644
 --- a/pallets/template/src/lib.rs
 +++ b/pallets/template/src/lib.rs
-@@ -20,4 +20,30 @@ pub mod pallet {
- 	use frame_system::pallet_prelude::*;
+@@ -58,12 +58,48 @@ pub mod pallet {
+ 	}
  
 +	#[cfg(test)]
 +	test_fuzz::dont_care!(crate::mock::Test);
@@ -44,9 +44,8 @@ index 2c33714..0808200 100644
 +		}
 +	}
 +
- 	/// Configure the pallet by specifying the parameters and types on which it depends.
- 	#[pallet::config]
-@@ -62,8 +88,18 @@ pub mod pallet {
+ 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
+ 	// These functions materialize as "extrinsics", which are often compared to transactions.
  	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
  	#[pallet::call]
 -	impl<T: Config> Pallet<T> {
