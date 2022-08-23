@@ -96,6 +96,35 @@ mod lifetime {
     }
 }
 
+mod uncloneable {
+    use serde::{Deserialize, Serialize};
+
+    struct X;
+
+    #[derive(Clone, Deserialize, Serialize)]
+    struct Y;
+
+    impl test_fuzz::FromRef<X> for Y {
+        fn from_ref(_: &X) -> Self {
+            Self
+        }
+    }
+
+    impl test_fuzz::Into<X> for Y {
+        fn into(self) -> X {
+            X
+        }
+    }
+
+    #[test_fuzz::test_fuzz(convert = "X, Y")]
+    fn target(x: X) {}
+
+    #[test]
+    fn test() {
+        target(X);
+    }
+}
+
 #[cfg(feature = "__inapplicable_conversion")]
 mod inapplicable_conversion {
     use serde::{Deserialize, Serialize};
