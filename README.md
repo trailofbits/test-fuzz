@@ -117,9 +117,9 @@ The primary effects of the `test_fuzz` macro are:
 
   Note: The target's arguments must be serializable for **every** instantiation of its `Self` type parameters. But the target's arguments are required to be deserializable only when the target's `Self` is instantiated with `parameters`.
 
-- **`convert = "X, Y"`** - When serializing the target's arguments, convert values of type `X` to type `Y` using `Y`'s implementation of `From<X>`. When deserializing, convert those values back to type `X` using `Y`'s implementation of the non-standard trait `test_fuzz::Into<X>`.
+- **`convert = "X, Y"`** - When serializing the target's arguments, convert values of type `X` to type `Y` using `Y`'s implementation of `From<X>`, or of type `&X` to type `Y` using `Y`'s implementation of the non-standard trait `test_fuzz::FromRef<X>`. When deserializing, convert those values back to type `X` using `Y`'s implementation of the non-standard trait `test_fuzz::Into<X>`.
 
-  That is, use of `convert = "X, Y"` should be accompanied by the following implementations:
+  That is, use of `convert = "X, Y"` must be accompanied by certain implementations. If `X` implements [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html), then `Y` may implement the following:
 
   ```rust
   impl From<X> for Y {
@@ -127,7 +127,21 @@ The primary effects of the `test_fuzz` macro are:
           ...
       }
   }
+  ```
 
+  If `X` does not implement [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html), then `Y` must implement the following:
+
+  ```rust
+  impl test_fuzz::FromRef<X> for Y {
+      fn from_ref(x: &X) -> Self {
+          ...
+      }
+  }
+  ```
+
+  Additionally, `Y` must implement the following (regardless of whether `X` implements [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html)):
+
+  ```rust
   impl test_fuzz::Into<X> for Y {
       fn into(self) -> X {
           ...
