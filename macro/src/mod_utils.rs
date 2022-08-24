@@ -8,9 +8,9 @@ use syn::{
 };
 
 struct ModVisitor<'span, 'ast> {
-    pub target: &'span Span,
-    pub stack: Vec<&'ast ItemMod>,
-    pub result: Option<Vec<Ident>>,
+    target: &'span Span,
+    stack: Vec<&'ast ItemMod>,
+    result: Option<Vec<Ident>>,
 }
 
 impl<'span, 'ast> Visit<'ast> for ModVisitor<'span, 'ast> {

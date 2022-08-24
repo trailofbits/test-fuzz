@@ -6,7 +6,7 @@ pub struct WrappedKey<'key> {
         serialize_with = "test_fuzz::serialize_ref",
         deserialize_with = "test_fuzz::deserialize_ref"
     )]
-    pub key: &'key [u8; 32],
+    key: &'key [u8; 32],
 }
 
 #[test_fuzz::test_fuzz_impl]
