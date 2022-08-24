@@ -96,6 +96,38 @@ mod lifetime {
     }
 }
 
+mod mutable {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Clone)]
+    struct X(bool);
+
+    #[derive(Clone, Deserialize, Serialize)]
+    struct Y(bool);
+
+    impl From<X> for Y {
+        fn from(x: X) -> Self {
+            Self(x.0)
+        }
+    }
+
+    impl test_fuzz::Into<X> for Y {
+        fn into(self) -> X {
+            X(self.0)
+        }
+    }
+
+    #[test_fuzz::test_fuzz(convert = "X, Y")]
+    fn target(mut x: X) {
+        x.0 = true;
+    }
+
+    #[test]
+    fn test() {
+        target(X(false));
+    }
+}
+
 mod uncloneable {
     use serde::{Deserialize, Serialize};
 

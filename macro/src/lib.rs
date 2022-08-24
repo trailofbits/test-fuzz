@@ -33,6 +33,8 @@ mod mod_utils;
 mod ord_type;
 use ord_type::OrdType;
 
+mod pat_utils;
+
 mod type_utils;
 
 type Conversions = BTreeMap<OrdType, (Type, bool)>;
@@ -379,7 +381,7 @@ fn map_method_or_fn(
         for (from, (to, used)) in conversions {
             assert!(
                 used,
-                r#"Conversion "{}" -> "{}" does not apply to the following cadidates: {:#?}"#,
+                r#"Conversion "{}" -> "{}" does not apply to the following candidates: {:#?}"#,
                 from,
                 OrdType(to),
                 candidates
@@ -797,11 +799,16 @@ fn map_arg<'a>(
                 (true, expr, ty, fmt)
             }
             FnArg::Typed(PatType { pat, ty, .. }) => {
-                let expr = parse_quote! { #pat };
+                let ident = match *pat_utils::pat_idents(pat).as_slice() {
+                    [] => Ident::new("_", Span::call_site()),
+                    [ident] => ident.clone(),
+                    _ => panic!("Unexpected pattern: {}", pat.to_token_stream()),
+                };
+                let expr = parse_quote! { #ident };
                 let ty = self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
                     type_utils::expand_self(self_ty, &trait_path, ty)
                 });
-                let name = format!("{}", pat.to_token_stream());
+                let name = ident.to_string();
                 let fmt = parse_quote! {
                     test_fuzz::runtime::TryDebug(&self.#i).apply(&mut |value| {
                         debug_struct.field(#name, value);

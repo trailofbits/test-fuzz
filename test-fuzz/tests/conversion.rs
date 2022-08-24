@@ -13,7 +13,7 @@ fn conversion() {
         .args(["--features", "__inapplicable_conversion"])
         .assert()
         .failure()
-        .stderr(predicate::str::is_match(r#"(?m)\bConversion "Y" -> "Z" does not apply to the following cadidates: \{\s*"X",\s*}$"#).unwrap());
+        .stderr(predicate::str::is_match(r#"(?m)\bConversion "Y" -> "Z" does not apply to the following candidates: \{\s*"X",\s*}$"#).unwrap());
 }
 
 fn test() -> Command {
