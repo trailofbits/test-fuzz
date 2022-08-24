@@ -6,10 +6,10 @@ struct Struct;
 #[test_fuzz::test_fuzz_impl]
 impl Struct {
     #[test_fuzz::test_fuzz]
-    pub fn foo(&self) {}
+    fn foo(&self) {}
 
     #[test_fuzz::test_fuzz]
-    pub fn bar(&mut self) {}
+    fn bar(&mut self) {}
 }
 
 #[test]

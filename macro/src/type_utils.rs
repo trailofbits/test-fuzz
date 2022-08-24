@@ -25,8 +25,8 @@ pub fn collapse_crate(ty: &Type) -> Type {
 }
 
 struct TypeVisitor<'a> {
-    pub self_ty: &'a Type,
-    pub trait_path: &'a Option<Path>,
+    self_ty: &'a Type,
+    trait_path: &'a Option<Path>,
 }
 
 impl<'a> VisitMut for TypeVisitor<'a> {
