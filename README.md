@@ -218,7 +218,7 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 2. Display target `foo`'s corpus
 
    ```
-   cargo test-fuzz foo --display-corpus
+   cargo test-fuzz foo --display corpus
    ```
 
 3. Fuzz target `foo`
@@ -229,7 +229,7 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 
 4. Replay crashes found for target `foo`
    ```
-   cargo test-fuzz foo --replay-crashes
+   cargo test-fuzz foo --replay crashes
    ```
 
 #### Usage
