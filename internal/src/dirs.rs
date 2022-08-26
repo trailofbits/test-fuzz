@@ -83,7 +83,7 @@ pub fn target_directory(instrumented: bool) -> PathBuf {
     if let Ok(path) = env::var("TEST_FUZZ_MANIFEST_PATH") {
         command.manifest_path(path);
     }
-    let mut target_dir = command.exec().unwrap().target_directory;
+    let mut target_dir = command.no_deps().exec().unwrap().target_directory;
     if instrumented {
         target_dir = target_dir.join("afl");
     }
