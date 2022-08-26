@@ -9,6 +9,7 @@ if [[ $# -ne 0 ]]; then
 fi
 
 URLS=(
+    https://github.com/CosmWasm/cw-plus
     https://github.com/paritytech/substrate
     https://github.com/solana-labs/example-helloworld
     https://github.com/solana-labs/solana
@@ -16,6 +17,7 @@ URLS=(
 )
 
 PATCHES=(
+    cw-plus.patch
     substrate_client_transaction_pool.patch
     example-helloworld.patch
     solana.patch

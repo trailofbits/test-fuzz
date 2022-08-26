@@ -1,0 +1,118 @@
+diff --git a/contracts/cw20-base/Cargo.toml b/contracts/cw20-base/Cargo.toml
+index ee071fd1..65ab8d3b 100644
+--- a/contracts/cw20-base/Cargo.toml
++++ b/contracts/cw20-base/Cargo.toml
+@@ -30,4 +30,6 @@ serde = { version = "1.0.103", default-features = false, features = ["derive"] }
+ thiserror = { version = "1.0.23" }
+ 
++test-fuzz = { path = "../../../../test-fuzz" }
++
+ [dev-dependencies]
+ cw-multi-test = { path = "../../packages/multi-test", version = "0.14.0" }
+diff --git a/contracts/cw20-base/src/contract.rs b/contracts/cw20-base/src/contract.rs
+index 029af562..2fda62fc 100644
+--- a/contracts/cw20-base/src/contract.rs
++++ b/contracts/cw20-base/src/contract.rs
+@@ -92,7 +92,33 @@ fn verify_logo(logo: &Logo) -> Result<(), ContractError> {
+ }
+ 
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
++struct MockDepsMut;
++
++impl<'a> test_fuzz::FromRef<DepsMut<'a>> for MockDepsMut {
++    fn from_ref(_: &DepsMut) -> Self {
++        Self
++    }
++}
++
++impl<'a> test_fuzz::Into<DepsMut<'a>> for MockDepsMut {
++    fn into(self) -> DepsMut<'a> {
++        let cosmwasm_std::OwnedDeps {
++            storage,
++            api,
++            querier,
++            ..
++        } = cosmwasm_std::testing::mock_dependencies();
++        DepsMut {
++            storage: Box::leak(Box::new(storage)),
++            api: Box::leak(Box::new(api)),
++            querier: cosmwasm_std::QuerierWrapper::new(Box::leak(Box::new(querier))),
++        }
++    }
++}
++
+ #[cfg_attr(not(feature = "library"), entry_point)]
+-pub fn instantiate(
+-    mut deps: DepsMut,
++#[test_fuzz::test_fuzz(convert = "DepsMut<'a>, MockDepsMut")]
++pub fn instantiate<'a>(
++    mut deps: DepsMut<'a>,
+     _env: Env,
+     _info: MessageInfo,
+@@ -186,6 +212,7 @@ pub fn validate_accounts(accounts: &[Cw20Coin]) -> Result<(), ContractError> {
+ 
+ #[cfg_attr(not(feature = "library"), entry_point)]
+-pub fn execute(
+-    deps: DepsMut,
++#[test_fuzz::test_fuzz(convert = "DepsMut<'a>, MockDepsMut")]
++pub fn execute<'a>(
++    deps: DepsMut<'a>,
+     env: Env,
+     info: MessageInfo,
+@@ -521,6 +548,32 @@ pub fn execute_upload_logo(
+ }
+ 
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
++struct MockDeps;
++
++impl<'a> From<Deps<'a>> for MockDeps {
++    fn from(_: Deps) -> Self {
++        Self
++    }
++}
++
++impl<'a> test_fuzz::Into<Deps<'a>> for MockDeps {
++    fn into(self) -> Deps<'a> {
++        let cosmwasm_std::OwnedDeps {
++            storage,
++            api,
++            querier,
++            ..
++        } = cosmwasm_std::testing::mock_dependencies();
++        Deps {
++            storage: Box::leak(Box::new(storage)),
++            api: Box::leak(Box::new(api)),
++            querier: cosmwasm_std::QuerierWrapper::new(Box::leak(Box::new(querier))),
++        }
++    }
++}
++
+ #[cfg_attr(not(feature = "library"), entry_point)]
+-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
++#[test_fuzz::test_fuzz(convert = "Deps<'a>, MockDeps")]
++pub fn query<'a>(deps: Deps<'a>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+     match msg {
+         QueryMsg::Balance { address } => to_binary(&query_balance(deps, address)?),
+@@ -604,5 +657,10 @@ pub fn query_download_logo(deps: Deps) -> StdResult<DownloadLogoResponse> {
+ 
+ #[cfg_attr(not(feature = "library"), entry_point)]
+-pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
++#[test_fuzz::test_fuzz(convert = "DepsMut<'a>, MockDepsMut")]
++pub fn migrate<'a>(
++    deps: DepsMut<'a>,
++    _env: Env,
++    _msg: MigrateMsg,
++) -> Result<Response, ContractError> {
+     let original_version =
+         ensure_from_older_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
+diff --git a/contracts/cw20-base/src/msg.rs b/contracts/cw20-base/src/msg.rs
+index 27f3a5b5..5302ca29 100644
+--- a/contracts/cw20-base/src/msg.rs
++++ b/contracts/cw20-base/src/msg.rs
+@@ -122,5 +122,5 @@ pub enum QueryMsg {
+ }
+ 
+-#[derive(Serialize, Deserialize, JsonSchema)]
++#[derive(Clone, Serialize, Deserialize, JsonSchema)]
+ pub struct MigrateMsg {}
+ 
