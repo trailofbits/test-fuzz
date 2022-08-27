@@ -41,6 +41,9 @@ jobs:
             target/dylint/
           key: ${{ runner.os }}-dylint-${{ hashFiles('dylint_versions') }}
 
+      - name: Rustup
+        run: rustup update
+
       - name: Install llvm
         run: sudo apt-get install llvm
 
