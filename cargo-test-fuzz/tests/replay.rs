@@ -32,7 +32,7 @@ fn replay_crashes() {
             &format!("{}", MEMORY_LIMIT / 1024),
         ],
         Object::Crashes,
-        r"(?m)\bmemory allocation of \d{10,} bytes failed$",
+        r"(?m)\bmemory allocation of \d{10,} bytes failed$|\bcapacity overflow\b",
     );
 }
 

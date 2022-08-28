@@ -1,83 +1,44 @@
 use assert_cmd::Command;
 use bitflags::bitflags;
 use cargo_metadata::MetadataCommand;
+use lazy_static::lazy_static;
+use option_set::option_set;
 use predicates::prelude::*;
 use rustc_version::{version_meta, Channel};
+use serde::Deserialize;
 use std::{
     fs::{read_to_string, OpenOptions},
-    io::Write,
+    io::{stderr, Write},
     path::Path,
 };
 use tempfile::tempdir_in;
 use test_log::test;
 
-bitflags! {
-    struct Flags: u8 {
+option_set! {
+    struct Flags: UpperSnake + u8 {
         const EXPENSIVE = 0b0000_0001;
         const REQUIRES_ISOLATION = 0b0000_0010;
         const SKIP_NIGHTLY = 0b0000_0100;
     }
 }
 
-struct Test<'a> {
+#[derive(Deserialize)]
+struct Test {
     flags: Flags,
-    url: &'a str,
-    patch: &'a str,
-    subdir: &'a str,
-    package: &'a str,
-    targets: &'a [&'a str],
+    url: String,
+    patch: String,
+    subdir: String,
+    package: String,
+    targets: Vec<String>,
 }
 
-const TESTS: &[Test] = &[
-    Test {
-        flags: Flags::empty(),
-        url: "https://github.com/CosmWasm/cw-plus",
-        patch: "cw-plus.patch",
-        subdir: ".",
-        package: "cw20-base",
-        targets: &["instantiate", "execute", "query", "migrate"],
-    },
-    Test {
-        flags: Flags::EXPENSIVE,
-        url: "https://github.com/paritytech/substrate",
-        patch: "substrate_client_transaction_pool.patch",
-        subdir: ".",
-        package: "sc-transaction-pool",
-        targets: &["import"],
-    },
-    // smoelius: Disable this test for now: https://github.com/solana-labs/solana/issues/25474
-    // smoelius: It seems to be working again as of:
-    // https://github.com/solana-labs/example-helloworld/pull/532
-    Test {
-        // smoelius: Keeping this here for reference.
-        // https://github.com/bitflags/bitflags/issues/180#issuecomment-499302965
-        // flags: Flags::from_bits_truncate(
-        //     Flags::REQUIRES_ISOLATION.bits() | Flags::SKIP_NIGHTLY.bits(),
-        // ),
-        flags: Flags::REQUIRES_ISOLATION,
-        url: "https://github.com/solana-labs/example-helloworld",
-        patch: "example-helloworld.patch",
-        subdir: "src/program-rust",
-        package: "solana-bpf-helloworld",
-        targets: &["process_instruction"],
-    },
-    Test {
-        flags: Flags::EXPENSIVE,
-        url: "https://github.com/solana-labs/solana",
-        patch: "solana.patch",
-        subdir: ".",
-        package: "solana-bpf-loader-program",
-        targets: &["process_instruction"],
-    },
-    Test {
-        flags: Flags::empty(),
-        url: "https://github.com/substrate-developer-hub/substrate-node-template",
-        patch: "substrate_node_template.patch",
-        subdir: ".",
-        package: "pallet-template",
-        targets: &["do_something"],
-    },
-];
+lazy_static! {
+    static ref TESTS: Vec<Test> = {
+        let content =
+            read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("third_party.json")).unwrap();
+        serde_json::from_str(&content).unwrap()
+    };
+}
 
 // smoelius: This should match `scripts/update_patches.sh`.
 const LINES_OF_CONTEXT: u32 = 2;
@@ -85,11 +46,11 @@ const LINES_OF_CONTEXT: u32 = 2;
 #[test]
 fn cheap_tests() {
     let version_meta = version_meta().unwrap();
-    for test in TESTS {
+    for test in TESTS.iter() {
         run_test(
             test,
             test.flags.contains(Flags::EXPENSIVE)
-                && (test.flags.contains(Flags::SKIP_NIGHTLY)
+                || (test.flags.contains(Flags::SKIP_NIGHTLY)
                     && version_meta.channel == Channel::Nightly),
         );
     }
@@ -99,7 +60,7 @@ fn cheap_tests() {
 #[ignore]
 fn all_tests() {
     let version_meta = version_meta().unwrap();
-    for test in TESTS {
+    for test in TESTS.iter() {
         run_test(
             test,
             test.flags.contains(Flags::SKIP_NIGHTLY) && version_meta.channel == Channel::Nightly,
@@ -107,7 +68,16 @@ fn all_tests() {
     }
 }
 
-fn run_test(test: &Test, stop_after_update: bool) {
+fn run_test(test: &Test, partial: bool) {
+    #[allow(clippy::explicit_write)]
+    writeln!(
+        stderr(),
+        "{}{}",
+        test.url,
+        if partial { " (partial)" } else { "" }
+    )
+    .unwrap();
+
     // smoelius: Each patch expects test-fuzz to be an ancestor of the directory in which the patch
     // is applied.
     #[allow(unknown_lints)]
@@ -116,7 +86,7 @@ fn run_test(test: &Test, stop_after_update: bool) {
 
     Command::new("git")
         .current_dir(tempdir.path())
-        .args(&["clone", test.url, "."])
+        .args(&["clone", &test.url, "."])
         .assert()
         .success();
 
@@ -124,7 +94,7 @@ fn run_test(test: &Test, stop_after_update: bool) {
     #[allow(env_cargo_path)]
     let patch = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("patches")
-        .join(test.patch)
+        .join(&test.patch)
         .canonicalize()
         .unwrap();
 
@@ -134,7 +104,7 @@ fn run_test(test: &Test, stop_after_update: bool) {
         .assert()
         .success();
 
-    let subdir = tempdir.path().join(test.subdir);
+    let subdir = tempdir.path().join(&test.subdir);
 
     if test.flags.contains(Flags::REQUIRES_ISOLATION) {
         let mut file = OpenOptions::new()
@@ -156,26 +126,26 @@ fn run_test(test: &Test, stop_after_update: bool) {
         .assert()
         .success();
 
-    check_test_fuzz_dependency(&subdir, test.package);
+    check_test_fuzz_dependency(&subdir, &test.package);
 
-    if stop_after_update {
+    if partial {
         return;
     }
 
     Command::new("cargo")
         .current_dir(&subdir)
-        .args(&["test", "--package", test.package, "--", "--nocapture"])
+        .args(&["test", "--package", &test.package, "--", "--nocapture"])
         .assert()
         .success();
 
-    for target in test.targets {
+    for target in &test.targets {
         Command::cargo_bin("cargo-test-fuzz")
             .unwrap()
             .current_dir(&subdir)
             .args(&[
                 "test-fuzz",
                 "--package",
-                test.package,
+                &test.package,
                 "--display=corpus",
                 target,
             ])
@@ -189,7 +159,7 @@ fn run_test(test: &Test, stop_after_update: bool) {
             .args(&[
                 "test-fuzz",
                 "--package",
-                test.package,
+                &test.package,
                 "--replay=corpus",
                 target,
             ])
@@ -223,18 +193,18 @@ fn check_test_fuzz_dependency(subdir: &Path, test_package: &str) {
 
 #[test]
 fn patches_are_current() {
-    for test in TESTS {
+    for test in TESTS.iter() {
         let tempdir = tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();
 
         Command::new("git")
             .current_dir(tempdir.path())
-            .args(&["clone", test.url, "."])
+            .args(&["clone", &test.url, "."])
             .assert()
             .success();
 
         let patch_path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("patches")
-            .join(test.patch);
+            .join(&test.patch);
         let patch = read_to_string(patch_path).unwrap();
 
         Command::new("git")
