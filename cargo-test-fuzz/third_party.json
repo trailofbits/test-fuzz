@@ -1,0 +1,42 @@
+[
+  {
+    "flags": [],
+    "url": "https://github.com/CosmWasm/cw-plus",
+    "patch": "cw-plus.patch",
+    "subdir": ".",
+    "package": "cw20-base",
+    "targets": ["instantiate", "execute", "query", "migrate"]
+  },
+  {
+    "flags": ["EXPENSIVE"],
+    "url": "https://github.com/paritytech/substrate",
+    "patch": "substrate_client_transaction_pool.patch",
+    "subdir": ".",
+    "package": "sc-transaction-pool",
+    "targets": ["import"]
+  },
+  {
+    "flags": ["REQUIRES_ISOLATION"],
+    "url": "https://github.com/solana-labs/example-helloworld",
+    "patch": "example-helloworld.patch",
+    "subdir": "src/program-rust",
+    "package": "solana-bpf-helloworld",
+    "targets": ["process_instruction"]
+  },
+  {
+    "flags": ["EXPENSIVE"],
+    "url": "https://github.com/solana-labs/solana",
+    "patch": "solana.patch",
+    "subdir": ".",
+    "package": "solana-bpf-loader-program",
+    "targets": ["process_instruction"]
+  },
+  {
+    "flags": [],
+    "url": "https://github.com/substrate-developer-hub/substrate-node-template",
+    "patch": "substrate_node_template.patch",
+    "subdir": ".",
+    "package": "pallet-template",
+    "targets": ["do_something"]
+  }
+]

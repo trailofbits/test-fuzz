@@ -8,22 +8,6 @@ if [[ $# -ne 0 ]]; then
     exit 1
 fi
 
-URLS=(
-    https://github.com/CosmWasm/cw-plus
-    https://github.com/paritytech/substrate
-    https://github.com/solana-labs/example-helloworld
-    https://github.com/solana-labs/solana
-    https://github.com/substrate-developer-hub/substrate-node-template
-)
-
-PATCHES=(
-    cw-plus.patch
-    substrate_client_transaction_pool.patch
-    example-helloworld.patch
-    solana.patch
-    substrate_node_template.patch
-)
-
 # smoelius: This should match `cargo-test-fuzz/tests/third_party.rs`.
 LINES_OF_CONTEXT=2
 
@@ -31,12 +15,8 @@ DIR="$(dirname "$(realpath "$0")")/.."
 
 cd "$DIR"
 
-N=${#URLS[@]}
-
-for (( I=0; I<$N; I++ )) {
-    URL=${URLS[$I]}
-    PATCH=${PATCHES[$I]}
-
+paste <(jq -r .[].url cargo-test-fuzz/third_party.json) <(jq -r .[].patch cargo-test-fuzz/third_party.json) |
+while read URL PATCH; do
     pushd "$(mktemp -d)"
 
     git clone "$URL" .
@@ -48,4 +28,4 @@ for (( I=0; I<$N; I++ )) {
     git diff --unified="$LINES_OF_CONTEXT" > "$DIR"/cargo-test-fuzz/patches/"$PATCH"
 
     popd
-}
+done
