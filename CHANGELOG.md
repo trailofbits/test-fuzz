@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.0.3
+
+- Don't assume converted arguments are cloneable ([#130](https://github.com/trailofbits/test-fuzz/pull/130))
+- Handle mutable arguments ([#132](https://github.com/trailofbits/test-fuzz/pull/132))
+
 ## 3.0.2
 
 - Simplify command line interface ([#120](https://github.com/trailofbits/test-fuzz/pull/120))
