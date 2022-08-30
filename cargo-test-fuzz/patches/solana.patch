@@ -32,7 +32,7 @@ index 60e21b2e99..001f393f76 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index ca3582c7ae..2367bc06b9 100644
+index c3c2852f8b..37f5adf460 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -130,4 +130,5 @@ impl TransactionExecutor {
@@ -192,7 +192,7 @@ index 8366265ef6..8958ffb3d9 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index ee629bc915..ec1ab287b6 100644
+index a01ee3ad6a..f9f56231f6 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -305,7 +305,8 @@ pub fn create_vm<'a, 'b>(
@@ -225,10 +225,10 @@ index 8956d98a35..642602755c 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 790e615b23..337fccaceb 100644
+index fc0573dbdf..faddc5a4be 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -671,5 +671,5 @@ lazy_static! {
+@@ -676,5 +676,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
@@ -236,17 +236,17 @@ index 790e615b23..337fccaceb 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 0c944787cf..26e298ddbd 100644
+index 276f319c63..9f0206ba9c 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
-@@ -21,5 +21,5 @@ pub type TransactionAccount = (Pubkey, AccountSharedData);
+@@ -23,5 +23,5 @@ pub type TransactionAccount = (Pubkey, AccountSharedData);
  ///
  /// It also contains indices to other structures for faster lookup.
 -#[derive(Clone, Debug)]
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct InstructionAccount {
      /// Points to the account and its key in the `TransactionContext`
-@@ -39,11 +39,80 @@ pub struct InstructionAccount {
+@@ -41,11 +41,80 @@ pub struct InstructionAccount {
  }
  
 +fn serialize_account_keys<'a, S>(
@@ -328,7 +328,7 @@ index 0c944787cf..26e298ddbd 100644
 +    )]
      account_touched_flags: RefCell<Pin<Box<[bool]>>>,
      instruction_context_capacity: usize,
-@@ -325,5 +394,5 @@ pub struct TransactionReturnData {
+@@ -334,5 +403,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone)]
