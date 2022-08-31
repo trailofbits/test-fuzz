@@ -43,36 +43,47 @@ lazy_static! {
 // smoelius: This should match `scripts/update_patches.sh`.
 const LINES_OF_CONTEXT: u32 = 2;
 
-#[test]
-fn cheap_tests() {
-    let version_meta = version_meta().unwrap();
-    for test in TESTS.iter() {
-        run_test(
-            test,
-            test.flags.contains(Flags::EXPENSIVE)
-                || (test.flags.contains(Flags::SKIP_NIGHTLY)
-                    && version_meta.channel == Channel::Nightly),
-        );
+mod cheap_tests {
+    use super::{test, *};
+    #[test]
+    fn test() {
+        let version_meta = version_meta().unwrap();
+        for test in TESTS.iter() {
+            run_test(
+                module_path!(),
+                test,
+                test.flags.contains(Flags::EXPENSIVE)
+                    || (test.flags.contains(Flags::SKIP_NIGHTLY)
+                        && version_meta.channel == Channel::Nightly),
+            );
+        }
     }
 }
 
-#[test]
-#[ignore]
-fn all_tests() {
-    let version_meta = version_meta().unwrap();
-    for test in TESTS.iter() {
-        run_test(
-            test,
-            test.flags.contains(Flags::SKIP_NIGHTLY) && version_meta.channel == Channel::Nightly,
-        );
+mod all_tests {
+    use super::{test, *};
+    #[test]
+    #[ignore]
+    fn test() {
+        let version_meta = version_meta().unwrap();
+        for test in TESTS.iter() {
+            run_test(
+                module_path!(),
+                test,
+                test.flags.contains(Flags::SKIP_NIGHTLY)
+                    && version_meta.channel == Channel::Nightly,
+            );
+        }
     }
 }
 
-fn run_test(test: &Test, partial: bool) {
+fn run_test(module_path: &str, test: &Test, partial: bool) {
+    let (_, module) = module_path.split_once("::").unwrap();
     #[allow(clippy::explicit_write)]
     writeln!(
         stderr(),
-        "{}{}",
+        "{}: {}{}",
+        module,
         test.url,
         if partial { " (partial)" } else { "" }
     )
