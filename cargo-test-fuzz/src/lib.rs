@@ -997,7 +997,10 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
             if line.contains("Time limit was reached") {
                 time_limit_was_reached = true;
             }
-            if line.contains("+++ Testing aborted programmatically +++") {
+            // smoelius: Work around "pizza mode" bug.
+            if line.contains("+++ Testing aborted programmatically +++")
+                || line.contains("+++ Baking aborted programmatically +++")
+            {
                 testing_aborted_programmatically = true;
             }
             println!("{}", line);
