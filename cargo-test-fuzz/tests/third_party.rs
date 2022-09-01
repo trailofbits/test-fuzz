@@ -198,7 +198,7 @@ fn patches_are_current() {
 
         Command::new("git")
             .current_dir(tempdir.path())
-            .args(&["clone", &test.url, "."])
+            .args(&["clone", "--depth=1", &test.url, "."])
             .assert()
             .success();
 
