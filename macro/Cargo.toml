@@ -13,13 +13,13 @@ repository = "https://github.com/trailofbits/test-fuzz"
 proc-macro = true
 
 [dependencies]
-darling = "0.14.0"
+darling = "0.14.1"
 if_chain = "1.0.2"
 lazy_static = "1.4.0"
-proc-macro2 = "1.0.36"
-quote = "1.0.16"
-subprocess = "0.2.8"
-syn = { version = "1.0.89", features = ["full", "parsing", "visit", "visit-mut"] }
+proc-macro2 = "1.0.43"
+quote = "1.0.21"
+subprocess = "0.2.9"
+syn = { version = "1.0.99", features = ["full", "parsing", "visit", "visit-mut"] }
 toolchain_find = "0.2.0"
 unzip-n = "0.1.2"
 

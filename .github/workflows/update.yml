@@ -25,10 +25,8 @@ jobs:
 
       - name: Update dependencies
         run: |
-          # smoelius: AFL should not be updated.
-          AFL="$(grep '^afl\>.*$' test-fuzz/Cargo.toml)"
-          find . -name Cargo.toml -exec cargo upgrade --workspace --manifest-path={} \;
-          sed -i "s/^afl\>.*$/$AFL/" test-fuzz/Cargo.toml
+          cargo update
+          cargo upgrade --to-lockfile
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v3
