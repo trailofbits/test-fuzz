@@ -19,7 +19,7 @@ paste <(jq -r .[].url cargo-test-fuzz/third_party.json) <(jq -r .[].patch cargo-
 while read URL PATCH; do
     pushd "$(mktemp -d)"
 
-    git clone "$URL" .
+    git clone --depth 1 "$URL" .
 
     git apply --reject "$DIR"/cargo-test-fuzz/patches/"$PATCH" || true
 

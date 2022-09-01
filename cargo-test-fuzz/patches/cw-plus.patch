@@ -1,5 +1,5 @@
 diff --git a/contracts/cw20-base/Cargo.toml b/contracts/cw20-base/Cargo.toml
-index 08ba32a8..ad369270 100644
+index 08ba32a..ad36927 100644
 --- a/contracts/cw20-base/Cargo.toml
 +++ b/contracts/cw20-base/Cargo.toml
 @@ -30,4 +30,6 @@ serde = { version = "1.0.103", default-features = false, features = ["derive"] }
@@ -10,7 +10,7 @@ index 08ba32a8..ad369270 100644
  [dev-dependencies]
  cw-multi-test = { path = "../../packages/multi-test", version = "0.14.0" }
 diff --git a/contracts/cw20-base/src/contract.rs b/contracts/cw20-base/src/contract.rs
-index 029af562..2fda62fc 100644
+index 029af56..2fda62f 100644
 --- a/contracts/cw20-base/src/contract.rs
 +++ b/contracts/cw20-base/src/contract.rs
 @@ -92,7 +92,33 @@ fn verify_logo(logo: &Logo) -> Result<(), ContractError> {
@@ -106,7 +106,7 @@ index 029af562..2fda62fc 100644
      let original_version =
          ensure_from_older_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 diff --git a/contracts/cw20-base/src/msg.rs b/contracts/cw20-base/src/msg.rs
-index 20887125..81110d11 100644
+index 2088712..81110d1 100644
 --- a/contracts/cw20-base/src/msg.rs
 +++ b/contracts/cw20-base/src/msg.rs
 @@ -123,5 +123,5 @@ pub enum QueryMsg {
