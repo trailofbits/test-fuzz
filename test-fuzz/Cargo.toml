@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz"
-version = "3.0.3"
+version = "3.0.4"
 edition = "2018"
 
 description = "To make fuzzing Rust easy"
@@ -10,12 +10,12 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
-afl = { version = "0.12.5", optional = true }
+afl = { version = "0.12.6", optional = true }
 serde = "1.0.144"
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.0.3" }
-runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=3.0.3" }
-test-fuzz-macro = { path = "../macro", version = "=3.0.3" }
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.0.4" }
+runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=3.0.4" }
+test-fuzz-macro = { path = "../macro", version = "=3.0.4" }
 
 [dev-dependencies]
 assert_cmd = "2.0.4"

@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.4
+
+- Work around "pizza mode" bug ([#137](https://github.com/trailofbits/test-fuzz/pull/137))
+
 ## 3.0.3
 
 - Don't assume converted arguments are cloneable ([#130](https://github.com/trailofbits/test-fuzz/pull/130))
