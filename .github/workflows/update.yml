@@ -8,6 +8,7 @@ name: Update dependencies
 on:
   schedule:
     - cron: "0 3 * * 5"
+  workflow_dispatch:
 
 jobs:
   update:
@@ -32,3 +33,4 @@ jobs:
         uses: peter-evans/create-pull-request@v3
         with:
           title: "Update dependencies"
+          token: ${{ secrets.PR_GITHUB_TOKEN }}
