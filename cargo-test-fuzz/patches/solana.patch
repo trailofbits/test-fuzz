@@ -21,7 +21,7 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 60e21b2..001f393 100644
+index 804d47f..249152d 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -236,17 +236,17 @@ index fc0573d..faddc5a 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index ebca42c..70cb1b6 100644
+index 488a5b5..988c0eb 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
-@@ -27,5 +27,5 @@ pub type TransactionAccount = (Pubkey, AccountSharedData);
+@@ -82,5 +82,5 @@ pub enum TransactionContextAttribute {
  ///
  /// It also contains indices to other structures for faster lookup.
 -#[derive(Clone, Debug)]
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct InstructionAccount {
      /// Points to the account and its key in the `TransactionContext`
-@@ -45,11 +45,80 @@ pub struct InstructionAccount {
+@@ -100,11 +100,80 @@ pub struct InstructionAccount {
  }
  
 +fn serialize_account_keys<'a, S>(
@@ -328,7 +328,7 @@ index ebca42c..70cb1b6 100644
 +    )]
      #[cfg(not(target_os = "solana"))]
      account_touched_flags: RefCell<Pin<Box<[bool]>>>,
-@@ -344,5 +413,5 @@ pub struct TransactionReturnData {
+@@ -399,5 +468,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone)]
