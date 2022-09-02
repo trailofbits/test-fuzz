@@ -12,9 +12,6 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          # smoelius: The next line causes `secrets.PR_GITHUB_TOKEN` to be search for under
-          # "Actions" instead of "Dependabot" in the `github-script` step below.
-          ssh-key: ${{ secrets.PR_SSH_KEY }}
 
       - name: Check updated files
         # smoelius: Dependabot should update only manifest and/or lockfiles. Hard error otherwise.
