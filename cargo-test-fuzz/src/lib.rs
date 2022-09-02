@@ -435,7 +435,7 @@ fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec
 
     Ok(executable_targets
         .into_iter()
-        .filter(|executable_targets| !executable_targets.1.is_empty())
+        .filter(|(_, targets)| !targets.is_empty())
         .collect())
 }
 

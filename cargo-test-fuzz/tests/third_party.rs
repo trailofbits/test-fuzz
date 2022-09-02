@@ -96,7 +96,7 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
     let tempdir = tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();
 
     Command::new("git")
-        .current_dir(tempdir.path())
+        .current_dir(&tempdir)
         .args(&["clone", &test.url, "."])
         .assert()
         .success();
@@ -110,7 +110,7 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
         .unwrap();
 
     Command::new("git")
-        .current_dir(tempdir.path())
+        .current_dir(&tempdir)
         .args(&["apply", &patch.to_string_lossy()])
         .assert()
         .success();
@@ -208,7 +208,7 @@ fn patches_are_current() {
         let tempdir = tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();
 
         Command::new("git")
-            .current_dir(tempdir.path())
+            .current_dir(&tempdir)
             .args(&["clone", "--depth=1", &test.url, "."])
             .assert()
             .success();
@@ -219,14 +219,14 @@ fn patches_are_current() {
         let patch = read_to_string(patch_path).unwrap();
 
         Command::new("git")
-            .current_dir(tempdir.path())
+            .current_dir(&tempdir)
             .args(&["apply"])
             .write_stdin(patch.as_bytes())
             .assert()
             .success();
 
         let assert = Command::new("git")
-            .current_dir(tempdir.path())
+            .current_dir(&tempdir)
             .args(&["diff", &format!("--unified={}", LINES_OF_CONTEXT)])
             .assert()
             .success();
