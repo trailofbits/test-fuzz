@@ -8,7 +8,7 @@ use testing::{examples, retry};
 // smoelius: MEMORY_LIMIT must be large enough for the build process to complete.
 const MEMORY_LIMIT: u64 = 1024 * 1024 * 1024;
 
-const TIMEOUT: &str = "120";
+const TIMEOUT: &str = "240";
 
 #[derive(Clone, Copy)]
 enum Object {
