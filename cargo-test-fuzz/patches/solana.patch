@@ -32,16 +32,16 @@ index 804d47f..249152d 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index c3c2852..37f5adf 100644
+index 2b984ed..3641559 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -130,4 +130,5 @@ impl TransactionExecutor {
+@@ -132,4 +132,5 @@ impl TransactionExecutor {
  
  /// Compute meter
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct ComputeMeter {
      remaining: u64,
-@@ -174,15 +175,59 @@ impl fmt::Display for AllocErr {
+@@ -176,15 +177,59 @@ impl fmt::Display for AllocErr {
  }
  
 +struct DummyAllocator;
@@ -101,13 +101,13 @@ index c3c2852..37f5adf 100644
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -192,4 +237,5 @@ pub struct InvokeContext<'a> {
+@@ -194,4 +239,5 @@ pub struct InvokeContext<'a> {
      compute_meter: Rc<RefCell<ComputeMeter>>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      executors: Rc<RefCell<Executors>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -200,4 +246,21 @@ pub struct InvokeContext<'a> {
+@@ -202,4 +248,21 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -151,7 +151,7 @@ index 2ca91ba..d94725c 100644
  pub struct PreAccount {
      key: Pubkey,
 diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
-index 8c142fe..a770279 100644
+index 4557a5b..b87fff9 100644
 --- a/program-runtime/src/sysvar_cache.rs
 +++ b/program-runtime/src/sysvar_cache.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for SysvarCache {
@@ -192,29 +192,29 @@ index 8366265..8958ffb 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index a01ee3a..f9f5623 100644
+index 95780bb..0ab8501 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -305,7 +305,8 @@ pub fn create_vm<'a, 'b>(
+@@ -307,7 +307,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
 +#[test_fuzz::test_fuzz]
 +pub fn process_instruction<'a>(
-     first_instruction_account: usize,
+     first_instruction_account: IndexOfAccount,
 -    invoke_context: &mut InvokeContext,
 +    invoke_context: &mut InvokeContext<'a>,
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 8956d98..6426027 100644
+index 40a2673..238ff46 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
  rand_chacha = { version = "0.2.2", optional = true }
  rustversion = "1.0.9"
--serde = "1.0.143"
-+serde = { version = "1.0.138", features = ["rc"] }
+-serde = "1.0.144"
++serde = { version = "1.0.144", features = ["rc"] }
  serde_bytes = "0.11"
  serde_derive = "1.0.103"
 @@ -81,4 +81,6 @@ uriparse = "0.6.4"
@@ -225,10 +225,10 @@ index 8956d98..6426027 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index fc0573d..faddc5a 100644
+index 0ee3915..a75b42f 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -676,5 +676,5 @@ lazy_static! {
+@@ -681,5 +681,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
@@ -236,18 +236,18 @@ index fc0573d..faddc5a 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 488a5b5..988c0eb 100644
+index 5005427..a462478 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
-@@ -82,5 +82,5 @@ pub enum TransactionContextAttribute {
+@@ -84,5 +84,5 @@ pub type IndexOfAccount = u16;
  ///
  /// It also contains indices to other structures for faster lookup.
 -#[derive(Clone, Debug)]
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct InstructionAccount {
      /// Points to the account and its key in the `TransactionContext`
-@@ -100,11 +100,80 @@ pub struct InstructionAccount {
- }
+@@ -105,11 +105,80 @@ pub struct InstructionAccount {
+ pub type TransactionAccount = (Pubkey, AccountSharedData);
  
 +fn serialize_account_keys<'a, S>(
 +    account_keys: &Pin<Box<[Pubkey]>>,
@@ -328,10 +328,10 @@ index 488a5b5..988c0eb 100644
 +    )]
      #[cfg(not(target_os = "solana"))]
      account_touched_flags: RefCell<Pin<Box<[bool]>>>,
-@@ -399,5 +468,5 @@ pub struct TransactionReturnData {
+@@ -422,5 +491,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
--#[derive(Debug, Clone)]
-+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+-#[derive(Debug, Clone, Default)]
++#[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize)]
  pub struct InstructionContext {
      nesting_level: usize,
