@@ -5,7 +5,7 @@ edition = "2018"
 publish = false
 
 [dependencies]
-anyhow = "1.0.63"
+anyhow = "1.0.64"
 assert_cmd = "2.0.4"
 cargo_metadata = "0.15.0"
 if_chain = "1.0.2"
