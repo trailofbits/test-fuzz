@@ -1,14 +1,14 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index ae2faa4..d6c2696 100644
+index ae060e5..ea3359e 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
-@@ -29,4 +29,6 @@ solana-sdk = { path = "../sdk", version = "=1.12.0" }
+@@ -29,4 +29,6 @@ solana-sdk = { path = "../sdk", version = "=1.15.0" }
  thiserror = "1.0"
  
 +test-fuzz = { path = "../../../test-fuzz" }
 +
  [dev-dependencies]
- solana-logger = { path = "../logger", version = "=1.12.0" }
+ solana-logger = { path = "../logger", version = "=1.15.0" }
 diff --git a/program-runtime/src/accounts_data_meter.rs b/program-runtime/src/accounts_data_meter.rs
 index 3e0553d..5136a8b 100644
 --- a/program-runtime/src/accounts_data_meter.rs
@@ -21,7 +21,7 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 804d47f..249152d 100644
+index e2b9ed3..d809e31 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -180,7 +180,7 @@ index c61d8e2..ffad007 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 8366265..8958ffb 100644
+index d0fc87c..71727b2 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -23,4 +23,7 @@ solana_rbpf = "=0.2.32"
@@ -192,7 +192,7 @@ index 8366265..8958ffb 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 95780bb..0ab8501 100644
+index d37e117..e0fbf4d 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -307,7 +307,8 @@ pub fn create_vm<'a, 'b>(
@@ -207,7 +207,7 @@ index 95780bb..0ab8501 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 54c2e45..c21773f 100644
+index 0602001..6fe5b1b 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
@@ -225,10 +225,10 @@ index 54c2e45..c21773f 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 0ee3915..a75b42f 100644
+index f2f3be0..5607a16 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -681,5 +681,5 @@ lazy_static! {
+@@ -696,5 +696,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
