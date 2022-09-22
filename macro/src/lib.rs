@@ -74,7 +74,7 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
         (Some(path.clone()), Some(quote! { #bang #path #for_ }))
     });
 
-    let (impl_items, modules) = map_impl_items(&generics, &trait_path, &*self_ty, &items);
+    let (impl_items, modules) = map_impl_items(&generics, &trait_path, &self_ty, &items);
 
     let result = quote! {
         #(#attrs)* #defaultness #unsafety #impl_token #generics #trait_ #self_ty #where_clause {
