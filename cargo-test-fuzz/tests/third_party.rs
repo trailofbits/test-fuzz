@@ -4,6 +4,7 @@ use cargo_metadata::MetadataCommand;
 use lazy_static::lazy_static;
 use option_set::option_set;
 use predicates::prelude::*;
+use regex::Regex;
 use rustc_version::{version_meta, Channel};
 use serde::Deserialize;
 use std::{
@@ -204,6 +205,8 @@ fn check_test_fuzz_dependency(subdir: &Path, test_package: &str) {
 
 #[test]
 fn patches_are_current() {
+    let re = Regex::new(r#"^index [[:xdigit:]]{7}\.\.[[:xdigit:]]{7} [0-7]{6}$"#).unwrap();
+
     for test in TESTS.iter() {
         let tempdir = tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();
 
@@ -225,6 +228,9 @@ fn patches_are_current() {
             .assert()
             .success();
 
+        // smoelius: The following checks may be redundant in the sense that if the patch applies,
+        // they might necessarily pass. I am keeping them for now as a sanity check.
+
         let assert = Command::new("git")
             .current_dir(&tempdir)
             .args(&["diff", &format!("--unified={}", LINES_OF_CONTEXT)])
@@ -233,6 +239,15 @@ fn patches_are_current() {
 
         let diff = String::from_utf8_lossy(&assert.get_output().stdout);
 
-        assert_eq!(patch, diff);
+        let patch_lines = patch.lines().collect::<Vec<_>>();
+        let diff_lines = diff.lines().collect::<Vec<_>>();
+
+        assert_eq!(patch_lines.len(), diff_lines.len());
+
+        for (patch_line, diff_line) in patch_lines.into_iter().zip(diff_lines) {
+            if !(re.is_match(patch_line) && re.is_match(diff_line)) {
+                assert_eq!(patch_line, diff_line);
+            }
+        }
     }
 }
