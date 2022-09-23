@@ -27,7 +27,7 @@ jobs:
       - name: Update dependencies
         run: |
           cargo update
-          cargo upgrade --to-lockfile
+          cargo upgrade
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v4
