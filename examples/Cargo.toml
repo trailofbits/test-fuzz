@@ -9,7 +9,7 @@ name = "hello-world"
 path = "src/main.rs"
 
 [dependencies]
-serde = { version = "1.0.144", features = ["rc"] }
+serde = { version = "1.0.145", features = ["rc"] }
 test-fuzz = { path = "../test-fuzz", version = "=3.0.4" }
 
 [dev-dependencies]
