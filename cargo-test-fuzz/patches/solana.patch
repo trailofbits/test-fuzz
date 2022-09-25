@@ -32,7 +32,7 @@ index e2b9ed3..d809e31 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 2b984ed..3641559 100644
+index c50f457..c50d232 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -132,4 +132,5 @@ impl TransactionExecutor {
@@ -192,7 +192,7 @@ index d0fc87c..71727b2 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index d37e117..e0fbf4d 100644
+index ab6cf86..0d7fe3d 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -307,7 +307,8 @@ pub fn create_vm<'a, 'b>(
@@ -207,7 +207,7 @@ index d37e117..e0fbf4d 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 0602001..6fe5b1b 100644
+index 7abcfcc..f95be31 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
@@ -225,10 +225,10 @@ index 0602001..6fe5b1b 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index f2f3be0..5607a16 100644
+index e129168..7df95f1 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -696,5 +696,5 @@ lazy_static! {
+@@ -691,5 +691,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
@@ -236,7 +236,7 @@ index f2f3be0..5607a16 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 5005427..a462478 100644
+index 1dd000a..d760a4f 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -84,5 +84,5 @@ pub type IndexOfAccount = u16;
