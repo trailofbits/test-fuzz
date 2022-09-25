@@ -228,8 +228,8 @@ fn patches_are_current() {
             .assert()
             .success();
 
-        // smoelius: The following checks may be redundant in the sense that if the patch applies,
-        // they might necessarily pass. I am keeping them for now as a sanity check.
+        // smoelius: The following checks are *not* redundant. They can fail even if the patch
+        // applies.
 
         let assert = Command::new("git")
             .current_dir(&tempdir)
