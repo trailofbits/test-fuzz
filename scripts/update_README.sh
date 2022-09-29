@@ -15,19 +15,18 @@ OPTIONS="$(mktemp)"
 README="$(mktemp)"
 
 cargo run -p cargo-test-fuzz -- test-fuzz --help |
-sed -n '/^USAGE:/,/^ARGS:/p' |
-tail -n +2 |
-head -n -2 |
+sed -n '/^Usage:/p' |
+sed 's/^Usage://' |
 cat > "$USAGE"
 
 cargo run -p cargo-test-fuzz -- test-fuzz --help |
-sed -n '/^ARGS:/,/^OPTIONS:/p' |
+sed -n '/^Arguments:/,/^Options:/p' |
 tail -n +2 |
 head -n -2 |
 cat > "$ARGS"
 
 cargo run -p cargo-test-fuzz -- test-fuzz --help |
-sed -n '/^OPTIONS:/,$ p' |
+sed -n '/^Options:/,$ p' |
 tail -n +2 |
 cat > "$OPTIONS"
 
@@ -48,12 +47,12 @@ while read -r X; do
 
     if [[ "$X" = '#### Usage' ]]; then
         NEXT='USAGE'
-    elif [[ "$X" = '#### Args' ]]; then
+    elif [[ "$X" = '#### Arguments' ]]; then
         NEXT='ARGS'
     elif [[ "$X" = '#### Options' ]]; then
         NEXT='OPTIONS'
     elif [[ "$X" = '```' ]]; then
-        # smoelius: It should not be possible to get here with "$NEXT" = 'dev/zero'.
+        # smoelius: It should not be possible to get here with "$NEXT" = '/dev/zero'.
         if [[ -n "$NEXT" ]]; then
             cat "${!NEXT}"
             NEXT='/dev/zero'
