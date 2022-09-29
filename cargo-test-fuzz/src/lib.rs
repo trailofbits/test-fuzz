@@ -9,7 +9,7 @@ use bitflags::bitflags;
 use cargo_metadata::{
     Artifact, ArtifactProfile, CargoOpt, Message, Metadata, MetadataCommand, Package, PackageId,
 };
-use clap::{crate_version, ArgEnum};
+use clap::{crate_version, ValueEnum};
 use heck::ToKebabCase;
 use internal::dirs::{
     concretizations_directory_from_target, corpus_directory_from_target,
@@ -56,7 +56,7 @@ bitflags! {
     }
 }
 
-#[derive(ArgEnum, Clone, Copy, Debug, Display, Deserialize, PartialEq, Eq, Serialize)]
+#[derive(Clone, Copy, Debug, Display, Deserialize, PartialEq, Eq, Serialize, ValueEnum)]
 #[remain::sorted]
 enum Object {
     Concretizations,

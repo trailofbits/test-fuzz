@@ -1,6 +1,6 @@
 use super::Object;
 use anyhow::Result;
-use clap::{crate_version, Parser};
+use clap::{crate_version, ArgAction, Parser};
 use heck::ToKebabCase;
 use paste::paste;
 use serde::{Deserialize, Serialize};
@@ -35,7 +35,6 @@ struct TestFuzzWithDeprecations {
     consolidate_all: bool,
     #[clap(
         long,
-        arg_enum,
         value_name = "OBJECT",
         help = "Display concretizations, corpus, crashes, `impl` concretizations, hangs, or work \
         queue. By default, corpus uses an uninstrumented fuzz target; the others use an \
@@ -67,7 +66,7 @@ struct TestFuzzWithDeprecations {
     exit_code: bool,
     #[clap(
         long,
-        multiple_occurrences = true,
+        action = ArgAction::Append,
         help = "Space or comma separated list of features to activate"
     )]
     features: Vec<String>,
@@ -94,7 +93,6 @@ struct TestFuzzWithDeprecations {
     pretty_print: bool,
     #[clap(
         long,
-        arg_enum,
         value_name = "OBJECT",
         help = "Replay corpus, crashes, hangs, or work queue. By default, corpus uses an \
         uninstrumented fuzz target; the others use an instrumented fuzz target. To replay the \
@@ -266,4 +264,10 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     }
 
     super::run(super::TestFuzz::from(opts))
+}
+
+#[test]
+fn verify_cli() {
+    use clap::CommandFactory;
+    Opts::command().debug_assert();
 }
