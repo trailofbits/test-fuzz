@@ -21,7 +21,7 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index e2b9ed3..d809e31 100644
+index 9b5db88..f08f0fb 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -32,7 +32,7 @@ index e2b9ed3..d809e31 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index c50f457..c50d232 100644
+index 7a3da76..c633877 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -132,4 +132,5 @@ impl TransactionExecutor {
@@ -180,10 +180,10 @@ index c61d8e2..ffad007 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index d0fc87c..71727b2 100644
+index b4a2cd3..3463b23 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.32"
+@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.33"
  thiserror = "1.0"
  
 +serde = "1.0"
@@ -192,10 +192,10 @@ index d0fc87c..71727b2 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index ab6cf86..0d7fe3d 100644
+index 951bd37..285eb26 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -307,7 +307,8 @@ pub fn create_vm<'a, 'b>(
+@@ -310,7 +310,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -225,10 +225,10 @@ index 7abcfcc..f95be31 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index e129168..7df95f1 100644
+index d3b2202..057f368 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -691,5 +691,5 @@ lazy_static! {
+@@ -696,5 +696,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone)]
@@ -236,7 +236,7 @@ index e129168..7df95f1 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 1dd000a..d760a4f 100644
+index e27bf27..1a0bfe3 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -84,5 +84,5 @@ pub type IndexOfAccount = u16;
@@ -328,7 +328,7 @@ index 1dd000a..d760a4f 100644
 +    )]
      #[cfg(not(target_os = "solana"))]
      account_touched_flags: RefCell<Pin<Box<[bool]>>>,
-@@ -422,5 +491,5 @@ pub struct TransactionReturnData {
+@@ -432,5 +501,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone, Default)]
