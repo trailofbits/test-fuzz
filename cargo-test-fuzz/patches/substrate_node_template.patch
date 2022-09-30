@@ -1,5 +1,5 @@
 diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
-index ff7d85b..ddaf6aa 100644
+index 953fbde..b81c312 100644
 --- a/pallets/template/Cargo.toml
 +++ b/pallets/template/Cargo.toml
 @@ -38,2 +38,8 @@ std = [
@@ -12,7 +12,7 @@ index ff7d85b..ddaf6aa 100644
 +[dependencies.serde]
 +version = '1.0.130'
 diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
-index f1519ef..7b1a57b 100644
+index a9209a9..7e4d77b 100644
 --- a/pallets/template/src/lib.rs
 +++ b/pallets/template/src/lib.rs
 @@ -58,12 +58,48 @@ pub mod pallet {
@@ -56,7 +56,7 @@ index f1519ef..7b1a57b 100644
 +	{
  		/// An example dispatchable that takes a singles value as a parameter, writes the value to
  		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
- 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1))]
+ 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 +		#[test_fuzz::test_fuzz(
 +			bounds = "T: frame_system::Config",
 +			concretize_impl = "crate::mock::Test",
