@@ -180,10 +180,10 @@ index c61d8e2..ffad007 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index b4a2cd3..3463b23 100644
+index acfd11b..d9d5333 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.33"
+@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.34"
  thiserror = "1.0"
  
 +serde = "1.0"
@@ -192,10 +192,10 @@ index b4a2cd3..3463b23 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 951bd37..285eb26 100644
+index b972638..33f026f 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -310,7 +310,8 @@ pub fn create_vm<'a, 'b>(
+@@ -330,7 +330,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -236,7 +236,7 @@ index b64d3f2..cddf437 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index e27bf27..1a0bfe3 100644
+index 02db1c2..12ac370 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -84,5 +84,5 @@ pub type IndexOfAccount = u16;

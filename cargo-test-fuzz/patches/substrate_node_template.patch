@@ -1,5 +1,5 @@
 diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
-index 953fbde..b81c312 100644
+index 4f7cf78..dbf8070 100644
 --- a/pallets/template/Cargo.toml
 +++ b/pallets/template/Cargo.toml
 @@ -38,2 +38,8 @@ std = [
@@ -12,7 +12,7 @@ index 953fbde..b81c312 100644
 +[dependencies.serde]
 +version = '1.0.130'
 diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
-index a9209a9..7e4d77b 100644
+index 0b55d7a..02aba8a 100644
 --- a/pallets/template/src/lib.rs
 +++ b/pallets/template/src/lib.rs
 @@ -58,12 +58,48 @@ pub mod pallet {
