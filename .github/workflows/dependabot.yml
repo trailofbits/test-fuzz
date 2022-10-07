@@ -1,4 +1,4 @@
-name: Dependabot Workflow
+name: Dependabot workflow
 
 on: [pull_request, workflow_dispatch]
 
