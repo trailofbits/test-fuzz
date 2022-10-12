@@ -1,8 +1,8 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index ae060e5..ea3359e 100644
+index aae3ff0..1fce7df 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
-@@ -29,4 +29,6 @@ solana-sdk = { path = "../sdk", version = "=1.15.0" }
+@@ -30,4 +30,6 @@ solana-sdk = { path = "../sdk", version = "=1.15.0" }
  thiserror = "1.0"
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -21,7 +21,7 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 534b835..7c4c003 100644
+index b537d53..01a5028 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -32,16 +32,16 @@ index 534b835..7c4c003 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 5b080f3..09e37c9 100644
+index 5fabd64..1392588 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -132,4 +132,5 @@ impl TransactionExecutor {
+@@ -60,4 +60,5 @@ impl std::fmt::Debug for BuiltinProgram {
  
  /// Compute meter
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct ComputeMeter {
      remaining: u64,
-@@ -176,15 +177,59 @@ impl fmt::Display for AllocErr {
+@@ -104,15 +105,59 @@ impl fmt::Display for AllocErr {
  }
  
 +struct DummyAllocator;
@@ -101,13 +101,13 @@ index 5b080f3..09e37c9 100644
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -194,4 +239,5 @@ pub struct InvokeContext<'a> {
+@@ -122,4 +167,5 @@ pub struct InvokeContext<'a> {
      compute_meter: Rc<RefCell<ComputeMeter>>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      executors: Rc<RefCell<Executors>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -202,4 +248,21 @@ pub struct InvokeContext<'a> {
+@@ -130,4 +176,21 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -192,10 +192,10 @@ index acfd11b..d9d5333 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index b972638..33f026f 100644
+index b828b58..ab603c6 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -330,7 +330,8 @@ pub fn create_vm<'a, 'b>(
+@@ -331,7 +331,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -225,25 +225,25 @@ index 7abcfcc..f95be31 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index b64d3f2..cddf437 100644
+index bd6e533..5883ff5 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -691,5 +691,5 @@ lazy_static! {
+@@ -686,5 +686,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
--#[derive(AbiExample, Debug, Clone)]
-+#[derive(AbiExample, Debug, Clone, serde::Deserialize, serde::Serialize)]
+-#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
++#[derive(AbiExample, Debug, Clone, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 02db1c2..12ac370 100644
+index d8b7182..05db75c 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -84,5 +84,5 @@ pub type IndexOfAccount = u16;
  ///
  /// It also contains indices to other structures for faster lookup.
--#[derive(Clone, Debug)]
-+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+-#[derive(Clone, Debug, Eq, PartialEq)]
++#[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct InstructionAccount {
      /// Points to the account and its key in the `TransactionContext`
 @@ -105,11 +105,80 @@ pub struct InstructionAccount {
@@ -309,8 +309,8 @@ index 02db1c2..12ac370 100644
  /// Loaded transaction shared between runtime and programs.
  ///
  /// This context is valid for the entire duration of a transaction being processed.
--#[derive(Debug)]
-+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+-#[derive(Debug, Clone, PartialEq)]
++#[derive(Debug, Clone, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct TransactionContext {
 +    #[serde(
 +        serialize_with = "serialize_account_keys",
@@ -331,7 +331,7 @@ index 02db1c2..12ac370 100644
 @@ -432,5 +501,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
--#[derive(Debug, Clone, Default)]
-+#[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize)]
+-#[derive(Debug, Clone, Default, Eq, PartialEq)]
++#[derive(Debug, Clone, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct InstructionContext {
      nesting_level: usize,
