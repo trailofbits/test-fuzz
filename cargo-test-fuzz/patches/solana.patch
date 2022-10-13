@@ -32,7 +32,7 @@ index b537d53..01a5028 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 5fabd64..1392588 100644
+index af1b7d6..5ae7ceb 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -60,4 +60,5 @@ impl std::fmt::Debug for BuiltinProgram {
@@ -105,7 +105,7 @@ index 5fabd64..1392588 100644
      compute_meter: Rc<RefCell<ComputeMeter>>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
-     executors: Rc<RefCell<Executors>>,
+     pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
      pub feature_set: Arc<FeatureSet>,
 @@ -130,4 +176,21 @@ pub struct InvokeContext<'a> {
  }
@@ -118,7 +118,7 @@ index 5fabd64..1392588 100644
 +            sysvar_cache: self.sysvar_cache.clone(),
 +            log_collector: self.log_collector.clone(),
 +            compute_meter: self.compute_meter.clone(),
-+            executors: self.executors.clone(),
++            tx_executor_cache: self.tx_executor_cache.clone(),
 +            feature_set: self.feature_set.clone(),
 +            timings: self.timings.clone(),
 +            syscall_context: self.syscall_context.clone(),
@@ -192,7 +192,7 @@ index acfd11b..d9d5333 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index b828b58..ab603c6 100644
+index 253f260..7f77a98 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -331,7 +331,8 @@ pub fn create_vm<'a, 'b>(
