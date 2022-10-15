@@ -72,13 +72,13 @@ jobs:
       - name: Dylint
         run: |
           cargo install cargo-dylint dylint-link || true
-          DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all --workspace -- --tests
+          DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all --workspace -- --all-targets
 
       - name: Udeps
         run: |
           rustup toolchain install nightly
           cargo install cargo-udeps || true
-          cargo clean && cargo +nightly udeps --workspace --tests
+          cargo clean && cargo +nightly udeps --workspace --all-targets
 
   test:
     runs-on: ubuntu-latest

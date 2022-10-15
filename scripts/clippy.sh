@@ -10,7 +10,7 @@ fi
 
 # cargo clean
 
-cargo clippy --workspace --tests -- \
+cargo clippy --workspace --all-targets -- \
     -D warnings \
     -W clippy::pedantic \
     -W clippy::nursery \
