@@ -21,7 +21,7 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index b537d53..01a5028 100644
+index 01ee899..50d80be 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -32,7 +32,7 @@ index b537d53..01a5028 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index af1b7d6..5ae7ceb 100644
+index 081547d..a6eeea7 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -60,4 +60,5 @@ impl std::fmt::Debug for BuiltinProgram {
@@ -180,7 +180,7 @@ index c61d8e2..ffad007 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index acfd11b..d9d5333 100644
+index 0765e78..b1fe289 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -23,4 +23,7 @@ solana_rbpf = "=0.2.34"
@@ -192,10 +192,10 @@ index acfd11b..d9d5333 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 253f260..7f77a98 100644
+index f9835b7..8963a0c 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -331,7 +331,8 @@ pub fn create_vm<'a, 'b>(
+@@ -392,7 +392,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -207,17 +207,17 @@ index 253f260..7f77a98 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 7abcfcc..f95be31 100644
+index 660b46a..7ffc5ef 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -66,5 +66,5 @@ rand = { version = "0.7.0", optional = true }
+@@ -67,5 +67,5 @@ rand = { version = "0.7.0", optional = true }
  rand_chacha = { version = "0.2.2", optional = true }
  rustversion = "1.0.9"
 -serde = "1.0.144"
 +serde = { version = "1.0.144", features = ["rc"] }
  serde_bytes = "0.11"
  serde_derive = "1.0.103"
-@@ -81,4 +81,6 @@ uriparse = "0.6.4"
+@@ -82,4 +82,6 @@ uriparse = "0.6.4"
  wasm-bindgen = "0.2"
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -225,10 +225,10 @@ index 7abcfcc..f95be31 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index bd6e533..5883ff5 100644
+index c7fe655..e414d60 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -686,5 +686,5 @@ lazy_static! {
+@@ -691,5 +691,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
