@@ -9,13 +9,13 @@ name = "hello-world"
 path = "src/main.rs"
 
 [dependencies]
-serde = { version = "1.0.145", features = ["rc"] }
+serde = { version = "1.0.146", features = ["rc"] }
 test-fuzz = { path = "../test-fuzz", version = "=3.0.4" }
 
 [dev-dependencies]
 lazy_static = "1.4.0"
 parse_duration = "2.1.1"
-serde_json = "1.0.86"
+serde_json = "1.0.87"
 
 [features]
 __auto_concretize = ["test-fuzz/auto_concretize"]
