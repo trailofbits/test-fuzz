@@ -26,8 +26,7 @@ fn link() {
     // smoelius: https://stackoverflow.com/questions/7219845/difference-between-nm-and-objdump
     Command::new("nm")
         .args(&[&target_directory(false)
-            .join("debug")
-            .join("hello-world")
+            .join("debug/hello-world")
             .to_string_lossy()
             .to_string()])
         .assert()

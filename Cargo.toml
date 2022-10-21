@@ -12,6 +12,7 @@ members = [
 [workspace.metadata.dylint]
 libraries = [
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/general/*" },
+    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/const_path_join" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/inconsistent_qualification" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/question_mark_in_expression" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/suboptimal_pattern" },

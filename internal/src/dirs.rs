@@ -33,23 +33,17 @@ pub fn corpus_directory_from_target(krate: &str, target: &str) -> PathBuf {
 
 #[must_use]
 pub fn crashes_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    output_directory_from_target(krate, target)
-        .join("default")
-        .join("crashes")
+    output_directory_from_target(krate, target).join("default/crashes")
 }
 
 #[must_use]
 pub fn hangs_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    output_directory_from_target(krate, target)
-        .join("default")
-        .join("hangs")
+    output_directory_from_target(krate, target).join("default/hangs")
 }
 
 #[must_use]
 pub fn queue_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    output_directory_from_target(krate, target)
-        .join("default")
-        .join("queue")
+    output_directory_from_target(krate, target).join("default/queue")
 }
 
 #[must_use]
