@@ -9,9 +9,7 @@ use std::{
 
 lazy_static! {
     static ref METADATA: Metadata = MetadataCommand::new().no_deps().exec().unwrap();
-    static ref README_PATH: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
-        .join("README.md");
+    static ref README_PATH: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR")).join("../README.md");
 }
 
 #[test]

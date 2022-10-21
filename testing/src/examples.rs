@@ -10,9 +10,7 @@ use subprocess::{Exec, Redirection};
 
 lazy_static! {
     pub static ref MANIFEST_PATH: String = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("..")
-        .join("examples")
-        .join("Cargo.toml")
+        .join("../examples/Cargo.toml")
         .to_string_lossy()
         .to_string();
 }
