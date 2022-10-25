@@ -180,10 +180,10 @@ index c61d8e2..ffad007 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 0765e78..b1fe289 100644
+index d95a4ab..a86b1d1 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.34"
+@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.35"
  thiserror = "1.0"
  
 +serde = "1.0"
@@ -192,7 +192,7 @@ index 0765e78..b1fe289 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index f9835b7..8963a0c 100644
+index e9f2bad..6aece84 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -392,7 +392,8 @@ pub fn create_vm<'a, 'b>(
@@ -225,10 +225,10 @@ index 660b46a..7ffc5ef 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index c7fe655..e414d60 100644
+index 8671ee3..6ea7453 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -691,5 +691,5 @@ lazy_static! {
+@@ -696,5 +696,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
