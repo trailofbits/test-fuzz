@@ -20,7 +20,12 @@ enum SubCommand {
 
 // smoelius: Wherever possible, try to reuse cargo test and libtest option names.
 #[derive(Clone, Debug, Deserialize, Parser, Serialize)]
-#[clap(version = crate_version!())]
+#[clap(version = crate_version!(), after_help = "To fuzz at most <SECONDS> of time, use:
+
+    cargo test-fuzz ... -- -V <SECONDS>
+
+Try `cargo afl fuzz --help` to see additional fuzzer options.
+")]
 #[remain::sorted]
 struct TestFuzzWithDeprecations {
     #[clap(long, help = "Display backtraces")]
