@@ -20,7 +20,7 @@ doctest = false
 anyhow = "1.0.66"
 bitflags = "1.3.2"
 cargo_metadata = "0.15.0"
-clap = { version = "4.0.18", features = ["cargo", "derive"] }
+clap = { version = "4.0.18", features = ["cargo", "derive", "wrap_help"] }
 env_logger = "0.9.1"
 heck = "0.4.0"
 lazy_static = "1.4.0"
