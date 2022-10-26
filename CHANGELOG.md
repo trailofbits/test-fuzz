@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.5
+
+- Update help message ([#153](https://github.com/trailofbits/test-fuzz/pull/153))
+
 ## 3.0.4
 
 - Work around "pizza mode" bug ([#137](https://github.com/trailofbits/test-fuzz/pull/137))
