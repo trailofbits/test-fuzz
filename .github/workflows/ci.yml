@@ -97,12 +97,18 @@ jobs:
       - name: Install llvm
         run: sudo apt-get install llvm
 
+      # smoelius: The Substrate tests require `protoc`.
+      - name: Install protoc
+        if: ${{ github.event_name == 'schedule' }}
+        run: sudo apt-get install protobuf-compiler
+
       - name: Install afl
         run: cargo install afl
 
       # smoelius: The nightly toolchain and wasm32 target are needed for some Substrate tests,
       # regardless of the toolchain used to build test-fuzz.
       - name: Add nightly toolchain and wasm32 target
+        if: ${{ github.event_name == 'schedule' }}
         run: |
           rustup toolchain install nightly
           rustup +nightly target add wasm32-unknown-unknown
