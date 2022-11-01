@@ -21,7 +21,7 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 01ee899..50d80be 100644
+index f196f49..6e20c90 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -192,10 +192,10 @@ index d95a4ab..a86b1d1 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index e9f2bad..6aece84 100644
+index de727cd..844b691 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -392,7 +392,8 @@ pub fn create_vm<'a, 'b>(
+@@ -393,7 +393,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -225,10 +225,10 @@ index 660b46a..7ffc5ef 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 89cedb0..0185da3 100644
+index bb103bc..0764c47 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -701,5 +701,5 @@ lazy_static! {
+@@ -706,5 +706,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
