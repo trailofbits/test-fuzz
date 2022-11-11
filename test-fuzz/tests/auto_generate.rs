@@ -21,7 +21,7 @@ fn unsigned() {
 }
 
 fn test(name: &str, n: usize) {
-    let corpus = corpus_directory_from_target("auto_generate", &format!("{}::target", name));
+    let corpus = corpus_directory_from_target("auto_generate", &format!("{name}::target"));
 
     // smoelius: `corpus` is distinct for all tests. So there is no race here.
     #[cfg_attr(
@@ -32,7 +32,7 @@ fn test(name: &str, n: usize) {
 
     examples::test(
         "auto_generate",
-        &format!("{}::target_fuzz::auto_generate", name),
+        &format!("{name}::target_fuzz::auto_generate"),
     )
     .unwrap()
     .assert()

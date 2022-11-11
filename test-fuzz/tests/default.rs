@@ -21,7 +21,7 @@ fn default() {
 }
 
 fn test(name: &str, n: usize) {
-    let corpus = corpus_directory_from_target("default", &format!("{}::target", name));
+    let corpus = corpus_directory_from_target("default", &format!("{name}::target"));
 
     // smoelius: `corpus` is distinct for all tests. So there is no race here.
     #[cfg_attr(
@@ -30,7 +30,7 @@ fn test(name: &str, n: usize) {
     )]
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test("default", &format!("{}::target_fuzz::auto_generate", name))
+    examples::test("default", &format!("{name}::target_fuzz::auto_generate"))
         .unwrap()
         .assert()
         .success();

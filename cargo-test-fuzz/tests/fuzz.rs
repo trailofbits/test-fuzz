@@ -32,7 +32,7 @@ fn fuzz(krate: &str, persistent: bool) {
         dylint_lib = "non_thread_safe_call_in_test",
         allow(non_thread_safe_call_in_test)
     )]
-    remove_dir_all(&corpus).unwrap_or_default();
+    remove_dir_all(corpus).unwrap_or_default();
 
     examples::test(krate, "test").unwrap().assert().success();
 

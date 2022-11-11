@@ -98,7 +98,7 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
 
     Command::new("git")
         .current_dir(&tempdir)
-        .args(&["clone", &test.url, "."])
+        .args(["clone", &test.url, "."])
         .assert()
         .success();
 
@@ -112,7 +112,7 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
 
     Command::new("git")
         .current_dir(&tempdir)
-        .args(&["apply", &patch.to_string_lossy()])
+        .args(["apply", &patch.to_string_lossy()])
         .assert()
         .success();
 
@@ -134,7 +134,7 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
     // incompatible with `syn:1.0.84`.
     Command::new("cargo")
         .current_dir(&subdir)
-        .args(&["update"])
+        .args(["update"])
         .assert()
         .success();
 
@@ -146,7 +146,7 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
 
     Command::new("cargo")
         .current_dir(&subdir)
-        .args(&["test", "--package", &test.package, "--", "--nocapture"])
+        .args(["test", "--package", &test.package, "--", "--nocapture"])
         .assert()
         .success();
 
@@ -154,7 +154,7 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
         Command::cargo_bin("cargo-test-fuzz")
             .unwrap()
             .current_dir(&subdir)
-            .args(&[
+            .args([
                 "test-fuzz",
                 "--package",
                 &test.package,
@@ -168,7 +168,7 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
         Command::cargo_bin("cargo-test-fuzz")
             .unwrap()
             .current_dir(&subdir)
-            .args(&[
+            .args([
                 "test-fuzz",
                 "--package",
                 &test.package,
@@ -212,7 +212,7 @@ fn patches_are_current() {
 
         Command::new("git")
             .current_dir(&tempdir)
-            .args(&["clone", "--depth=1", &test.url, "."])
+            .args(["clone", "--depth=1", &test.url, "."])
             .assert()
             .success();
 
@@ -223,7 +223,7 @@ fn patches_are_current() {
 
         Command::new("git")
             .current_dir(&tempdir)
-            .args(&["apply"])
+            .args(["apply"])
             .write_stdin(patch.as_bytes())
             .assert()
             .success();
@@ -233,7 +233,7 @@ fn patches_are_current() {
 
         let assert = Command::new("git")
             .current_dir(&tempdir)
-            .args(&["diff", &format!("--unified={}", LINES_OF_CONTEXT)])
+            .args(["diff", &format!("--unified={LINES_OF_CONTEXT}")])
             .assert()
             .success();
 

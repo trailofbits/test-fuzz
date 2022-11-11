@@ -21,19 +21,19 @@ fn test() {
     let mut mod_path = String::new();
 
     for i in 1..=4 {
-        let test = format!("{}test", mod_path);
-        let target = format!("{}target", mod_path);
+        let test = format!("{mod_path}test");
+        let target = format!("{mod_path}target");
 
-        mod_path = format!("{}auto_concretize_{}::", mod_path, i);
+        mod_path = format!("{mod_path}auto_concretize_{i}::");
 
         let impl_concretizations =
             impl_concretizations_directory_from_target("auto_concretize_0", &target);
 
-        remove_dir_all(&impl_concretizations).unwrap_or_default();
+        remove_dir_all(impl_concretizations).unwrap_or_default();
 
         let concretizations = concretizations_directory_from_target("auto_concretize_0", &target);
 
-        remove_dir_all(&concretizations).unwrap_or_default();
+        remove_dir_all(concretizations).unwrap_or_default();
 
         examples::test("auto_concretize_0", &test)
             .unwrap()
@@ -46,13 +46,13 @@ fn test_fuzz() {
     let mut mod_path = String::new();
 
     for i in 1..=4 {
-        let target = format!("{}target", mod_path);
+        let target = format!("{mod_path}target");
 
-        mod_path = format!("{}auto_concretize_{}::", mod_path, i);
+        mod_path = format!("{mod_path}auto_concretize_{i}::");
 
         examples::test_fuzz("auto_concretize_0", &target)
             .unwrap()
-            .args(&["--no-run"])
+            .args(["--no-run"])
             .assert()
             .success();
     }

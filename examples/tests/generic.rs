@@ -1,5 +1,5 @@
 #![cfg_attr(dylint_lib = "crate_wide_allow", allow(crate_wide_allow))]
-#![allow(clippy::blacklisted_name)]
+#![allow(clippy::disallowed_names)]
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -52,6 +52,8 @@ impl<T: FooBarTrait + Clone + Debug + Serialize> Trait<T> for Struct {
     // state:
     // Derived `Debug` formats are not stable, and so may change with future Rust versions.
     // So `x` should not be compared to a string constant.
+    // smoelius: The following will be needed once `uninlined_format_args` reaches stable.
+    // #[allow(clippy::uninlined_format_args)]
     #[test_fuzz::test_fuzz(concretize_impl = "Bar")]
     fn target(&self, x: &T) {
         assert_ne!(

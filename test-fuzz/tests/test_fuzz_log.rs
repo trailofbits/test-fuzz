@@ -7,7 +7,7 @@ use testing::examples::MANIFEST_PATH;
 fn test_fuzz_log() {
     Command::new("cargo")
         .envs(vec![("TEST_FUZZ_LOG", "1")])
-        .args(&[
+        .args([
             "test",
             "--manifest-path",
             &MANIFEST_PATH,
