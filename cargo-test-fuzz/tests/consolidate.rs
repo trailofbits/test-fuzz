@@ -63,7 +63,7 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
 
         examples::test_fuzz(krate, target)
             .unwrap()
-            .args(&["--consolidate"])
+            .args(["--consolidate"])
             .assert()
             .success();
 
@@ -71,7 +71,7 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
 
         examples::test_fuzz(krate, target)
             .unwrap()
-            .args(&["--display=corpus"])
+            .args(["--display=corpus"])
             .assert()
             .success()
             .try_stdout(predicate::str::contains(pattern))

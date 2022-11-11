@@ -191,13 +191,13 @@ pub fn write_args<T: Serialize>(serde_format: SerdeFormat, args: &T) {
 }
 
 pub fn write_data(dir: &Path, data: &[u8]) -> io::Result<()> {
-    create_dir_all(&dir).unwrap_or_default();
+    create_dir_all(dir).unwrap_or_default();
     let hex = {
         let hash = Sha1::digest(data);
         hex::encode(hash)
     };
     let path = dir.join(hex);
-    write(path, &data)
+    write(path, data)
 }
 
 pub fn read_args<T: DeserializeOwned, R: Read>(serde_format: SerdeFormat, reader: R) -> Option<T> {

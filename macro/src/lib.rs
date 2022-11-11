@@ -418,7 +418,7 @@ fn map_method_or_fn(
 
     let target_ident = &sig.ident;
     let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
-    let mod_ident = Ident::new(&format!("{}_fuzz", renamed_target_ident), Span::call_site());
+    let mod_ident = Ident::new(&format!("{renamed_target_ident}_fuzz"), Span::call_site());
 
     // smoelius: This is a hack. When `only_concretizations` is specified, the user should not have
     // to also specify trait bounds. But `Args` is used to get the module path at runtime via
@@ -1068,7 +1068,7 @@ fn log(tokens: &TokenStream2) {
     if log_enabled() {
         find_installed_component("rustfmt").map_or_else(
             || {
-                println!("{}", tokens);
+                println!("{tokens}");
             },
             |rustfmt| {
                 let mut popen = Exec::cmd(rustfmt)
@@ -1079,7 +1079,7 @@ fn log(tokens: &TokenStream2) {
                     .stdin
                     .take()
                     .expect("Could not take `rustfmt`'s standard input");
-                write!(stdin, "{}", tokens).expect("Could not write to `rustfmt`'s standard input");
+                write!(stdin, "{tokens}").expect("Could not write to `rustfmt`'s standard input");
                 drop(stdin);
                 let status = popen.wait().expect("`wait` failed");
                 assert!(status.success(), "`rustfmt` failed");

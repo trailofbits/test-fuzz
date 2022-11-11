@@ -60,13 +60,13 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &st
         dylint_lib = "non_thread_safe_call_in_test",
         allow(non_thread_safe_call_in_test)
     )]
-    remove_dir_all(&corpus).unwrap_or_default();
+    remove_dir_all(corpus).unwrap_or_default();
 
     examples::test(krate, "test").unwrap().assert().success();
 
     examples::test_fuzz(krate, target)
         .unwrap()
-        .args(&["--reset"])
+        .args(["--reset"])
         .assert()
         .success();
 
@@ -86,7 +86,7 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &st
         let mut command = examples::test_fuzz(krate, target).unwrap();
 
         command
-            .args(&[match object {
+            .args([match object {
                 Object::Crashes => "--replay=crashes",
                 Object::Hangs => "--replay=hangs",
             }])

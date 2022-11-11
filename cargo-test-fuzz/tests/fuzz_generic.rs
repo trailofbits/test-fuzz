@@ -46,14 +46,14 @@ fn fuzz(test: &str, code: i32) {
         dylint_lib = "non_thread_safe_call_in_test",
         allow(non_thread_safe_call_in_test)
     )]
-    remove_dir_all(&corpus).unwrap_or_default();
+    remove_dir_all(corpus).unwrap_or_default();
 
     examples::test("generic", test).unwrap().assert().success();
 
     retry(3, || {
         examples::test_fuzz("generic", "target")
             .unwrap()
-            .args(&["--exit-code", "--run-until-crash", "--", "-V", TIMEOUT])
+            .args(["--exit-code", "--run-until-crash", "--", "-V", TIMEOUT])
             .assert()
             .try_code(predicate::eq(code))
     })

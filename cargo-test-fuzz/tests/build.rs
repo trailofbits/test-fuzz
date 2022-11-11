@@ -5,7 +5,7 @@ use testing::examples;
 fn build_no_instrumentation() {
     examples::test_fuzz_all()
         .unwrap()
-        .args(&["--no-run", "--no-instrumentation"])
+        .args(["--no-run", "--no-instrumentation"])
         .assert()
         .success();
 }
@@ -14,7 +14,7 @@ fn build_no_instrumentation() {
 fn build() {
     examples::test_fuzz_all()
         .unwrap()
-        .args(&["--no-run"])
+        .args(["--no-run"])
         .assert()
         .success();
 }
@@ -23,7 +23,7 @@ fn build() {
 fn build_pesistent() {
     examples::test_fuzz_all()
         .unwrap()
-        .args(&["--no-run", "--persistent"])
+        .args(["--no-run", "--persistent"])
         .assert()
         .success();
 }

@@ -18,7 +18,7 @@ fn conversion() {
 
 fn test() -> Command {
     let mut command = Command::new("cargo");
-    command.args(&[
+    command.args([
         "test",
         "--manifest-path",
         &MANIFEST_PATH,

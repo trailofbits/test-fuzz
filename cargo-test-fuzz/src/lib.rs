@@ -178,7 +178,7 @@ fn run(opts: TestFuzz) -> Result<()> {
     check_test_fuzz_and_afl_versions(&executable_targets)?;
 
     if opts.list {
-        println!("{:#?}", executable_targets);
+        println!("{executable_targets:#?}");
         return Ok(());
     }
 
@@ -224,7 +224,7 @@ fn run(opts: TestFuzz) -> Result<()> {
 
     fuzz(&opts, &executable, &target).map_err(|error| {
         if opts.exit_code {
-            eprintln!("{:?}", error);
+            eprintln!("{error:?}");
             exit(2);
         }
         error
@@ -294,12 +294,12 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
                     Err(err) => Some(Err(err)),
                 })
                 .collect::<std::result::Result<_, std::io::Error>>()
-                .with_context(|| format!("`parse_stream` failed for `{:?}`", exec))?;
+                .with_context(|| format!("`parse_stream` failed for `{exec:?}`"))?;
             Ok(artifacts)
         })?;
     let status = popen
         .wait()
-        .with_context(|| format!("`wait` failed for `{:?}`", popen))?;
+        .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
 
     // smoelius: If the command failed, re-execute it without --message-format=json. This is easier
     // than trying to capture and colorize `CompilerMessage`s like Cargo does.
@@ -307,7 +307,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         let mut popen = Exec::cmd("cargo").args(&args).popen()?;
         let status = popen
             .wait()
-            .with_context(|| format!("`wait` failed for `{:?}`", popen))?;
+            .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
         ensure!(
             !status.success(),
             "Command succeeded unexpectedly: {:?}",
@@ -451,7 +451,7 @@ fn targets(executable: &Path) -> Result<Vec<String>> {
     // "M tests, N benchmarks." Stop at the empty line.
     let mut targets = Vec::<String>::default();
     for line in std::io::BufReader::new(stream).lines() {
-        let line = line.with_context(|| format!("Could not get output of `{:?}`", exec))?;
+        let line = line.with_context(|| format!("Could not get output of `{exec:?}`"))?;
         if line.is_empty() {
             break;
         }
@@ -535,7 +535,7 @@ fn executable_target(
 }
 
 fn match_message(opts: &TestFuzz) -> String {
-    opts.ztarget.as_ref().map_or("".to_owned(), |pat| {
+    opts.ztarget.as_ref().map_or(String::new(), |pat| {
         format!(
             " {} `{}`",
             if opts.exact { "equal to" } else { "containing" },
@@ -589,10 +589,10 @@ lazy_static! {
 
 fn cargo_afl_version() -> Result<Version> {
     let mut command = Command::new("cargo");
-    command.args(&["afl", "--version"]);
+    command.args(["afl", "--version"]);
     let output = command
         .output()
-        .with_context(|| format!("Could not get output of `{:?}`", command))?;
+        .with_context(|| format!("Could not get output of `{command:?}`"))?;
     let stdout = String::from_utf8_lossy(&output.stdout);
     let version = stdout.strip_prefix("cargo-afl ").ok_or_else(|| {
         anyhow!(
@@ -817,7 +817,7 @@ fn for_each_entry(
             let mut popen = exec
                 .clone()
                 .popen()
-                .with_context(|| format!("`popen` failed for `{:?}`", exec))?;
+                .with_context(|| format!("`popen` failed for `{exec:?}`"))?;
             let millis = opts.timeout.unwrap_or(DEFAULT_TIMEOUT);
             let time = Duration::from_millis(millis);
             let mut communicator = popen.communicate_start(None).limit_time(time);
@@ -832,7 +832,7 @@ fn for_each_entry(
                 }) => {
                     popen
                         .kill()
-                        .with_context(|| format!("`kill` failed for `{:?}`", popen))?;
+                        .with_context(|| format!("`kill` failed for `{popen:?}`"))?;
                     if error.kind() != std::io::ErrorKind::TimedOut {
                         return Err(anyhow!(error));
                     }
@@ -842,7 +842,7 @@ fn for_each_entry(
             }
         };
 
-        print!("{}: ", file_name);
+        print!("{file_name}: ");
         if let Some(last) = buffer.last() {
             print!("{}", String::from_utf8_lossy(&buffer));
             if last != &b'\n' {
@@ -857,7 +857,7 @@ fn for_each_entry(
             },
             |status| {
                 if !flags.contains(Flags::RAW) && buffer.is_empty() {
-                    println!("{:?}", status);
+                    println!("{status:?}");
                 }
                 failure |= !status.success();
             },
@@ -976,7 +976,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         debug!("{:?}", command);
         let status = command
             .status()
-            .with_context(|| format!("Could not get status of `{:?}`", command))?;
+            .with_context(|| format!("Could not get status of `{command:?}`"))?;
 
         ensure!(status.success(), "Command failed: {:?}", command);
     } else {
@@ -993,7 +993,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         let mut time_limit_was_reached = false;
         let mut testing_aborted_programmatically = false;
         for line in std::io::BufReader::new(stdout).lines() {
-            let line = line.with_context(|| format!("Could not get output of `{:?}`", exec))?;
+            let line = line.with_context(|| format!("Could not get output of `{exec:?}`"))?;
             if line.contains("Time limit was reached") {
                 time_limit_was_reached = true;
             }
@@ -1003,11 +1003,11 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
             {
                 testing_aborted_programmatically = true;
             }
-            println!("{}", line);
+            println!("{line}");
         }
         let status = popen
             .wait()
-            .with_context(|| format!("`wait` failed for `{:?}`", popen))?;
+            .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
 
         if !testing_aborted_programmatically || !status.success() {
             bail!("Command failed: {:?}", exec);
@@ -1023,11 +1023,11 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
 
 fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
     let mut command = Command::new(&executable.path);
-    command.args(&["--exact", &(target.to_owned() + AUTO_GENERATED_SUFFIX)]);
+    command.args(["--exact", &(target.to_owned() + AUTO_GENERATED_SUFFIX)]);
     debug!("{:?}", command);
     let status = command
         .status()
-        .with_context(|| format!("Could not get status of `{:?}`", command))?;
+        .with_context(|| format!("Could not get status of `{command:?}`"))?;
 
     ensure!(status.success(), "Command failed: {:?}", command);
 

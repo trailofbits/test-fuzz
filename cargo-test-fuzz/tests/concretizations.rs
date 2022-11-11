@@ -62,7 +62,7 @@ fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected:
         dylint_lib = "non_thread_safe_call_in_test",
         allow(non_thread_safe_call_in_test)
     )]
-    remove_dir_all(&impl_concretizations).unwrap_or_default();
+    remove_dir_all(impl_concretizations).unwrap_or_default();
 
     let concretizations = concretizations_directory_from_target(krate, target);
 
@@ -70,7 +70,7 @@ fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected:
         dylint_lib = "non_thread_safe_call_in_test",
         allow(non_thread_safe_call_in_test)
     )]
-    remove_dir_all(&concretizations).unwrap_or_default();
+    remove_dir_all(concretizations).unwrap_or_default();
 
     examples::test(krate, test).unwrap().assert().success();
 
@@ -80,7 +80,7 @@ fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected:
     ] {
         let assert = &examples::test_fuzz(krate, target)
             .unwrap()
-            .args(&[option])
+            .args([option])
             .assert()
             .success();
 
