@@ -202,13 +202,17 @@ index 32d04b0..3691ef0 100644
  	/// Clone the inner map.
  	pub fn clone_map(&self) -> HashMap<K, V> {
 diff --git a/primitives/runtime/src/transaction_validity.rs b/primitives/runtime/src/transaction_validity.rs
-index 7cc8b70..02e5c1f 100644
+index 4646808..e8e6cc0 100644
 --- a/primitives/runtime/src/transaction_validity.rs
 +++ b/primitives/runtime/src/transaction_validity.rs
-@@ -230,4 +230,5 @@ impl From<UnknownTransaction> for TransactionValidity {
- 	Copy, Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, parity_util_mem::MallocSizeOf,
- )]
-+#[cfg_attr(feature = "std", derive(serde::Deserialize, serde::Serialize))]
+@@ -228,5 +228,8 @@ impl From<UnknownTransaction> for TransactionValidity {
+ /// by our local node (for instance off-chain workers).
+ #[derive(Copy, Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug)]
+-#[cfg_attr(feature = "std", derive(parity_util_mem::MallocSizeOf))]
++#[cfg_attr(
++	feature = "std",
++	derive(parity_util_mem::MallocSizeOf, serde::Deserialize, serde::Serialize)
++)]
  pub enum TransactionSource {
  	/// Transaction is already included in block.
 diff --git a/test-utils/runtime/src/lib.rs b/test-utils/runtime/src/lib.rs

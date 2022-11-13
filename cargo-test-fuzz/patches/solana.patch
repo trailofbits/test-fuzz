@@ -21,10 +21,10 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index f196f49..6e20c90 100644
+index 2e362ee..fd52bd3 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
-@@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
+@@ -50,5 +50,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
  }
  
 -#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -192,10 +192,10 @@ index d95a4ab..a86b1d1 100644
  [dev-dependencies]
  rand = "0.7.3"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index de727cd..844b691 100644
+index 75da03f..000d9a2 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -393,7 +393,8 @@ pub fn create_vm<'a, 'b>(
+@@ -357,7 +357,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -225,10 +225,10 @@ index 660b46a..7ffc5ef 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index bb103bc..0764c47 100644
+index e33edc9..b0d4a79 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -706,5 +706,5 @@ lazy_static! {
+@@ -711,5 +711,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
@@ -236,17 +236,17 @@ index bb103bc..0764c47 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index d8b7182..05db75c 100644
+index eaff7c8..090039d 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
-@@ -84,5 +84,5 @@ pub type IndexOfAccount = u16;
+@@ -29,5 +29,5 @@ pub type IndexOfAccount = u16;
  ///
  /// It also contains indices to other structures for faster lookup.
 -#[derive(Clone, Debug, Eq, PartialEq)]
 +#[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct InstructionAccount {
      /// Points to the account and its key in the `TransactionContext`
-@@ -105,11 +105,80 @@ pub struct InstructionAccount {
+@@ -50,11 +50,80 @@ pub struct InstructionAccount {
  pub type TransactionAccount = (Pubkey, AccountSharedData);
  
 +fn serialize_account_keys<'a, S>(
@@ -328,7 +328,7 @@ index d8b7182..05db75c 100644
 +    )]
      #[cfg(not(target_os = "solana"))]
      account_touched_flags: RefCell<Pin<Box<[bool]>>>,
-@@ -432,5 +501,5 @@ pub struct TransactionReturnData {
+@@ -377,5 +446,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone, Default, Eq, PartialEq)]
