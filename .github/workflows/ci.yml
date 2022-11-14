@@ -50,7 +50,9 @@ jobs:
       - name: Prettier
         run: npm install -g prettier && prettier --check '**/*.json' '**/*.md' '**/*.yml'
 
+      # https://github.com/DevinR528/cargo-sort/issues/57
       - name: Cargo sort
+        if: ${{ false }}
         run: |
           cargo install cargo-sort || true
           find . -name Cargo.toml | xargs -n 1 dirname | xargs -n 1 cargo sort --check --grouped
