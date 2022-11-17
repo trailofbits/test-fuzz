@@ -1,5 +1,5 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index 0bdfb62..12745e7 100644
+index f7f644a..875925d 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
 @@ -21,6 +21,6 @@ linked-hash-map = "0.5.4"
@@ -11,8 +11,8 @@ index 0bdfb62..12745e7 100644
 +serde = { version = "1.0.136", features = ["derive", "rc"] }
  thiserror = "1.0.30"
  prometheus-endpoint = { package = "substrate-prometheus-endpoint", version = "0.10.0-dev", path = "../../utils/prometheus" }
-@@ -34,4 +34,5 @@ sp-runtime = { version = "6.0.0", path = "../../primitives/runtime" }
- sp-tracing = { version = "5.0.0", path = "../../primitives/tracing" }
+@@ -34,4 +34,5 @@ sp-runtime = { version = "7.0.0", path = "../../primitives/runtime" }
+ sp-tracing = { version = "6.0.0", path = "../../primitives/tracing" }
  sp-transaction-pool = { version = "4.0.0-dev", path = "../../primitives/transaction-pool" }
 +test-fuzz = { path = "../../../../test-fuzz" }
  
