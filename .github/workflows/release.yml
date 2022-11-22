@@ -25,7 +25,7 @@ jobs:
       - name: Publish
         run: |
           # smoelius: The crates must be published in this order, which is a reverse topological
-          # sort of `doc/crates.dot`.
+          # sort of `docs/crates.dot`.
           for X in internal macro runtime test-fuzz cargo-test-fuzz; do
             # smoelius: Continue if a previous publish attempt failed.
             TMP="$(mktemp)"
