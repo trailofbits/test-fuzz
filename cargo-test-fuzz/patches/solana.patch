@@ -1,5 +1,5 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 63d9ae5..7f70c1e 100644
+index 8eba2c6..4b5b927 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -31,4 +31,6 @@ solana-sdk = { path = "../sdk", version = "=1.15.0" }
@@ -21,7 +21,7 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 8318e0d..3fa127a 100644
+index 47bdd01..24c28a2 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -50,5 +50,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -175,10 +175,10 @@ index c61d8e2..ffad007 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 195b967..1d91d4c 100644
+index 9570111..3c838ee 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -22,4 +22,7 @@ solana_rbpf = "=0.2.36"
+@@ -22,4 +22,7 @@ solana_rbpf = "=0.2.37"
  thiserror = "1.0"
  
 +serde = "1.0"
@@ -220,10 +220,10 @@ index 660b46a..7ffc5ef 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index e33edc9..b0d4a79 100644
+index bfd7f38..c9752a2 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -711,5 +711,5 @@ lazy_static! {
+@@ -716,5 +716,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
