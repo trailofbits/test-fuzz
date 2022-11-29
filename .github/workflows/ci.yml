@@ -113,6 +113,7 @@ jobs:
         if: ${{ github.event_name == 'schedule' }}
         run: |
           rustup toolchain install nightly
+          rustup          target add wasm32-unknown-unknown
           rustup +nightly target add wasm32-unknown-unknown
 
       - name: Test
