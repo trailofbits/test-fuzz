@@ -24,7 +24,7 @@
     "targets": ["process_instruction"]
   },
   {
-    "flags": ["EXPENSIVE"],
+    "flags": ["EXPENSIVE", "SKIP"],
     "url": "https://github.com/solana-labs/solana",
     "patch": "solana.patch",
     "subdir": ".",

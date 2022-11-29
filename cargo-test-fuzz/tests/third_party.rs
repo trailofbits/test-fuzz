@@ -17,9 +17,10 @@ use test_log::test;
 
 option_set! {
     struct Flags: UpperSnake + u8 {
-        const EXPENSIVE = 0b0000_0001;
-        const REQUIRES_ISOLATION = 0b0000_0010;
-        const SKIP_NIGHTLY = 0b0000_0100;
+        const EXPENSIVE = 1 << 0;
+        const SKIP = 1 << 1;
+        const SKIP_NIGHTLY = 1 << 2;
+        const REQUIRES_ISOLATION = 1 << 3;
     }
 }
 
@@ -54,6 +55,7 @@ mod cheap_tests {
                 module_path!(),
                 test,
                 test.flags.contains(Flags::EXPENSIVE)
+                    || test.flags.contains(Flags::SKIP)
                     || (test.flags.contains(Flags::SKIP_NIGHTLY)
                         && version_meta.channel == Channel::Nightly),
             );
@@ -71,8 +73,9 @@ mod all_tests {
             run_test(
                 module_path!(),
                 test,
-                test.flags.contains(Flags::SKIP_NIGHTLY)
-                    && version_meta.channel == Channel::Nightly,
+                test.flags.contains(Flags::SKIP)
+                    || (test.flags.contains(Flags::SKIP_NIGHTLY)
+                        && version_meta.channel == Channel::Nightly),
             );
         }
     }
