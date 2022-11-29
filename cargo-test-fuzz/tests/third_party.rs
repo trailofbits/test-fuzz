@@ -132,11 +132,21 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
 
     // smoelius: Right now, Substrate's lockfile refers to `pin-project:0.4.27`, which is
     // incompatible with `syn:1.0.84`.
+    // smoelius: The `pin-project` issue has been resolved. But Substrate now chokes when
+    // `libp2p-swarm-derive` is upgraded from 0.30.1 to 0.30.2.
     Command::new("cargo")
         .current_dir(&subdir)
         .args(["update"])
         .assert()
         .success();
+
+    let mut command = Command::new("cargo");
+    command
+        .current_dir(&subdir)
+        .args(["update", "-p", "libp2p-swarm-derive"]);
+    if command.assert().try_success().is_ok() {
+        command.args(["--precise", "0.30.1"]).assert().success();
+    }
 
     check_test_fuzz_dependency(&subdir, &test.package);
 
