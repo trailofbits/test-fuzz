@@ -11,17 +11,17 @@ repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
 afl = { version = "0.12.10", optional = true }
-serde = "1.0.147"
+serde = "1.0.148"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.0.5" }
 runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=3.0.5" }
 test-fuzz-macro = { path = "../macro", version = "=3.0.5" }
 
 [dev-dependencies]
-assert_cmd = "2.0.6"
+assert_cmd = "2.0.7"
 cargo_metadata = "0.15.2"
 lazy_static = "1.4.0"
-predicates = "2.1.3"
+predicates = "2.1.4"
 regex = "1.7.0"
 semver = "1.0.14"
 
