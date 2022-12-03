@@ -30,11 +30,22 @@ sed -n '/^Options:/,$ p' |
 tail -n +2 |
 cat > "$OPTIONS"
 
+ENABLE=
+
+# smoelius: File to `cat` the next time '```' is encountered.
 NEXT=
 
 IFS=''
 cat README.md |
 while read -r X; do
+    if [[ -z "$ENABLE" ]]; then
+        if [[ "$X" = '### `cargo test-fuzz` command' ]]; then
+            ENABLE=1
+        fi
+        echo "$X"
+        continue
+    fi
+
     if [[ "$NEXT" = '/dev/zero' ]]; then
         if [[ "$X" = '```' ]]; then
             NEXT=
