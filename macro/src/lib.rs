@@ -40,7 +40,7 @@ mod type_utils;
 type Conversions = BTreeMap<OrdType, (Type, bool)>;
 
 lazy_static! {
-    pub(crate) static ref CARGO_CRATE_NAME: String =
+    static ref CARGO_CRATE_NAME: String =
         var("CARGO_CRATE_NAME").expect("Could not get `CARGO_CRATE_NAME`");
 }
 

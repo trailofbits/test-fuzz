@@ -7,7 +7,7 @@ use syn::{
     Ident, Path, PathArguments, PathSegment, Type, TypePath,
 };
 
-pub fn collapse_crate(ty: &Type) -> Type {
+pub(super) fn collapse_crate(ty: &Type) -> Type {
     let mut ty = ty.clone();
     if_chain! {
         if let Type::Path(ref mut path) = ty;
@@ -58,7 +58,7 @@ impl<'a> VisitMut for TypeVisitor<'a> {
     }
 }
 
-pub fn expand_self(self_ty: &Type, trait_path: &Option<Path>, ty: &Type) -> Type {
+pub(super) fn expand_self(self_ty: &Type, trait_path: &Option<Path>, ty: &Type) -> Type {
     let mut ty = ty.clone();
     let mut visitor = TypeVisitor {
         self_ty,
@@ -68,7 +68,7 @@ pub fn expand_self(self_ty: &Type, trait_path: &Option<Path>, ty: &Type) -> Type
     ty
 }
 
-pub fn match_type_path(path: &TypePath, other: &[&str]) -> Option<PathArguments> {
+pub(super) fn match_type_path(path: &TypePath, other: &[&str]) -> Option<PathArguments> {
     let mut path = path.clone();
     let args = path.path.segments.last_mut().map(|segment| {
         let args = segment.arguments.clone();
@@ -93,7 +93,7 @@ pub fn match_type_path(path: &TypePath, other: &[&str]) -> Option<PathArguments>
     }
 }
 
-pub fn type_base(ty: &Type) -> Type {
+pub(super) fn type_base(ty: &Type) -> Type {
     let mut ty = ty.clone();
 
     if let Type::Path(ref mut path) = ty {

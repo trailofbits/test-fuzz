@@ -16,7 +16,7 @@ impl<'a> Visit<'a> for PatVisitor<'a> {
     }
 }
 
-pub fn pat_idents(pat: &Pat) -> Vec<&Ident> {
+pub(super) fn pat_idents(pat: &Pat) -> Vec<&Ident> {
     let mut visitor = PatVisitor { idents: Vec::new() };
     visitor.visit_pat(pat);
     visitor.idents

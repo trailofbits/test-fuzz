@@ -10,7 +10,7 @@ enum Kind {
 
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
-pub struct Error {
+pub(super) struct Error {
     impl_: bool,
     sig: Signature,
     krate: String,
@@ -42,7 +42,7 @@ impl fmt::Display for Error {
 }
 
 #[cfg(feature = "__auto_concretize")]
-pub use functions::*;
+pub(super) use functions::*;
 
 #[cfg(feature = "__auto_concretize")]
 mod functions {
@@ -55,7 +55,7 @@ mod functions {
     };
     use syn::Signature;
 
-    pub fn unique_impl_concretization(sig: &Signature) -> Result<String, Error> {
+    pub(crate) fn unique_impl_concretization(sig: &Signature) -> Result<String, Error> {
         let target = target_from_sig(sig);
         unique_file_as_string(&internal::dirs::impl_concretizations_directory_from_target(
             &CARGO_CRATE_NAME,
@@ -70,7 +70,7 @@ mod functions {
         })
     }
 
-    pub fn unique_concretization(sig: &Signature) -> Result<String, Error> {
+    pub(crate) fn unique_concretization(sig: &Signature) -> Result<String, Error> {
         let target = target_from_sig(sig);
         unique_file_as_string(&internal::dirs::concretizations_directory_from_target(
             &CARGO_CRATE_NAME,

@@ -3,7 +3,7 @@ use std::cmp::Ordering;
 use syn::Type;
 
 #[derive(Clone)]
-pub struct OrdType(pub Type);
+pub(super) struct OrdType(pub(super) Type);
 
 impl std::fmt::Display for OrdType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

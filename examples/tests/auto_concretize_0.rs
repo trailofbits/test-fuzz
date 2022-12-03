@@ -15,10 +15,10 @@ macro_rules! declarations {
         }
 
         #[derive(Clone, Deserialize, Serialize)]
-        pub struct Bar;
+        pub(crate) struct Bar;
 
         #[derive(Clone, Deserialize, Serialize)]
-        pub struct Baz;
+        pub(crate) struct Baz;
 
         #[test]
         fn test() {

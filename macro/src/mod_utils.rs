@@ -38,7 +38,7 @@ fn contains(left: &Span, right: &Span) -> bool {
     left.join(*right).map_or(false, |join| join.eq(left))
 }
 
-pub fn module_path(span: &Span) -> Vec<Ident> {
+pub(super) fn module_path(span: &Span) -> Vec<Ident> {
     let source = span.source_file();
     let path = source.path();
     let contents =
