@@ -90,7 +90,7 @@ The primary effects of the `test_fuzz` macro are:
 
 #### Arguments
 
-- **`bounds = "where_predicates"`** - Impose `where_predicates` (e.g., trait bounds) on the struct used to serialize/deserialize arguments. This may be necessary, e.g., if a target's argument type is an associated type. For an example, see [associated_type.rs](examples/tests/associated_type.rs#L27) in this repository.
+- **`bounds = "where_predicates"`** - Impose `where_predicates` (e.g., trait bounds) on the struct used to serialize/deserialize arguments. This may be necessary, e.g., if a target's argument type is an associated type. For an example, see [associated_type.rs](https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/associated_type.rs#L26) in this repository.
 
 - **`concretize = "parameters"`** - Use `parameters` as the target's type parameters when fuzzing. Example:
 
@@ -345,7 +345,7 @@ Try `cargo afl fuzz --help` to see additional fuzzer options.
   #[test_fuzz::test_fuzz(convert = "&X, LeakedX")
   ```
 
-  An example where `X` is [`Path`](https://doc.rust-lang.org/std/path/struct.Path.html) appears in [conversion.rs](examples/tests/conversion.rs#L5) in this repository.
+  An example where `X` is [`Path`](https://doc.rust-lang.org/std/path/struct.Path.html) appears in [conversion.rs](https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/conversion.rs#L5) in this repository.
 
   More generally, an invocation of the form `leak!($ty, $ident)` expands to the following:
 

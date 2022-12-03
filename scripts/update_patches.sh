@@ -16,7 +16,7 @@ DIR="$(dirname "$(realpath "$0")")/.."
 cd "$DIR"
 
 paste <(jq -r .[].url cargo-test-fuzz/third_party.json) <(jq -r .[].patch cargo-test-fuzz/third_party.json) |
-while read URL PATCH; do
+while read -r URL PATCH; do
     pushd "$(mktemp -d)"
 
     git clone --depth 1 "$URL" .

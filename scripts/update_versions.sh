@@ -15,7 +15,7 @@ find . -name Cargo.toml -exec sed -i "{
 s/^version = \"[^\"]*\"$/$VERSION/
 }" {} \;
 
-REQ="$(echo "$VERSION" | sed 's/"/"=/')"
+REQ="${VERSION/\"/\"=}"
 
 find . -name Cargo.toml -exec sed -i "/^test-fuzz/{
 s/^\(.*\)\<version = \"[^\"]*\"\(.*\)$/\1$REQ\2/

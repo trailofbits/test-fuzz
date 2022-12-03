@@ -39,6 +39,7 @@ IFS=''
 cat README.md |
 while read -r X; do
     if [[ -z "$ENABLE" ]]; then
+        # shellcheck disable=SC2016
         if [[ "$X" = '### `cargo test-fuzz` command' ]]; then
             ENABLE=1
         fi
