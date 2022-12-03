@@ -9,6 +9,6 @@ if [[ $# -ne 0 ]]; then
 fi
 
 cargo license |
-while read X; do
+while read -r X; do
     echo "$X" | grep -w 'Apache\|BSD-3-Clause\|ISC\|MIT\|N/A'
 done

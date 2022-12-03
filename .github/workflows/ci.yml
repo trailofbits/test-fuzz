@@ -47,15 +47,24 @@ jobs:
       - name: Install llvm
         run: sudo apt-get install llvm
 
+      - name: Actionlint
+        run: go install github.com/rhysd/actionlint/cmd/actionlint@latest && "$HOME"/go/bin/actionlint --shellcheck='-e SC2016'
+
+      - name: Shellcheck
+        run: shellcheck --exclude=SC2002 scripts/*
+
       - name: Prettier
         run: npm install -g prettier && prettier --check '**/*.json' '**/*.md' '**/*.yml'
+
+      - name: Markdown link check
+        run: npm install -g markdown-link-check && markdown-link-check ./**/*.md
 
       # https://github.com/DevinR528/cargo-sort/issues/57
       - name: Cargo sort
         if: ${{ false }}
         run: |
           cargo install cargo-sort || true
-          find . -name Cargo.toml | xargs -n 1 dirname | xargs -n 1 cargo sort --check --grouped
+          find . -name Cargo.toml -print0 | xargs -0 -n 1 dirname | xargs -n 1 cargo sort --check --grouped
 
       - name: Format
         run: cargo fmt && git diff --exit-code
@@ -128,7 +137,7 @@ jobs:
           if [[ ${{ github.event_name }} = schedule ]]; then
             IGNORED='--ignored'
           fi
-          cargo test --workspace --features=test-fuzz/serde_${{ matrix.serde_format }} $AUTO_CONCRETIZE -- --nocapture $IGNORED $SHUFFLE
+          cargo test --workspace --features=test-fuzz/serde_${{ matrix.serde_format }} "$AUTO_CONCRETIZE" -- --nocapture $IGNORED $SHUFFLE
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
           RUST_BACKTRACE: 1
@@ -145,7 +154,7 @@ jobs:
 
       - name: Test
         run: |
-          OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true`"
+          OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
           echo "$OUTPUT"
           echo "$OUTPUT" | grep '^Error: Could not determine `cargo-afl` version. Is it installed? Try `cargo install afl`.$'
 
@@ -166,7 +175,7 @@ jobs:
 
       - name: Test
         run: |
-          OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true`"
+          OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
           echo "$OUTPUT"
           echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `afl [^`]*`, which is incompatible with `cargo-afl [^`]*`.$'
 
@@ -191,7 +200,7 @@ jobs:
 
       - name: Test
         run: |
-          OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true`"
+          OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
           echo "$OUTPUT"
           echo "$OUTPUT" | grep '^`[^`]*` depends on `afl [^`]*`, which is newer than `cargo-afl [^`]*`.'
           echo "$OUTPUT" | grep 'Consider upgrading with `cargo install afl --force --version [^`]*`.$'
@@ -218,7 +227,7 @@ jobs:
 
       - name: Test
         run: |
-          OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true`"
+          OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
           echo "$OUTPUT"
           echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `test-fuzz [^`]*`, which is incompatible with `cargo-test-fuzz [^`]*`.$'
 
@@ -245,7 +254,22 @@ jobs:
 
       - name: Test
         run: |
-          OUTPUT="`cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true`"
+          OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
           echo "$OUTPUT"
           echo "$OUTPUT" | grep '^`[^`]*` depends on `test-fuzz [^`]*`, which is newer than `cargo-test-fuzz [^`]*`.'
           echo "$OUTPUT" | grep 'Consider upgrading with `cargo install cargo-test-fuzz --force --version [^`]*`.$'
+
+  all-checks:
+    needs:
+      - lint
+      - test
+      - test-uninstalled-cargo-afl
+      - test-incompatible-cargo-afl
+      - test-newer-afl
+      - test-incompatible-test-fuzz
+      - test-newer-test-fuzz
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - run: true
