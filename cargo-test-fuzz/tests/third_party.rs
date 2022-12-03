@@ -81,7 +81,7 @@ mod all_tests {
     }
 }
 
-fn run_test(module_path: &str, test: &Test, partial: bool) {
+fn run_test(module_path: &str, test: &Test, no_run: bool) {
     let (_, module) = module_path.split_once("::").unwrap();
     #[allow(clippy::explicit_write)]
     writeln!(
@@ -89,7 +89,7 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
         "{}: {}{}",
         module,
         test.url,
-        if partial { " (partial)" } else { "" }
+        if no_run { " (no-run)" } else { "" }
     )
     .unwrap();
 
@@ -153,7 +153,7 @@ fn run_test(module_path: &str, test: &Test, partial: bool) {
 
     check_test_fuzz_dependency(&subdir, &test.package);
 
-    if partial {
+    if no_run {
         return;
     }
 
