@@ -1,5 +1,5 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 8eba2c6..4b5b927 100644
+index 2a3c830..1c6e8c5 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -31,4 +31,6 @@ solana-sdk = { path = "../sdk", version = "=1.15.0" }
@@ -32,7 +32,7 @@ index 47bdd01..24c28a2 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 9589569..142912b 100644
+index 9dcadf5..8776414 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -92,15 +92,59 @@ impl fmt::Display for AllocErr {
@@ -175,22 +175,22 @@ index c61d8e2..ffad007 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 9570111..3c838ee 100644
+index 1e1d7e5..794cafb 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -22,4 +22,7 @@ solana_rbpf = "=0.2.37"
+@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.38"
  thiserror = "1.0"
  
 +serde = "1.0"
 +test-fuzz = { path = "../../../../test-fuzz" }
 +
- [dev-dependencies]
- rand = "0.7.3"
+ [lib]
+ crate-type = ["lib"]
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 268fd28..16950bf 100644
+index 47028f5..ed808bc 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -359,7 +359,8 @@ pub fn create_vm<'a, 'b>(
+@@ -339,7 +339,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -220,10 +220,10 @@ index 660b46a..7ffc5ef 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index a954080..b5086bd 100644
+index 019b178..fec6e1a 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -721,5 +721,5 @@ lazy_static! {
+@@ -726,5 +726,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
