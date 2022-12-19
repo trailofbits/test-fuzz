@@ -455,14 +455,10 @@ fn targets(executable: &Path) -> Result<Vec<String>> {
         if line.is_empty() {
             break;
         }
-        let line = if let Some(line) = line.strip_suffix(": test") {
-            line
-        } else {
+        let Some(line) = line.strip_suffix(": test") else {
             continue;
         };
-        let line = if let Some(line) = line.strip_suffix(ENTRY_SUFFIX) {
-            line
-        } else {
+        let Some(line) = line.strip_suffix(ENTRY_SUFFIX) else {
             continue;
         };
         targets.push(line.to_owned());
@@ -511,9 +507,7 @@ fn executable_target(
         executable_targets
     );
 
-    let mut executable_targets = if let Some(executable_targets) = executable_targets.pop() {
-        executable_targets
-    } else {
+    let Some(mut executable_targets) =  executable_targets.pop() else {
         bail!("Found no fuzz targets{}", match_message(opts));
     };
 
@@ -623,15 +617,8 @@ fn check_dependency_version(
         );
         if !as_version_req(dependency_version).matches(binary_version) {
             eprintln!(
-                "`{}` depends on `{} {}`, which is newer than `{} {}`. Consider upgrading with \
-                `cargo install {} --force --version '>={}'`.",
-                name,
-                dependency,
-                dependency_version,
-                binary,
-                binary_version,
-                krate,
-                dependency_version
+                "`{name}` depends on `{dependency} {dependency_version}`, which is newer than `{binary} {binary_version}`. Consider upgrading with \
+                `cargo install {krate} --force --version '>={dependency_version}'`."
             );
         }
     } else {

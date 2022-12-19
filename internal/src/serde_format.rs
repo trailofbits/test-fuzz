@@ -26,8 +26,7 @@ pub fn serde_format() -> SerdeFormat {
     formats.push(SerdeFormat::Cbor4ii);
     assert!(
         formats.len() <= 1,
-        "Multiple serde formats selected: {:?}",
-        formats
+        "{}", "Multiple serde formats selected: {formats:?}"
     );
     formats.pop().expect("No serde format selected")
 }
