@@ -1,5 +1,5 @@
 diff --git a/contracts/cw20-base/Cargo.toml b/contracts/cw20-base/Cargo.toml
-index 3f19564..e36ae10 100644
+index b2c94a7..152107f 100644
 --- a/contracts/cw20-base/Cargo.toml
 +++ b/contracts/cw20-base/Cargo.toml
 @@ -30,4 +30,6 @@ serde = { version = "1.0.103", default-features = false, features = ["derive"] }
@@ -8,7 +8,7 @@ index 3f19564..e36ae10 100644
 +test-fuzz = { path = "../../../../test-fuzz" }
 +
  [dev-dependencies]
- cw-multi-test = "0.16.0"
+ cw-multi-test = "0.16.1"
 diff --git a/contracts/cw20-base/src/contract.rs b/contracts/cw20-base/src/contract.rs
 index 049dcbf..44f8161 100644
 --- a/contracts/cw20-base/src/contract.rs
