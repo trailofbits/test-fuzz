@@ -15,13 +15,13 @@ repository = "https://github.com/trailofbits/test-fuzz"
 # in when another format is selected.
 
 [dependencies]
-bincode = "1.3.3"
-cbor4ii = { version = "0.2.13", features = ["serde1", "use_std"], optional = true }
-hex = "0.4.3"
-num-traits = "0.2.15"
-serde = { version = "1.0.150", features = ["derive"] }
-serde_cbor = { version = "0.11.2", optional = true }
-sha-1 = "0.10.1"
+bincode = "1.3"
+cbor4ii = { version = "0.2", features = ["serde1", "use_std"], optional = true }
+hex = "0.4"
+num-traits = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_cbor = { version = "0.11", optional = true }
+sha-1 = "0.10"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.0.5" }
 

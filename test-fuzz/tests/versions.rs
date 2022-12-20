@@ -1,6 +1,6 @@
 use cargo_metadata::{Dependency, DependencyKind, Metadata, MetadataCommand};
 use lazy_static::lazy_static;
-use regex::Regex;
+use regex::{Match, Regex};
 use semver::Version;
 use std::{
     fs::read_to_string,
@@ -77,8 +77,14 @@ fn readme_references_current_version() {
     for group in re.captures_iter(&content) {
         let matches: Vec<Option<&str>> = group
             .iter()
-            .map(|match_| match_.map(|match_| match_.as_str()))
+            .map(|match_| match_.as_ref().map(Match::as_str))
             .collect();
-        assert_eq!(matches.last(), Some(&Some(env!("CARGO_PKG_VERSION"))));
+        let version = Version::parse(env!("CARGO_PKG_VERSION")).unwrap();
+        assert_eq!(
+            matches.last(),
+            Some(&Some(
+                format!("{}.{}", version.major, version.minor).as_str()
+            ))
+        );
     }
 }

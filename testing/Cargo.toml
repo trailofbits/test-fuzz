@@ -5,13 +5,13 @@ edition = "2018"
 publish = false
 
 [dependencies]
-anyhow = "1.0.66"
-assert_cmd = "2.0.7"
-cargo_metadata = "0.15.2"
-if_chain = "1.0.2"
-lazy_static = "1.4.0"
-log = "0.4.17"
-retry = "2.0.0"
-subprocess = "0.2.9"
+anyhow = "1.0"
+assert_cmd = "2.0"
+cargo_metadata = "0.15"
+if_chain = "1.0"
+lazy_static = "1.4"
+log = "0.4"
+retry = "2.0"
+subprocess = "0.2"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.0.5" }

@@ -39,7 +39,7 @@ Fuzzing with `test-fuzz` is essentially three steps:\*
    - Add the following `dependencies` to the target crate's `Cargo.toml` file:
      ```toml
      serde = "1.0"
-     test-fuzz = "3.0.5"
+     test-fuzz = "3.0"
      ```
    - Precede the target function with the [`test_fuzz`](#test_fuzz-macro) macro:
      ```rust
@@ -394,7 +394,7 @@ Try `cargo afl fuzz --help` to see additional fuzzer options.
 The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#choosing-features). For example, to enable the `auto_concretize` feature, use:
 
 ```toml
-test-fuzz = { version = "3.0.5", features = ["auto_concretize"] }
+test-fuzz = { version = "3.0", features = ["auto_concretize"] }
 ```
 
 The `test-fuzz` package currently supports the following features:
