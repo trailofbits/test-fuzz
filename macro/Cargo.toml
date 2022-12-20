@@ -13,15 +13,15 @@ repository = "https://github.com/trailofbits/test-fuzz"
 proc-macro = true
 
 [dependencies]
-darling = "0.14.2"
-if_chain = "1.0.2"
-lazy_static = "1.4.0"
-proc-macro2 = "1.0.47"
-quote = "1.0.21"
-subprocess = "0.2.9"
-syn = { version = "1.0.105", features = ["full", "parsing", "visit", "visit-mut"] }
-toolchain_find = "0.2.0"
-unzip-n = "0.1.2"
+darling = "0.14"
+if_chain = "1.0"
+lazy_static = "1.4"
+proc-macro2 = "1.0"
+quote = "1.0"
+subprocess = "0.2"
+syn = { version = "1.0", features = ["full", "parsing", "visit", "visit-mut"] }
+toolchain_find = "0.2"
+unzip-n = "0.1"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.0.5" }
 
