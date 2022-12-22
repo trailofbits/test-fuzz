@@ -10,18 +10,13 @@ fi
 
 # cargo clean
 
-cargo clippy --workspace --all-targets -- \
+cargo +nightly clippy --features=test-fuzz/auto_concretize --all-targets -- \
     -D warnings \
     -W clippy::pedantic \
     -W clippy::nursery \
-    -W clippy::cargo \
-    -A clippy::cargo-common-metadata \
     -A clippy::cognitive-complexity \
-    -A clippy::if-not-else \
     -A clippy::missing-const-for-fn \
     -A clippy::missing-errors-doc \
     -A clippy::missing-panics-doc \
     -A clippy::redundant-pub-crate \
-    -A clippy::struct-excessive-bools \
-    -A clippy::type-repetition-in-bounds \
-    -A clippy::too-many-lines
+    -A clippy::type-repetition-in-bounds
