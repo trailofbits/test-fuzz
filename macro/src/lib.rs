@@ -40,7 +40,7 @@ mod type_utils;
 type Conversions = BTreeMap<OrdType, (Type, bool)>;
 
 lazy_static! {
-    pub(crate) static ref CARGO_CRATE_NAME: String =
+    static ref CARGO_CRATE_NAME: String =
         var("CARGO_CRATE_NAME").expect("Could not get `CARGO_CRATE_NAME`");
 }
 
@@ -216,6 +216,7 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
 #[allow(
     clippy::ptr_arg,
     clippy::too_many_arguments,
+    clippy::too_many_lines,
     clippy::trivially_copy_pass_by_ref
 )]
 fn map_method_or_fn(
@@ -256,7 +257,7 @@ fn map_method_or_fn(
             #[cfg(feature = "__auto_concretize")]
             return auto_concretize::unique_impl_concretization(sig)
                 .map(|s| parse_generic_arguments(&s, true))
-                .map_err(|error| impl_concretization_error = Some(error.clone()))
+                .map_err(|error| impl_concretization_error = Some(error))
                 .ok();
             #[cfg(not(feature = "__auto_concretize"))]
             return None;
@@ -270,7 +271,7 @@ fn map_method_or_fn(
             #[cfg(feature = "__auto_concretize")]
             return auto_concretize::unique_concretization(sig)
                 .map(|s| parse_generic_arguments(&s, true))
-                .map_err(|error| concretization_error = Some(error.clone()))
+                .map_err(|error| concretization_error = Some(error))
                 .ok();
             #[cfg(not(feature = "__auto_concretize"))]
             return None;

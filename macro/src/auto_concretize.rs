@@ -46,7 +46,7 @@ pub use functions::*;
 
 #[cfg(feature = "__auto_concretize")]
 mod functions {
-    use super::*;
+    use super::{Error, Kind};
     use crate::{mod_utils, CARGO_CRATE_NAME};
     use proc_macro::Span;
     use std::{
@@ -86,7 +86,7 @@ mod functions {
     }
 
     fn target_from_sig(sig: &Signature) -> String {
-        mod_utils::module_path(&Span::call_site())
+        mod_utils::module_path(Span::call_site())
             .iter()
             .chain(iter::once(&sig.ident))
             .map(ToString::to_string)
@@ -112,7 +112,7 @@ mod functions {
             || Err(Kind::None),
             |path| {
                 Ok(read_to_string(&path)
-                    .expect(&format!("`read_to_string` failed for `{:?}`", path)))
+                    .unwrap_or_else(|_| panic!("`read_to_string` failed for `{:?}`", path)))
             },
         )
     }

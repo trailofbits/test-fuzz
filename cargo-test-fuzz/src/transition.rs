@@ -19,6 +19,7 @@ enum SubCommand {
 }
 
 // smoelius: Wherever possible, try to reuse cargo test and libtest option names.
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Deserialize, Parser, Serialize)]
 #[clap(version = crate_version!(), after_help = "To fuzz at most <SECONDS> of time, use:
 

@@ -68,6 +68,7 @@ enum Object {
     Queue,
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[remain::sorted]
 struct TestFuzz {
@@ -476,10 +477,10 @@ fn filter_executable_targets(
         .iter()
         .filter_map(|(executable, targets)| {
             let targets = filter_targets(opts, pat, targets);
-            if !targets.is_empty() {
-                Some((executable.clone(), targets))
-            } else {
+            if targets.is_empty() {
                 None
+            } else {
+                Some((executable.clone(), targets))
             }
         })
         .collect()
@@ -721,6 +722,7 @@ fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) 
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn for_each_entry(
     opts: &TestFuzz,
     executable: &Executable,
@@ -890,6 +892,7 @@ fn for_each_entry(
     Ok(())
 }
 
+#[allow(clippy::too_many_lines)]
 fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
     let input_dir = if opts.resume {
         "-".to_owned()
@@ -957,6 +960,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         .map(String::from),
     );
 
+    #[allow(clippy::if_not_else)]
     if !opts.exit_code {
         let mut command = Command::new("cargo");
         command.envs(envs).args(args);
