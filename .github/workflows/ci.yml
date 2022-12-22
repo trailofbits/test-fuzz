@@ -78,18 +78,19 @@ jobs:
           ./scripts/check_licenses.sh
 
       - name: Clippy
-        run: ./scripts/clippy.sh
+        run: |
+          rustup +nightly component add clippy
+          ./scripts/clippy.sh
 
       - name: Dylint
         run: |
           cargo install cargo-dylint dylint-link || true
-          DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all --workspace -- --all-targets
+          DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all -- --features=test-fuzz/auto_concretize --all-targets
 
       - name: Udeps
         run: |
-          rustup toolchain install nightly
           cargo install cargo-udeps || true
-          cargo clean && cargo +nightly udeps --workspace --all-targets
+          cargo clean && cargo +nightly udeps --features=test-fuzz/auto_concretize --all-targets
 
   test:
     runs-on: ubuntu-latest
@@ -116,12 +117,11 @@ jobs:
       - name: Install afl
         run: cargo install afl
 
-      # smoelius: The nightly toolchain and wasm32 target are needed for some Substrate tests,
-      # regardless of the toolchain used to build test-fuzz.
-      - name: Add nightly toolchain and wasm32 target
+      # smoelius: The wasm32 target is needed for some Substrate tests, regardless of the toolchain
+      # used to build test-fuzz.
+      - name: Add wasm32 target
         if: ${{ github.event_name == 'schedule' }}
         run: |
-          rustup toolchain install nightly
           rustup          target add wasm32-unknown-unknown
           rustup +nightly target add wasm32-unknown-unknown
 
@@ -137,7 +137,7 @@ jobs:
           if [[ ${{ github.event_name }} = schedule ]]; then
             IGNORED='--ignored'
           fi
-          cargo test --workspace --features=test-fuzz/serde_${{ matrix.serde_format }} "$AUTO_CONCRETIZE" -- --nocapture $IGNORED $SHUFFLE
+          cargo test --features=test-fuzz/serde_${{ matrix.serde_format }} "$AUTO_CONCRETIZE" -- --nocapture $IGNORED $SHUFFLE
         env:
           AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
           RUST_BACKTRACE: 1
