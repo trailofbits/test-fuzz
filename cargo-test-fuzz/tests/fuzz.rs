@@ -1,9 +1,18 @@
-use internal::dirs::corpus_directory_from_target;
+use internal::{dirs::corpus_directory_from_target, Fuzzer};
 use predicates::prelude::*;
 use std::fs::remove_dir_all;
-use testing::{examples, retry, CommandExt};
+use testing::{examples, retry, skip_fuzzer, CommandExt};
 
-const TIMEOUT: &str = "60";
+const MAX_TOTAL_TIME: &str = "60";
+
+#[cfg_attr(
+    dylint_lib = "non_thread_safe_call_in_test",
+    allow(non_thread_safe_call_in_test)
+)]
+#[test]
+fn fuzz_afraid_of_number_7() {
+    fuzz("afraid_of_number_7");
+}
 
 #[cfg_attr(
     dylint_lib = "non_thread_safe_call_in_test",
@@ -11,7 +20,7 @@ const TIMEOUT: &str = "60";
 )]
 #[test]
 fn fuzz_assert() {
-    fuzz("assert", false);
+    fuzz("assert");
 }
 
 #[cfg_attr(
@@ -20,10 +29,12 @@ fn fuzz_assert() {
 )]
 #[test]
 fn fuzz_qwerty() {
-    fuzz("qwerty", true);
+    skip_fuzzer!("fuzz_qwerty", Fuzzer::Libfuzzer);
+
+    fuzz("qwerty");
 }
 
-fn fuzz(krate: &str, persistent: bool) {
+fn fuzz(krate: &str) {
     let corpus = corpus_directory_from_target(krate, "target");
 
     // smoelius: `corpus` is distinct for all tests. So there is no race here.
@@ -42,10 +53,7 @@ fn fuzz(krate: &str, persistent: bool) {
         let mut command = examples::test_fuzz(krate, "target").unwrap();
 
         let mut args = vec!["--exit-code", "--run-until-crash"];
-        if persistent {
-            args.push("--persistent");
-        }
-        args.extend_from_slice(&["--", "-V", TIMEOUT]);
+        args.extend_from_slice(&["--max-total-time", MAX_TOTAL_TIME]);
 
         command
             .args(&args)

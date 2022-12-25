@@ -41,10 +41,10 @@ fn contains(left: Span, right: Span) -> bool {
 pub fn module_path(span: Span) -> Vec<Ident> {
     let source = span.source_file();
     let path = source.path();
-    let contents = read_to_string(&path)
-        .unwrap_or_else(|_| panic!("`read_to_string` failed for `{:?}`", path));
+    let contents =
+        read_to_string(&path).unwrap_or_else(|_| panic!("`read_to_string` failed for `{path:?}`"));
     let file: File =
-        parse_str(&contents).unwrap_or_else(|_| panic!("Could not parse `{:?}` contents", source));
+        parse_str(&contents).unwrap_or_else(|_| panic!("Could not parse `{source:?}` contents"));
     let mut visitor = ModVisitor {
         target: span,
         stack: Vec::new(),

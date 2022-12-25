@@ -112,7 +112,7 @@ mod functions {
             || Err(Kind::None),
             |path| {
                 Ok(read_to_string(&path)
-                    .unwrap_or_else(|_| panic!("`read_to_string` failed for `{:?}`", path)))
+                    .unwrap_or_else(|_| panic!("`read_to_string` failed for `{path:?}`")))
             },
         )
     }

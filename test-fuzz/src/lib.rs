@@ -3,7 +3,7 @@ pub use test_fuzz_macro::{test_fuzz, test_fuzz_impl};
 
 // smoelius: Re-export afl so that test-fuzz clients do not need to add it to their Cargo.toml
 // files.
-#[cfg(feature = "__persistent")]
+#[cfg(feature = "__fuzzer_aflplusplus_persistent")]
 pub use afl;
 
 // smoelius: Unfortunately, the same trick doesn't work for serde.

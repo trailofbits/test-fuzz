@@ -27,6 +27,9 @@ use toolchain_find::find_installed_component;
 
 mod auto_concretize;
 
+mod fuzzer;
+use fuzzer::args_entry_stmts;
+
 #[cfg(feature = "__auto_concretize")]
 mod mod_utils;
 
@@ -38,6 +41,18 @@ mod pat_utils;
 mod type_utils;
 
 type Conversions = BTreeMap<OrdType, (Type, bool)>;
+
+#[allow(dead_code)]
+struct Components<'a> {
+    combined_concretization: &'a Option<TokenStream2>,
+    set_panic_hook: &'a TokenStream2,
+    take_panic_hook: &'a TokenStream2,
+    input_args: &'a TokenStream2,
+    output_args: &'a TokenStream2,
+    args_ret_ty: &'a Type,
+    output_ret: &'a TokenStream2,
+    call_in_environment: &'a Expr,
+}
 
 lazy_static! {
     static ref CARGO_CRATE_NAME: String =
@@ -123,7 +138,7 @@ fn map_impl_item(
     }
 }
 
-// smoelius: This function is slightly misnamed. The mapped item could actually be an associated
+// smoelius: `map_method` is slightly misnamed. The mapped item could actually be an associated
 // function. I am keeping this name to be consistent with `ImplItem::Method`.
 // smoelius: In `syn` 2.0, `ImplItem::Method` was renamed to `ImplItem::Fn`:
 // https://github.com/dtolnay/syn/releases/tag/2.0.0
@@ -510,28 +525,26 @@ fn map_method_or_fn(
             }
         }
     };
-    let input_args = {
-        #[cfg(feature = "__persistent")]
-        quote! {}
-        #[cfg(not(feature = "__persistent"))]
+    let (set_panic_hook, take_panic_hook) = (
         quote! {
-            let mut args = UsingReader::<_>::read_args #combined_concretization (std::io::stdin());
-        }
+            std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
+        },
+        quote! {
+            let _ = std::panic::take_hook();
+        },
+    );
+    let input_args = quote! {
+        let mut args = UsingReader::<_>::read_args #combined_concretization (std::io::stdin());
     };
-    let output_args = {
-        #[cfg(feature = "__persistent")]
-        quote! {}
-        #[cfg(not(feature = "__persistent"))]
-        quote! {
-            args.as_ref().map(|x| {
-                if test_fuzz::runtime::pretty_print_enabled() {
-                    eprint!("{:#?}", x);
-                } else {
-                    eprint!("{:?}", x);
-                };
-            });
-            eprintln!();
-        }
+    let output_args = quote! {
+        args.as_ref().map(|x| {
+            if test_fuzz::runtime::pretty_print_enabled() {
+                eprint!("{:#?}", x);
+            } else {
+                eprint!("{:?}", x);
+            };
+        });
+        eprintln!();
     };
     let args_ret_ty: Type = parse_quote! {
         <Args #combined_concretization_with_dummy_lifetimes as HasRetTy>::RetTy
@@ -567,53 +580,38 @@ fn map_method_or_fn(
     } else {
         call
     };
-    let call_in_environment_with_deserialized_arguments = {
-        #[cfg(feature = "__persistent")]
-        quote! {
-            test_fuzz::afl::fuzz!(|data: &[u8]| {
-                let mut args = UsingReader::<_>::read_args #combined_concretization (data);
-                let ret: Option< #args_ret_ty > = args.map(|mut args|
-                    #call_in_environment
-                );
-            });
-        }
-        #[cfg(not(feature = "__persistent"))]
-        quote! {
-            let ret: Option< #args_ret_ty > = args.map(|mut args|
-                #call_in_environment
-            );
-        }
-    };
-    let output_ret = {
-        #[cfg(feature = "__persistent")]
-        quote! {
-            // smoelius: Suppress unused variable warning.
-            let _: Option< #args_ret_ty > = None;
-        }
-        #[cfg(not(feature = "__persistent"))]
-        quote! {
-            struct Ret( #args_ret_ty );
-            impl std::fmt::Debug for Ret {
-                fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                    use test_fuzz::runtime::TryDebugFallback;
-                    let mut debug_tuple = fmt.debug_tuple("Ret");
-                    test_fuzz::runtime::TryDebug(&self.0).apply(&mut |value| {
-                        debug_tuple.field(value);
-                    });
-                    debug_tuple.finish()
-                }
+    let output_ret = quote! {
+        struct Ret( #args_ret_ty );
+        impl std::fmt::Debug for Ret {
+            fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                use test_fuzz::runtime::TryDebugFallback;
+                let mut debug_tuple = fmt.debug_tuple("Ret");
+                test_fuzz::runtime::TryDebug(&self.0).apply(&mut |value| {
+                    debug_tuple.field(value);
+                });
+                debug_tuple.finish()
             }
-            let ret = ret.map(Ret);
-            ret.map(|x| {
-                if test_fuzz::runtime::pretty_print_enabled() {
-                    eprint!("{:#?}", x);
-                } else {
-                    eprint!("{:?}", x);
-                };
-            });
-            eprintln!();
         }
+        let ret = ret.map(Ret);
+        ret.map(|x| {
+            if test_fuzz::runtime::pretty_print_enabled() {
+                eprint!("{:#?}", x);
+            } else {
+                eprint!("{:?}", x);
+            };
+        });
+        eprintln!();
     };
+    let args_entry_stmts = args_entry_stmts(&Components {
+        combined_concretization: &combined_concretization,
+        set_panic_hook: &set_panic_hook,
+        take_panic_hook: &take_panic_hook,
+        input_args: &input_args,
+        output_args: &output_args,
+        output_ret: &output_ret,
+        args_ret_ty: &args_ret_ty,
+        call_in_environment: &call_in_environment,
+    });
     let mod_items = if opts.only_concretizations {
         quote! {}
     } else {
@@ -693,26 +691,8 @@ fn map_method_or_fn(
                     }
 
                     fn entry() {
-                        // smoelius: Do not set the panic hook when replaying. Leave cargo test's
-                        // panic hook in place.
                         if test_fuzz::runtime::test_fuzz_enabled() {
-                            if test_fuzz::runtime::display_enabled()
-                                || test_fuzz::runtime::replay_enabled()
-                            {
-                                #input_args
-                                if test_fuzz::runtime::display_enabled() {
-                                    #output_args
-                                }
-                                if test_fuzz::runtime::replay_enabled() {
-                                    #call_in_environment_with_deserialized_arguments
-                                    #output_ret
-                                }
-                            } else {
-                                std::panic::set_hook(std::boxed::Box::new(|_| std::process::abort()));
-                                #input_args
-                                #call_in_environment_with_deserialized_arguments
-                                let _ = std::panic::take_hook();
-                            }
+                            #args_entry_stmts
                         }
                     }
                 }
@@ -1041,7 +1021,10 @@ fn args_as_turbofish(args: &Punctuated<GenericArgument, token::Comma>) -> TokenS
 }
 
 // smoelius: The current strategy for combining auto-generated values is a kind of "round robin."
-// The strategy ensures that each auto-generated value gets into at least one `Arg` value.
+// The strategy ensures that each auto-generated value gets into at least one `Args` value.
+// smoelius: One problem with the current approach is that it increments `Args` fields in lockstep.
+// So for any two fields with the same number of values, if value x appears alongside value y, then
+// whenever x appears, it appears alongside y (and vice versa).
 fn args_from_autos(autos: &[Expr]) -> Expr {
     let lens: Vec<Expr> = (0..autos.len())
         .map(|i| {

@@ -1,4 +1,6 @@
+use super::Fuzzer;
 use cargo_metadata::MetadataCommand;
+use heck::ToSnakeCase;
 use std::{any::type_name, env, path::PathBuf};
 
 #[must_use]
@@ -32,54 +34,63 @@ pub fn corpus_directory_from_target(krate: &str, target: &str) -> PathBuf {
 }
 
 #[must_use]
-pub fn crashes_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    output_directory_from_target(krate, target).join("default/crashes")
+pub fn crashes_directory_from_target(fuzzer: Fuzzer, krate: &str, target: &str) -> PathBuf {
+    output_directory_from_target(fuzzer, krate, target).join(match fuzzer {
+        Fuzzer::Aflplusplus | Fuzzer::AflplusplusPersistent => "default/crashes",
+        Fuzzer::Libfuzzer => "artifacts",
+    })
 }
 
 #[must_use]
-pub fn hangs_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    output_directory_from_target(krate, target).join("default/hangs")
+pub fn hangs_directory_from_target(fuzzer: Fuzzer, krate: &str, target: &str) -> PathBuf {
+    output_directory_from_target(fuzzer, krate, target).join(match fuzzer {
+        Fuzzer::Aflplusplus | Fuzzer::AflplusplusPersistent => "default/hangs",
+        Fuzzer::Libfuzzer => "artifacts",
+    })
 }
 
 #[must_use]
-pub fn queue_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    output_directory_from_target(krate, target).join("default/queue")
+pub fn queue_directory_from_target(fuzzer: Fuzzer, krate: &str, target: &str) -> PathBuf {
+    output_directory_from_target(fuzzer, krate, target).join(match fuzzer {
+        Fuzzer::Aflplusplus | Fuzzer::AflplusplusPersistent => "default/queue",
+        Fuzzer::Libfuzzer => "queue",
+    })
 }
 
 #[must_use]
-pub fn output_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    output_directory().join(path_from_target(krate, target))
+pub fn output_directory_from_target(fuzzer: Fuzzer, krate: &str, target: &str) -> PathBuf {
+    output_directory(fuzzer).join(path_from_target(krate, target))
 }
 
 #[must_use]
 fn impl_concretizations_directory() -> PathBuf {
-    target_directory(false).join("impl_concretizations")
+    target_directory(None).join("impl_concretizations")
 }
 
 #[must_use]
 fn concretizations_directory() -> PathBuf {
-    target_directory(false).join("concretizations")
+    target_directory(None).join("concretizations")
 }
 
 #[must_use]
 fn corpus_directory() -> PathBuf {
-    target_directory(false).join("corpus")
+    target_directory(None).join("corpus")
 }
 
 #[must_use]
-fn output_directory() -> PathBuf {
-    target_directory(true).join("output")
+fn output_directory(fuzzer: Fuzzer) -> PathBuf {
+    target_directory(Some(fuzzer)).join("output")
 }
 
 #[must_use]
-pub fn target_directory(instrumented: bool) -> PathBuf {
+pub fn target_directory(fuzzer: Option<Fuzzer>) -> PathBuf {
     let mut command = MetadataCommand::new();
     if let Ok(path) = env::var("TEST_FUZZ_MANIFEST_PATH") {
         command.manifest_path(path);
     }
     let mut target_dir = command.no_deps().exec().unwrap().target_directory;
-    if instrumented {
-        target_dir = target_dir.join("afl");
+    if let Some(fuzzer) = fuzzer {
+        target_dir = target_dir.join(fuzzer.to_string().to_snake_case());
     }
     target_dir.into()
 }
@@ -89,7 +100,7 @@ fn path_from_args_type<T>() -> String {
     let type_name = type_name::<T>();
     let n = type_name
         .find("_fuzz")
-        .unwrap_or_else(|| panic!("unexpected type name: `{}`", type_name));
+        .unwrap_or_else(|| panic!("unexpected type name: `{type_name}`"));
     type_name[..n].to_owned()
 }
 
