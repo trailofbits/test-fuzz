@@ -1,4 +1,4 @@
-use super::Object;
+use super::{Fuzzer, Object};
 use anyhow::Result;
 use clap::{crate_version, ArgAction, Parser};
 use heck::ToKebabCase;
@@ -21,11 +21,8 @@ enum SubCommand {
 // smoelius: Wherever possible, try to reuse cargo test and libtest option names.
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Deserialize, Parser, Serialize)]
-#[command(version = crate_version!(), after_help = "To fuzz at most <SECONDS> of time, use:
-
-    cargo test-fuzz ... -- -V <SECONDS>
-
-Try `cargo afl fuzz --help` to see additional fuzzer options.
+#[command(version = crate_version!(), after_help = "\
+Try `cargo afl fuzz --help` to see additional AFLplusplus options.
 ")]
 #[remain::sorted]
 struct TestFuzzWithDeprecations {
@@ -67,7 +64,8 @@ struct TestFuzzWithDeprecations {
     #[arg(
         long,
         help = "Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 \
-        if an error occurred; implies --no-ui, does not imply --run-until-crash or -- -V <SECONDS>"
+        if an error occurred; implies --no-ui, does not imply --run-until-crash or \
+        --max-total-time <SECONDS>"
     )]
     exit_code: bool,
     #[arg(
@@ -76,10 +74,19 @@ struct TestFuzzWithDeprecations {
         help = "Space or comma separated list of features to activate"
     )]
     features: Vec<String>,
+    #[arg(long, help = "Fuzz using <FUZZER>")]
+    fuzzer: Option<Fuzzer>,
     #[arg(long, help = "List fuzz targets")]
     list: bool,
     #[arg(long, value_name = "PATH", help = "Path to Cargo.toml")]
     manifest_path: Option<String>,
+    #[arg(
+        long,
+        value_name = "SECONDS",
+        help = "Fuzz at most <SECONDS> of time (equivalent to -- -V <SECONDS> for aflplusplus, and \
+        -- --max_total_time <SECONDS> for libfuzzer)"
+    )]
+    max_total_time: Option<u64>,
     #[arg(long, help = "Do not activate the `default` feature")]
     no_default_features: bool,
     #[arg(
@@ -93,7 +100,7 @@ struct TestFuzzWithDeprecations {
     no_ui: bool,
     #[arg(short, long, help = "Package containing fuzz target")]
     package: Option<String>,
-    #[arg(long, help = "Enable persistent mode fuzzing")]
+    #[arg(long, hide = true)]
     persistent: bool,
     #[arg(long, help = "Pretty-print debug output when displaying/replaying")]
     pretty_print: bool,
@@ -137,8 +144,9 @@ struct TestFuzzWithDeprecations {
     test: Option<String>,
     #[arg(
         long,
-        help = "Number of seconds to consider a hang when fuzzing or replaying (equivalent \
-        to -- -t <TIMEOUT * 1000> when fuzzing)"
+        help = "Number of seconds to consider a hang when fuzzing or replaying (equivalent to \
+        -- -t <TIMEOUT * 1000> when fuzzing with aflplusplus, and -- -timeout <TIMEOUT> when \
+        fuzzing with libfuzzer)"
     )]
     timeout: Option<u64>,
     #[arg(long, help = "Show build output when displaying/replaying")]
@@ -148,7 +156,7 @@ struct TestFuzzWithDeprecations {
         help = "String that fuzz target's name must contain"
     )]
     ztarget: Option<String>,
-    #[arg(last = true, name = "ARGS", help = "Arguments for the fuzzer")]
+    #[arg(last = true, value_name = "ARGS", help = "Arguments for the fuzzer")]
     zzargs: Vec<String>,
 }
 
@@ -169,14 +177,16 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             exact,
             exit_code,
             features,
+            fuzzer,
             list,
             manifest_path,
+            max_total_time,
             no_default_features,
             no_instrumentation,
             no_run,
             no_ui,
             package,
-            persistent,
+            persistent: _,
             pretty_print,
             replay,
             replay_corpus: _,
@@ -203,14 +213,15 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             exact,
             exit_code,
             features,
+            fuzzer,
             list,
             manifest_path,
+            max_total_time,
             no_default_features,
             no_instrumentation,
             no_run,
             no_ui,
             package,
-            persistent,
             pretty_print,
             replay,
             reset,
@@ -261,6 +272,11 @@ pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     process_deprecated_action_object!(opts, replay, crashes);
     process_deprecated_action_object!(opts, replay, hangs);
     process_deprecated_action_object!(opts, replay, queue);
+
+    if opts.persistent {
+        eprintln!("`--persistent` is deprecated. Use `--fuzzer aflplusplus-persistent`.");
+        opts.fuzzer = Some(Fuzzer::AflplusplusPersistent);
+    }
 
     if let Some(target_name) = opts.target.take() {
         eprintln!("`--target <TARGETNAME>` is deprecated. Use just `<TARGETNAME>`.");

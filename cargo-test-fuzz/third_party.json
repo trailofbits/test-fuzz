@@ -1,6 +1,6 @@
 [
   {
-    "flags": [],
+    "flags": ["SKIP_LIBFUZZER"],
     "url": "https://github.com/CosmWasm/cw-plus",
     "rev": "de1fb0b9836e56e5640575d246274d882509d714",
     "patch": "cw-plus.patch",
@@ -18,7 +18,7 @@
     "targets": ["import"]
   },
   {
-    "flags": ["REQUIRES_ISOLATION"],
+    "flags": ["SKIP_LIBFUZZER", "REQUIRES_ISOLATION"],
     "url": "https://github.com/solana-labs/example-helloworld",
     "rev": "36eb41d1290732786e13bd097668d8676254a139",
     "patch": "example-helloworld.patch",

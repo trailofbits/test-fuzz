@@ -21,8 +21,25 @@ pub use num_traits;
 
 pub mod traits;
 
+#[cfg(feature = "__fuzzer_libfuzzer")]
+pub mod libfuzzer;
+
 #[cfg(any(serde_default, feature = "__serde_bincode"))]
-const BYTE_LIMIT: u64 = 1024 * 1024 * 1024;
+const BYTE_LIMIT: u64 = {
+    #[cfg(any(
+        fuzzer_default,
+        feature = "__fuzzer_aflplusplus",
+        feature = "__fuzzer_aflplusplus_persistent"
+    ))]
+    {
+        1024 * 1024 * 1024
+    }
+    // smoelius: With a large byte limit, runs often timeout under libfuzzer.
+    #[cfg(feature = "__fuzzer_libfuzzer")]
+    {
+        32 * 1024
+    }
+};
 
 // smoelius: TryDebug, etc. use Nikolai Vazquez's trick from `impls`.
 // https://github.com/nvzqz/impls#how-it-works

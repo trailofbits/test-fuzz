@@ -10,10 +10,15 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
+anyhow = "1.0"
 cargo_metadata = "0.15"
+clap = { version = "4.1", features = ["derive"] }
+heck = "0.4"
 proc-macro2 = "1.0"
 quote = "1.0"
+remain = "0.2"
 serde = "1.0"
+strum = "0.24"
 strum_macros = "0.24"
 
 [features]

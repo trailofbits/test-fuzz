@@ -101,13 +101,52 @@ jobs:
           cargo clean && cargo +nightly udeps --features=test-fuzz/auto_concretize --all-targets
 
   test:
-    runs-on: ubuntu-latest
-
     strategy:
       fail-fast: false
       matrix:
-        serde_format: [bincode, cbor, cbor4ii]
-        toolchain: [stable, nightly]
+        include:
+          - fuzzer: aflplusplus
+            environment: ubuntu-latest
+            serde_format: bincode
+            toolchain: stable
+          - fuzzer: aflplusplus
+            environment: macos-latest
+            serde_format: bincode
+            toolchain: nightly
+          - fuzzer: aflplusplus-persistent
+            environment: ubuntu-latest
+            serde_format: cbor
+            toolchain: stable
+          - fuzzer: libfuzzer
+            environment: ubuntu-latest
+            serde_format: cbor
+            toolchain: nightly
+          - fuzzer: libfuzzer
+            environment: macos-latest
+            serde_format: cbor4ii
+            toolchain: stable
+          - fuzzer: aflplusplus
+            environment: ubuntu-latest
+            serde_format: cbor4ii
+            toolchain: nightly
+          - fuzzer: aflplusplus
+            environment: macos-latest
+            serde_format: bincode
+            toolchain: stable
+          - fuzzer: aflplusplus-persistent
+            environment: ubuntu-latest
+            serde_format: bincode
+            toolchain: nightly
+          - fuzzer: libfuzzer
+            environment: ubuntu-latest
+            serde_format: cbor
+            toolchain: stable
+          - fuzzer: libfuzzer
+            environment: macos-latest
+            serde_format: cbor
+            toolchain: nightly
+
+    runs-on: ${{ matrix.environment }}
 
     steps:
       - uses: actions/checkout@v3
@@ -118,11 +157,17 @@ jobs:
         run: rustup default ${{ matrix.toolchain }}
 
       - name: Install llvm
+        if: ${{ matrix.environment == 'ubuntu-latest' }}
         run: sudo apt-get install llvm
 
       # smoelius: The Substrate tests require `protoc`.
       - name: Install protoc
-        run: sudo apt-get install protobuf-compiler
+        run: |
+          if [[ ${{ matrix.environment }} = 'ubuntu-latest' ]]; then
+            sudo apt-get install protobuf-compiler
+          else
+            brew install protobuf
+          fi
 
       - name: Install afl
         run: cargo install afl
@@ -132,6 +177,11 @@ jobs:
           test "$(ls ~/.local/share/afl.rs | wc -l)" -eq 1
           test "$(ls ~/.local/share/afl.rs/rustc-* | wc -l)" -eq 1
           sudo "$HOME"/.local/share/afl.rs/rustc-*/afl.rs-*/afl/bin/afl-system-config
+          if [[ ${{ matrix.environment }} = 'macos-latest' ]]; then
+            SL=/System/Library; PL=com.apple.ReportCrash
+            launchctl unload -w ${SL}/LaunchAgents/${PL}.plist
+            sudo launchctl unload -w ${SL}/LaunchDaemons/${PL}.Root.plist
+          fi
 
       # smoelius: The wasm32 target is needed for some Substrate tests, regardless of the toolchain
       # used to build test-fuzz.
@@ -144,7 +194,7 @@ jobs:
         run: |
           AUTO_CONCRETIZE=
           SHUFFLE=
-          if [[ ${{ matrix.toolchain }} = nightly ]]; then
+          if [[ ${{ matrix.toolchain }} = 'nightly' ]]; then
             AUTO_CONCRETIZE='--features=test-fuzz/auto_concretize'
             SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
           fi
@@ -158,6 +208,7 @@ jobs:
         env:
           RUST_BACKTRACE: 1
           RUST_LOG: warn
+          TEST_FUZZ_FUZZER: ${{ matrix.fuzzer }}
 
   test-uninstalled-cargo-afl:
     runs-on: ubuntu-latest
@@ -172,13 +223,14 @@ jobs:
         run: |
           OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
           echo "$OUTPUT"
-          echo "$OUTPUT" | grep '^Error: Could not determine `cargo-afl` version. Is it installed? Try `cargo install afl`.$'
+          echo "$OUTPUT" | grep 'Could not determine `cargo-afl` version. Is it installed? Try `cargo install afl`.'
 
   test-incompatible-cargo-afl:
     runs-on: ubuntu-latest
 
     env:
       RUSTUP_TOOLCHAIN: nightly
+      TEST_FUZZ_FUZZER: aflplusplus-persistent
 
     steps:
       - uses: actions/checkout@v3
@@ -200,6 +252,7 @@ jobs:
 
     env:
       RUSTUP_TOOLCHAIN: nightly
+      TEST_FUZZ_FUZZER: aflplusplus-persistent
 
     steps:
       - uses: actions/checkout@v3

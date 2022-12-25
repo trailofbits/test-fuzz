@@ -1,6 +1,7 @@
 use assert_cmd::Command;
 use bitflags::bitflags;
 use cargo_metadata::MetadataCommand;
+use internal::{fuzzer, Fuzzer};
 use lazy_static::lazy_static;
 use option_set::option_set;
 use predicates::prelude::*;
@@ -21,7 +22,8 @@ option_set! {
         const EXPENSIVE = 1 << 0;
         const SKIP = 1 << 1;
         const SKIP_NIGHTLY = 1 << 2;
-        const REQUIRES_ISOLATION = 1 << 3;
+        const SKIP_LIBFUZZER = 1 << 3;
+        const REQUIRES_ISOLATION = 1 << 4;
     }
 }
 
@@ -52,6 +54,7 @@ mod cheap_tests {
     #[test]
     fn test() {
         let version_meta = version_meta().unwrap();
+        let fuzzer = fuzzer().unwrap();
         for test in TESTS.iter() {
             run_test(
                 module_path!(),
@@ -59,7 +62,8 @@ mod cheap_tests {
                 test.flags.contains(Flags::EXPENSIVE)
                     || test.flags.contains(Flags::SKIP)
                     || (test.flags.contains(Flags::SKIP_NIGHTLY)
-                        && version_meta.channel == Channel::Nightly),
+                        && version_meta.channel == Channel::Nightly)
+                    || (test.flags.contains(Flags::SKIP_LIBFUZZER) && fuzzer == Fuzzer::Libfuzzer),
             );
         }
     }
@@ -71,13 +75,15 @@ mod all_tests {
     #[ignore]
     fn test() {
         let version_meta = version_meta().unwrap();
+        let fuzzer = fuzzer().unwrap();
         for test in TESTS.iter() {
             run_test(
                 module_path!(),
                 test,
                 test.flags.contains(Flags::SKIP)
                     || (test.flags.contains(Flags::SKIP_NIGHTLY)
-                        && version_meta.channel == Channel::Nightly),
+                        && version_meta.channel == Channel::Nightly)
+                    || (test.flags.contains(Flags::SKIP_LIBFUZZER) && fuzzer == Fuzzer::Libfuzzer),
             );
         }
     }
@@ -159,8 +165,11 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
         command
             .current_dir(&subdir)
             .args(["update", "-p", "libp2p-swarm-derive"]);
-        if command.assert().try_success().is_ok() {
-            command.args(["--precise", "0.30.1"]).assert().success();
+        if command.logged_assert().try_success().is_ok() {
+            command
+                .args(["--precise", "0.30.1"])
+                .logged_assert()
+                .success();
         }
     }
 
@@ -223,7 +232,7 @@ fn check_test_fuzz_dependency(subdir: &Path, test_package: &str) {
         .packages
         .iter()
         .find(|package| package.name == test_package)
-        .unwrap_or_else(|| panic!("Could not find package `{}`", test_package));
+        .unwrap_or_else(|| panic!("Could not find package `{test_package}`",));
     let dep = package
         .dependencies
         .iter()

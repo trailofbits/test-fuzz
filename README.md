@@ -248,50 +248,52 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 #### Options
 
 ```
-      --backtrace             Display backtraces
-      --consolidate           Move one target's crashes, hangs, and work queue to its corpus; to
-                              consolidate all targets, use --consolidate-all
-      --display <OBJECT>      Display concretizations, corpus, crashes, `impl` concretizations,
-                              hangs, or work queue. By default, corpus uses an uninstrumented fuzz
-                              target; the others use an instrumented fuzz target. To display the
-                              corpus with instrumentation, use --display corpus-instrumented.
-                              [possible values: concretizations, corpus, corpus-instrumented,
-                              crashes, hangs, impl-concretizations, queue]
-      --exact                 Target name is an exact name rather than a substring
-      --exit-code             Exit with 0 if the time limit was reached, 1 for other programmatic
-                              aborts, and 2 if an error occurred; implies --no-ui, does not imply
-                              --run-until-crash or -- -V <SECONDS>
-      --features <FEATURES>   Space or comma separated list of features to activate
-      --list                  List fuzz targets
-      --manifest-path <PATH>  Path to Cargo.toml
-      --no-default-features   Do not activate the `default` feature
-      --no-instrumentation    Compile without instrumentation (for testing build process)
-      --no-run                Compile, but don't fuzz
-      --no-ui                 Disable user interface
-  -p, --package <PACKAGE>     Package containing fuzz target
-      --persistent            Enable persistent mode fuzzing
-      --pretty-print          Pretty-print debug output when displaying/replaying
-      --replay <OBJECT>       Replay corpus, crashes, hangs, or work queue. By default, corpus uses
-                              an uninstrumented fuzz target; the others use an instrumented fuzz
-                              target. To replay the corpus with instrumentation, use --replay
-                              corpus-instrumented. [possible values: concretizations, corpus,
-                              corpus-instrumented, crashes, hangs, impl-concretizations, queue]
-      --reset                 Clear fuzzing data for one target, but leave corpus intact; to reset
-                              all targets, use --reset-all
-      --resume                Resume target's last fuzzing session
-      --run-until-crash       Stop fuzzing once a crash is found
-      --test <NAME>           Integration test containing fuzz target
-      --timeout <TIMEOUT>     Number of seconds to consider a hang when fuzzing or replaying
-                              (equivalent to -- -t <TIMEOUT * 1000> when fuzzing)
-      --verbose               Show build output when displaying/replaying
-  -h, --help                  Print help
-  -V, --version               Print version
+      --backtrace                 Display backtraces
+      --consolidate               Move one target's crashes, hangs, and work queue to its corpus; to
+                                  consolidate all targets, use --consolidate-all
+      --display <OBJECT>          Display concretizations, corpus, crashes, `impl` concretizations,
+                                  hangs, or work queue. By default, corpus uses an uninstrumented
+                                  fuzz target; the others use an instrumented fuzz target. To
+                                  display the corpus with instrumentation, use --display
+                                  corpus-instrumented. [possible values: concretizations, corpus,
+                                  corpus-instrumented, crashes, hangs, impl-concretizations, queue]
+      --exact                     Target name is an exact name rather than a substring
+      --exit-code                 Exit with 0 if the time limit was reached, 1 for other
+                                  programmatic aborts, and 2 if an error occurred; implies --no-ui,
+                                  does not imply --run-until-crash or --max-total-time <SECONDS>
+      --features <FEATURES>       Space or comma separated list of features to activate
+      --fuzzer <FUZZER>           Fuzz using <FUZZER> [possible values: aflplusplus,
+                                  aflplusplus-persistent, libfuzzer]
+      --list                      List fuzz targets
+      --manifest-path <PATH>      Path to Cargo.toml
+      --max-total-time <SECONDS>  Fuzz at most <SECONDS> of time (equivalent to -- -V <SECONDS> for
+                                  aflplusplus, and -- --max_total_time <SECONDS> for libfuzzer)
+      --no-default-features       Do not activate the `default` feature
+      --no-instrumentation        Compile without instrumentation (for testing build process)
+      --no-run                    Compile, but don't fuzz
+      --no-ui                     Disable user interface
+  -p, --package <PACKAGE>         Package containing fuzz target
+      --pretty-print              Pretty-print debug output when displaying/replaying
+      --replay <OBJECT>           Replay corpus, crashes, hangs, or work queue. By default, corpus
+                                  uses an uninstrumented fuzz target; the others use an instrumented
+                                  fuzz target. To replay the corpus with instrumentation, use
+                                  --replay corpus-instrumented. [possible values: concretizations,
+                                  corpus, corpus-instrumented, crashes, hangs, impl-concretizations,
+                                  queue]
+      --reset                     Clear fuzzing data for one target, but leave corpus intact; to
+                                  reset all targets, use --reset-all
+      --resume                    Resume target's last fuzzing session
+      --run-until-crash           Stop fuzzing once a crash is found
+      --test <NAME>               Integration test containing fuzz target
+      --timeout <TIMEOUT>         Number of seconds to consider a hang when fuzzing or replaying
+                                  (equivalent to -- -t <TIMEOUT * 1000> when fuzzing with
+                                  aflplusplus, and -- -timeout <TIMEOUT> when fuzzing with
+                                  libfuzzer)
+      --verbose                   Show build output when displaying/replaying
+  -h, --help                      Print help
+  -V, --version                   Print version
 
-To fuzz at most <SECONDS> of time, use:
-
-    cargo test-fuzz ... -- -V <SECONDS>
-
-Try `cargo afl fuzz --help` to see additional fuzzer options.
+Try `cargo afl fuzz --help` to see additional AFLplusplus options.
 ```
 
 ### Convenience functions and macros

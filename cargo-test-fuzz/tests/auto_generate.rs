@@ -1,10 +1,10 @@
 use anyhow::ensure;
-use internal::dirs::corpus_directory_from_target;
+use internal::{dirs::corpus_directory_from_target, fuzzer, Fuzzer};
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
 use testing::{examples, retry, CommandExt};
 
-const TIMEOUT: &str = "60";
+const MAX_TOTAL_TIME: &str = "60";
 
 // smoelius: It would be nice if these first two tests could distinguish how many "auto_generate"
 // tests get run (0 vs. 1). But right now, I can't think of an easy way to do this.
@@ -39,7 +39,15 @@ fn auto_generate_empty() {
 )]
 #[test]
 fn auto_generate_nonempty() {
-    auto_generate("assert", "target", true, "Auto-generated", 1);
+    // smoelius: Libfuzzer exits with 77 when a crash is found.
+    let fuzzer = fuzzer().unwrap();
+    auto_generate(
+        "assert",
+        "target",
+        fuzzer != Fuzzer::Libfuzzer,
+        "Auto-generated",
+        1,
+    );
 }
 
 fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usize) {
@@ -55,7 +63,12 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
     retry(3, || {
         let assert = examples::test_fuzz(krate, target)
             .unwrap()
-            .args(["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
+            .args([
+                "--no-ui",
+                "--run-until-crash",
+                "--max-total-time",
+                MAX_TOTAL_TIME,
+            ])
             .logged_assert();
 
         let assert = if success {

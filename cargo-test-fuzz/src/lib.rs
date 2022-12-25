@@ -11,29 +11,31 @@ use cargo_metadata::{
 };
 use clap::{crate_version, ValueEnum};
 use heck::ToKebabCase;
-use internal::dirs::{
-    concretizations_directory_from_target, corpus_directory_from_target,
-    crashes_directory_from_target, hangs_directory_from_target,
-    impl_concretizations_directory_from_target, output_directory_from_target,
-    queue_directory_from_target, target_directory,
+use internal::{
+    dirs::{
+        concretizations_directory_from_target, corpus_directory_from_target,
+        crashes_directory_from_target, hangs_directory_from_target,
+        impl_concretizations_directory_from_target, output_directory_from_target,
+        queue_directory_from_target, target_directory,
+    },
+    fuzzer, Fuzzer,
 };
 use log::debug;
-use semver::Version;
-use semver::VersionReq;
+use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
     fmt::{Debug, Formatter},
     fs::{create_dir_all, read, read_dir, remove_dir_all, File},
     io::{BufRead, Read},
-    iter,
     path::{Path, PathBuf},
     process::{exit, Command},
-    sync::Mutex,
     time::Duration,
 };
 use strum_macros::Display;
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
+
+mod fuzzer;
 
 mod transition;
 #[allow(deprecated)]
@@ -79,14 +81,15 @@ struct TestFuzz {
     exact: bool,
     exit_code: bool,
     features: Vec<String>,
+    fuzzer: Option<Fuzzer>,
     list: bool,
     manifest_path: Option<String>,
+    max_total_time: Option<u64>,
     no_default_features: bool,
     no_instrumentation: bool,
     no_run: bool,
     no_ui: bool,
     package: Option<String>,
-    persistent: bool,
     pretty_print: bool,
     replay: Option<Object>,
     reset: bool,
@@ -105,7 +108,7 @@ struct Executable {
     path: PathBuf,
     name: String,
     test_fuzz_version: Option<Version>,
-    afl_version: Option<Version>,
+    fuzzer_version: Option<Version>,
 }
 
 impl Debug for Executable {
@@ -119,8 +122,8 @@ impl Debug for Executable {
             .as_ref()
             .map(ToString::to_string)
             .unwrap_or_default();
-        let afl_version = self
-            .afl_version
+        let fuzzer_version = self
+            .fuzzer_version
             .as_ref()
             .map(ToString::to_string)
             .unwrap_or_default();
@@ -128,7 +131,7 @@ impl Debug for Executable {
             .field("path", &self.path)
             .field("name", &self.name)
             .field("test_fuzz_version", &test_fuzz_version)
-            .field("afl_version", &afl_version)
+            .field("fuzzer_version", &fuzzer_version)
             .finish()
     }
 }
@@ -151,6 +154,9 @@ fn run(opts: TestFuzz) -> Result<()> {
         opts
     };
 
+    let fuzzer_env = fuzzer()?;
+    let fuzzer = fuzzer::instantiate(opts.fuzzer.unwrap_or(fuzzer_env));
+
     if let Some(object) = opts.replay {
         ensure!(
             !matches!(
@@ -162,13 +168,11 @@ fn run(opts: TestFuzz) -> Result<()> {
         );
     }
 
-    cache_cargo_afl_version()?;
-
     let display = opts.display.is_some();
 
     let replay = opts.replay.is_some();
 
-    let executables = build(&opts, display || replay)?;
+    let executables = build(&opts, fuzzer, display || replay)?;
 
     let mut executable_targets = executable_targets(&executables)?;
 
@@ -176,7 +180,7 @@ fn run(opts: TestFuzz) -> Result<()> {
         executable_targets = filter_executable_targets(&opts, pat, &executable_targets);
     }
 
-    check_test_fuzz_and_afl_versions(&executable_targets)?;
+    check_test_fuzz_and_fuzzer_versions(fuzzer, &executable_targets)?;
 
     if opts.list {
         println!("{executable_targets:#?}");
@@ -189,28 +193,28 @@ fn run(opts: TestFuzz) -> Result<()> {
 
     if opts.consolidate_all || opts.reset_all {
         if opts.consolidate_all {
-            consolidate(&opts, &executable_targets)?;
+            consolidate(&opts, fuzzer, &executable_targets)?;
         }
-        return reset(&opts, &executable_targets);
+        return reset(&opts, fuzzer, &executable_targets);
     }
 
     let (executable, target) = executable_target(&opts, &executable_targets)?;
 
     if opts.consolidate || opts.reset {
         if opts.consolidate {
-            consolidate(&opts, &executable_targets)?;
+            consolidate(&opts, fuzzer, &executable_targets)?;
         }
-        return reset(&opts, &executable_targets);
+        return reset(&opts, fuzzer, &executable_targets);
     }
 
     let (flags, dir) = None
         .or_else(|| {
             opts.display
-                .map(|object| flags_and_dir(object, &executable.name, &target))
+                .map(|object| flags_and_dir(fuzzer, object, &executable.name, &target))
         })
         .or_else(|| {
             opts.replay
-                .map(|object| flags_and_dir(object, &executable.name, &target))
+                .map(|object| flags_and_dir(fuzzer, object, &executable.name, &target))
         })
         .unwrap_or((Flags::empty(), PathBuf::default()));
 
@@ -223,7 +227,7 @@ fn run(opts: TestFuzz) -> Result<()> {
         return Ok(());
     }
 
-    fuzz(&opts, &executable, &target).map_err(|error| {
+    fuzz(&opts, fuzzer, &executable, &target).map_err(|error| {
         if opts.exit_code {
             eprintln!("{error:?}");
             exit(2);
@@ -232,49 +236,48 @@ fn run(opts: TestFuzz) -> Result<()> {
     })
 }
 
-fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
-    let metadata = metadata(opts)?;
+fn build(opts: &TestFuzz, fuzzer: &dyn fuzzer::Interface, quiet: bool) -> Result<Vec<Executable>> {
+    let metadata = metadata(opts, fuzzer)?;
 
-    let mut args = vec![];
-    if !opts.no_instrumentation {
-        args.extend_from_slice(&["afl"]);
-    }
-    args.extend_from_slice(&["test", "--frozen", "--offline", "--no-run"]);
+    let mut command = if opts.no_instrumentation {
+        let mut command = Command::new("cargo");
+        command.args(["test", "--no-run"]);
+        if let Some(path) = &opts.manifest_path {
+            command.args(["--manifest-path", path]);
+        }
+        command
+    } else {
+        fuzzer.build(opts.manifest_path.as_deref().map(Path::new))?
+    };
+
+    // command.args(&["--frozen", "--offline"]);
     if opts.no_default_features {
-        args.extend_from_slice(&["--no-default-features"]);
+        command.args(["--no-default-features"]);
     }
     for features in &opts.features {
-        args.extend_from_slice(&["--features", features]);
+        command.args(["--features", features]);
     }
-    let target_dir = target_directory(true);
-    let target_dir_str = target_dir.to_string_lossy();
     if !opts.no_instrumentation {
-        args.extend_from_slice(&["--target-dir", &target_dir_str]);
-    }
-    if let Some(path) = &opts.manifest_path {
-        args.extend_from_slice(&["--manifest-path", path]);
+        let fuzzer_as_feature = "test-fuzz/".to_owned() + &fuzzer.to_enum().as_feature();
+        command.args(["--features", &fuzzer_as_feature]);
+
+        let target_dir = target_directory(Some(fuzzer.to_enum()));
+        let target_dir_str = target_dir.to_string_lossy();
+        command.args(["--target-dir", &target_dir_str]);
     }
     if let Some(package) = &opts.package {
-        args.extend_from_slice(&["--package", package]);
-    }
-    if opts.persistent {
-        args.extend_from_slice(&["--features", "test-fuzz/__persistent"]);
+        command.args(["--package", package]);
     }
     if let Some(name) = &opts.test {
-        args.extend_from_slice(&["--test", name]);
+        command.args(["--test", name]);
     }
 
     // smoelius: Suppress "Warning: AFL++ tools will need to set AFL_MAP_SIZE..." Setting
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to /dev/null.
     // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when
     // displaying/replaying.
-    let mut exec = Exec::cmd("cargo")
-        .args(
-            &args
-                .iter()
-                .chain(iter::once(&"--message-format=json"))
-                .collect::<Vec<_>>(),
-        )
+    let mut exec = exec_from_command(&command)
+        .arg("--message-format=json")
         .stdout(Redirection::Pipe);
     if quiet && !opts.verbose {
         exec = exec.stderr(NullFile);
@@ -305,7 +308,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     // smoelius: If the command failed, re-execute it without --message-format=json. This is easier
     // than trying to capture and colorize `CompilerMessage`s like Cargo does.
     if !status.success() {
-        let mut popen = Exec::cmd("cargo").args(&args).popen()?;
+        let mut popen = exec_from_command(&command).popen()?;
         let status = popen
             .wait()
             .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
@@ -328,13 +331,13 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
                 ..
             } = artifact
             {
-                let (test_fuzz_version, afl_version) =
-                    test_fuzz_and_afl_versions(&metadata, &package_id)?;
+                let (test_fuzz_version, fuzzer_version) =
+                    test_fuzz_and_fuzzer_versions(fuzzer, &metadata, &package_id)?;
                 Ok(Some(Executable {
                     path: executable.into(),
                     name: build_target.name,
                     test_fuzz_version,
-                    afl_version,
+                    fuzzer_version,
                 }))
             } else {
                 Ok(None)
@@ -344,13 +347,13 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     Ok(executables.into_iter().flatten().collect())
 }
 
-fn metadata(opts: &TestFuzz) -> Result<Metadata> {
+fn metadata(opts: &TestFuzz, fuzzer: &dyn fuzzer::Interface) -> Result<Metadata> {
     let mut command = MetadataCommand::new();
     if opts.no_default_features {
         command.features(CargoOpt::NoDefaultFeatures);
     }
     let mut features = opts.features.clone();
-    features.push("test-fuzz/__persistent".to_owned());
+    features.push("test-fuzz/".to_owned() + &fuzzer.to_enum().as_feature());
     command.features(CargoOpt::SomeFeatures(features));
     if let Some(path) = &opts.manifest_path {
         command.manifest_path(path);
@@ -358,23 +361,42 @@ fn metadata(opts: &TestFuzz) -> Result<Metadata> {
     command.exec().map_err(Into::into)
 }
 
-fn test_fuzz_and_afl_versions(
+fn exec_from_command(command: &Command) -> Exec {
+    let mut exec = Exec::cmd(command.get_program()).args(&command.get_args().collect::<Vec<_>>());
+    for (key, val) in command.get_envs() {
+        if let Some(val) = val {
+            exec = exec.env(key, val);
+        } else {
+            exec = exec.env_remove(key);
+        }
+    }
+    if let Some(path) = command.get_current_dir() {
+        exec = exec.cwd(path);
+    }
+    exec
+}
+
+fn test_fuzz_and_fuzzer_versions(
+    fuzzer: &dyn fuzzer::Interface,
     metadata: &Metadata,
     package_id: &PackageId,
 ) -> Result<(Option<Version>, Option<Version>)> {
     let test_fuzz = package_dependency(metadata, package_id, "test-fuzz")?;
-    let afl = test_fuzz
+    let fuzzer = test_fuzz
         .as_ref()
-        .map(|package_id| package_dependency(metadata, package_id, "afl"))
+        .zip(fuzzer.dependency_name())
+        .map(|(package_id, dependency_name)| {
+            package_dependency(metadata, package_id, dependency_name)
+        })
         .transpose()?;
     let test_fuzz_version = test_fuzz
         .map(|package_id| package_version(metadata, &package_id))
         .transpose()?;
-    let afl_version = afl
+    let fuzzer_version = fuzzer
         .flatten()
         .map(|package_id| package_version(metadata, &package_id))
         .transpose()?;
-    Ok((test_fuzz_version, afl_version))
+    Ok((test_fuzz_version, fuzzer_version))
 }
 
 fn package_dependency(
@@ -539,7 +561,8 @@ fn match_message(opts: &TestFuzz) -> String {
     })
 }
 
-fn check_test_fuzz_and_afl_versions(
+fn check_test_fuzz_and_fuzzer_versions(
+    fuzzer: &dyn fuzzer::Interface,
     executable_targets: &[(Executable, Vec<String>)],
 ) -> Result<()> {
     let cargo_test_fuzz_version = Version::parse(crate_version!())?;
@@ -552,48 +575,11 @@ fn check_test_fuzz_and_afl_versions(
             &cargo_test_fuzz_version,
             "cargo-test-fuzz",
         )?;
-        #[allow(clippy::expect_used)]
-        check_dependency_version(
-            &executable.name,
-            "afl",
-            executable.afl_version.as_ref(),
-            "cargo-afl",
-            CARGO_AFL_VERSION
-                .lock()
-                .expect("Could not lock `CARGO_AFL_VERSION`")
-                .as_ref()
-                .expect("Could not determine `cargo-afl` version"),
-            "afl",
-        )?;
+        if let Some(fuzzer_version) = executable.fuzzer_version.as_ref() {
+            fuzzer.check_dependency_version(&executable.name, fuzzer_version)?;
+        }
     }
     Ok(())
-}
-
-#[allow(clippy::significant_drop_tightening)]
-fn cache_cargo_afl_version() -> Result<()> {
-    let cargo_afl_version = cargo_afl_version()?;
-    let mut lock = CARGO_AFL_VERSION
-        .lock()
-        .map_err(|error| anyhow!(error.to_string()))?;
-    *lock = Some(cargo_afl_version);
-    Ok(())
-}
-
-static CARGO_AFL_VERSION: Mutex<Option<Version>> = Mutex::new(None);
-
-fn cargo_afl_version() -> Result<Version> {
-    let mut command = Command::new("cargo");
-    command.args(["afl", "--version"]);
-    let output = command
-        .output()
-        .with_context(|| format!("Could not get output of `{command:?}`"))?;
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let version = stdout.strip_prefix("cargo-afl ").ok_or_else(|| {
-        anyhow!(
-            "Could not determine `cargo-afl` version. Is it installed? Try `cargo install afl`."
-        )
-    })?;
-    Version::parse(version.trim_end()).map_err(Into::into)
 }
 
 fn check_dependency_version(
@@ -632,7 +618,11 @@ fn as_version_req(version: &Version) -> VersionReq {
     VersionReq::parse(&version.to_string()).expect("Could not parse version as version request")
 }
 
-fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> Result<()> {
+fn consolidate(
+    opts: &TestFuzz,
+    fuzzer: &dyn fuzzer::Interface,
+    executable_targets: &[(Executable, Vec<String>)],
+) -> Result<()> {
     assert!(opts.consolidate_all || executable_targets.len() == 1);
 
     for (executable, targets) in executable_targets {
@@ -640,9 +630,10 @@ fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]
 
         for target in targets {
             let corpus_dir = corpus_directory_from_target(&executable.name, target);
-            let crashes_dir = crashes_directory_from_target(&executable.name, target);
-            let hangs_dir = hangs_directory_from_target(&executable.name, target);
-            let queue_dir = queue_directory_from_target(&executable.name, target);
+            let crashes_dir =
+                crashes_directory_from_target(fuzzer.to_enum(), &executable.name, target);
+            let hangs_dir = hangs_directory_from_target(fuzzer.to_enum(), &executable.name, target);
+            let queue_dir = queue_directory_from_target(fuzzer.to_enum(), &executable.name, target);
 
             for dir in &[crashes_dir, hangs_dir, queue_dir] {
                 for entry in read_dir(dir)
@@ -678,14 +669,19 @@ fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]
     Ok(())
 }
 
-fn reset(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> Result<()> {
+fn reset(
+    opts: &TestFuzz,
+    fuzzer: &dyn fuzzer::Interface,
+    executable_targets: &[(Executable, Vec<String>)],
+) -> Result<()> {
     assert!(opts.reset_all || executable_targets.len() == 1);
 
     for (executable, targets) in executable_targets {
         assert!(opts.reset_all || targets.len() == 1);
 
         for target in targets {
-            let output_dir = output_directory_from_target(&executable.name, target);
+            let output_dir =
+                output_directory_from_target(fuzzer.to_enum(), &executable.name, target);
             if !output_dir.exists() {
                 continue;
             }
@@ -701,15 +697,29 @@ fn reset(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> R
     Ok(())
 }
 
-fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) {
+fn flags_and_dir(
+    fuzzer: &dyn fuzzer::Interface,
+    object: Object,
+    krate: &str,
+    target: &str,
+) -> (Flags, PathBuf) {
     match object {
         Object::Corpus | Object::CorpusInstrumented => (
             Flags::REQUIRES_CARGO_TEST,
             corpus_directory_from_target(krate, target),
         ),
-        Object::Crashes => (Flags::empty(), crashes_directory_from_target(krate, target)),
-        Object::Hangs => (Flags::empty(), hangs_directory_from_target(krate, target)),
-        Object::Queue => (Flags::empty(), queue_directory_from_target(krate, target)),
+        Object::Crashes => (
+            Flags::empty(),
+            crashes_directory_from_target(fuzzer.to_enum(), krate, target),
+        ),
+        Object::Hangs => (
+            Flags::empty(),
+            hangs_directory_from_target(fuzzer.to_enum(), krate, target),
+        ),
+        Object::Queue => (
+            Flags::empty(),
+            queue_directory_from_target(fuzzer.to_enum(), krate, target),
+        ),
         Object::ImplConcretizations => (
             Flags::REQUIRES_CARGO_TEST | Flags::RAW,
             impl_concretizations_directory_from_target(krate, target),
@@ -892,7 +902,12 @@ fn for_each_entry(
 }
 
 #[allow(clippy::too_many_lines)]
-fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
+fn fuzz(
+    opts: &TestFuzz,
+    fuzzer: &dyn fuzzer::Interface,
+    executable: &Executable,
+    target: &str,
+) -> Result<()> {
     let input_dir = if opts.resume {
         "-".to_owned()
     } else {
@@ -914,98 +929,10 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         corpus_dir.to_string_lossy().into_owned()
     };
 
-    let output_dir = output_directory_from_target(&executable.name, target);
+    let output_dir = output_directory_from_target(fuzzer.to_enum(), &executable.name, target);
     create_dir_all(&output_dir).unwrap_or_default();
 
-    let mut envs = BASE_ENVS.to_vec();
-    if opts.no_ui {
-        envs.push(("AFL_NO_UI", "1"));
-    }
-    if opts.run_until_crash {
-        envs.push(("AFL_BENCH_UNTIL_CRASH", "1"));
-    }
-
-    let mut args = vec![];
-    args.extend(
-        vec![
-            "afl",
-            "fuzz",
-            "-i",
-            &input_dir,
-            "-o",
-            &output_dir.to_string_lossy(),
-            "-D",
-            "-M",
-            "default",
-        ]
-        .into_iter()
-        .map(String::from),
-    );
-    if let Some(timeout) = opts.timeout {
-        args.extend(["-t".to_owned(), format!("{}", timeout * MILLIS_PER_SEC)]);
-    }
-    args.extend(opts.zzargs.clone());
-    args.extend(
-        vec![
-            "--",
-            &executable.path.to_string_lossy(),
-            "--exact",
-            &(target.to_owned() + ENTRY_SUFFIX),
-        ]
-        .into_iter()
-        .map(String::from),
-    );
-
-    #[allow(clippy::if_not_else)]
-    if !opts.exit_code {
-        let mut command = Command::new("cargo");
-        command.envs(envs).args(args);
-        debug!("{:?}", command);
-        let status = command
-            .status()
-            .with_context(|| format!("Could not get status of `{command:?}`"))?;
-
-        ensure!(status.success(), "Command failed: {:?}", command);
-    } else {
-        let exec = Exec::cmd("cargo")
-            .env_extend(&envs)
-            .args(&args)
-            .stdout(Redirection::Pipe);
-        debug!("{:?}", exec);
-        let mut popen = exec.clone().popen()?;
-        let stdout = popen
-            .stdout
-            .take()
-            .ok_or_else(|| anyhow!("Could not get output of `{:?}`", exec))?;
-        let mut time_limit_was_reached = false;
-        let mut testing_aborted_programmatically = false;
-        for line in std::io::BufReader::new(stdout).lines() {
-            let line = line.with_context(|| format!("Could not get output of `{exec:?}`"))?;
-            if line.contains("Time limit was reached") {
-                time_limit_was_reached = true;
-            }
-            // smoelius: Work around "pizza mode" bug.
-            if line.contains("+++ Testing aborted programmatically +++")
-                || line.contains("+++ Baking aborted programmatically +++")
-            {
-                testing_aborted_programmatically = true;
-            }
-            println!("{line}");
-        }
-        let status = popen
-            .wait()
-            .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
-
-        if !testing_aborted_programmatically || !status.success() {
-            bail!("Command failed: {:?}", exec);
-        }
-
-        if !time_limit_was_reached {
-            exit(1);
-        }
-    }
-
-    Ok(())
+    fuzzer.fuzz(opts, executable, target, Path::new(&input_dir), &output_dir)
 }
 
 fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
