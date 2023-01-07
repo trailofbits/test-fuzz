@@ -1,8 +1,8 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 2a3c830..1c6e8c5 100644
+index 9042813..46bc0ca 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
-@@ -31,4 +31,6 @@ solana-sdk = { path = "../sdk", version = "=1.15.0" }
+@@ -31,4 +31,6 @@ solana_rbpf = "=0.2.38"
  thiserror = "1.0"
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -220,10 +220,10 @@ index 660b46a..7ffc5ef 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 228dc56..420c925 100644
+index 12541a4..a8ec468 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -741,5 +741,5 @@ lazy_static! {
+@@ -746,5 +746,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
