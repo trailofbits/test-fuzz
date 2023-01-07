@@ -143,12 +143,16 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
         .assert()
         .success();
 
-    let mut command = Command::new("cargo");
-    command
-        .current_dir(&subdir)
-        .args(["update", "-p", "libp2p-swarm-derive"]);
-    if command.assert().try_success().is_ok() {
-        command.args(["--precise", "0.30.1"]).assert().success();
+    // smoelius: The `libp2p-swarm-derive` issue appears to have been resolved.
+    #[cfg(any())]
+    {
+        let mut command = Command::new("cargo");
+        command
+            .current_dir(&subdir)
+            .args(["update", "-p", "libp2p-swarm-derive"]);
+        if command.assert().try_success().is_ok() {
+            command.args(["--precise", "0.30.1"]).assert().success();
+        }
     }
 
     check_test_fuzz_dependency(&subdir, &test.package);
