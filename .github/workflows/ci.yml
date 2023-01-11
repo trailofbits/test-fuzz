@@ -19,6 +19,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
 
+    env:
+      CARGO_TERM_COLOR: always
+
     steps:
       - uses: actions/checkout@v3
 
@@ -100,6 +103,9 @@ jobs:
         serde_format: [bincode, cbor, cbor4ii]
         toolchain: [stable, nightly]
 
+    env:
+      CARGO_TERM_COLOR: always
+
     steps:
       - uses: actions/checkout@v3
 
@@ -147,6 +153,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      CARGO_TERM_COLOR: always
       RUSTUP_TOOLCHAIN: nightly
 
     steps:
@@ -162,6 +169,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      CARGO_TERM_COLOR: always
       RUSTUP_TOOLCHAIN: nightly
 
     steps:
@@ -183,6 +191,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      CARGO_TERM_COLOR: always
       RUSTUP_TOOLCHAIN: nightly
 
     steps:
@@ -209,6 +218,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      CARGO_TERM_COLOR: always
       RUSTUP_TOOLCHAIN: nightly
 
     steps:
@@ -235,6 +245,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      CARGO_TERM_COLOR: always
       RUSTUP_TOOLCHAIN: nightly
 
     steps:
