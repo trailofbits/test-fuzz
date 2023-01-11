@@ -1,5 +1,5 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 9042813..46bc0ca 100644
+index 61fee5a..9eae36f 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -31,4 +31,6 @@ solana_rbpf = "=0.2.38"
@@ -220,10 +220,10 @@ index 660b46a..7ffc5ef 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 12541a4..a8ec468 100644
+index 2b88154..ae55c22 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -746,5 +746,5 @@ lazy_static! {
+@@ -761,5 +761,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
@@ -231,17 +231,17 @@ index 12541a4..a8ec468 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 6f63812..26ce3be 100644
+index 892f96b..72c76ce 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
-@@ -29,5 +29,5 @@ pub type IndexOfAccount = u16;
+@@ -31,5 +31,5 @@ pub type IndexOfAccount = u16;
  ///
  /// It also contains indices to other structures for faster lookup.
 -#[derive(Clone, Debug, Eq, PartialEq)]
 +#[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct InstructionAccount {
      /// Points to the account and its key in the `TransactionContext`
-@@ -50,11 +50,80 @@ pub struct InstructionAccount {
+@@ -52,11 +52,80 @@ pub struct InstructionAccount {
  pub type TransactionAccount = (Pubkey, AccountSharedData);
  
 +fn serialize_account_keys<'a, S>(
@@ -323,7 +323,7 @@ index 6f63812..26ce3be 100644
 +    )]
      #[cfg(not(target_os = "solana"))]
      account_touched_flags: RefCell<Pin<Box<[bool]>>>,
-@@ -377,5 +446,5 @@ pub struct TransactionReturnData {
+@@ -396,5 +465,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone, Default, Eq, PartialEq)]
