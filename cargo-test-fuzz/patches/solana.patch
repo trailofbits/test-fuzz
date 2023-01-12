@@ -21,7 +21,7 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 47bdd01..24c28a2 100644
+index 2492276..a43fd9a 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -50,5 +50,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -220,7 +220,7 @@ index 660b46a..7ffc5ef 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 2b88154..ae55c22 100644
+index d13fdb4..242f07e 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
 @@ -761,5 +761,5 @@ lazy_static! {
