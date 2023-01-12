@@ -18,6 +18,7 @@ fn conversion() {
 
 fn test() -> Command {
     let mut command = Command::new("cargo");
+    command.env("CARGO_TERM_COLOR", "never");
     command.args([
         "test",
         "--manifest-path",
