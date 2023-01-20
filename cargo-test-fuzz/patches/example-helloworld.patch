@@ -1,8 +1,8 @@
 diff --git a/src/program-rust/Cargo.toml b/src/program-rust/Cargo.toml
-index 3c7fc8e..cbcb684 100644
+index a4976a0..80e2ab7 100644
 --- a/src/program-rust/Cargo.toml
 +++ b/src/program-rust/Cargo.toml
-@@ -18,4 +18,9 @@ borsh-derive = "0.9.1"
+@@ -18,4 +18,9 @@ borsh-derive = "0.10.0"
  solana-program = "~1.10.35"
  
 +serde = "1.0"

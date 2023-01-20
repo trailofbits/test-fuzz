@@ -21,10 +21,10 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 2492276..a43fd9a 100644
+index 51e3c1e..7c23f53 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
-@@ -50,5 +50,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
+@@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
  }
  
 -#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -187,10 +187,10 @@ index 1e1d7e5..794cafb 100644
  [lib]
  crate-type = ["lib"]
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 47028f5..ed808bc 100644
+index bb84b7c..4d1d64a 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -339,7 +339,8 @@ pub fn create_vm<'a, 'b>(
+@@ -338,7 +338,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -202,7 +202,7 @@ index 47028f5..ed808bc 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 660b46a..7ffc5ef 100644
+index 2906326..1c22a57 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -67,5 +67,5 @@ rand = { version = "0.7.0", optional = true }
@@ -220,10 +220,10 @@ index 660b46a..7ffc5ef 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index d13fdb4..242f07e 100644
+index 8a6a695..a87473e 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -761,5 +761,5 @@ lazy_static! {
+@@ -771,5 +771,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]

@@ -1,34 +1,34 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index 7a3ab04..271eff6 100644
+index bbb5eba..df7e89a 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
-@@ -20,6 +20,6 @@ futures-timer = "3.0.2"
- linked-hash-map = "0.5.4"
+@@ -21,6 +21,6 @@ linked-hash-map = "0.5.4"
  log = "0.4.17"
+ num-traits = "0.2.8"
 -parking_lot = "0.12.1"
 -serde = { version = "1.0.136", features = ["derive"] }
 +parking_lot = { version = "0.12.0", features = ["serde"] }
 +serde = { version = "1.0.136", features = ["derive", "rc"] }
  thiserror = "1.0.30"
  prometheus-endpoint = { package = "substrate-prometheus-endpoint", version = "0.10.0-dev", path = "../../utils/prometheus" }
-@@ -33,4 +33,5 @@ sp-runtime = { version = "7.0.0", path = "../../primitives/runtime" }
+@@ -34,4 +34,5 @@ sp-runtime = { version = "7.0.0", path = "../../primitives/runtime" }
  sp-tracing = { version = "6.0.0", path = "../../primitives/tracing" }
  sp-transaction-pool = { version = "4.0.0-dev", path = "../../primitives/transaction-pool" }
 +test-fuzz = { path = "../../../../test-fuzz" }
  
  [dev-dependencies]
 diff --git a/client/transaction-pool/src/graph/base_pool.rs b/client/transaction-pool/src/graph/base_pool.rs
-index 67580d6..09d1ce2 100644
+index 44371be..fde11e6 100644
 --- a/client/transaction-pool/src/graph/base_pool.rs
 +++ b/client/transaction-pool/src/graph/base_pool.rs
-@@ -85,5 +85,5 @@ pub struct PruneStatus<Hash, Ex> {
+@@ -86,5 +86,5 @@ pub struct PruneStatus<Hash, Ex> {
  /// Immutable transaction
  #[cfg_attr(test, derive(Clone))]
 -#[derive(PartialEq, Eq)]
 +#[derive(PartialEq, Eq, serde::Deserialize, serde::Serialize)]
  pub struct Transaction<Hash, Extrinsic> {
  	/// Raw extrinsic representing that transaction.
-@@ -221,5 +221,7 @@ pub struct BasePool<Hash: hash::Hash + Eq, Ex> {
+@@ -222,5 +222,7 @@ pub struct BasePool<Hash: hash::Hash + Eq, Ex> {
  }
  
 -impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> Default for BasePool<Hash, Ex> {
@@ -37,7 +37,7 @@ index 67580d6..09d1ce2 100644
 +{
  	fn default() -> Self {
  		Self::new(false)
-@@ -227,5 +229,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> Default for Bas
+@@ -228,5 +230,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> Default for Bas
  }
  
 -impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> BasePool<Hash, Ex> {
@@ -63,31 +63,31 @@ index d23b5f2..b3f5c87 100644
  	pub imported_at: Instant,
  }
 diff --git a/client/transaction-pool/src/graph/ready.rs b/client/transaction-pool/src/graph/ready.rs
-index b52372a..849551c 100644
+index 9040c81..b07e3c8 100644
 --- a/client/transaction-pool/src/graph/ready.rs
 +++ b/client/transaction-pool/src/graph/ready.rs
-@@ -38,5 +38,5 @@ use super::{
+@@ -39,5 +39,5 @@ use super::{
  ///
  /// Should be cheap to clone.
 -#[derive(Debug)]
 +#[derive(Debug, serde::Deserialize, serde::Serialize)]
  pub struct TransactionRef<Hash, Ex> {
  	/// The actual transaction data.
-@@ -75,5 +75,5 @@ impl<Hash, Ex> PartialEq for TransactionRef<Hash, Ex> {
+@@ -76,5 +76,5 @@ impl<Hash, Ex> PartialEq for TransactionRef<Hash, Ex> {
  impl<Hash, Ex> Eq for TransactionRef<Hash, Ex> {}
  
 -#[derive(Debug)]
 +#[derive(Debug, serde::Deserialize, serde::Serialize)]
  pub struct ReadyTx<Hash, Ex> {
  	/// A reference to a transaction
-@@ -106,5 +106,5 @@ qed
+@@ -107,5 +107,5 @@ qed
  
  /// Validated transactions that are block ready with all their dependencies met.
 -#[derive(Debug)]
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct ReadyTransactions<Hash: hash::Hash + Eq, Ex> {
  	/// Next free insertion id (used to indicate when a transaction was inserted into the pool).
-@@ -137,5 +137,10 @@ impl<Hash: hash::Hash + Eq, Ex> Default for ReadyTransactions<Hash, Ex> {
+@@ -138,5 +138,10 @@ impl<Hash: hash::Hash + Eq, Ex> Default for ReadyTransactions<Hash, Ex> {
  }
  
 -impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
@@ -99,7 +99,7 @@ index b52372a..849551c 100644
 +{
  	/// Borrows a map of tags that are provided by transactions in this queue.
  	pub fn provided_tags(&self) -> &HashMap<Tag, Hash> {
-@@ -175,8 +180,15 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
+@@ -176,8 +181,15 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
  	/// that are in this queue.
  	/// Returns transactions that were replaced by the one imported.
 +	#[test_fuzz::test_fuzz(
@@ -115,7 +115,7 @@ index b52372a..849551c 100644
 +		}
  		assert!(
  			tx.is_ready(),
-@@ -184,4 +196,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
+@@ -185,4 +197,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
  			tx.missing_tags
  		);
 +		if self.ready.read().contains_key(&tx.transaction.hash) {
@@ -123,7 +123,7 @@ index b52372a..849551c 100644
 +		}
  		assert!(
  			!self.ready.read().contains_key(&tx.transaction.hash),
-@@ -203,4 +218,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
+@@ -204,4 +219,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
  			// Check if the transaction that satisfies the tag is still in the queue.
  			if let Some(other) = self.provided_tags.get(tag) {
 +				if ready.get_mut(other).is_none() {
