@@ -1,3 +1,6 @@
+// smoelius: `rlimit` does not work on macOS.
+#![cfg(not(target_os = "macos"))]
+
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use rlimit::Resource;
