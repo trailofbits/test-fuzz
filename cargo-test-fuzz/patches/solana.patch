@@ -202,12 +202,12 @@ index 3030901..8635940 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index de2263f..199ea9b 100644
+index 0942afd..ff5477c 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -67,5 +67,5 @@ rand = { version = "0.7.0", optional = true }
  rand_chacha = { version = "0.2.2", optional = true }
- rustversion = "1.0.9"
+ rustversion = "1.0.11"
 -serde = "1.0.152"
 +serde = { version = "1.0.152", features = ["rc"] }
  serde_bytes = "0.11"
