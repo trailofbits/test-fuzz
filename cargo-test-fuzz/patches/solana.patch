@@ -1,5 +1,5 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 61fee5a..9eae36f 100644
+index 26ad439..2fd84ee 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -31,4 +31,6 @@ solana_rbpf = "=0.2.38"
@@ -8,7 +8,7 @@ index 61fee5a..9eae36f 100644
 +test-fuzz = { path = "../../../test-fuzz" }
 +
  [dev-dependencies]
- solana-logger = { path = "../logger", version = "=1.15.0" }
+ solana-logger = { path = "../logger", version = "=1.16.0" }
 diff --git a/program-runtime/src/accounts_data_meter.rs b/program-runtime/src/accounts_data_meter.rs
 index 3e0553d..5136a8b 100644
 --- a/program-runtime/src/accounts_data_meter.rs
@@ -32,10 +32,10 @@ index 51e3c1e..7c23f53 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 9dcadf5..8776414 100644
+index 11e9c6b..09fe97f 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -92,15 +92,59 @@ impl fmt::Display for AllocErr {
+@@ -95,15 +95,59 @@ impl fmt::Display for AllocErr {
  }
  
 +struct DummyAllocator;
@@ -95,13 +95,13 @@ index 9dcadf5..8776414 100644
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -111,4 +155,5 @@ pub struct InvokeContext<'a> {
+@@ -114,4 +158,5 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -119,4 +164,22 @@ pub struct InvokeContext<'a> {
+@@ -122,4 +167,22 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -175,7 +175,7 @@ index c61d8e2..ffad007 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 1e1d7e5..794cafb 100644
+index 029feab..b91c952 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -23,4 +23,7 @@ solana_rbpf = "=0.2.38"
@@ -187,7 +187,7 @@ index 1e1d7e5..794cafb 100644
  [lib]
  crate-type = ["lib"]
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index bb84b7c..4d1d64a 100644
+index 3030901..8635940 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -338,7 +338,8 @@ pub fn create_vm<'a, 'b>(
@@ -202,14 +202,14 @@ index bb84b7c..4d1d64a 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 61ae764..7a5078b 100644
+index de2263f..199ea9b 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -67,5 +67,5 @@ rand = { version = "0.7.0", optional = true }
  rand_chacha = { version = "0.2.2", optional = true }
  rustversion = "1.0.9"
--serde = "1.0.144"
-+serde = { version = "1.0.144", features = ["rc"] }
+-serde = "1.0.152"
++serde = { version = "1.0.152", features = ["rc"] }
  serde_bytes = "0.11"
  serde_derive = "1.0.103"
 @@ -83,4 +83,6 @@ uriparse = "0.6.4"
@@ -220,10 +220,10 @@ index 61ae764..7a5078b 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index d0d5066..b747062 100644
+index de81656..bc001c0 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -771,5 +771,5 @@ lazy_static! {
+@@ -786,5 +786,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
