@@ -1,5 +1,5 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 26ad439..2fd84ee 100644
+index 2ee1ad4..4d69e4a 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -31,4 +31,6 @@ solana_rbpf = "=0.2.38"
@@ -21,7 +21,7 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 51e3c1e..7c23f53 100644
+index afc6842..635aadd 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -32,10 +32,10 @@ index 51e3c1e..7c23f53 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 11e9c6b..09fe97f 100644
+index d3674bb..eb7ee2e 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -95,15 +95,59 @@ impl fmt::Display for AllocErr {
+@@ -97,12 +97,29 @@ impl fmt::Display for AllocErr {
  }
  
 +struct DummyAllocator;
@@ -60,6 +60,13 @@ index 11e9c6b..09fe97f 100644
      orig_account_lengths: Vec<usize>,
 +    #[serde(skip, default = "dummy_allocator")]
      allocator: Rc<RefCell<dyn Alloc>>,
+ }
+ 
+-#[derive(Default)]
++#[derive(Default, Clone, serde::Deserialize, serde::Serialize)]
+ pub struct TraceLogStackFrame {
+     pub trace_log: Vec<[u64; 12]>,
+@@ -110,8 +127,35 @@ pub struct TraceLogStackFrame {
  }
  
 +pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
@@ -95,13 +102,13 @@ index 11e9c6b..09fe97f 100644
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -114,4 +158,5 @@ pub struct InvokeContext<'a> {
+@@ -122,4 +166,5 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -122,4 +167,22 @@ pub struct InvokeContext<'a> {
+@@ -131,4 +176,22 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -110,7 +117,7 @@ index 11e9c6b..09fe97f 100644
 +            transaction_context: Box::leak(Box::new(self.transaction_context.clone())),
 +            pre_accounts: self.pre_accounts.clone(),
 +            sysvar_cache: self.sysvar_cache.clone(),
-+            trace_log: self.trace_log.clone(),
++            trace_log_stack: self.trace_log_stack.clone(),
 +            log_collector: self.log_collector.clone(),
 +            compute_meter: self.compute_meter.clone(),
 +            tx_executor_cache: self.tx_executor_cache.clone(),
@@ -187,10 +194,10 @@ index 029feab..b91c952 100644
  [lib]
  crate-type = ["lib"]
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 3030901..8635940 100644
+index 86d3cd9..7b9f848 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -338,7 +338,8 @@ pub fn create_vm<'a, 'b>(
+@@ -339,7 +339,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -202,7 +209,7 @@ index 3030901..8635940 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 0942afd..ff5477c 100644
+index 3c458d8..c2a90b7 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -67,5 +67,5 @@ rand = { version = "0.7.0", optional = true }
@@ -220,10 +227,10 @@ index 0942afd..ff5477c 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index de81656..bc001c0 100644
+index fc0c8dc..47f6b1b 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -786,5 +786,5 @@ lazy_static! {
+@@ -796,5 +796,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
