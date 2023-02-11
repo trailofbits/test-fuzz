@@ -194,10 +194,10 @@ index 029feab..b91c952 100644
  [lib]
  crate-type = ["lib"]
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 86d3cd9..7b9f848 100644
+index 462961c..25b9c74 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -339,7 +339,8 @@ pub fn create_vm<'a, 'b>(
+@@ -379,7 +379,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -227,10 +227,10 @@ index 3c458d8..c2a90b7 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index fc0c8dc..47f6b1b 100644
+index 81d6148..d3798d8 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -796,5 +796,5 @@ lazy_static! {
+@@ -801,5 +801,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
