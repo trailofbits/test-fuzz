@@ -18,5 +18,6 @@ cargo +nightly clippy --features=test-fuzz/auto_concretize --all-targets -- \
     -A clippy::missing-const-for-fn \
     -A clippy::missing-errors-doc \
     -A clippy::missing-panics-doc \
+    -A clippy::option-if-let-else \
     -A clippy::redundant-pub-crate \
     -A clippy::type-repetition-in-bounds
