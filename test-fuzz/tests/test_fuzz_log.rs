@@ -6,7 +6,7 @@ use testing::examples::MANIFEST_PATH;
 #[test]
 fn test_fuzz_log() {
     Command::new("cargo")
-        .envs(vec![("TEST_FUZZ_LOG", "1")])
+        .env("TEST_FUZZ_LOG", "1")
         .args([
             "test",
             "--manifest-path",
