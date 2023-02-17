@@ -943,10 +943,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         .map(String::from),
     );
     if let Some(timeout) = opts.timeout {
-        args.extend(vec![
-            "-t".to_owned(),
-            format!("{}", timeout * NANOS_PER_MILLI),
-        ]);
+        args.extend(["-t".to_owned(), format!("{}", timeout * NANOS_PER_MILLI)]);
     }
     args.extend(opts.zzargs.clone());
     args.extend(
