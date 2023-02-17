@@ -32,10 +32,10 @@ index afc6842..635aadd 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index d3674bb..eb7ee2e 100644
+index 5e74f0e..e5af459 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -97,12 +97,29 @@ impl fmt::Display for AllocErr {
+@@ -98,12 +98,29 @@ impl fmt::Display for AllocErr {
  }
  
 +struct DummyAllocator;
@@ -66,7 +66,7 @@ index d3674bb..eb7ee2e 100644
 +#[derive(Default, Clone, serde::Deserialize, serde::Serialize)]
  pub struct TraceLogStackFrame {
      pub trace_log: Vec<[u64; 12]>,
-@@ -110,8 +127,35 @@ pub struct TraceLogStackFrame {
+@@ -111,8 +128,35 @@ pub struct TraceLogStackFrame {
  }
  
 +pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
@@ -102,13 +102,13 @@ index d3674bb..eb7ee2e 100644
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -122,4 +166,5 @@ pub struct InvokeContext<'a> {
+@@ -123,4 +167,5 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -131,4 +176,22 @@ pub struct InvokeContext<'a> {
+@@ -132,4 +177,22 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -182,7 +182,7 @@ index c61d8e2..ffad007 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 029feab..b91c952 100644
+index 60f5a43..2b3dc8c 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -23,4 +23,7 @@ solana_rbpf = "=0.2.38"
@@ -191,10 +191,10 @@ index 029feab..b91c952 100644
 +serde = "1.0"
 +test-fuzz = { path = "../../../../test-fuzz" }
 +
- [lib]
- crate-type = ["lib"]
+ [dev-dependencies]
+ memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 462961c..25b9c74 100644
+index 0a6762b..182f271 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -379,7 +379,8 @@ pub fn create_vm<'a, 'b>(
@@ -227,10 +227,10 @@ index 3c458d8..c2a90b7 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = "0.3.59"
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 81d6148..d3798d8 100644
+index 4e1223a..dbdbc31 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -801,5 +801,5 @@ lazy_static! {
+@@ -806,5 +806,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
