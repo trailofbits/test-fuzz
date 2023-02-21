@@ -494,7 +494,6 @@ fn filter_targets(opts: &TestFuzz, pat: &str, targets: &[String]) -> Vec<String>
         .collect()
 }
 
-#[allow(clippy::expect_used)]
 fn executable_target(
     opts: &TestFuzz,
     executable_targets: &[(Executable, Vec<String>)],
@@ -520,6 +519,7 @@ fn executable_target(
         executable_targets.1
     );
 
+    #[allow(clippy::expect_used)]
     Ok((
         executable_targets.0,
         executable_targets
@@ -539,7 +539,6 @@ fn match_message(opts: &TestFuzz) -> String {
     })
 }
 
-#[allow(clippy::expect_used)]
 fn check_test_fuzz_and_afl_versions(
     executable_targets: &[(Executable, Vec<String>)],
 ) -> Result<()> {
@@ -553,6 +552,7 @@ fn check_test_fuzz_and_afl_versions(
             &cargo_test_fuzz_version,
             "cargo-test-fuzz",
         )?;
+        #[allow(clippy::expect_used)]
         check_dependency_version(
             &executable.name,
             "afl",
@@ -628,8 +628,8 @@ fn check_dependency_version(
     Ok(())
 }
 
-#[allow(clippy::expect_used)]
 fn as_version_req(version: &Version) -> VersionReq {
+    #[allow(clippy::expect_used)]
     VersionReq::parse(&version.to_string()).expect("Could not parse version as version request")
 }
 
@@ -1025,7 +1025,6 @@ fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
 #[cfg(test)]
 mod tests {
     #![allow(deprecated)]
-    #![allow(clippy::unwrap_used)]
 
     use super::cargo_test_fuzz as cargo;
     use anyhow::Result;
@@ -1036,6 +1035,7 @@ mod tests {
     )]
     #[test]
     fn build_no_instrumentation_with_target() {
+        #[allow(clippy::unwrap_used)]
         cargo_test_fuzz(&[
             "--features",
             &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
