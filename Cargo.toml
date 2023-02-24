@@ -16,6 +16,7 @@ libraries = [
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/collapsible_unwrap" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/const_path_join" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/inconsistent_qualification" },
+    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/misleading_variable_name" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/question_mark_in_expression" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/ref_aware_redundant_closure_for_method_calls" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/suboptimal_pattern" },
