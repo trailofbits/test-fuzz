@@ -13,8 +13,8 @@ pub fn collapse_crate(ty: &Type) -> Type {
         if let Type::Path(ref mut path) = ty;
         if path.qself.is_none();
         if path.path.leading_colon.is_none();
-        let mut iter = path.path.segments.iter_mut();
-        if let Some(ref mut segment) = iter.next();
+        let mut iter_mut = path.path.segments.iter_mut();
+        if let Some(ref mut segment) = iter_mut.next();
         if segment.ident == *CARGO_CRATE_NAME;
         if segment.arguments == PathArguments::None;
         then {
