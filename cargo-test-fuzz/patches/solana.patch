@@ -1,14 +1,3 @@
-diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 2ee1ad4..4d69e4a 100644
---- a/program-runtime/Cargo.toml
-+++ b/program-runtime/Cargo.toml
-@@ -31,4 +31,6 @@ solana_rbpf = "=0.2.38"
- thiserror = "1.0"
- 
-+test-fuzz = { path = "../../../test-fuzz" }
-+
- [dev-dependencies]
- solana-logger = { path = "../logger", version = "=1.16.0" }
 diff --git a/program-runtime/src/accounts_data_meter.rs b/program-runtime/src/accounts_data_meter.rs
 index 3e0553d..5136a8b 100644
 --- a/program-runtime/src/accounts_data_meter.rs
@@ -182,11 +171,11 @@ index c61d8e2..ffad007 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 60f5a43..2b3dc8c 100644
+index 79de085..39f0384 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -23,4 +23,7 @@ solana_rbpf = "=0.2.38"
- thiserror = "1.0"
+@@ -22,4 +22,7 @@ solana_rbpf = { workspace = true }
+ thiserror = { workspace = true }
  
 +serde = "1.0"
 +test-fuzz = { path = "../../../../test-fuzz" }
@@ -194,10 +183,10 @@ index 60f5a43..2b3dc8c 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 0a6762b..182f271 100644
+index 16a083f..c823907 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -379,7 +379,8 @@ pub fn create_vm<'a, 'b>(
+@@ -381,7 +381,8 @@ pub fn create_vm<'a, 'b>(
  }
  
 -pub fn process_instruction(
@@ -209,23 +198,23 @@ index 0a6762b..182f271 100644
  ) -> Result<(), InstructionError> {
      process_instruction_common(first_instruction_account, invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 3c458d8..c2a90b7 100644
+index 7e8368d..56d903d 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -67,5 +67,5 @@ rand = { version = "0.7.0", optional = true }
- rand_chacha = { version = "0.2.2", optional = true }
- rustversion = "1.0.11"
--serde = "1.0.152"
+@@ -67,5 +67,5 @@ rand = { workspace = true, optional = true }
+ rand_chacha = { workspace = true, optional = true }
+ rustversion = { workspace = true }
+-serde = { workspace = true }
 +serde = { version = "1.0.152", features = ["rc"] }
- serde_bytes = "0.11"
- serde_derive = "1.0.103"
-@@ -83,4 +83,6 @@ uriparse = "0.6.4"
- wasm-bindgen = "0.2"
+ serde_bytes = { workspace = true }
+ serde_derive = { workspace = true }
+@@ -83,4 +83,6 @@ uriparse = { workspace = true }
+ wasm-bindgen = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
 +
  [target.'cfg(target_arch = "wasm32")'.dependencies]
- js-sys = "0.3.59"
+ js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
 index 4e1223a..dbdbc31 100644
 --- a/sdk/src/feature_set.rs
