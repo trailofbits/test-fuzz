@@ -235,14 +235,14 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 #### Usage
 
 ```
- cargo test-fuzz [OPTIONS] [TARGETNAME] [-- <args>...]
+ cargo test-fuzz [OPTIONS] [TARGETNAME] [-- <ARGS>...]
 ```
 
 #### Arguments
 
 ```
   [TARGETNAME]  String that fuzz target's name must contain
-  [args]...     Arguments for the fuzzer
+  [ARGS]...     Arguments for the fuzzer
 ```
 
 #### Options

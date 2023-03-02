@@ -148,7 +148,7 @@ struct TestFuzzWithDeprecations {
         help = "String that fuzz target's name must contain"
     )]
     ztarget: Option<String>,
-    #[clap(last = true, name = "args", help = "Arguments for the fuzzer")]
+    #[clap(last = true, name = "ARGS", help = "Arguments for the fuzzer")]
     zzargs: Vec<String>,
 }
 
