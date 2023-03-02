@@ -10,10 +10,10 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index afc6842..635aadd 100644
+index 7f00f43..38eacf7 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
-@@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
+@@ -27,5 +27,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
  }
  
 -#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -216,10 +216,10 @@ index 7e8368d..56d903d 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 4e1223a..dbdbc31 100644
+index 4814c44..1bef9a0 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -806,5 +806,5 @@ lazy_static! {
+@@ -816,5 +816,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
