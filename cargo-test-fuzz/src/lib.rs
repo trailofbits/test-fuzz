@@ -569,6 +569,7 @@ fn check_test_fuzz_and_afl_versions(
     Ok(())
 }
 
+#[allow(clippy::significant_drop_tightening)]
 fn cache_cargo_afl_version() -> Result<()> {
     let cargo_afl_version = cargo_afl_version()?;
     let mut lock = CARGO_AFL_VERSION
