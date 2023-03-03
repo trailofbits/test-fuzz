@@ -44,7 +44,7 @@ rlimit = "0.9"
 rustc_version = "0.4"
 semver = "1.0"
 serde_json = "1.0"
-tempfile = "3.3"
+tempfile = "3.4"
 test-log = "0.2"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
