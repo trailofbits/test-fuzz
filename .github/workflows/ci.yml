@@ -62,12 +62,11 @@ jobs:
       - name: Markdown link check
         run: npm install -g markdown-link-check && markdown-link-check ./**/*.md
 
-      # https://github.com/DevinR528/cargo-sort/issues/57
+      # https://github.com/DevinR528/cargo-sort/issues/57#issuecomment-1457714872
       - name: Cargo sort
-        if: ${{ false }}
         run: |
           cargo install cargo-sort || true
-          find . -name Cargo.toml -print0 | xargs -0 -n 1 dirname | xargs -n 1 cargo sort --check --grouped
+          find . -name Cargo.toml -print0 | xargs -0 -n 1 dirname | xargs -n 1 cargo sort --check --grouped --no-format
 
       - name: Format
         run: cargo fmt && git diff --exit-code
