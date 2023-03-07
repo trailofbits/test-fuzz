@@ -21,10 +21,10 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 5e74f0e..e5af459 100644
+index 17904dd..a4c6c7f 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -98,12 +98,29 @@ impl fmt::Display for AllocErr {
+@@ -97,12 +97,29 @@ impl fmt::Display for AllocErr {
  }
  
 +struct DummyAllocator;
@@ -55,7 +55,7 @@ index 5e74f0e..e5af459 100644
 +#[derive(Default, Clone, serde::Deserialize, serde::Serialize)]
  pub struct TraceLogStackFrame {
      pub trace_log: Vec<[u64; 12]>,
-@@ -111,8 +128,35 @@ pub struct TraceLogStackFrame {
+@@ -110,8 +127,35 @@ pub struct TraceLogStackFrame {
  }
  
 +pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
@@ -91,13 +91,13 @@ index 5e74f0e..e5af459 100644
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
      pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -123,4 +167,5 @@ pub struct InvokeContext<'a> {
+@@ -122,4 +166,5 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -132,4 +177,22 @@ pub struct InvokeContext<'a> {
+@@ -131,4 +176,22 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -183,20 +183,19 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 16a083f..c823907 100644
+index c7d8c06..6a77614 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -381,7 +381,8 @@ pub fn create_vm<'a, 'b>(
+@@ -382,5 +382,8 @@ pub fn create_vm<'a, 'b>(
  }
  
--pub fn process_instruction(
+-pub fn process_instruction(invoke_context: &mut InvokeContext) -> Result<(), InstructionError> {
 +#[test_fuzz::test_fuzz]
 +pub fn process_instruction<'a>(
-     first_instruction_account: IndexOfAccount,
--    invoke_context: &mut InvokeContext,
 +    invoke_context: &mut InvokeContext<'a>,
- ) -> Result<(), InstructionError> {
-     process_instruction_common(first_instruction_account, invoke_context, false)
++) -> Result<(), InstructionError> {
+     process_instruction_common(invoke_context, false)
+ }
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
 index 7e8368d..56d903d 100644
 --- a/sdk/Cargo.toml
