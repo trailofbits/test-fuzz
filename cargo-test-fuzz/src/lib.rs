@@ -50,6 +50,7 @@ const DEFAULT_TIMEOUT: u64 = 1000;
 const NANOS_PER_MILLI: u64 = 1_000_000;
 
 bitflags! {
+    #[derive(Copy, Clone, Eq, PartialEq)]
     struct Flags: u8 {
         const REQUIRES_CARGO_TEST = 0b0000_0001;
         const RAW = 0b0000_0010;
