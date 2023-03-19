@@ -38,7 +38,7 @@ test-fuzz = { path = "../test-fuzz", version = "=3.0.5" }
 [dev-dependencies]
 assert_cmd = "2.0"
 option_set = "0.1"
-predicates = "2.1"
+predicates = "3.0"
 regex = "1.7"
 rlimit = "0.9"
 rustc_version = "0.4"
