@@ -21,7 +21,7 @@ test-fuzz-macro = { path = "../macro", version = "=3.0.5" }
 assert_cmd = "2.0"
 cargo_metadata = "0.15"
 lazy_static = "1.4"
-predicates = "2.1"
+predicates = "3.0"
 regex = "1.7"
 semver = "1.0"
 
