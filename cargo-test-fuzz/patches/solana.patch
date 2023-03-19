@@ -183,10 +183,10 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index c7d8c06..6a77614 100644
+index 0ec03ff..cc5af1c 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -382,5 +382,8 @@ pub fn create_vm<'a, 'b>(
+@@ -426,5 +426,8 @@ fn create_memory_mapping<'a, 'b, C: ContextObject>(
  }
  
 -pub fn process_instruction(invoke_context: &mut InvokeContext) -> Result<(), InstructionError> {
@@ -215,10 +215,10 @@ index 7e8368d..56d903d 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 4814c44..1bef9a0 100644
+index 484fea3..ae30516 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -816,5 +816,5 @@ lazy_static! {
+@@ -821,5 +821,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]

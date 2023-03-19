@@ -10,7 +10,7 @@ index b2c94a7..152107f 100644
  [dev-dependencies]
  cw-multi-test = "0.16.1"
 diff --git a/contracts/cw20-base/src/contract.rs b/contracts/cw20-base/src/contract.rs
-index 049dcbf..44f8161 100644
+index 7e3547b..a32746e 100644
 --- a/contracts/cw20-base/src/contract.rs
 +++ b/contracts/cw20-base/src/contract.rs
 @@ -92,7 +92,33 @@ fn verify_logo(logo: &Logo) -> Result<(), ContractError> {
@@ -59,7 +59,7 @@ index 049dcbf..44f8161 100644
 +    deps: DepsMut<'a>,
      env: Env,
      info: MessageInfo,
-@@ -521,6 +548,32 @@ pub fn execute_upload_logo(
+@@ -505,6 +532,32 @@ pub fn execute_upload_logo(
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
@@ -93,7 +93,7 @@ index 049dcbf..44f8161 100644
 +pub fn query<'a>(deps: Deps<'a>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
      match msg {
          QueryMsg::Balance { address } => to_binary(&query_balance(deps, address)?),
-@@ -604,5 +657,10 @@ pub fn query_download_logo(deps: Deps) -> StdResult<DownloadLogoResponse> {
+@@ -588,5 +641,10 @@ pub fn query_download_logo(deps: Deps) -> StdResult<DownloadLogoResponse> {
  
  #[cfg_attr(not(feature = "library"), entry_point)]
 -pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
