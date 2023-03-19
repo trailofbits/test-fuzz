@@ -16,6 +16,7 @@ use tempfile::tempdir_in;
 use test_log::test;
 
 option_set! {
+    #[derive(Copy, Clone, Eq, PartialEq)]
     struct Flags: UpperSnake + u8 {
         const EXPENSIVE = 1 << 0;
         const SKIP = 1 << 1;
