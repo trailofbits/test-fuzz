@@ -254,9 +254,9 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
       --display <OBJECT>      Display concretizations, corpus, crashes, `impl` concretizations,
                               hangs, or work queue. By default, corpus uses an uninstrumented fuzz
                               target; the others use an instrumented fuzz target. To display the
-                              corpus with instrumentation, use --display corpus-instrumented. [possible
-                              values: concretizations, corpus, corpus-instrumented, crashes, hangs,
-                              impl-concretizations, queue]
+                              corpus with instrumentation, use --display corpus-instrumented.
+                              [possible values: concretizations, corpus, corpus-instrumented,
+                              crashes, hangs, impl-concretizations, queue]
       --exact                 Target name is an exact name rather than a substring
       --exit-code             Exit with 0 if the time limit was reached, 1 for other programmatic
                               aborts, and 2 if an error occurred; implies --no-ui, does not imply
