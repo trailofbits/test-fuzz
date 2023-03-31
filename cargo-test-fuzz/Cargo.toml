@@ -20,7 +20,7 @@ doctest = false
 anyhow = "1.0"
 bitflags = "2.0"
 cargo_metadata = "0.15"
-clap = { version = "4.1", features = ["cargo", "derive", "wrap_help"] }
+clap = { version = "4.2", features = ["cargo", "derive", "wrap_help"] }
 env_logger = "0.10"
 heck = "0.4"
 lazy_static = "1.4"
@@ -44,7 +44,7 @@ rlimit = "0.9"
 rustc_version = "0.4"
 semver = "1.0"
 serde_json = "1.0"
-tempfile = "3.4"
+tempfile = "3.5"
 test-log = "0.2"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
