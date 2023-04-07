@@ -18,7 +18,7 @@ doctest = false
 
 [dependencies]
 anyhow = "1.0"
-bitflags = "2.0"
+bitflags = "2.1"
 cargo_metadata = "0.15"
 clap = { version = "4.2", features = ["cargo", "derive", "wrap_help"] }
 env_logger = "0.10"
