@@ -21,10 +21,10 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 0f7abe7..fdd8c81 100644
+index 9a12416..decd9ca 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -99,12 +99,29 @@ impl fmt::Display for AllocErr {
+@@ -123,12 +123,29 @@ impl fmt::Display for AllocErr {
  }
  
 +struct DummyAllocator;
@@ -55,7 +55,7 @@ index 0f7abe7..fdd8c81 100644
 +#[derive(Default, Clone, serde::Deserialize, serde::Serialize)]
  pub struct TraceLogStackFrame {
      pub trace_log: Vec<[u64; 12]>,
-@@ -112,8 +129,35 @@ pub struct TraceLogStackFrame {
+@@ -136,8 +153,35 @@ pub struct TraceLogStackFrame {
  }
  
 +pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
@@ -90,14 +90,8 @@ index 0f7abe7..fdd8c81 100644
      pre_accounts: Vec<PreAccount>,
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
-     pub sysvar_cache: Cow<'a, SysvarCache>,
-@@ -124,4 +168,5 @@ pub struct InvokeContext<'a> {
-     compute_meter: RefCell<u64>,
-     accounts_data_meter: AccountsDataMeter,
-+    #[serde(skip)]
-     pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
-     pub feature_set: Arc<FeatureSet>,
-@@ -133,4 +178,22 @@ pub struct InvokeContext<'a> {
+     sysvar_cache: &'a SysvarCache,
+@@ -157,4 +201,22 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -183,19 +177,19 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index cfc8b93..a342293 100644
+index 65546a1..6c64602 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -433,5 +433,8 @@ fn create_memory_mapping<'a, 'b, C: ContextObject>(
+@@ -423,6 +423,7 @@ fn create_memory_mapping<'a, 'b, C: ContextObject>(
  }
  
--pub fn process_instruction(invoke_context: &mut InvokeContext) -> Result<(), InstructionError> {
+-pub fn process_instruction(
+-    invoke_context: &mut InvokeContext,
 +#[test_fuzz::test_fuzz]
 +pub fn process_instruction<'a>(
 +    invoke_context: &mut InvokeContext<'a>,
-+) -> Result<(), InstructionError> {
-     process_instruction_common(invoke_context, false)
- }
+ ) -> Result<(), Box<dyn std::error::Error>> {
+     process_instruction_inner(invoke_context, false)
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
 index 7e8368d..56d903d 100644
 --- a/sdk/Cargo.toml
@@ -215,10 +209,10 @@ index 7e8368d..56d903d 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 3fb86fd..4ff902b 100644
+index 5437320..3342b47 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -840,5 +840,5 @@ lazy_static! {
+@@ -846,5 +846,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
