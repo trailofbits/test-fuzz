@@ -30,7 +30,7 @@ jobs:
           cargo upgrade
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with:
           title: "Update dependencies"
           token: ${{ secrets.PR_GITHUB_TOKEN }}
