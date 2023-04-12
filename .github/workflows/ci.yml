@@ -59,8 +59,10 @@ jobs:
       - name: Prettier
         run: npm install -g prettier && prettier --check '**/*.json' '**/*.md' '**/*.yml'
 
+      # smoelius: Pin `markdown-link-check` to version 3.10.3 until the following issue is resolved:
+      # https://github.com/tcort/markdown-link-check/issues/246
       - name: Markdown link check
-        run: npm install -g markdown-link-check && markdown-link-check ./**/*.md
+        run: npm install -g markdown-link-check@3.10.3 && markdown-link-check ./**/*.md
 
       # https://github.com/DevinR528/cargo-sort/issues/57#issuecomment-1457714872
       - name: Cargo sort
