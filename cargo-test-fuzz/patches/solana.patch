@@ -21,43 +21,41 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 9a12416..decd9ca 100644
+index cc842dd..ca63985 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -123,12 +123,29 @@ impl fmt::Display for AllocErr {
+@@ -118,4 +118,5 @@ impl fmt::Display for AllocErr {
  }
  
-+struct DummyAllocator;
-+
-+impl Alloc for DummyAllocator {
-+    fn alloc(&mut self, _layout: Layout) -> Result<u64, AllocErr> {
-+        std::process::exit(0);
-+    }
-+    fn dealloc(&mut self, _addr: u64, _layout: Layout) {
-+        std::process::exit(0);
-+    }
-+}
-+
-+fn dummy_allocator() -> Rc<RefCell<dyn Alloc>> {
-+    Rc::new(RefCell::new(DummyAllocator))
-+}
-+
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
- struct SyscallContext {
-     check_aligned: bool,
-     check_size: bool,
-     orig_account_lengths: Vec<usize>,
-+    #[serde(skip, default = "dummy_allocator")]
-     allocator: Rc<RefCell<dyn Alloc>>,
+ pub struct BpfAllocator {
+     len: u64,
+@@ -146,4 +147,5 @@ impl BpfAllocator {
  }
  
--#[derive(Default)]
-+#[derive(Default, Clone, serde::Deserialize, serde::Serialize)]
- pub struct TraceLogStackFrame {
-     pub trace_log: Vec<[u64; 12]>,
-@@ -136,8 +153,35 @@ pub struct TraceLogStackFrame {
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
+ pub struct SyscallContext {
+     pub allocator: BpfAllocator,
+@@ -152,9 +154,54 @@ pub struct SyscallContext {
  }
  
++pub fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
++where
++    S: serde::Serializer,
++    T: serde::Serialize,
++{
++    <T as serde::Serialize>::serialize(*x, serializer)
++}
++
++pub fn deserialize_ref<'de, D, T>(deserializer: D) -> Result<&'static T, D::Error>
++where
++    D: serde::Deserializer<'de>,
++    T: serde::de::DeserializeOwned + std::fmt::Debug,
++{
++    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
++    Ok(Box::leak(Box::new(x)))
++}
++
 +pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
 +where
 +    S: serde::Serializer,
@@ -90,8 +88,16 @@ index 9a12416..decd9ca 100644
      pre_accounts: Vec<PreAccount>,
 +    #[serde(skip, default = "default_builtin_programs")]
      builtin_programs: &'a [BuiltinProgram],
++    #[serde(serialize_with = "serialize_ref", deserialize_with = "deserialize_ref")]
      sysvar_cache: &'a SysvarCache,
-@@ -157,4 +201,22 @@ pub struct InvokeContext<'a> {
+     log_collector: Option<Rc<RefCell<LogCollector>>>,
+@@ -163,4 +210,5 @@ pub struct InvokeContext<'a> {
+     compute_meter: RefCell<u64>,
+     accounts_data_meter: AccountsDataMeter,
++    #[serde(skip)]
+     pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
+     pub feature_set: Arc<FeatureSet>,
+@@ -171,4 +219,20 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -99,8 +105,6 @@ index 9a12416..decd9ca 100644
 +        Self {
 +            transaction_context: Box::leak(Box::new(self.transaction_context.clone())),
 +            pre_accounts: self.pre_accounts.clone(),
-+            sysvar_cache: self.sysvar_cache.clone(),
-+            trace_log_stack: self.trace_log_stack.clone(),
 +            log_collector: self.log_collector.clone(),
 +            compute_meter: self.compute_meter.clone(),
 +            tx_executor_cache: self.tx_executor_cache.clone(),
@@ -147,7 +151,7 @@ index 4557a5b..b87fff9 100644
  pub struct SysvarCache {
      clock: Option<Arc<Clock>>,
 diff --git a/program-runtime/src/timings.rs b/program-runtime/src/timings.rs
-index c61d8e2..ffad007 100644
+index 0e2e495..a380f89 100644
 --- a/program-runtime/src/timings.rs
 +++ b/program-runtime/src/timings.rs
 @@ -9,5 +9,5 @@ use {
@@ -157,7 +161,7 @@ index c61d8e2..ffad007 100644
 +#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
  pub struct ProgramTiming {
      pub accumulated_us: u64,
-@@ -391,5 +391,5 @@ impl ExecuteAccessoryTimings {
+@@ -388,5 +388,5 @@ impl ExecuteAccessoryTimings {
  }
  
 -#[derive(Default, Debug, PartialEq, Eq)]
@@ -177,10 +181,10 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 65546a1..6c64602 100644
+index db06f2c..5e5bab4 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -423,6 +423,7 @@ fn create_memory_mapping<'a, 'b, C: ContextObject>(
+@@ -438,6 +438,7 @@ fn create_memory_mapping<'a, 'b, C: ContextObject>(
  }
  
 -pub fn process_instruction(
@@ -209,10 +213,10 @@ index 7e8368d..56d903d 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 5437320..3342b47 100644
+index 25dface..8f03e4b 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -846,5 +846,5 @@ lazy_static! {
+@@ -861,5 +861,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
@@ -220,7 +224,7 @@ index 5437320..3342b47 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index bf91b2a..e733cd3 100644
+index 0236073..e5e8d6f 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -31,5 +31,5 @@ pub type IndexOfAccount = u16;
