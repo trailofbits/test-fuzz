@@ -1,9 +1,11 @@
 name: CI
 
 on:
-  push:
-
   pull_request:
+
+  push:
+    branches:
+      - master
 
   # smoelius: Every Thursday at 3:00 UTC (Wednesday at 22:00 EST), run `cargo test -- --ignored`.
   schedule:
