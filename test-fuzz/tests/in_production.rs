@@ -33,8 +33,9 @@ lazy_static! {
         .join("Cargo.toml")
         .to_string_lossy()
         .to_string();
-    static ref MUTEX: Mutex<()> = Mutex::new(());
 }
+
+static MUTEX: Mutex<()> = Mutex::new(());
 
 fn test(write: bool, n: usize) {
     let _lock = MUTEX.lock().unwrap();

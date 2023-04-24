@@ -17,7 +17,6 @@ use internal::dirs::{
     impl_concretizations_directory_from_target, output_directory_from_target,
     queue_directory_from_target, target_directory,
 };
-use lazy_static::lazy_static;
 use log::debug;
 use semver::Version;
 use semver::VersionReq;
@@ -580,9 +579,7 @@ fn cache_cargo_afl_version() -> Result<()> {
     Ok(())
 }
 
-lazy_static! {
-    static ref CARGO_AFL_VERSION: Mutex<Option<Version>> = Mutex::new(None);
-}
+static CARGO_AFL_VERSION: Mutex<Option<Version>> = Mutex::new(None);
 
 fn cargo_afl_version() -> Result<Version> {
     let mut command = Command::new("cargo");
