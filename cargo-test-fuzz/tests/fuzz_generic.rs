@@ -1,5 +1,4 @@
 use internal::{dirs::corpus_directory_from_target, serde_format};
-use lazy_static::lazy_static;
 use predicates::prelude::*;
 use std::{fs::remove_dir_all, sync::Mutex};
 use test_log::test;
@@ -31,10 +30,7 @@ fn fuzz_bar_asdfgh() {
     fuzz("test_bar_asdfgh", 0);
 }
 
-#[cfg(test)]
-lazy_static! {
-    static ref MUTEX: Mutex<()> = Mutex::new(());
-}
+static MUTEX: Mutex<()> = Mutex::new(());
 
 fn fuzz(test: &str, code: i32) {
     let _lock = MUTEX.lock().unwrap();
