@@ -21,22 +21,22 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index cc842dd..ca63985 100644
+index d13104d..69bf0aa 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -118,4 +118,5 @@ impl fmt::Display for AllocErr {
+@@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -146,4 +147,5 @@ impl BpfAllocator {
+@@ -143,4 +144,5 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -152,9 +154,54 @@ pub struct SyscallContext {
+@@ -149,9 +151,54 @@ pub struct SyscallContext {
  }
  
 +pub fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
@@ -73,8 +73,8 @@ index cc842dd..ca63985 100644
 +    Ok(Box::leak(Box::new(x)))
 +}
 +
-+fn default_builtin_programs() -> &'static [BuiltinProgram] {
-+    Box::leak(Box::new([]))
++fn default_builtin_programs() -> &'static BuiltinPrograms {
++    Box::leak(Box::new(BuiltinPrograms::default()))
 +}
 +
 +#[derive(serde::Deserialize, serde::Serialize)]
@@ -87,17 +87,17 @@ index cc842dd..ca63985 100644
      rent: Rent,
      pre_accounts: Vec<PreAccount>,
 +    #[serde(skip, default = "default_builtin_programs")]
-     builtin_programs: &'a [BuiltinProgram],
+     builtin_programs: &'a BuiltinPrograms,
 +    #[serde(serialize_with = "serialize_ref", deserialize_with = "deserialize_ref")]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -163,4 +210,5 @@ pub struct InvokeContext<'a> {
+@@ -160,4 +207,5 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -171,4 +219,20 @@ pub struct InvokeContext<'a> {
+@@ -168,4 +216,20 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -181,19 +181,19 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index db06f2c..5e5bab4 100644
+index 7b296c3..949584d 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -438,6 +438,7 @@ fn create_memory_mapping<'a, 'b, C: ContextObject>(
+@@ -464,6 +464,7 @@ pub fn process_instruction_jit(
  }
  
--pub fn process_instruction(
+-fn process_instruction_inner(
 -    invoke_context: &mut InvokeContext,
 +#[test_fuzz::test_fuzz]
-+pub fn process_instruction<'a>(
++fn process_instruction_inner<'a>(
 +    invoke_context: &mut InvokeContext<'a>,
- ) -> Result<(), Box<dyn std::error::Error>> {
-     process_instruction_inner(invoke_context, false)
+     use_jit: bool,
+ ) -> Result<u64, Box<dyn std::error::Error>> {
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
 index 7e8368d..56d903d 100644
 --- a/sdk/Cargo.toml
