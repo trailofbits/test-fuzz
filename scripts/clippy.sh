@@ -16,6 +16,7 @@ cargo +nightly clippy --features=test-fuzz/auto_concretize --all-targets -- \
     -W clippy::nursery \
     -A clippy::cognitive-complexity \
     -A clippy::collection-is-never-read \
+    -A clippy::items-after-test-module \
     -A clippy::let-underscore-untyped \
     -A clippy::missing-const-for-fn \
     -A clippy::missing-errors-doc \
