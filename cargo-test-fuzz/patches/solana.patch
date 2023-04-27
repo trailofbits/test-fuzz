@@ -21,7 +21,7 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index d13104d..69bf0aa 100644
+index 740d9eb..f8fbe7d 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
@@ -181,10 +181,10 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 7b296c3..949584d 100644
+index cf4f841..ccef8c2 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -464,6 +464,7 @@ pub fn process_instruction_jit(
+@@ -434,6 +434,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
@@ -192,8 +192,8 @@ index 7b296c3..949584d 100644
 +#[test_fuzz::test_fuzz]
 +fn process_instruction_inner<'a>(
 +    invoke_context: &mut InvokeContext<'a>,
-     use_jit: bool,
  ) -> Result<u64, Box<dyn std::error::Error>> {
+     let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
 index 7e8368d..56d903d 100644
 --- a/sdk/Cargo.toml
