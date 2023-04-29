@@ -21,7 +21,7 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 740d9eb..f8fbe7d 100644
+index f006c90..0638fbd 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
@@ -97,7 +97,7 @@ index 740d9eb..f8fbe7d 100644
 +    #[serde(skip)]
      pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -168,4 +216,20 @@ pub struct InvokeContext<'a> {
+@@ -169,4 +217,21 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -111,6 +111,7 @@ index 740d9eb..f8fbe7d 100644
 +            feature_set: self.feature_set.clone(),
 +            timings: self.timings.clone(),
 +            syscall_context: self.syscall_context.clone(),
++            traces: self.traces.clone(),
 +            ..*self
 +        }
 +    }
@@ -181,10 +182,10 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index cf4f841..ccef8c2 100644
+index 347ef83..7a5a9ca 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -434,6 +434,7 @@ pub fn process_instruction(
+@@ -460,6 +460,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
@@ -213,10 +214,10 @@ index 7e8368d..56d903d 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 25dface..8f03e4b 100644
+index 37b1e4d..65c324c 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -861,5 +861,5 @@ lazy_static! {
+@@ -865,5 +865,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
@@ -224,18 +225,25 @@ index 25dface..8f03e4b 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 0236073..e5e8d6f 100644
+index 8f8d1bb..867b69a 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
-@@ -31,5 +31,5 @@ pub type IndexOfAccount = u16;
+@@ -36,5 +36,5 @@ pub type IndexOfAccount = u16;
  ///
  /// It also contains indices to other structures for faster lookup.
 -#[derive(Clone, Debug, Eq, PartialEq)]
 +#[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct InstructionAccount {
      /// Points to the account and its key in the `TransactionContext`
-@@ -52,11 +52,80 @@ pub struct InstructionAccount {
+@@ -57,5 +57,5 @@ pub struct InstructionAccount {
  pub type TransactionAccount = (Pubkey, AccountSharedData);
+ 
+-#[derive(Clone, Debug, PartialEq)]
++#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
+ pub struct TransactionAccounts {
+     accounts: Vec<RefCell<AccountSharedData>>,
+@@ -137,9 +137,31 @@ impl TransactionAccounts {
+ }
  
 +fn serialize_account_keys<'a, S>(
 +    account_keys: &Pin<Box<[Pubkey]>>,
@@ -255,45 +263,6 @@ index 0236073..e5e8d6f 100644
 +    Ok(Pin::new(account_keys.into_boxed_slice()))
 +}
 +
-+fn serialize_accounts<'a, S>(
-+    accounts: &Pin<Box<[RefCell<AccountSharedData>]>>,
-+    serializer: S,
-+) -> Result<S::Ok, S::Error>
-+where
-+    S: serde::Serializer,
-+{
-+    <[RefCell<AccountSharedData>] as serde::Serialize>::serialize(&**accounts, serializer)
-+}
-+
-+fn deserialize_accounts<'de, D>(
-+    deserializer: D,
-+) -> Result<Pin<Box<[RefCell<AccountSharedData>]>>, D::Error>
-+where
-+    D: serde::Deserializer<'de>,
-+{
-+    let accounts =
-+        <Vec<RefCell<AccountSharedData>> as serde::de::Deserialize>::deserialize(deserializer)?;
-+    Ok(Pin::new(accounts.into_boxed_slice()))
-+}
-+
-+fn serialize_touched_flags<'a, S>(
-+    touched_flags: &RefCell<Pin<Box<[bool]>>>,
-+    serializer: S,
-+) -> Result<S::Ok, S::Error>
-+where
-+    S: serde::Serializer,
-+{
-+    <[bool] as serde::Serialize>::serialize(&**touched_flags.borrow(), serializer)
-+}
-+
-+fn deserialize_touched_flags<'de, D>(deserializer: D) -> Result<RefCell<Pin<Box<[bool]>>>, D::Error>
-+where
-+    D: serde::Deserializer<'de>,
-+{
-+    let touched_flags = <Vec<bool> as serde::de::Deserialize>::deserialize(deserializer)?;
-+    Ok(RefCell::new(Pin::new(touched_flags.into_boxed_slice())))
-+}
-+
  /// Loaded transaction shared between runtime and programs.
  ///
  /// This context is valid for the entire duration of a transaction being processed.
@@ -305,18 +274,8 @@ index 0236073..e5e8d6f 100644
 +        deserialize_with = "deserialize_account_keys"
 +    )]
      account_keys: Pin<Box<[Pubkey]>>,
-+    #[serde(
-+        serialize_with = "serialize_accounts",
-+        deserialize_with = "deserialize_accounts"
-+    )]
-     accounts: Pin<Box<[RefCell<AccountSharedData>]>>,
-+    #[serde(
-+        serialize_with = "serialize_touched_flags",
-+        deserialize_with = "deserialize_touched_flags"
-+    )]
-     #[cfg(not(target_os = "solana"))]
-     account_touched_flags: RefCell<Pin<Box<[bool]>>>,
-@@ -396,5 +465,5 @@ pub struct TransactionReturnData {
+     accounts: Arc<TransactionAccounts>,
+@@ -481,5 +503,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone, Default, Eq, PartialEq)]
