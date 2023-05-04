@@ -1,7 +1,7 @@
 #![deny(clippy::unwrap_used)]
 #![cfg_attr(feature = "__auto_concretize", feature(proc_macro_span))]
 
-use darling::FromMeta;
+use darling::{ast::NestedMeta, FromMeta};
 use internal::serde_format;
 use lazy_static::lazy_static;
 use proc_macro::TokenStream;
@@ -17,8 +17,8 @@ use std::{
 use subprocess::{Exec, Redirection};
 use syn::{
     parse::Parser, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated, token,
-    Attribute, AttributeArgs, Block, Expr, FnArg, GenericArgument, GenericParam, Generics, Ident,
-    ImplItem, ImplItemMethod, ItemFn, ItemImpl, ItemMod, LifetimeDef, PatType, Path, PathArguments,
+    Attribute, Block, Expr, FnArg, GenericArgument, GenericParam, Generics, Ident, ImplItem,
+    ImplItemFn, ItemFn, ItemImpl, ItemMod, LifetimeParam, PatType, Path, PathArguments,
     PathSegment, Receiver, ReturnType, Signature, Stmt, Type, TypeParam, TypePath, TypeReference,
     TypeSlice, Visibility, WhereClause, WherePredicate,
 };
@@ -49,7 +49,8 @@ struct TestFuzzImplOpts {}
 
 #[proc_macro_attribute]
 pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
-    let attr_args = parse_macro_input!(args as AttributeArgs);
+    let attr_args =
+        NestedMeta::parse_meta_list(args.into()).expect("Could not parse attribute args");
     let _ =
         TestFuzzImplOpts::from_list(&attr_args).expect("Could not parse `test_fuzz_impl` options");
 
@@ -113,8 +114,8 @@ fn map_impl_item(
     let trait_path = trait_path.clone();
     let self_ty = self_ty.clone();
     move |impl_item| {
-        if let ImplItem::Method(method) = &impl_item {
-            map_method(&generics, &trait_path, &self_ty, method)
+        if let ImplItem::Fn(impl_item_fn) = &impl_item {
+            map_impl_item_fn(&generics, &trait_path, &self_ty, impl_item_fn)
         } else {
             (impl_item.clone(), None)
         }
@@ -123,24 +124,26 @@ fn map_impl_item(
 
 // smoelius: This function is slightly misnamed. The mapped item could actually be an associated
 // function. I am keeping this name to be consistent with `ImplItem::Method`.
-fn map_method(
+// smoelius: In `syn` 2.0, `ImplItem::Method` was renamed to `ImplItem::Fn`:
+// https://github.com/dtolnay/syn/releases/tag/2.0.0
+fn map_impl_item_fn(
     generics: &Generics,
     trait_path: &Option<Path>,
     self_ty: &Type,
-    method: &ImplItemMethod,
+    impl_item_fn: &ImplItemFn,
 ) -> (ImplItem, Option<ItemMod>) {
-    let ImplItemMethod {
+    let ImplItemFn {
         attrs,
         vis,
         defaultness,
         sig,
         block,
-    } = &method;
+    } = &impl_item_fn;
 
     let mut attrs = attrs.clone();
 
     attrs.iter().position(is_test_fuzz).map_or_else(
-        || (parse_quote!( #method ), None),
+        || (parse_quote!( #impl_item_fn ), None),
         |i| {
             let attr = attrs.remove(i);
             let opts = opts_from_attr(&attr);
@@ -184,7 +187,8 @@ struct TestFuzzOpts {
 
 #[proc_macro_attribute]
 pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
-    let attr_args = parse_macro_input!(args as AttributeArgs);
+    let attr_args =
+        NestedMeta::parse_meta_list(args.into()).expect("Could not parse attribute args");
     let opts = TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options");
 
     let item = parse_macro_input!(item as ItemFn);
@@ -907,14 +911,14 @@ fn map_ref_arg(
 fn opts_from_attr(attr: &Attribute) -> TestFuzzOpts {
     attr.parse_args::<TokenStream2>()
         .map_or(TestFuzzOpts::default(), |tokens| {
-            let attr_args = parse_macro_input::parse::<AttributeArgs>(tokens.into())
-                .expect("Could not parse attribute args");
+            let attr_args =
+                NestedMeta::parse_meta_list(tokens).expect("Could not parse attribute args");
             TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options")
         })
 }
 
 fn is_test_fuzz(attr: &Attribute) -> bool {
-    attr.path
+    attr.path()
         .segments
         .iter()
         .all(|PathSegment { ident, .. }| ident == "test_fuzz")
@@ -1019,7 +1023,7 @@ fn type_generic_phantom_types(generics: &Generics) -> Vec<Type> {
             GenericParam::Type(TypeParam { ident, .. }) => {
                 Some(parse_quote! { std::marker::PhantomData< #ident > })
             }
-            GenericParam::Lifetime(LifetimeDef { lifetime, .. }) => {
+            GenericParam::Lifetime(LifetimeParam { lifetime, .. }) => {
                 Some(parse_quote! { std::marker::PhantomData< & #lifetime () > })
             }
             GenericParam::Const(_) => None,
