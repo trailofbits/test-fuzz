@@ -21,22 +21,22 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index f006c90..0638fbd 100644
+index b7ddd14..4f4a137 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
+@@ -116,4 +116,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -143,4 +144,5 @@ impl BpfAllocator {
+@@ -144,4 +145,5 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -149,9 +151,54 @@ pub struct SyscallContext {
+@@ -150,9 +152,54 @@ pub struct SyscallContext {
  }
  
 +pub fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
@@ -91,13 +91,13 @@ index f006c90..0638fbd 100644
 +    #[serde(serialize_with = "serialize_ref", deserialize_with = "deserialize_ref")]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -160,4 +207,5 @@ pub struct InvokeContext<'a> {
+@@ -161,4 +208,5 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
      pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -169,4 +217,21 @@ pub struct InvokeContext<'a> {
+@@ -170,4 +218,21 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -182,10 +182,10 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 347ef83..7a5a9ca 100644
+index 18e4808..9dc72c5 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -460,6 +460,7 @@ pub fn process_instruction(
+@@ -438,6 +438,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
@@ -214,7 +214,7 @@ index 7e8368d..56d903d 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 37b1e4d..65c324c 100644
+index 475f896..2b175d7 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
 @@ -865,5 +865,5 @@ lazy_static! {
