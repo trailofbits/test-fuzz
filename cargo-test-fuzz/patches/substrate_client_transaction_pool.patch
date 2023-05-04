@@ -210,14 +210,3 @@ index 072609c..aa1b211 100644
 +#[cfg_attr(feature = "std", derive(serde::Deserialize, serde::Serialize))]
  pub enum TransactionSource {
  	/// Transaction is already included in block.
-diff --git a/test-utils/runtime/src/lib.rs b/test-utils/runtime/src/lib.rs
-index b560084..f12928d 100644
---- a/test-utils/runtime/src/lib.rs
-+++ b/test-utils/runtime/src/lib.rs
-@@ -192,5 +192,5 @@ impl<'a> serde::Deserialize<'a> for Extrinsic {
- 		D: serde::Deserializer<'a>,
- 	{
--		let r = sp_core::bytes::deserialize(de)?;
-+		let r = <Vec<u8>>::deserialize(de)?;
- 		Decode::decode(&mut &r[..])
- 			.map_err(|e| serde::de::Error::custom(format!("Decode error: {}", e)))
