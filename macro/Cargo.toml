@@ -13,7 +13,7 @@ repository = "https://github.com/trailofbits/test-fuzz"
 proc-macro = true
 
 [dependencies]
-darling = "0.14"
+darling = "0.20"
 if_chain = "1.0"
 lazy_static = "1.4"
 proc-macro2 = "1.0"
