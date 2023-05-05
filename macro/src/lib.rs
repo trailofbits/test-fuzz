@@ -3,6 +3,7 @@
 
 use darling::{ast::NestedMeta, FromMeta};
 use internal::serde_format;
+use itertools::MultiUnzip;
 use lazy_static::lazy_static;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
@@ -23,7 +24,6 @@ use syn::{
     TypeSlice, Visibility, WhereClause, WherePredicate,
 };
 use toolchain_find::find_installed_component;
-use unzip_n::unzip_n;
 
 mod auto_concretize;
 
@@ -763,12 +763,10 @@ fn map_args<'a, I>(
 where
     I: Iterator<Item = &'a FnArg>,
 {
-    unzip_n!(5);
-
     let (receiver, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
         .enumerate()
         .map(map_arg(conversions, candidates, self_ty, trait_path))
-        .unzip_n();
+        .multiunzip();
 
     let receiver = receiver.first().map_or(false, |&x| x);
 

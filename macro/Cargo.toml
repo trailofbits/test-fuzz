@@ -15,13 +15,13 @@ proc-macro = true
 [dependencies]
 darling = "0.20"
 if_chain = "1.0"
+itertools = "0.10"
 lazy_static = "1.4"
 proc-macro2 = "1.0"
 quote = "1.0"
 subprocess = "0.2"
 syn = { version = "2.0", features = ["full", "parsing", "visit", "visit-mut"] }
 toolchain_find = "0.3"
-unzip-n = "0.1"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.0.5" }
 
