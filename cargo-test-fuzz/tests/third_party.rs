@@ -13,7 +13,6 @@ use std::{
     path::Path,
 };
 use tempfile::tempdir_in;
-use test_log::test;
 
 option_set! {
     #[derive(Copy, Clone, Eq, PartialEq)]
@@ -47,7 +46,7 @@ lazy_static! {
 const LINES_OF_CONTEXT: u32 = 2;
 
 mod cheap_tests {
-    use super::{test, *};
+    use super::*;
     #[test]
     fn test() {
         let version_meta = version_meta().unwrap();
@@ -65,7 +64,7 @@ mod cheap_tests {
 }
 
 mod all_tests {
-    use super::{test, *};
+    use super::*;
     #[test]
     #[ignore]
     fn test() {
