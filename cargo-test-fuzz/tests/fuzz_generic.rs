@@ -1,7 +1,6 @@
 use internal::{dirs::corpus_directory_from_target, serde_format};
 use predicates::prelude::*;
 use std::{fs::remove_dir_all, sync::Mutex};
-use test_log::test;
 use testing::{examples, retry};
 
 const TIMEOUT: &str = "60";

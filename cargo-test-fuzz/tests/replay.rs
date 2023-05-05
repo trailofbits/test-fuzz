@@ -5,7 +5,6 @@ use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use rlimit::Resource;
 use std::fs::remove_dir_all;
-use test_log::test;
 use testing::{examples, retry};
 
 // smoelius: MEMORY_LIMIT must be large enough for the build process to complete.
