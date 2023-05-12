@@ -21,22 +21,22 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index b7ddd14..4f4a137 100644
+index 3e968c4..2b0be1d 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -116,4 +116,5 @@ impl fmt::Display for AllocErr {
+@@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -144,4 +145,5 @@ impl BpfAllocator {
+@@ -143,4 +144,5 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -150,9 +152,54 @@ pub struct SyscallContext {
+@@ -149,9 +151,54 @@ pub struct SyscallContext {
  }
  
 +pub fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
@@ -91,13 +91,17 @@ index b7ddd14..4f4a137 100644
 +    #[serde(serialize_with = "serialize_ref", deserialize_with = "deserialize_ref")]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -161,4 +208,5 @@ pub struct InvokeContext<'a> {
+@@ -160,6 +207,9 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
-     pub tx_executor_cache: Rc<RefCell<TransactionExecutorCache>>,
+     pub programs_loaded_for_tx_batch: Rc<RefCell<LoadedProgramsForTxBatch>>,
++    #[serde(skip)]
+     pub programs_modified_by_tx: Rc<RefCell<LoadedProgramsForTxBatch>>,
++    #[serde(skip)]
+     pub programs_updated_only_for_global_cache: Rc<RefCell<LoadedProgramsForTxBatch>>,
      pub feature_set: Arc<FeatureSet>,
-@@ -170,4 +218,21 @@ pub struct InvokeContext<'a> {
+@@ -171,4 +221,25 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -107,7 +111,11 @@ index b7ddd14..4f4a137 100644
 +            pre_accounts: self.pre_accounts.clone(),
 +            log_collector: self.log_collector.clone(),
 +            compute_meter: self.compute_meter.clone(),
-+            tx_executor_cache: self.tx_executor_cache.clone(),
++            programs_loaded_for_tx_batch: self.programs_loaded_for_tx_batch.clone(),
++            programs_modified_by_tx: self.programs_modified_by_tx.clone(),
++            programs_updated_only_for_global_cache: self
++                .programs_updated_only_for_global_cache
++                .clone(),
 +            feature_set: self.feature_set.clone(),
 +            timings: self.timings.clone(),
 +            syscall_context: self.syscall_context.clone(),
@@ -182,10 +190,10 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 18e4808..9dc72c5 100644
+index d3c4e71..5ac2270 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -438,6 +438,7 @@ pub fn process_instruction(
+@@ -449,6 +449,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
