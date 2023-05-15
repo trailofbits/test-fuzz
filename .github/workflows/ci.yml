@@ -123,6 +123,12 @@ jobs:
       - name: Install afl
         run: cargo install afl
 
+      - name: Run afl-system-config
+        run: |
+          test "$(ls ~/.local/share/afl.rs | wc -l)" -eq 1
+          test "$(ls ~/.local/share/afl.rs/rustc-* | wc -l)" -eq 1
+          sudo "$HOME"/.local/share/afl.rs/rustc-*/afl.rs-*/afl/bin/afl-system-config
+
       # smoelius: The wasm32 target is needed for some Substrate tests, regardless of the toolchain
       # used to build test-fuzz.
       - name: Add wasm32 target
@@ -145,7 +151,6 @@ jobs:
           fi
           cargo test --features=test-fuzz/serde_${{ matrix.serde_format }} "$AUTO_CONCRETIZE" -- --nocapture $IGNORED $SHUFFLE
         env:
-          AFL_I_DONT_CARE_ABOUT_MISSING_CRASHES: 1
           RUST_BACKTRACE: 1
           RUST_LOG: warn
 
