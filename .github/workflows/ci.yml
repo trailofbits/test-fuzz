@@ -207,7 +207,7 @@ jobs:
 
       - name: Require afl 0.12.2
         run: |
-          sed -i 's/afl = "[^"]*"/afl = "=0.12.2"/' test-fuzz/Cargo.toml
+          sed -i 's/^\(afl = {.*\<version = "\)[^"]*\(".*}\)$/\1=0.12.2\2/' test-fuzz/Cargo.toml
 
       - name: Test
         run: |
