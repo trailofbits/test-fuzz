@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.1.0
+
+- Update dependencies, including `afl` to version 0.13.0 ([c1707f5](https://github.com/trailofbits/test-fuzz/commit/c1707f5c09e9c68113699c67be13fa4944a94405))
+
 ## 3.0.5
 
 - Update help message ([#153](https://github.com/trailofbits/test-fuzz/pull/153))
