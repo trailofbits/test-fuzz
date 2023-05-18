@@ -201,7 +201,7 @@ index 47ad226..41b184e 100644
  	/// Clone the inner map.
  	pub fn clone_map(&self) -> HashMap<K, V> {
 diff --git a/primitives/runtime/src/transaction_validity.rs b/primitives/runtime/src/transaction_validity.rs
-index 072609c..aa1b211 100644
+index 8369484..ef3bdb4 100644
 --- a/primitives/runtime/src/transaction_validity.rs
 +++ b/primitives/runtime/src/transaction_validity.rs
 @@ -228,4 +228,5 @@ impl From<UnknownTransaction> for TransactionValidity {

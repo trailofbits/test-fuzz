@@ -21,7 +21,7 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 3e968c4..2b0be1d 100644
+index 53c1804..a658a54 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
@@ -95,11 +95,11 @@ index 3e968c4..2b0be1d 100644
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
-     pub programs_loaded_for_tx_batch: Rc<RefCell<LoadedProgramsForTxBatch>>,
+     pub programs_loaded_for_tx_batch: &'a LoadedProgramsForTxBatch,
 +    #[serde(skip)]
-     pub programs_modified_by_tx: Rc<RefCell<LoadedProgramsForTxBatch>>,
+     pub programs_modified_by_tx: &'a mut LoadedProgramsForTxBatch,
 +    #[serde(skip)]
-     pub programs_updated_only_for_global_cache: Rc<RefCell<LoadedProgramsForTxBatch>>,
+     pub programs_updated_only_for_global_cache: &'a mut LoadedProgramsForTxBatch,
      pub feature_set: Arc<FeatureSet>,
 @@ -171,4 +221,25 @@ pub struct InvokeContext<'a> {
  }
@@ -190,10 +190,10 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 100c99d..96facec 100644
+index 7eb96f0..008c53a 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -442,6 +442,7 @@ pub fn process_instruction(
+@@ -436,6 +436,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
