@@ -21,22 +21,22 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 53c1804..a658a54 100644
+index ecd29d8..60ee670 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
+@@ -116,4 +116,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -143,4 +144,5 @@ impl BpfAllocator {
+@@ -144,4 +145,5 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -149,9 +151,54 @@ pub struct SyscallContext {
+@@ -150,8 +152,52 @@ pub struct SyscallContext {
  }
  
 +pub fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
@@ -86,12 +86,10 @@ index 53c1804..a658a54 100644
      pub transaction_context: &'a mut TransactionContext,
      rent: Rent,
      pre_accounts: Vec<PreAccount>,
-+    #[serde(skip, default = "default_builtin_programs")]
-     builtin_programs: &'a BuiltinPrograms,
 +    #[serde(serialize_with = "serialize_ref", deserialize_with = "deserialize_ref")]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -160,6 +207,9 @@ pub struct InvokeContext<'a> {
+@@ -160,6 +206,9 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
@@ -101,7 +99,7 @@ index 53c1804..a658a54 100644
 +    #[serde(skip)]
      pub programs_updated_only_for_global_cache: &'a mut LoadedProgramsForTxBatch,
      pub feature_set: Arc<FeatureSet>,
-@@ -171,4 +221,25 @@ pub struct InvokeContext<'a> {
+@@ -171,4 +220,25 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -190,7 +188,7 @@ index 79de085..39f0384 100644
  [dev-dependencies]
  memoffset = "0.8"
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 7eb96f0..008c53a 100644
+index 3da64cc..b4a84a9 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -436,6 +436,7 @@ pub fn process_instruction(
