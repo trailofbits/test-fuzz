@@ -44,9 +44,9 @@ const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
 const BASE_ENVS: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
 
-const DEFAULT_TIMEOUT: u64 = 1000;
+const DEFAULT_TIMEOUT: u64 = 1;
 
-const NANOS_PER_MILLI: u64 = 1_000_000;
+const MILLIS_PER_SEC: u64 = 1_000;
 
 bitflags! {
     #[derive(Copy, Clone, Eq, PartialEq)]
@@ -806,8 +806,8 @@ fn for_each_entry(
                 .clone()
                 .popen()
                 .with_context(|| format!("`popen` failed for `{exec:?}`"))?;
-            let millis = opts.timeout.unwrap_or(DEFAULT_TIMEOUT);
-            let time = Duration::from_millis(millis);
+            let secs = opts.timeout.unwrap_or(DEFAULT_TIMEOUT);
+            let time = Duration::from_secs(secs);
             let mut communicator = popen.communicate_start(None).limit_time(time);
             match communicator.read() {
                 Ok((_, buffer)) => {
@@ -942,7 +942,7 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         .map(String::from),
     );
     if let Some(timeout) = opts.timeout {
-        args.extend(["-t".to_owned(), format!("{}", timeout * NANOS_PER_MILLI)]);
+        args.extend(["-t".to_owned(), format!("{}", timeout * MILLIS_PER_SEC)]);
     }
     args.extend(opts.zzargs.clone());
     args.extend(
