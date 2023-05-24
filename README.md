@@ -282,7 +282,7 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
       --run-until-crash       Stop fuzzing once a crash is found
       --test <NAME>           Integration test containing fuzz target
       --timeout <TIMEOUT>     Number of milliseconds to consider a hang when fuzzing or replaying
-                              (equivalent to -- -t <TIMEOUT> when fuzzing)
+                              (equivalent to -- -t <TIMEOUT * 1000> when fuzzing)
       --verbose               Show build output when displaying/replaying
   -h, --help                  Print help
   -V, --version               Print version
