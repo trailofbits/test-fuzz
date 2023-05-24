@@ -138,7 +138,7 @@ struct TestFuzzWithDeprecations {
     #[clap(
         long,
         help = "Number of milliseconds to consider a hang when fuzzing or replaying (equivalent \
-        to -- -t <TIMEOUT> when fuzzing)"
+        to -- -t <TIMEOUT * 1000> when fuzzing)"
     )]
     timeout: Option<u64>,
     #[clap(long, help = "Show build output when displaying/replaying")]
