@@ -137,7 +137,7 @@ struct TestFuzzWithDeprecations {
     test: Option<String>,
     #[clap(
         long,
-        help = "Number of milliseconds to consider a hang when fuzzing or replaying (equivalent \
+        help = "Number of seconds to consider a hang when fuzzing or replaying (equivalent \
         to -- -t <TIMEOUT * 1000> when fuzzing)"
     )]
     timeout: Option<u64>,
