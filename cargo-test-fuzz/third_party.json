@@ -2,6 +2,7 @@
   {
     "flags": [],
     "url": "https://github.com/CosmWasm/cw-plus",
+    "rev": "de1fb0b9836e56e5640575d246274d882509d714",
     "patch": "cw-plus.patch",
     "subdir": ".",
     "package": "cw20-base",
@@ -10,6 +11,7 @@
   {
     "flags": ["EXPENSIVE"],
     "url": "https://github.com/paritytech/substrate",
+    "rev": "8b1af507be15efd08c525d75cab63e2f6a4eaf35",
     "patch": "substrate_client_transaction_pool.patch",
     "subdir": ".",
     "package": "sc-transaction-pool",
@@ -18,6 +20,7 @@
   {
     "flags": ["REQUIRES_ISOLATION"],
     "url": "https://github.com/solana-labs/example-helloworld",
+    "rev": "36eb41d1290732786e13bd097668d8676254a139",
     "patch": "example-helloworld.patch",
     "subdir": "src/program-rust",
     "package": "solana-bpf-helloworld",
@@ -26,6 +29,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP"],
     "url": "https://github.com/solana-labs/solana",
+    "rev": "d4baddf8e8503f2081ec3c52482eca004b24b242",
     "patch": "solana.patch",
     "subdir": ".",
     "package": "solana-bpf-loader-program",
@@ -34,6 +38,7 @@
   {
     "flags": [],
     "url": "https://github.com/substrate-developer-hub/substrate-node-template",
+    "rev": "87b1b4728e29f68c6b2bafde7f3d0f4c8af9b302",
     "patch": "substrate_node_template.patch",
     "subdir": ".",
     "package": "pallet-template",
