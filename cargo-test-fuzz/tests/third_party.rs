@@ -28,6 +28,7 @@ option_set! {
 struct Test {
     flags: Flags,
     url: String,
+    rev: String,
     patch: String,
     subdir: String,
     package: String,
@@ -81,6 +82,7 @@ mod all_tests {
     }
 }
 
+#[allow(clippy::too_many_lines)]
 fn run_test(module_path: &str, test: &Test, no_run: bool) {
     let (_, module) = module_path.split_once("::").unwrap();
     #[allow(clippy::explicit_write)]
@@ -102,6 +104,12 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
     Command::new("git")
         .current_dir(&tempdir)
         .args(["clone", &test.url, "."])
+        .assert()
+        .success();
+
+    Command::new("git")
+        .current_dir(&tempdir)
+        .args(["checkout", &test.rev])
         .assert()
         .success();
 
@@ -221,6 +229,7 @@ fn check_test_fuzz_dependency(subdir: &Path, test_package: &str) {
 }
 
 #[test]
+#[ignore]
 fn patches_are_current() {
     let re = Regex::new(r#"^index [[:xdigit:]]{7}\.\.[[:xdigit:]]{7} [0-7]{6}$"#).unwrap();
 
@@ -254,7 +263,7 @@ fn patches_are_current() {
             .assert()
             .success();
 
-        let diff = String::from_utf8_lossy(&assert.get_output().stdout);
+        let diff = std::str::from_utf8(&assert.get_output().stdout).unwrap();
 
         let patch_lines = patch.lines().collect::<Vec<_>>();
         let diff_lines = diff.lines().collect::<Vec<_>>();
@@ -266,5 +275,29 @@ fn patches_are_current() {
                 assert_eq!(patch_line, diff_line);
             }
         }
+    }
+}
+
+#[test]
+#[ignore]
+fn revisions_are_current() {
+    for test in TESTS.iter() {
+        let tempdir = tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();
+
+        Command::new("git")
+            .current_dir(&tempdir)
+            .args(["clone", "--depth=1", &test.url, "."])
+            .assert()
+            .success();
+
+        let assert = Command::new("git")
+            .current_dir(&tempdir)
+            .args(["rev-parse", "HEAD"])
+            .assert()
+            .success();
+
+        let stdout = std::str::from_utf8(&assert.get_output().stdout).unwrap();
+
+        assert_eq!(stdout.trim_end(), test.rev);
     }
 }
