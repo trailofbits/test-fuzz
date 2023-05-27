@@ -14,7 +14,7 @@ enum SerdeFormat {
     Cbor4ii,
 }
 
-#[derive(Clone, Copy, Debug, Display, EnumIter)]
+#[derive(Clone, Copy, Debug, Display, EnumIter, Eq, PartialEq)]
 enum Environment {
     UbuntuLatest,
     MacosLatest,
@@ -31,8 +31,8 @@ fn matrix() {
     let expecteds = std::iter::repeat(
         Fuzzer::iter()
             .cartesian_product(Environment::iter())
-            .filter(|(fuzzer, environment)| {
-                *fuzzer != Fuzzer::AflplusplusPersistent || *environment != Environment::MacosLatest
+            .filter(|&(fuzzer, environment)| {
+                fuzzer != Fuzzer::AflplusplusPersistent || environment != Environment::MacosLatest
             }),
     )
     .take(2)
@@ -58,6 +58,11 @@ fn matrix() {
     for (expected, actual) in expecteds.zip(actuals) {
         let ((expected_fuzzer, expected_environment), (expected_serde_format, expected_toolchain)) =
             expected;
+        if expected_fuzzer == Fuzzer::AflplusplusPersistent
+            && expected_environment == Environment::MacosLatest
+        {
+            continue;
+        }
         assert_eq!(
             expected_fuzzer.to_string().to_kebab_case(),
             actual["fuzzer"].as_str().unwrap()

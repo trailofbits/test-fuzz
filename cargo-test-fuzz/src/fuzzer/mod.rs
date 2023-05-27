@@ -1,16 +1,23 @@
 use super::{Executable, TestFuzz};
-use anyhow::Result;
+use anyhow::{ensure, Result};
 use internal::Fuzzer;
 use semver::Version;
 use std::{path::Path, process::Command};
 
 mod impls;
 
-pub(super) fn instantiate(fuzzer: Fuzzer) -> &'static dyn Interface {
+pub(super) fn instantiate(fuzzer: Fuzzer) -> Result<&'static dyn Interface> {
     match fuzzer {
-        Fuzzer::Aflplusplus => impls::aflplusplus::instantiate(false),
-        Fuzzer::AflplusplusPersistent => impls::aflplusplus::instantiate(true),
-        Fuzzer::Libfuzzer => impls::libfuzzer::instantiate(),
+        Fuzzer::Aflplusplus => Ok(impls::aflplusplus::instantiate(false)),
+        Fuzzer::AflplusplusPersistent => {
+            // smoelius: https://github.com/AFLplusplus/AFLplusplus/blob/7b40d7b9420b2e3adb7d9afa88610199718dedba/include/forkserver.h#L114-L118
+            ensure!(
+                cfg!(not(target_os = "macos")),
+                "`aflplusplus-persistent` is not supported on macOS"
+            );
+            Ok(impls::aflplusplus::instantiate(true))
+        }
+        Fuzzer::Libfuzzer => Ok(impls::libfuzzer::instantiate()),
     }
 }
 

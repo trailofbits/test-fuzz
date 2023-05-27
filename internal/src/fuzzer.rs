@@ -9,7 +9,7 @@ use strum_macros::{Display, EnumIter};
 // command line option. Hence, cargo-test-fuzz needs to know all available fuzzers. This is unlike
 // the Serde format, which the user selects via a Cargo feature.
 #[derive(
-    Clone, Copy, Debug, Display, Deserialize, EnumIter, PartialEq, Eq, Serialize, ValueEnum,
+    Clone, Copy, Debug, Deserialize, Display, EnumIter, PartialEq, Eq, Serialize, ValueEnum,
 )]
 #[remain::sorted]
 pub enum Fuzzer {
