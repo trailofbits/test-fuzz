@@ -169,11 +169,14 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
         return;
     }
 
-    Command::new("cargo")
+    // smoelius: Use `std::process::Command` so that we can see the output of the command as it
+    // runs. `assert_cmd::Command` would capture the output.
+    assert!(std::process::Command::new("cargo")
         .current_dir(&subdir)
         .args(["test", "--package", &test.package, "--", "--nocapture"])
-        .assert()
-        .success();
+        .status()
+        .unwrap()
+        .success());
 
     for target in &test.targets {
         Command::cargo_bin("cargo-test-fuzz")
