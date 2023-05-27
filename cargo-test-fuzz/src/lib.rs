@@ -155,7 +155,7 @@ fn run(opts: TestFuzz) -> Result<()> {
     };
 
     let fuzzer_env = fuzzer()?;
-    let fuzzer = fuzzer::instantiate(opts.fuzzer.unwrap_or(fuzzer_env));
+    let fuzzer = fuzzer::instantiate(opts.fuzzer.unwrap_or(fuzzer_env))?;
 
     if let Some(object) = opts.replay {
         ensure!(
