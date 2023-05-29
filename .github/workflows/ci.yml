@@ -108,6 +108,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Set toolchain
         run: rustup default ${{ matrix.toolchain }}
@@ -117,7 +119,6 @@ jobs:
 
       # smoelius: The Substrate tests require `protoc`.
       - name: Install protoc
-        if: ${{ github.event_name == 'schedule' }}
         run: sudo apt-get install protobuf-compiler
 
       - name: Install afl
@@ -132,7 +133,6 @@ jobs:
       # smoelius: The wasm32 target is needed for some Substrate tests, regardless of the toolchain
       # used to build test-fuzz.
       - name: Add wasm32 target
-        if: ${{ github.event_name == 'schedule' }}
         run: |
           rustup          target add wasm32-unknown-unknown
           rustup +nightly target add wasm32-unknown-unknown
@@ -140,16 +140,17 @@ jobs:
       - name: Test
         run: |
           AUTO_CONCRETIZE=
-          IGNORED=
           SHUFFLE=
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
             AUTO_CONCRETIZE='--features=test-fuzz/auto_concretize'
             SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
           fi
-          if [[ ${{ github.event_name }} = schedule ]]; then
-            IGNORED='--ignored'
+          TEST_CMD="cargo test --features=test-fuzz/serde_${{ matrix.serde_format }} $AUTO_CONCRETIZE -- --nocapture $SHUFFLE"
+          $TEST_CMD
+          git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -w 'patches\|third_party' >/dev/null
+          if [[ $? -eq 0 || ${{ github.event_name }} = 'schedule' ]]; then
+            $TEST_CMD --ignored
           fi
-          cargo test --features=test-fuzz/serde_${{ matrix.serde_format }} "$AUTO_CONCRETIZE" -- --nocapture $IGNORED $SHUFFLE
         env:
           RUST_BACKTRACE: 1
           RUST_LOG: warn
