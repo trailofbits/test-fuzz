@@ -1,5 +1,5 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index 6338f81..b4aeb74 100644
+index fadb79d..ab06154 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
 @@ -21,6 +21,6 @@ linked-hash-map = "0.5.4"
@@ -11,8 +11,8 @@ index 6338f81..b4aeb74 100644
 +serde = { version = "1.0.136", features = ["derive", "rc"] }
  thiserror = "1.0.30"
  prometheus-endpoint = { package = "substrate-prometheus-endpoint", version = "0.10.0-dev", path = "../../utils/prometheus" }
-@@ -34,4 +34,5 @@ sp-runtime = { version = "7.0.0", path = "../../primitives/runtime" }
- sp-tracing = { version = "6.0.0", path = "../../primitives/tracing" }
+@@ -34,4 +34,5 @@ sp-runtime = { version = "8.0.0", path = "../../primitives/runtime" }
+ sp-tracing = { version = "7.0.0", path = "../../primitives/tracing" }
  sp-transaction-pool = { version = "4.0.0-dev", path = "../../primitives/transaction-pool" }
 +test-fuzz = { path = "../../../../test-fuzz" }
  
@@ -63,7 +63,7 @@ index bad4663..b10e15c 100644
  	pub imported_at: Instant,
  }
 diff --git a/client/transaction-pool/src/graph/ready.rs b/client/transaction-pool/src/graph/ready.rs
-index b4a5d9e..966b9fb 100644
+index b4a5d9e..1c421e1 100644
 --- a/client/transaction-pool/src/graph/ready.rs
 +++ b/client/transaction-pool/src/graph/ready.rs
 @@ -39,5 +39,5 @@ use super::{
@@ -112,7 +112,7 @@ index b4a5d9e..966b9fb 100644
 +		}
  		assert!(
  			tx.is_ready(),
-@@ -185,4 +197,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
+@@ -185,4 +194,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
  			tx.missing_tags
  		);
 +		if self.ready.read().contains_key(&tx.transaction.hash) {
@@ -120,7 +120,7 @@ index b4a5d9e..966b9fb 100644
 +		}
  		assert!(
  			!self.ready.read().contains_key(&tx.transaction.hash),
-@@ -204,4 +219,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
+@@ -204,4 +216,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
  			// Check if the transaction that satisfies the tag is still in the queue.
  			if let Some(other) = self.provided_tags.get(tag) {
 +				if ready.get_mut(other).is_none() {
@@ -128,7 +128,7 @@ index b4a5d9e..966b9fb 100644
 +				}
  				let tx = ready.get_mut(other).expect(HASH_READY);
  				tx.unlocks.push(hash.clone());
-@@ -606,5 +624,8 @@ mod tests {
+@@ -606,5 +621,8 @@ mod tests {
  	}
  
 -	fn import<H: hash::Hash + Eq + Member + Serialize, Ex>(
