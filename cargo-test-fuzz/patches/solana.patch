@@ -188,7 +188,7 @@ index 1cc2969..485ac04 100644
  [dev-dependencies]
  memoffset = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 822753f..5ee5c31 100644
+index d6b09e0..b0d3a63 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -420,6 +420,7 @@ pub fn process_instruction(
