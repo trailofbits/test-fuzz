@@ -147,8 +147,9 @@ jobs:
           fi
           TEST_CMD="cargo test --features=test-fuzz/serde_${{ matrix.serde_format }} $AUTO_CONCRETIZE -- --nocapture $SHUFFLE"
           $TEST_CMD
-          git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -w 'patches\|third_party' >/dev/null
-          if [[ $? -eq 0 || ${{ github.event_name }} = 'schedule' ]]; then
+          if [[ ${{ github.event_name }} = 'schedule' ]] ||
+            git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -w 'patches\|third_party' >/dev/null
+          then
             $TEST_CMD --ignored
           fi
         env:
