@@ -102,6 +102,7 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         serde_format: [bincode, cbor, cbor4ii]
         toolchain: [stable, nightly]
