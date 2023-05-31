@@ -873,19 +873,20 @@ fn map_ref_arg(
     expr: &Expr,
     ty: &TypeReference,
 ) -> (Type, Expr, Expr) {
-    let mutability = if ty.mutability.is_some() {
-        quote! { mut }
+    let (maybe_mut, mutability) = if ty.mutability.is_some() {
+        ("mut_", quote! { mut })
     } else {
-        quote! {}
+        ("", quote! {})
     };
     let ty = &*ty.elem;
     match ty {
         Type::Path(path) => {
             if type_utils::match_type_path(path, &["str"]) == Some(PathArguments::None) {
+                let as_maybe_mut_str = Ident::new(&format!("as_{maybe_mut}str"), Span::call_site());
                 (
                     parse_quote! { String },
                     parse_quote! { #expr.to_owned() },
-                    parse_quote! { args.#i.as_str() },
+                    parse_quote! { args.#i.#as_maybe_mut_str() },
                 )
             } else {
                 let expr = parse_quote! { (*#expr) };
@@ -893,11 +894,14 @@ fn map_ref_arg(
                 (ty, ser, parse_quote! { & #mutability #de })
             }
         }
-        Type::Slice(TypeSlice { elem, .. }) => (
-            parse_quote! { Vec<#elem> },
-            parse_quote! { #expr.to_vec() },
-            parse_quote! { args.#i.as_slice() },
-        ),
+        Type::Slice(TypeSlice { elem, .. }) => {
+            let as_maybe_mut_slice = Ident::new(&format!("as_{maybe_mut}slice"), Span::call_site());
+            (
+                parse_quote! { Vec<#elem> },
+                parse_quote! { #expr.to_vec() },
+                parse_quote! { args.#i.#as_maybe_mut_slice() },
+            )
+        }
         _ => {
             let expr = parse_quote! { (*#expr) };
             let (ty, ser, de) = map_typed_arg(conversions, candidates, i, &expr, ty);
