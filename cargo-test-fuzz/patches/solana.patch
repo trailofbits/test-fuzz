@@ -21,7 +21,7 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index ecd29d8..60ee670 100644
+index 7a767e1..7d20d7d 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -116,4 +116,5 @@ impl fmt::Display for AllocErr {
@@ -176,10 +176,10 @@ index 0e2e495..a380f89 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 1cc2969..485ac04 100644
+index dac5ede..7b94631 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -22,4 +22,7 @@ solana_rbpf = { workspace = true }
+@@ -23,4 +23,7 @@ solana_rbpf = { workspace = true }
  thiserror = { workspace = true }
  
 +serde = "1.0"
@@ -188,10 +188,10 @@ index 1cc2969..485ac04 100644
  [dev-dependencies]
  memoffset = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index d6b09e0..b0d3a63 100644
+index 602602b..cb21b2b 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -420,6 +420,7 @@ pub fn process_instruction(
+@@ -430,6 +430,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
@@ -231,7 +231,7 @@ index 475f896..2b175d7 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 8f8d1bb..867b69a 100644
+index fc7c121..9713825 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -36,5 +36,5 @@ pub type IndexOfAccount = u16;
