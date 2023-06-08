@@ -1,18 +1,18 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index fadb79d..ab06154 100644
+index 83bb8bd..6dedc6f 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
-@@ -21,6 +21,6 @@ linked-hash-map = "0.5.4"
+@@ -20,6 +20,6 @@ futures-timer = "3.0.2"
+ linked-hash-map = "0.5.4"
  log = "0.4.17"
- num-traits = "0.2.8"
 -parking_lot = "0.12.1"
--serde = { version = "1.0.136", features = ["derive"] }
-+parking_lot = { version = "0.12.0", features = ["serde"] }
-+serde = { version = "1.0.136", features = ["derive", "rc"] }
+-serde = { version = "1.0.163", features = ["derive"] }
++parking_lot = { version = "0.12.1", features = ["serde"] }
++serde = { version = "1.0.163", features = ["derive", "rc"] }
  thiserror = "1.0.30"
  prometheus-endpoint = { package = "substrate-prometheus-endpoint", version = "0.10.0-dev", path = "../../utils/prometheus" }
-@@ -34,4 +34,5 @@ sp-runtime = { version = "8.0.0", path = "../../primitives/runtime" }
- sp-tracing = { version = "7.0.0", path = "../../primitives/tracing" }
+@@ -33,4 +33,5 @@ sp-runtime = { version = "24.0.0", path = "../../primitives/runtime" }
+ sp-tracing = { version = "10.0.0", path = "../../primitives/tracing" }
  sp-transaction-pool = { version = "4.0.0-dev", path = "../../primitives/transaction-pool" }
 +test-fuzz = { path = "../../../../test-fuzz" }
  
