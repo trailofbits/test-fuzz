@@ -1,8 +1,6 @@
 use super::Object;
 use anyhow::Result;
 use clap::{crate_version, ArgAction, Parser};
-use heck::ToKebabCase;
-use paste::paste;
 use serde::{Deserialize, Serialize};
 use std::{env, ffi::OsStr};
 
@@ -48,20 +46,6 @@ struct TestFuzzWithDeprecations {
         corpus-instrumented."
     )]
     display: Option<Object>,
-    #[arg(long, hide = true)]
-    display_concretizations: bool,
-    #[arg(long, hide = true)]
-    display_corpus: bool,
-    #[arg(long, hide = true)]
-    display_corpus_instrumented: bool,
-    #[arg(long, hide = true)]
-    display_crashes: bool,
-    #[arg(long, hide = true)]
-    display_hangs: bool,
-    #[arg(long, hide = true)]
-    display_impl_concretizations: bool,
-    #[arg(long, hide = true)]
-    display_queue: bool,
     #[arg(long, help = "Target name is an exact name rather than a substring")]
     exact: bool,
     #[arg(
@@ -105,16 +89,6 @@ struct TestFuzzWithDeprecations {
         corpus with instrumentation, use --replay corpus-instrumented."
     )]
     replay: Option<Object>,
-    #[arg(long, hide = true)]
-    replay_corpus: bool,
-    #[arg(long, hide = true)]
-    replay_corpus_instrumented: bool,
-    #[arg(long, hide = true)]
-    replay_crashes: bool,
-    #[arg(long, hide = true)]
-    replay_hangs: bool,
-    #[arg(long, hide = true)]
-    replay_queue: bool,
     #[arg(
         long,
         help = "Clear fuzzing data for one target, but leave corpus intact; to reset all \
@@ -127,8 +101,6 @@ struct TestFuzzWithDeprecations {
     resume: bool,
     #[arg(long, help = "Stop fuzzing once a crash is found")]
     run_until_crash: bool,
-    #[arg(long, value_name = "TARGETNAME", hide = true)]
-    target: Option<String>,
     #[arg(
         long,
         value_name = "NAME",
@@ -159,13 +131,6 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             consolidate,
             consolidate_all,
             display,
-            display_concretizations: _,
-            display_corpus: _,
-            display_corpus_instrumented: _,
-            display_crashes: _,
-            display_hangs: _,
-            display_impl_concretizations: _,
-            display_queue: _,
             exact,
             exit_code,
             features,
@@ -179,16 +144,10 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             persistent,
             pretty_print,
             replay,
-            replay_corpus: _,
-            replay_corpus_instrumented: _,
-            replay_crashes: _,
-            replay_hangs: _,
-            replay_queue: _,
             reset,
             reset_all,
             resume,
             run_until_crash,
-            target: _,
             test,
             timeout,
             verbose,
@@ -226,10 +185,12 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
     }
 }
 
+#[allow(unused_macros)]
 macro_rules! process_deprecated_action_object {
     ($opts:ident, $action:ident, $object:ident) => {
-        paste! {
+        paste::paste! {
             if $opts.[< $action _ $object >] {
+                use heck::ToKebabCase;
                 eprintln!(
                     "`--{}-{}` is deprecated. Use `--{} {}` (no hyphen).",
                     stringify!($action),
@@ -245,29 +206,9 @@ macro_rules! process_deprecated_action_object {
     };
 }
 
-#[deprecated]
-pub fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
+pub(crate) fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
+    #[allow(unused_mut)]
     let SubCommand::TestFuzz(mut opts) = Opts::parse_from(args).subcmd;
-
-    process_deprecated_action_object!(opts, display, corpus);
-    process_deprecated_action_object!(opts, display, corpus_instrumented);
-    process_deprecated_action_object!(opts, display, crashes);
-    process_deprecated_action_object!(opts, display, hangs);
-    process_deprecated_action_object!(opts, display, queue);
-    process_deprecated_action_object!(opts, display, impl_concretizations);
-    process_deprecated_action_object!(opts, display, concretizations);
-    process_deprecated_action_object!(opts, replay, corpus);
-    process_deprecated_action_object!(opts, replay, corpus_instrumented);
-    process_deprecated_action_object!(opts, replay, crashes);
-    process_deprecated_action_object!(opts, replay, hangs);
-    process_deprecated_action_object!(opts, replay, queue);
-
-    if let Some(target_name) = opts.target.take() {
-        eprintln!("`--target <TARGETNAME>` is deprecated. Use just `<TARGETNAME>`.");
-        if opts.ztarget.is_none() {
-            opts.ztarget = Some(target_name);
-        }
-    }
 
     super::run(super::TestFuzz::from(opts))
 }

@@ -11,7 +11,7 @@ repository = "https://github.com/trailofbits/test-fuzz"
 
 [[bin]]
 name = "cargo-test-fuzz"
-path = "src/bin/cargo_test_fuzz.rs"
+path = "src/bin/cargo_test_fuzz/main.rs"
 
 [lib]
 doctest = false
@@ -47,3 +47,6 @@ serde_json = "1.0"
 tempfile = "3.6"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
+
+[package.metadata.cargo-udeps.ignore]
+normal = ["paste"]

@@ -35,10 +35,6 @@ use std::{
 use strum_macros::Display;
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
 
-mod transition;
-#[allow(deprecated)]
-pub use transition::cargo_test_fuzz;
-
 const AUTO_GENERATED_SUFFIX: &str = "_fuzz::auto_generate";
 const ENTRY_SUFFIX: &str = "_fuzz::entry";
 
@@ -58,7 +54,7 @@ bitflags! {
 
 #[derive(Clone, Copy, Debug, Display, Deserialize, PartialEq, Eq, Serialize, ValueEnum)]
 #[remain::sorted]
-enum Object {
+pub enum Object {
     Concretizations,
     Corpus,
     CorpusInstrumented,
@@ -71,33 +67,33 @@ enum Object {
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[remain::sorted]
-struct TestFuzz {
-    backtrace: bool,
-    consolidate: bool,
-    consolidate_all: bool,
-    display: Option<Object>,
-    exact: bool,
-    exit_code: bool,
-    features: Vec<String>,
-    list: bool,
-    manifest_path: Option<String>,
-    no_default_features: bool,
-    no_instrumentation: bool,
-    no_run: bool,
-    no_ui: bool,
-    package: Option<String>,
-    persistent: bool,
-    pretty_print: bool,
-    replay: Option<Object>,
-    reset: bool,
-    reset_all: bool,
-    resume: bool,
-    run_until_crash: bool,
-    test: Option<String>,
-    timeout: Option<u64>,
-    verbose: bool,
-    ztarget: Option<String>,
-    zzargs: Vec<String>,
+pub struct TestFuzz {
+    pub backtrace: bool,
+    pub consolidate: bool,
+    pub consolidate_all: bool,
+    pub display: Option<Object>,
+    pub exact: bool,
+    pub exit_code: bool,
+    pub features: Vec<String>,
+    pub list: bool,
+    pub manifest_path: Option<String>,
+    pub no_default_features: bool,
+    pub no_instrumentation: bool,
+    pub no_run: bool,
+    pub no_ui: bool,
+    pub package: Option<String>,
+    pub persistent: bool,
+    pub pretty_print: bool,
+    pub replay: Option<Object>,
+    pub reset: bool,
+    pub reset_all: bool,
+    pub resume: bool,
+    pub run_until_crash: bool,
+    pub test: Option<String>,
+    pub timeout: Option<u64>,
+    pub verbose: bool,
+    pub ztarget: Option<String>,
+    pub zzargs: Vec<String>,
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -133,7 +129,7 @@ impl Debug for Executable {
     }
 }
 
-fn run(opts: TestFuzz) -> Result<()> {
+pub fn run(opts: TestFuzz) -> Result<()> {
     let opts = {
         let mut opts = opts;
         if opts.exit_code {
@@ -1019,35 +1015,4 @@ fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
     ensure!(status.success(), "Command failed: {:?}", command);
 
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    #![allow(deprecated)]
-
-    use super::cargo_test_fuzz as cargo;
-    use anyhow::Result;
-
-    #[cfg_attr(
-        dylint_lib = "non_thread_safe_call_in_test",
-        allow(non_thread_safe_call_in_test)
-    )]
-    #[test]
-    fn build_no_instrumentation_with_target() {
-        #[allow(clippy::unwrap_used)]
-        cargo_test_fuzz(&[
-            "--features",
-            &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
-            "--no-run",
-            "--no-instrumentation",
-            "target",
-        ])
-        .unwrap();
-    }
-
-    fn cargo_test_fuzz(args: &[&str]) -> Result<()> {
-        let mut cargo_args = vec!["cargo-test-fuzz", "test-fuzz"];
-        cargo_args.extend_from_slice(args);
-        cargo(&cargo_args)
-    }
 }
