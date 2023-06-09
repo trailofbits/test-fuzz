@@ -3,7 +3,7 @@ use std::{
     fs::{read_dir, remove_dir_all, File},
     io::Read,
 };
-use testing::examples;
+use testing::{examples, CommandExt};
 
 #[test]
 fn serde_format() {
@@ -13,7 +13,7 @@ fn serde_format() {
 
     examples::test("serde", "unit_variant::test")
         .unwrap()
-        .assert()
+        .logged_assert()
         .success();
 
     for entry in read_dir(corpus).unwrap() {

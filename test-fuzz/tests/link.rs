@@ -1,7 +1,7 @@
 use assert_cmd::Command;
 use internal::dirs::target_directory;
 use predicates::prelude::*;
-use testing::examples::MANIFEST_PATH;
+use testing::{examples::MANIFEST_PATH, CommandExt};
 
 const SERDE_DEFAULT: &str = "bincode";
 
@@ -15,7 +15,7 @@ fn link() {
             "--features",
             &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
         ])
-        .assert()
+        .logged_assert()
         .success();
 
     let pred = predicate::str::contains(SERDE_DEFAULT);
@@ -29,7 +29,7 @@ fn link() {
             .join("debug/hello-world")
             .to_string_lossy()
             .to_string()])
-        .assert()
+        .logged_assert()
         .success()
         .stdout(pred);
 }

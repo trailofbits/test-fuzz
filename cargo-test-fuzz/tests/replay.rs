@@ -5,7 +5,7 @@ use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use rlimit::Resource;
 use std::fs::remove_dir_all;
-use testing::{examples, retry};
+use testing::{examples, retry, CommandExt};
 
 // smoelius: MEMORY_LIMIT must be large enough for the build process to complete.
 const MEMORY_LIMIT: u64 = 1024 * 1024 * 1024;
@@ -64,12 +64,15 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &st
     )]
     remove_dir_all(corpus).unwrap_or_default();
 
-    examples::test(krate, "test").unwrap().assert().success();
+    examples::test(krate, "test")
+        .unwrap()
+        .logged_assert()
+        .success();
 
     examples::test_fuzz(krate, target)
         .unwrap()
         .args(["--reset"])
-        .assert()
+        .logged_assert()
         .success();
 
     retry(3, || {
@@ -79,7 +82,7 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &st
         examples::test_fuzz(krate, target)
             .unwrap()
             .args(args)
-            .assert()
+            .logged_assert()
             .success();
 
         // smoelius: The memory limit must be set to replay the crashes, but not the hangs.
@@ -92,7 +95,7 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &st
                 Object::Crashes => "--replay=crashes",
                 Object::Hangs => "--replay=hangs",
             }])
-            .assert()
+            .logged_assert()
             .success()
             .try_stdout(predicate::str::is_match(re).unwrap())
     })

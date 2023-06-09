@@ -2,7 +2,7 @@ use anyhow::ensure;
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
-use testing::{examples, retry};
+use testing::{examples, retry, CommandExt};
 
 const TIMEOUT: &str = "60";
 
@@ -56,7 +56,7 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
         let assert = examples::test_fuzz(krate, target)
             .unwrap()
             .args(["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
-            .assert();
+            .logged_assert();
 
         let assert = if success {
             assert.success()
