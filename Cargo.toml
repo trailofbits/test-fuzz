@@ -8,6 +8,7 @@ members = [
     "test-fuzz",
     "testing",
 ]
+resolver = "2"
 
 [workspace.metadata.dylint]
 libraries = [
