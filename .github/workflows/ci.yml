@@ -73,7 +73,9 @@ jobs:
           find . -name Cargo.toml -print0 | xargs -0 -n 1 dirname | xargs -n 1 cargo sort --check --grouped --no-format
 
       - name: Format
-        run: cargo fmt && git diff --exit-code
+        run: |
+          rustup +nightly component add rustfmt
+          cargo +nightly fmt && git diff --exit-code
 
       - name: Format README
         run: ./scripts/update_README.sh && git diff --exit-code
