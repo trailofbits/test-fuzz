@@ -15,8 +15,8 @@ DIR="$(dirname "$(realpath "$0")")/.."
 
 cd "$DIR"
 
-paste <(jq -r .[].url cargo-test-fuzz/third_party.json) <(jq -r .[].patch cargo-test-fuzz/third_party.json) |
-while read -r URL PATCH; do
+paste <(jq -r .[].url cargo-test-fuzz/third_party.json) <(jq -r .[].rev cargo-test-fuzz/third_party.json) <(jq -r .[].patch cargo-test-fuzz/third_party.json) |
+while read -r URL REV_OLD PATCH; do
     pushd "$(mktemp -d)"
 
     git clone --depth 1 "$URL" .
@@ -26,6 +26,12 @@ while read -r URL PATCH; do
     find "$PWD" -name '*.rej'
 
     git diff --unified="$LINES_OF_CONTEXT" > "$DIR"/cargo-test-fuzz/patches/"$PATCH"
+
+    # smoelius: Update third_party.json with the revision that was just diffed against.
+
+    REV_NEW="$(git rev-parse HEAD)"
+
+    sed -i "s/\"$REV_OLD\"/\"$REV_NEW\"/" "$DIR"/cargo-test-fuzz/third_party.json
 
     popd
 done

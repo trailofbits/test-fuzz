@@ -281,6 +281,11 @@ fn patches_are_current() {
     }
 }
 
+// smoelius: I am disabling this test, as it creates a race to get the patches committed after they
+// are updated.
+//   Note that `patches_are_current` above remains, and that it tests each patch against the head of
+// its respective repository, not the revision against which the patch was generated.
+#[cfg(any())]
 #[test]
 #[ignore]
 fn revisions_are_current() {
