@@ -70,7 +70,8 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
     let (_, _, where_clause) = generics.split_for_impl();
 
     // smoelius: Without the next line, you get:
-    //   the trait `quote::ToTokens` is not implemented for `(std::option::Option<syn::token::Bang>, syn::Path, syn::token::For)`
+    //   the trait `quote::ToTokens` is not implemented for `(std::option::Option<syn::token::Bang>,
+    // syn::Path, syn::token::For)`
     let (trait_path, trait_) = trait_.map_or((None, None), |(bang, path, for_)| {
         (Some(path.clone()), Some(quote! { #bang #path #for_ }))
     });
