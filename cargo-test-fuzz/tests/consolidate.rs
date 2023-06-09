@@ -2,7 +2,7 @@ use anyhow::ensure;
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
-use testing::{examples, retry};
+use testing::{examples, retry, CommandExt};
 
 const CRASH_TIMEOUT: &str = "60";
 
@@ -46,7 +46,10 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
     )]
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test(krate, "test").unwrap().assert().success();
+    examples::test(krate, "test")
+        .unwrap()
+        .logged_assert()
+        .success();
 
     assert_eq!(read_dir(&corpus).unwrap().count(), 1);
 
@@ -57,13 +60,13 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
         examples::test_fuzz(krate, target)
             .unwrap()
             .args(args)
-            .assert()
+            .logged_assert()
             .success();
 
         examples::test_fuzz(krate, target)
             .unwrap()
             .args(["--consolidate"])
-            .assert()
+            .logged_assert()
             .success();
 
         ensure!(read_dir(&corpus).unwrap().count() > 1);
@@ -71,7 +74,7 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
         examples::test_fuzz(krate, target)
             .unwrap()
             .args(["--display=corpus"])
-            .assert()
+            .logged_assert()
             .success()
             .try_stdout(predicate::str::contains(pattern))
             .map_err(Into::into)

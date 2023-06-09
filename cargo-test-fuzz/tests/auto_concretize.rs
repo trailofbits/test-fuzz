@@ -3,7 +3,7 @@ use internal::{
     dirs::{concretizations_directory_from_target, impl_concretizations_directory_from_target},
 };
 use std::fs::remove_dir_all;
-use testing::examples;
+use testing::{examples, CommandExt};
 
 #[test]
 fn auto_concretize() {
@@ -36,7 +36,7 @@ fn test() {
 
         examples::test("auto_concretize_0", &test)
             .unwrap()
-            .assert()
+            .logged_assert()
             .success();
     }
 }
@@ -52,7 +52,7 @@ fn test_fuzz() {
         examples::test_fuzz("auto_concretize_0", &target)
             .unwrap()
             .args(["--no-run"])
-            .assert()
+            .logged_assert()
             .success();
     }
 }

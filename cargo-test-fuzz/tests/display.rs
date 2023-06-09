@@ -1,5 +1,5 @@
 use predicates::prelude::*;
-use testing::examples;
+use testing::{examples, CommandExt};
 
 #[test]
 fn display_qwerty() {
@@ -29,12 +29,15 @@ fn display_debug_hang() {
 }
 
 fn display(krate: &str, test: &str, target: &str, stdout: &str, stderr: &str) {
-    examples::test(krate, test).unwrap().assert().success();
+    examples::test(krate, test)
+        .unwrap()
+        .logged_assert()
+        .success();
 
     examples::test_fuzz(krate, target)
         .unwrap()
         .args(["--display=corpus"])
-        .assert()
+        .logged_assert()
         .success()
         .stdout(predicate::str::contains(stdout))
         .stderr(predicate::str::contains(stderr));

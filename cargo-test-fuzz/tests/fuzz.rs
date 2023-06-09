@@ -1,7 +1,7 @@
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::remove_dir_all;
-use testing::{examples, retry};
+use testing::{examples, retry, CommandExt};
 
 const TIMEOUT: &str = "60";
 
@@ -33,7 +33,10 @@ fn fuzz(krate: &str, persistent: bool) {
     )]
     remove_dir_all(corpus).unwrap_or_default();
 
-    examples::test(krate, "test").unwrap().assert().success();
+    examples::test(krate, "test")
+        .unwrap()
+        .logged_assert()
+        .success();
 
     retry(3, || {
         let mut command = examples::test_fuzz(krate, "target").unwrap();
@@ -44,7 +47,10 @@ fn fuzz(krate: &str, persistent: bool) {
         }
         args.extend_from_slice(&["--", "-V", TIMEOUT]);
 
-        command.args(&args).assert().try_code(predicate::eq(1))
+        command
+            .args(&args)
+            .logged_assert()
+            .try_code(predicate::eq(1))
     })
     .unwrap();
 }

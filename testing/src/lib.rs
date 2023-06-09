@@ -1,3 +1,6 @@
+mod command_ext;
+pub use command_ext::CommandExt;
+
 pub mod examples;
 
 mod retry;

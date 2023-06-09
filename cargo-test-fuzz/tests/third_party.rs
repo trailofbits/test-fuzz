@@ -13,6 +13,7 @@ use std::{
     path::Path,
 };
 use tempfile::tempdir_in;
+use testing::CommandExt;
 
 option_set! {
     #[derive(Copy, Clone, Eq, PartialEq)]
@@ -104,13 +105,13 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
     Command::new("git")
         .current_dir(&tempdir)
         .args(["clone", &test.url, "."])
-        .assert()
+        .logged_assert()
         .success();
 
     Command::new("git")
         .current_dir(&tempdir)
         .args(["checkout", &test.rev])
-        .assert()
+        .logged_assert()
         .success();
 
     #[allow(unknown_lints)]
@@ -124,7 +125,7 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
     Command::new("git")
         .current_dir(&tempdir)
         .args(["apply", &patch.to_string_lossy()])
-        .assert()
+        .logged_assert()
         .success();
 
     let subdir = tempdir.path().join(&test.subdir);
@@ -148,7 +149,7 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
     Command::new("cargo")
         .current_dir(&subdir)
         .args(["update"])
-        .assert()
+        .logged_assert()
         .success();
 
     // smoelius: The `libp2p-swarm-derive` issue appears to have been resolved.
@@ -189,7 +190,7 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
                 "--display=corpus",
                 target,
             ])
-            .assert()
+            .logged_assert()
             .success()
             .stdout(predicate::str::is_match(r#"(?m)^[[:xdigit:]]{40}:"#).unwrap());
 
@@ -203,7 +204,7 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
                 "--replay=corpus",
                 target,
             ])
-            .assert()
+            .logged_assert()
             .success()
             .stdout(
                 predicate::str::is_match(r#"(?m)^[[:xdigit:]]{40}: Ret\((Ok|Err)\(.*\)\)$"#)
@@ -242,7 +243,7 @@ fn patches_are_current() {
         Command::new("git")
             .current_dir(&tempdir)
             .args(["clone", "--depth=1", &test.url, "."])
-            .assert()
+            .logged_assert()
             .success();
 
         let patch_path = Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -254,7 +255,7 @@ fn patches_are_current() {
             .current_dir(&tempdir)
             .args(["apply"])
             .write_stdin(patch.as_bytes())
-            .assert()
+            .logged_assert()
             .success();
 
         // smoelius: The following checks are *not* redundant. They can fail even if the patch
@@ -263,7 +264,7 @@ fn patches_are_current() {
         let assert = Command::new("git")
             .current_dir(&tempdir)
             .args(["diff", &format!("--unified={LINES_OF_CONTEXT}")])
-            .assert()
+            .logged_assert()
             .success();
 
         let diff = std::str::from_utf8(&assert.get_output().stdout).unwrap();
@@ -295,13 +296,13 @@ fn revisions_are_current() {
         Command::new("git")
             .current_dir(&tempdir)
             .args(["clone", "--depth=1", &test.url, "."])
-            .assert()
+            .logged_assert()
             .success();
 
         let assert = Command::new("git")
             .current_dir(&tempdir)
             .args(["rev-parse", "HEAD"])
-            .assert()
+            .logged_assert()
             .success();
 
         let stdout = std::str::from_utf8(&assert.get_output().stdout).unwrap();

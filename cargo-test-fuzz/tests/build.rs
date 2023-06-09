@@ -1,11 +1,11 @@
-use testing::examples;
+use testing::{examples, CommandExt};
 
 #[test]
 fn build_no_instrumentation() {
     examples::test_fuzz_all()
         .unwrap()
         .args(["--no-run", "--no-instrumentation"])
-        .assert()
+        .logged_assert()
         .success();
 }
 
@@ -14,7 +14,7 @@ fn build() {
     examples::test_fuzz_all()
         .unwrap()
         .args(["--no-run"])
-        .assert()
+        .logged_assert()
         .success();
 }
 
@@ -23,6 +23,6 @@ fn build_pesistent() {
     examples::test_fuzz_all()
         .unwrap()
         .args(["--no-run", "--persistent"])
-        .assert()
+        .logged_assert()
         .success();
 }

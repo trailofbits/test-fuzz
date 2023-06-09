@@ -1,0 +1,3 @@
+disallowed-methods = [
+    { path = "assert_cmd::cmd::Command::assert", reason = "use `test_fuzz_testing::CommandExt::logged_assert`" },
+]

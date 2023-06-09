@@ -2,7 +2,7 @@ use internal::dirs::{
     concretizations_directory_from_target, impl_concretizations_directory_from_target,
 };
 use std::fs::remove_dir_all;
-use testing::examples;
+use testing::{examples, CommandExt};
 
 #[cfg_attr(
     dylint_lib = "non_thread_safe_call_in_test",
@@ -71,7 +71,10 @@ fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected:
     )]
     remove_dir_all(concretizations).unwrap_or_default();
 
-    examples::test(krate, test).unwrap().assert().success();
+    examples::test(krate, test)
+        .unwrap()
+        .logged_assert()
+        .success();
 
     for (option, expected) in &[
         ("--display=impl-concretizations", impl_expected),
@@ -80,7 +83,7 @@ fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected:
         let assert = &examples::test_fuzz(krate, target)
             .unwrap()
             .args([option])
-            .assert()
+            .logged_assert()
             .success();
 
         let mut actual = std::str::from_utf8(&assert.get_output().stdout)

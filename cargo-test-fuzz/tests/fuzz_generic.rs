@@ -1,7 +1,7 @@
 use internal::{dirs::corpus_directory_from_target, serde_format};
 use predicates::prelude::*;
 use std::{fs::remove_dir_all, sync::Mutex};
-use testing::{examples, retry};
+use testing::{examples, retry, CommandExt};
 
 const TIMEOUT: &str = "60";
 
@@ -43,13 +43,16 @@ fn fuzz(test: &str, code: i32) {
     )]
     remove_dir_all(corpus).unwrap_or_default();
 
-    examples::test("generic", test).unwrap().assert().success();
+    examples::test("generic", test)
+        .unwrap()
+        .logged_assert()
+        .success();
 
     retry(3, || {
         examples::test_fuzz("generic", "target")
             .unwrap()
             .args(["--exit-code", "--run-until-crash", "--", "-V", TIMEOUT])
-            .assert()
+            .logged_assert()
             .try_code(predicate::eq(code))
     })
     .unwrap();
