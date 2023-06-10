@@ -27,7 +27,9 @@ internal = { path = "../internal", package = "test-fuzz-internal", version = "=3
 
 [features]
 __auto_concretize = []
-__persistent = []
+__fuzzer_aflplusplus = []
+__fuzzer_aflplusplus_persistent = []
+__fuzzer_libfuzzer = []
 __serde_bincode = ["internal/__serde_bincode"]
 __serde_cbor = ["internal/__serde_cbor"]
 __serde_cbor4ii = ["internal/__serde_cbor4ii"]

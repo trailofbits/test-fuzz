@@ -12,6 +12,7 @@ repository = "https://github.com/trailofbits/test-fuzz"
 [dependencies]
 afl = { version = "0.13", optional = true }
 serde = "1.0"
+serde_json = { version = "1.0", optional = true }
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.1.0" }
 runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=3.1.0" }
@@ -20,10 +21,16 @@ test-fuzz-macro = { path = "../macro", version = "=3.1.0" }
 [dev-dependencies]
 assert_cmd = "2.0"
 cargo_metadata = "0.15"
+env_logger = "0.10"
+heck = "0.4"
+itertools = "0.10"
 lazy_static = "1.4"
 predicates = "3.0"
 regex = "1.8"
 semver = "1.0"
+strum = "0.24"
+strum_macros = "0.24"
+yaml-rust = "0.4"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
 
@@ -35,7 +42,9 @@ auto_concretize = ["internal/__auto_concretize", "test-fuzz-macro/__auto_concret
 serde_bincode = ["internal/__serde_bincode", "runtime/__serde_bincode", "test-fuzz-macro/__serde_bincode"]
 serde_cbor = ["internal/__serde_cbor", "runtime/__serde_cbor", "test-fuzz-macro/__serde_cbor"]
 serde_cbor4ii = ["internal/__serde_cbor4ii", "runtime/__serde_cbor4ii", "test-fuzz-macro/__serde_cbor4ii"]
-__persistent = ["afl", "test-fuzz-macro/__persistent"]
+__fuzzer_aflplusplus = ["runtime/__fuzzer_aflplusplus", "test-fuzz-macro/__fuzzer_aflplusplus"]
+__fuzzer_aflplusplus_persistent = ["runtime/__fuzzer_aflplusplus_persistent", "test-fuzz-macro/__fuzzer_aflplusplus_persistent", "afl"]
+__fuzzer_libfuzzer = ["runtime/__fuzzer_libfuzzer", "test-fuzz-macro/__fuzzer_libfuzzer"]
 
 [package.metadata.cargo-udeps.ignore]
 normal = ["afl"]

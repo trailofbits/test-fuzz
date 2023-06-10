@@ -18,14 +18,21 @@ repository = "https://github.com/trailofbits/test-fuzz"
 bincode = "1.3"
 cbor4ii = { version = "0.3", features = ["serde1", "use_std"], optional = true }
 hex = "0.4"
+libc = { version = "0.2", optional = true }
+libfuzzer-sys = { version = "0.4", optional = true }
+nix = { version = "0.26", optional = true }
 num-traits = "0.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_cbor = { version = "0.11", optional = true }
+serde_json = { version = "1.0", optional = true }
 sha-1 = "0.10"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=3.1.0" }
 
 [features]
+__fuzzer_aflplusplus = []
+__fuzzer_aflplusplus_persistent = []
+__fuzzer_libfuzzer = ["libc", "libfuzzer-sys", "nix", "serde_json"]
 __serde_bincode = []
 __serde_cbor = ["serde_cbor"]
 __serde_cbor4ii = ["cbor4ii"]

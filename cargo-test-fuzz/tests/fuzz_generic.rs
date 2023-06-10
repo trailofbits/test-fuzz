@@ -1,9 +1,9 @@
-use internal::{dirs::corpus_directory_from_target, serde_format};
+use internal::{dirs::corpus_directory_from_target, fuzzer, serde_format, Fuzzer};
 use predicates::prelude::*;
 use std::{fs::remove_dir_all, sync::Mutex};
-use testing::{examples, retry, CommandExt};
+use testing::{examples, retry, skip_fuzzer, CommandExt};
 
-const TIMEOUT: &str = "60";
+const MAX_TOTAL_TIME: &str = "60";
 
 #[cfg_attr(
     dylint_lib = "non_thread_safe_call_in_test",
@@ -13,11 +13,19 @@ const TIMEOUT: &str = "60";
 fn fuzz_foo_qwerty() {
     // smoelius: When `bincode` is enabled, `cargo-afl` fails because "the program crashed with one
     // of the test cases provided."
-    if serde_format().to_string() == "Bincode" {
-        fuzz("test_foo_qwerty", 2);
-    } else {
-        fuzz("test_foo_qwerty", 1);
-    };
+    // smoelius: `to_string` is used here because `SerdeFormat` won't necessarily contain the
+    // `Bincode` variant.
+    let fuzzer = fuzzer().unwrap();
+    fuzz(
+        "test_foo_qwerty",
+        if matches!(fuzzer, Fuzzer::Aflplusplus | Fuzzer::AflplusplusPersistent)
+            && serde_format().to_string() == "Bincode"
+        {
+            2
+        } else {
+            1
+        },
+    );
 }
 
 #[cfg_attr(
@@ -26,6 +34,10 @@ fn fuzz_foo_qwerty() {
 )]
 #[test]
 fn fuzz_bar_asdfgh() {
+    if ["Cbor", "Cbor4ii"].contains(&serde_format().to_string().as_str()) {
+        skip_fuzzer!("fuzz_bar_asdfgh", Fuzzer::Libfuzzer);
+    }
+
     fuzz("test_bar_asdfgh", 0);
 }
 
@@ -51,7 +63,12 @@ fn fuzz(test: &str, code: i32) {
     retry(3, || {
         examples::test_fuzz("generic", "target")
             .unwrap()
-            .args(["--exit-code", "--run-until-crash", "--", "-V", TIMEOUT])
+            .args([
+                "--exit-code",
+                "--run-until-crash",
+                "--max-total-time",
+                MAX_TOTAL_TIME,
+            ])
             .logged_assert()
             .try_code(predicate::eq(code))
     })
