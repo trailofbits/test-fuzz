@@ -13,6 +13,8 @@ const TIMEOUT: &str = "60";
 fn fuzz_foo_qwerty() {
     // smoelius: When `bincode` is enabled, `cargo-afl` fails because "the program crashed with one
     // of the test cases provided."
+    // smoelius: `to_string` is used here because `SerdeFormat` won't necessarily contain the
+    // `Bincode` variant.
     if serde_format().to_string() == "Bincode" {
         fuzz("test_foo_qwerty", 2);
     } else {
