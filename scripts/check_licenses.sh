@@ -10,5 +10,9 @@ fi
 
 cargo license |
 while read -r X; do
-    echo "$X" | grep -w 'Apache\|BSD-3-Clause\|ISC\|MIT\|N/A'
+    echo "$X"
+    if [[ "$X" = 'AGPL-3.0 WITH mif-exception (5): cargo-test-fuzz, test-fuzz, test-fuzz-internal, test-fuzz-macro, test-fuzz-runtime' ]]; then
+        continue
+    fi
+    echo "$X" | grep -o '^[^:]*' | grep -w 'Apache\|BSD-3-Clause\|ISC\|MIT\|N/A' >/dev/null
 done
