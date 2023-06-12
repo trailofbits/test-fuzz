@@ -21,6 +21,7 @@ At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://gi
 6. [Environment variables](#environment-variables)
 7. [Limitations](#limitations)
 8. [Tips and tricks](#tips-and-tricks)
+9. [License](#license)
 
 ## Installation
 
@@ -468,3 +469,12 @@ The traits that `cargo-test-fuzz` currently supports and the values generated fo
 - Rust [won't allow you to](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types) implement `serde::Serialize` for other repositories' types. But you may be able to [patch](https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html) other repositories to make their types serializeble. Also, [`cargo-clone`](https://github.com/JanLikar/cargo-clone) can be useful for grabbing dependencies' repositories.
 
 - [Serde attributes](https://serde.rs/attributes.html) can be helpful in implementing `serde::Serialize`/`serde::Deserialize` for difficult types.
+
+## License
+
+`test-fuzz` is licensed and distributed under the AGPLv3 license with the [Macros and Inline Functions Exception]. In plain language, using the [`test_fuzz` macro], the [`test_fuzz_impl` macro], or `test-fuzz`'s [convenience functions and macros] in your software does not require it to be covered by the AGPLv3 license.
+
+[`test_fuzz` macro]: #test_fuzz-macro
+[`test_fuzz_impl` macro]: #test_fuzz_impl-macro
+[convenience functions and macros]: #convenience-functions-and-macros
+[Macros and Inline Functions Exception]: https://spdx.org/licenses/mif-exception.html

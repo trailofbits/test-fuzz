@@ -6,7 +6,7 @@ edition = "2021"
 description = "To make fuzzing Rust easy"
 
 authors = ["Samuel E. Moelius III <sam@moeli.us>"]
-license = "MIT OR Apache-2.0"
+license = "AGPL-3.0 WITH mif-exception"
 repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
