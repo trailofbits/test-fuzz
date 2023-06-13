@@ -1,5 +1,16 @@
 # Changelog
 
+## 4.0.0
+
+- BREAKING CHANGE: The `--timeout` option now uses seconds instead of milliseconds ([#219](https://github.com/trailofbits/test-fuzz/pull/219))&mdash;thanks [@dhruvdabhi101](https://github.com/dhruvdabhi101)
+- BREAKING CHANGE: The following deprecated options/functions have been removed ([#234](https://github.com/trailofbits/test-fuzz/pull/234)):
+  - Options `--display-<OBJECT>` (use `--display <OBJECT>` with no hyphen)
+  - Options `--replay-<OBJECT>` (use `--replay <OBJECT>` with no hyphen)
+  - Option `--target <TARGETNAME>` (use just `<TARGETNAME>`)
+  - Function `cargo_test_fuzz`
+- BREAKING CHANGE: `test-fuzz` is now licensed and distributed under the AGPLv3 license with the [Macros and Inline Functions Exception](https://spdx.org/licenses/mif-exception.html). See the [README](https://github.com/trailofbits/test-fuzz#license) for additional details. ([#241](https://github.com/trailofbits/test-fuzz/pull/241))
+- Fix a bug involving mutable slices and `str`s ([#230](https://github.com/trailofbits/test-fuzz/pull/230))&mdash;thanks [@0xalpharush](https://github.com/0xalpharush) for reporting the bug
+
 ## 3.1.0
 
 - Update dependencies, including `afl` to version 0.13.0 ([c1707f5](https://github.com/trailofbits/test-fuzz/commit/c1707f5c09e9c68113699c67be13fa4944a94405))
@@ -27,7 +38,7 @@
 
 ## 3.0.0
 
-- BREAKING CHANGE: Make `afl` an optional depdency enabled by `--persistent`. This is a breaking change in the following sense. If one tries to use `cargo-test-fuzz` 2.0.x with a target compiled with the new version of `test-fuzz`, one will recieve a `` ... does not depend on `afl` `` error. ([#114](https://github.com/trailofbits/test-fuzz/pull/114))
+- BREAKING CHANGE: Make `afl` an optional dependency enabled by `--persistent`. This is a breaking change in the following sense. If one tries to use `cargo-test-fuzz` 2.0.x with a target compiled with the new version of `test-fuzz`, one will receive a `` ... does not depend on `afl` `` error. ([#114](https://github.com/trailofbits/test-fuzz/pull/114))
 
 ## 2.0.5
 
