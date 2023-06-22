@@ -29,7 +29,7 @@ paste = "1.0"
 remain = "0.2"
 semver = "1.0"
 serde = { version = "1.0", features = ["derive"] }
-strum_macros = "0.24"
+strum_macros = "0.25"
 subprocess = "0.2"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=4.0.0" }
