@@ -1,5 +1,5 @@
 diff --git a/client/transaction-pool/Cargo.toml b/client/transaction-pool/Cargo.toml
-index 83bb8bd..6dedc6f 100644
+index 6f02b1c..f59c2f0 100644
 --- a/client/transaction-pool/Cargo.toml
 +++ b/client/transaction-pool/Cargo.toml
 @@ -20,6 +20,6 @@ futures-timer = "3.0.2"

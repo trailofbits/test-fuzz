@@ -147,10 +147,10 @@ index 2ca91ba..d94725c 100644
  pub struct PreAccount {
      key: Pubkey,
 diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
-index 4557a5b..b87fff9 100644
+index c403f1c..45b9844 100644
 --- a/program-runtime/src/sysvar_cache.rs
 +++ b/program-runtime/src/sysvar_cache.rs
-@@ -23,5 +23,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for SysvarCache {
+@@ -25,5 +25,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for SysvarCache {
  }
  
 -#[derive(Default, Clone, Debug)]
@@ -220,10 +220,10 @@ index 7e8368d..56d903d 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 475f896..2b175d7 100644
+index 6957b95..88d5ab1 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -865,5 +865,5 @@ lazy_static! {
+@@ -874,5 +874,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
