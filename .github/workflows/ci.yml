@@ -140,6 +140,11 @@ jobs:
           rustup          target add wasm32-unknown-unknown
           rustup +nightly target add wasm32-unknown-unknown
 
+      # smoelius: I expect this list to grow.
+      - name: Install dependencies
+        run: |
+          cargo install cargo-supply-chain || true
+
       - name: Test
         run: |
           AUTO_CONCRETIZE=
