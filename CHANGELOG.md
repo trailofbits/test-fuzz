@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.1
+
+- Remove last reference to `syn` 1.0 ([#244](https://github.com/trailofbits/test-fuzz/pull/244))
+
 ## 4.0.0
 
 - BREAKING CHANGE: The `--timeout` option now uses seconds instead of milliseconds ([#219](https://github.com/trailofbits/test-fuzz/pull/219))&mdash;thanks [@dhruvdabhi101](https://github.com/dhruvdabhi101)
