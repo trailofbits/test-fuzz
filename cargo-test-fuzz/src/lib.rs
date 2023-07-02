@@ -503,7 +503,7 @@ fn executable_target(
         executable_targets
     );
 
-    let Some(mut executable_targets) =  executable_targets.pop() else {
+    let Some(mut executable_targets) = executable_targets.pop() else {
         bail!("Found no fuzz targets{}", match_message(opts));
     };
 
