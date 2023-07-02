@@ -1,6 +1,6 @@
 use assert_cmd::prelude::*;
 use internal::dirs::corpus_directory_from_target;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use std::{
     env,
     fs::{read_dir, remove_dir_all},
@@ -28,12 +28,12 @@ fn write() {
 }
 
 #[cfg(test)]
-lazy_static! {
-    static ref MANIFEST_PATH: String = Path::new(env!("CARGO_MANIFEST_DIR"))
+static MANIFEST_PATH: Lazy<String> = Lazy::new(|| {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("Cargo.toml")
         .to_string_lossy()
-        .to_string();
-}
+        .to_string()
+});
 
 static MUTEX: Mutex<()> = Mutex::new(());
 

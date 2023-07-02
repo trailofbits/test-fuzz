@@ -3,17 +3,17 @@ use assert_cmd::Command;
 use cargo_metadata::{Artifact, ArtifactProfile, Message};
 use if_chain::if_chain;
 use internal::{auto_concretize_enabled, serde_format};
-use lazy_static::lazy_static;
 use log::debug;
+use once_cell::sync::Lazy;
 use std::path::Path;
 use subprocess::{Exec, Redirection};
 
-lazy_static! {
-    pub static ref MANIFEST_PATH: String = Path::new(env!("CARGO_MANIFEST_DIR"))
+pub static MANIFEST_PATH: Lazy<String> = Lazy::new(|| {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../examples/Cargo.toml")
         .to_string_lossy()
-        .to_string();
-}
+        .to_string()
+});
 
 // smoelius: We want to reuse the existing features. So we can't do anything that would cause the
 // examples to be rebuilt.

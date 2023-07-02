@@ -1,5 +1,5 @@
 use cargo_metadata::{Dependency, DependencyKind, Metadata, MetadataCommand};
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use regex::{Match, Regex};
 use semver::Version;
 use std::{
@@ -7,10 +7,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-lazy_static! {
-    static ref METADATA: Metadata = MetadataCommand::new().no_deps().exec().unwrap();
-    static ref README_PATH: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR")).join("../README.md");
-}
+static METADATA: Lazy<Metadata> = Lazy::new(|| MetadataCommand::new().no_deps().exec().unwrap());
+static README_PATH: Lazy<PathBuf> =
+    Lazy::new(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../README.md"));
 
 #[test]
 fn versions_are_equal() {

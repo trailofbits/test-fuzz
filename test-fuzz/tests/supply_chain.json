@@ -873,22 +873,6 @@
         "name": "David Tolnay"
       }
     ],
-    "lazy_static": [
-      {
-        "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
-        "id": 51,
-        "kind": "team",
-        "login": "github:rust-lang-nursery:libs",
-        "name": "libs"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/2903206?v=4",
-        "id": 394,
-        "kind": "user",
-        "login": "Kimundi",
-        "name": "Marvin Löbel"
-      }
-    ],
     "libc": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",

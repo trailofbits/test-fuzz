@@ -1,6 +1,7 @@
 #![cfg_attr(dylint_lib = "crate_wide_allow", allow(crate_wide_allow))]
 #![allow(clippy::disallowed_names)]
-use lazy_static::lazy_static;
+
+use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 
@@ -75,11 +76,8 @@ impl<T: FooBarTrait + Clone + Debug + Serialize> Trait<T> for Struct {
     fn target_only_concretizations<U>(&self, _: &T, _: &U) {}
 }
 
-#[cfg(test)]
-lazy_static! {
-    static ref FOO: Foo = Foo::A("qwerty".to_owned());
-    static ref BAR: Bar = Bar::B("asdfgh".to_owned());
-}
+static FOO: Lazy<Foo> = Lazy::new(|| Foo::A("qwerty".to_owned()));
+static BAR: Lazy<Bar> = Lazy::new(|| Bar::B("asdfgh".to_owned()));
 
 #[test]
 fn test_foo_qwerty() {

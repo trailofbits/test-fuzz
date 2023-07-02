@@ -4,7 +4,7 @@
 use darling::{ast::NestedMeta, FromMeta};
 use internal::serde_format;
 use itertools::MultiUnzip;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
@@ -39,10 +39,8 @@ mod type_utils;
 
 type Conversions = BTreeMap<OrdType, (Type, bool)>;
 
-lazy_static! {
-    static ref CARGO_CRATE_NAME: String =
-        var("CARGO_CRATE_NAME").expect("Could not get `CARGO_CRATE_NAME`");
-}
+static CARGO_CRATE_NAME: Lazy<String> =
+    Lazy::new(|| var("CARGO_CRATE_NAME").expect("Could not get `CARGO_CRATE_NAME`"));
 
 #[derive(FromMeta)]
 struct TestFuzzImplOpts {}
