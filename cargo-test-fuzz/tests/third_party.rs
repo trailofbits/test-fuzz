@@ -1,7 +1,7 @@
 use assert_cmd::Command;
 use bitflags::bitflags;
 use cargo_metadata::MetadataCommand;
-use lazy_static::lazy_static;
+use once_cell::sync::Lazy;
 use option_set::option_set;
 use predicates::prelude::*;
 use regex::Regex;
@@ -36,13 +36,11 @@ struct Test {
     targets: Vec<String>,
 }
 
-lazy_static! {
-    static ref TESTS: Vec<Test> = {
-        let content =
-            read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("third_party.json")).unwrap();
-        serde_json::from_str(&content).unwrap()
-    };
-}
+static TESTS: Lazy<Vec<Test>> = Lazy::new(|| {
+    let content =
+        read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("third_party.json")).unwrap();
+    serde_json::from_str(&content).unwrap()
+});
 
 // smoelius: This should match `scripts/update_patches.sh`.
 const LINES_OF_CONTEXT: u32 = 2;
