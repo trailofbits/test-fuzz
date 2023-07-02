@@ -222,6 +222,7 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
     clippy::too_many_lines,
     clippy::trivially_copy_pass_by_ref
 )]
+#[cfg_attr(dylint_lib = "commented_code", allow(commented_code))]
 fn map_method_or_fn(
     generics: &Generics,
     trait_path: &Option<Path>,
