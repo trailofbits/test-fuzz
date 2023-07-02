@@ -8,6 +8,8 @@ use std::{
 };
 
 static METADATA: Lazy<Metadata> = Lazy::new(|| MetadataCommand::new().no_deps().exec().unwrap());
+
+#[allow(unknown_lints, env_cargo_path)]
 static README_PATH: Lazy<PathBuf> =
     Lazy::new(|| Path::new(env!("CARGO_MANIFEST_DIR")).join("../README.md"));
 
