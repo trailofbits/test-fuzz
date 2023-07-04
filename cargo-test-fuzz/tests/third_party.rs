@@ -204,8 +204,7 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
             .logged_assert()
             .success()
             .stdout(
-                predicate::str::is_match(r#"(?m)^[[:xdigit:]]{40}: Ret\((Ok|Err)\(.*\)\)$"#)
-                    .unwrap(),
+                predicate::str::is_match(r"(?m)^[[:xdigit:]]{40}: Ret\((Ok|Err)\(.*\)\)$").unwrap(),
             );
     }
 }
@@ -232,7 +231,7 @@ fn check_test_fuzz_dependency(subdir: &Path, test_package: &str) {
 #[test]
 #[ignore]
 fn patches_are_current() {
-    let re = Regex::new(r#"^index [[:xdigit:]]{7}\.\.[[:xdigit:]]{7} [0-7]{6}$"#).unwrap();
+    let re = Regex::new(r"^index [[:xdigit:]]{7}\.\.[[:xdigit:]]{7} [0-7]{6}$").unwrap();
 
     for test in TESTS.iter() {
         let tempdir = tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();
