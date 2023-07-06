@@ -21,22 +21,22 @@ index 7f00f43..38eacf7 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 7a767e1..7d20d7d 100644
+index c09fc1c..7f887e5 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -116,4 +116,5 @@ impl fmt::Display for AllocErr {
+@@ -117,4 +117,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -144,4 +145,5 @@ impl BpfAllocator {
+@@ -145,4 +146,5 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -150,8 +152,52 @@ pub struct SyscallContext {
+@@ -151,8 +153,52 @@ pub struct SyscallContext {
  }
  
 +pub fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
@@ -89,7 +89,7 @@ index 7a767e1..7d20d7d 100644
 +    #[serde(serialize_with = "serialize_ref", deserialize_with = "deserialize_ref")]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -160,6 +206,9 @@ pub struct InvokeContext<'a> {
+@@ -161,6 +207,9 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
@@ -99,7 +99,7 @@ index 7a767e1..7d20d7d 100644
 +    #[serde(skip)]
      pub programs_updated_only_for_global_cache: &'a mut LoadedProgramsForTxBatch,
      pub feature_set: Arc<FeatureSet>,
-@@ -171,4 +220,25 @@ pub struct InvokeContext<'a> {
+@@ -172,4 +221,25 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -188,10 +188,10 @@ index dac5ede..7b94631 100644
  [dev-dependencies]
  memoffset = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 602602b..cb21b2b 100644
+index 1c0cfea..fb84491 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -430,6 +430,7 @@ pub fn process_instruction(
+@@ -435,6 +435,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
