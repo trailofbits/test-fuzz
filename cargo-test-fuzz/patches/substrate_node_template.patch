@@ -15,12 +15,13 @@ diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
 index 9550d3d..48fc3bd 100644
 --- a/pallets/template/src/lib.rs
 +++ b/pallets/template/src/lib.rs
-@@ -62,13 +62,49 @@ pub mod pallet {
+@@ -62,13 +62,50 @@ pub mod pallet {
  	}
  
 +	#[cfg(test)]
 +	test_fuzz::dont_care!(crate::mock::Test);
 +
++	#[cfg(test)]
 +	type AccountIdFor<T> = <T as frame_system::Config>::AccountId;
 +
 +	#[derive(Clone, serde::Deserialize, serde::Serialize)]
