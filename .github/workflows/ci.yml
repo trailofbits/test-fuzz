@@ -203,12 +203,12 @@ jobs:
       - name: Install llvm
         run: sudo apt-get install llvm
 
-      - name: Install afl 0.12.1
-        run: cargo install afl --version=0.12.1
+      - name: Install afl 0.12.2
+        run: cargo install afl --version=0.12.2
 
-      - name: Require afl 0.12.2
+      - name: Require afl 0.12.3
         run: |
-          sed -i 's/^\(afl = {.*\<version = "\)[^"]*\(".*}\)$/\1=0.12.2\2/' test-fuzz/Cargo.toml
+          sed -i 's/^\(afl = {.*\<version = "\)[^"]*\(".*}\)$/\1=0.12.3\2/' test-fuzz/Cargo.toml
 
       - name: Test
         run: |
