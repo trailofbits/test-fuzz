@@ -167,9 +167,6 @@ jobs:
   test-uninstalled-cargo-afl:
     runs-on: ubuntu-latest
 
-    env:
-      RUSTUP_TOOLCHAIN: nightly
-
     steps:
       - uses: actions/checkout@v3
 
@@ -181,9 +178,6 @@ jobs:
 
   test-incompatible-cargo-afl:
     runs-on: ubuntu-latest
-
-    env:
-      RUSTUP_TOOLCHAIN: nightly
 
     steps:
       - uses: actions/checkout@v3
@@ -202,9 +196,6 @@ jobs:
 
   test-newer-afl:
     runs-on: ubuntu-latest
-
-    env:
-      RUSTUP_TOOLCHAIN: nightly
 
     steps:
       - uses: actions/checkout@v3
@@ -229,9 +220,6 @@ jobs:
   test-incompatible-test-fuzz:
     runs-on: ubuntu-latest
 
-    env:
-      RUSTUP_TOOLCHAIN: nightly
-
     steps:
       - uses: actions/checkout@v3
 
@@ -254,9 +242,6 @@ jobs:
 
   test-newer-test-fuzz:
     runs-on: ubuntu-latest
-
-    env:
-      RUSTUP_TOOLCHAIN: nightly
 
     steps:
       - uses: actions/checkout@v3
