@@ -613,8 +613,9 @@ fn check_dependency_version(
         );
         if !as_version_req(dependency_version).matches(binary_version) {
             eprintln!(
-                "`{name}` depends on `{dependency} {dependency_version}`, which is newer than `{binary} {binary_version}`. Consider upgrading with \
-                `cargo install {krate} --force --version '>={dependency_version}'`."
+                "`{name}` depends on `{dependency} {dependency_version}`, which is newer than \
+                 `{binary} {binary_version}`. Consider upgrading with `cargo install {krate} \
+                 --force --version '>={dependency_version}'`."
             );
         }
     } else {

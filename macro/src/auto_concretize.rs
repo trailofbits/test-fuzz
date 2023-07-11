@@ -23,15 +23,15 @@ impl fmt::Display for Error {
         match self.kind {
             Kind::None => write!(
                 f,
-                "either (1) tests have not been run or (2) tests produced no {}concretizations for \
-                `{}`",
+                "either (1) tests have not been run or (2) tests produced no {}concretizations \
+                 for `{}`",
                 if self.impl_ { "impl " } else { "" },
                 self.target,
             ),
             Kind::Multiple => write!(
                 f,
                 "tests produced multiple {}concretizations for {}. View them with \
-                `--display={}concretizations --exact {}`.",
+                 `--display={}concretizations --exact {}`.",
                 if self.impl_ { "impl " } else { "" },
                 self.target,
                 self.target,
