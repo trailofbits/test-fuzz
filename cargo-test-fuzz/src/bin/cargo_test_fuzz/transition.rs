@@ -32,7 +32,7 @@ struct TestFuzzWithDeprecations {
     #[arg(
         long,
         help = "Move one target's crashes, hangs, and work queue to its corpus; to consolidate \
-        all targets, use --consolidate-all"
+                all targets, use --consolidate-all"
     )]
     consolidate: bool,
     #[arg(long, hide = true)]
@@ -41,9 +41,9 @@ struct TestFuzzWithDeprecations {
         long,
         value_name = "OBJECT",
         help = "Display concretizations, corpus, crashes, `impl` concretizations, hangs, or work \
-        queue. By default, corpus uses an uninstrumented fuzz target; the others use an \
-        instrumented fuzz target. To display the corpus with instrumentation, use --display \
-        corpus-instrumented."
+                queue. By default, corpus uses an uninstrumented fuzz target; the others use an \
+                instrumented fuzz target. To display the corpus with instrumentation, use \
+                --display corpus-instrumented."
     )]
     display: Option<Object>,
     #[arg(long, help = "Target name is an exact name rather than a substring")]
@@ -51,7 +51,8 @@ struct TestFuzzWithDeprecations {
     #[arg(
         long,
         help = "Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 \
-        if an error occurred; implies --no-ui, does not imply --run-until-crash or -- -V <SECONDS>"
+                if an error occurred; implies --no-ui, does not imply --run-until-crash or -- -V \
+                <SECONDS>"
     )]
     exit_code: bool,
     #[arg(
@@ -85,14 +86,14 @@ struct TestFuzzWithDeprecations {
         long,
         value_name = "OBJECT",
         help = "Replay corpus, crashes, hangs, or work queue. By default, corpus uses an \
-        uninstrumented fuzz target; the others use an instrumented fuzz target. To replay the \
-        corpus with instrumentation, use --replay corpus-instrumented."
+                uninstrumented fuzz target; the others use an instrumented fuzz target. To replay \
+                the corpus with instrumentation, use --replay corpus-instrumented."
     )]
     replay: Option<Object>,
     #[arg(
         long,
-        help = "Clear fuzzing data for one target, but leave corpus intact; to reset all \
-        targets, use --reset-all"
+        help = "Clear fuzzing data for one target, but leave corpus intact; to reset all targets, \
+                use --reset-all"
     )]
     reset: bool,
     #[arg(long, hide = true)]
@@ -109,8 +110,8 @@ struct TestFuzzWithDeprecations {
     test: Option<String>,
     #[arg(
         long,
-        help = "Number of seconds to consider a hang when fuzzing or replaying (equivalent \
-        to -- -t <TIMEOUT * 1000> when fuzzing)"
+        help = "Number of seconds to consider a hang when fuzzing or replaying (equivalent to -- \
+                -t <TIMEOUT * 1000> when fuzzing)"
     )]
     timeout: Option<u64>,
     #[arg(long, help = "Show build output when displaying/replaying")]
