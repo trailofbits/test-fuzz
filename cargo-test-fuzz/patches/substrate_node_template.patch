@@ -12,7 +12,7 @@ index 77c42a5..2afd7b4 100644
 +[dependencies.serde]
 +version = '1.0.130'
 diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
-index 9550d3d..48fc3bd 100644
+index 9550d3d..4306d04 100644
 --- a/pallets/template/src/lib.rs
 +++ b/pallets/template/src/lib.rs
 @@ -62,13 +62,50 @@ pub mod pallet {

@@ -10,10 +10,10 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 7f00f43..38eacf7 100644
+index 0fcd81c..ea84548 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
-@@ -27,5 +27,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
+@@ -33,5 +33,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
  }
  
 -#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -126,7 +126,7 @@ index c09fc1c..7f887e5 100644
  impl<'a> InvokeContext<'a> {
      #[allow(clippy::too_many_arguments)]
 diff --git a/program-runtime/src/log_collector.rs b/program-runtime/src/log_collector.rs
-index 57ac1ce..aacc5cf 100644
+index ead575d..b1525b0 100644
 --- a/program-runtime/src/log_collector.rs
 +++ b/program-runtime/src/log_collector.rs
 @@ -4,4 +4,5 @@ use std::{cell::RefCell, rc::Rc};
@@ -176,7 +176,7 @@ index 0e2e495..a380f89 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index dac5ede..7b94631 100644
+index e7123ae..0068225 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -23,4 +23,7 @@ solana_rbpf = { workspace = true }
@@ -202,17 +202,17 @@ index 1c0cfea..fb84491 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 7e8368d..56d903d 100644
+index 6f47005..f7bcfa5 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -67,5 +67,5 @@ rand = { workspace = true, optional = true }
+@@ -68,5 +68,5 @@ rand = { workspace = true, optional = true }
  rand_chacha = { workspace = true, optional = true }
  rustversion = { workspace = true }
 -serde = { workspace = true }
 +serde = { version = "1.0.152", features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -83,4 +83,6 @@ uriparse = { workspace = true }
+@@ -84,4 +84,6 @@ uriparse = { workspace = true }
  wasm-bindgen = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -231,7 +231,7 @@ index 6957b95..88d5ab1 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index fc7c121..9713825 100644
+index 8e8247b..a0a5c17 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -36,5 +36,5 @@ pub type IndexOfAccount = u16;
