@@ -25,7 +25,7 @@ impl Ord for OrdType {
 
 impl PartialOrd for OrdType {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        <String as PartialOrd>::partial_cmp(&self.to_string(), &other.to_string())
+        Some(self.cmp(other))
     }
 }
 
