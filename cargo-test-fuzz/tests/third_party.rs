@@ -1,5 +1,4 @@
 use assert_cmd::Command;
-use bitflags::bitflags;
 use cargo_metadata::MetadataCommand;
 use once_cell::sync::Lazy;
 use option_set::option_set;
@@ -16,7 +15,6 @@ use tempfile::tempdir_in;
 use testing::CommandExt;
 
 option_set! {
-    #[derive(Copy, Clone, Eq, PartialEq)]
     struct Flags: UpperSnake + u8 {
         const EXPENSIVE = 1 << 0;
         const SKIP = 1 << 1;
