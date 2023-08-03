@@ -10,7 +10,7 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 0fcd81c..ea84548 100644
+index ff217f0..61c44b1 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
 @@ -33,5 +33,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
@@ -21,7 +21,7 @@ index 0fcd81c..ea84548 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index c09fc1c..7f887e5 100644
+index 808891b..7f456ed 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -117,4 +117,5 @@ impl fmt::Display for AllocErr {
@@ -36,7 +36,7 @@ index c09fc1c..7f887e5 100644
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -151,8 +153,52 @@ pub struct SyscallContext {
+@@ -156,8 +158,52 @@ pub struct SerializedAccountMetadata {
  }
  
 +pub fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
@@ -89,7 +89,7 @@ index c09fc1c..7f887e5 100644
 +    #[serde(serialize_with = "serialize_ref", deserialize_with = "deserialize_ref")]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -161,6 +207,9 @@ pub struct InvokeContext<'a> {
+@@ -166,6 +212,9 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
@@ -99,7 +99,7 @@ index c09fc1c..7f887e5 100644
 +    #[serde(skip)]
      pub programs_updated_only_for_global_cache: &'a mut LoadedProgramsForTxBatch,
      pub feature_set: Arc<FeatureSet>,
-@@ -172,4 +221,25 @@ pub struct InvokeContext<'a> {
+@@ -177,4 +226,25 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -188,10 +188,10 @@ index e7123ae..0068225 100644
  [dev-dependencies]
  memoffset = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 1c0cfea..fb84491 100644
+index c8afee7..74f380e 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -435,6 +435,7 @@ pub fn process_instruction(
+@@ -368,6 +368,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
@@ -231,7 +231,7 @@ index 6957b95..88d5ab1 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 8e8247b..a0a5c17 100644
+index 21e8d20..14b6aff 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -36,5 +36,5 @@ pub type IndexOfAccount = u16;
