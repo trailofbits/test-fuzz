@@ -1376,13 +1376,6 @@
     ],
     "serde": [
       {
-        "avatar": "https://avatars3.githubusercontent.com/u/11965399?v=4",
-        "id": 30,
-        "kind": "team",
-        "login": "github:serde-rs:owners",
-        "name": "owners"
-      },
-      {
         "avatar": "https://avatars.githubusercontent.com/u/1940490?v=4",
         "id": 3618,
         "kind": "user",
@@ -1392,13 +1385,6 @@
     ],
     "serde_derive": [
       {
-        "avatar": "https://avatars3.githubusercontent.com/u/11965399?v=4",
-        "id": 30,
-        "kind": "team",
-        "login": "github:serde-rs:owners",
-        "name": "owners"
-      },
-      {
         "avatar": "https://avatars.githubusercontent.com/u/1940490?v=4",
         "id": 3618,
         "kind": "user",
@@ -1407,13 +1393,6 @@
       }
     ],
     "serde_json": [
-      {
-        "avatar": "https://avatars3.githubusercontent.com/u/11965399?v=4",
-        "id": 30,
-        "kind": "team",
-        "login": "github:serde-rs:owners",
-        "name": "owners"
-      },
       {
         "avatar": "https://avatars.githubusercontent.com/u/1940490?v=4",
         "id": 3618,
