@@ -188,7 +188,7 @@ index e7123ae..0068225 100644
  [dev-dependencies]
  memoffset = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index a9ccec2..90c5132 100644
+index f9cf519..a7ef0e5 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -368,6 +368,7 @@ pub fn process_instruction(
@@ -220,10 +220,10 @@ index 6f47005..f7bcfa5 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 6957b95..88d5ab1 100644
+index fa358f1..9fbb2fd 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -874,5 +874,5 @@ lazy_static! {
+@@ -896,5 +896,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
