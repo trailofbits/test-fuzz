@@ -19,7 +19,7 @@ impl<'de, 'a> Deserialize<'de> for Bar<'a> {
     where
         D: Deserializer<'de>,
     {
-        <()>::deserialize(deserializer).map(|_| Bar(&Foo))
+        <()>::deserialize(deserializer).map(|()| Bar(&Foo))
     }
 }
 
