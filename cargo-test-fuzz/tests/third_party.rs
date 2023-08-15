@@ -133,7 +133,7 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
             .unwrap();
 
         writeln!(file)
-            .and_then(|_| writeln!(file, "[workspace]"))
+            .and_then(|()| writeln!(file, "[workspace]"))
             .unwrap();
     }
 
