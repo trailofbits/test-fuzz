@@ -141,11 +141,19 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
     // incompatible with `syn:1.0.84`.
     // smoelius: The `pin-project` issue has been resolved. But Substrate now chokes when
     // `libp2p-swarm-derive` is upgraded from 0.30.1 to 0.30.2.
-    Command::new("cargo")
-        .current_dir(&subdir)
-        .args(["update"])
-        .logged_assert()
-        .success();
+    // smoelius: Substrate now chokes when `x25519-dalek` is upgraded from 2.0.0-pre.1 to 2.0.0.
+    // However, rather than try to upgrade everything and then downgrade just `x25519-dalek`
+    // (similar to how I did for `libp2p-swarm-derive`), I am instead trying to upgrade just the
+    // packages that need it.
+    for package in ["libc", "num-bigint@0.4.0", "tempfile"] {
+        #[allow(clippy::let_unit_value)]
+        let () = Command::new("cargo")
+            .current_dir(&subdir)
+            .args(["update", "-p", package])
+            .logged_assert()
+            .try_success()
+            .map_or((), |_| ());
+    }
 
     // smoelius: The `libp2p-swarm-derive` issue appears to have been resolved.
     #[cfg(any())]
