@@ -11,7 +11,7 @@
   {
     "flags": ["EXPENSIVE"],
     "url": "https://github.com/paritytech/substrate",
-    "rev": "c5c502cb5a0a088ee6a5c0601615b4a2079fbe56",
+    "rev": "e526f80a91f75a3811059d4ee19b0f190005c5a2",
     "patch": "substrate_client_transaction_pool.patch",
     "subdir": ".",
     "package": "sc-transaction-pool",
@@ -29,7 +29,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP"],
     "url": "https://github.com/solana-labs/solana",
-    "rev": "e700dde6177941c9d480096846f240db27fe25dd",
+    "rev": "6521a100f76e6aeb4e9e1e43bf8ddf6675a439e0",
     "patch": "solana.patch",
     "subdir": ".",
     "package": "solana-bpf-loader-program",
@@ -38,7 +38,7 @@
   {
     "flags": [],
     "url": "https://github.com/substrate-developer-hub/substrate-node-template",
-    "rev": "e6bf90cfbf774fc284056068fe75e3e97eeb0306",
+    "rev": "f621c2a4c6d95e2557e0e5b87dbd8a178d3d5bfd",
     "patch": "substrate_node_template.patch",
     "subdir": ".",
     "package": "pallet-template",

@@ -21,7 +21,7 @@ index ff217f0..61c44b1 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 808891b..7f456ed 100644
+index 3506671..723ab02 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -117,4 +117,5 @@ impl fmt::Display for AllocErr {
@@ -188,10 +188,10 @@ index e7123ae..0068225 100644
  [dev-dependencies]
  memoffset = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index f9cf519..a7ef0e5 100644
+index ed45290..c0be808 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -368,6 +368,7 @@ pub fn process_instruction(
+@@ -356,6 +356,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
@@ -202,11 +202,11 @@ index f9cf519..a7ef0e5 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 6f47005..f7bcfa5 100644
+index 629fbe5..3f5ab42 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -68,5 +68,5 @@ rand = { workspace = true, optional = true }
- rand_chacha = { workspace = true, optional = true }
+ rand0-7 = { package = "rand", version = "0.7", optional = true }
  rustversion = { workspace = true }
 -serde = { workspace = true }
 +serde = { version = "1.0.152", features = ["rc"] }
@@ -220,10 +220,10 @@ index 6f47005..f7bcfa5 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index fa358f1..9fbb2fd 100644
+index cd76899..9aec31d 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -896,5 +896,5 @@ lazy_static! {
+@@ -890,5 +890,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
