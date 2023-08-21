@@ -1381,6 +1381,13 @@
         "kind": "user",
         "login": "dtolnay",
         "name": "David Tolnay"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/11965399?v=4",
+        "id": 8138,
+        "kind": "team",
+        "login": "github:serde-rs:publish",
+        "name": "publish"
       }
     ],
     "serde_derive": [
@@ -1390,6 +1397,13 @@
         "kind": "user",
         "login": "dtolnay",
         "name": "David Tolnay"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/11965399?v=4",
+        "id": 8138,
+        "kind": "team",
+        "login": "github:serde-rs:publish",
+        "name": "publish"
       }
     ],
     "serde_json": [
@@ -1399,6 +1413,13 @@
         "kind": "user",
         "login": "dtolnay",
         "name": "David Tolnay"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/11965399?v=4",
+        "id": 8138,
+        "kind": "team",
+        "login": "github:serde-rs:publish",
+        "name": "publish"
       }
     ],
     "sha-1": [
