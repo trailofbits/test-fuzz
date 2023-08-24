@@ -1,9 +1,6 @@
-#![cfg_attr(dylint_lib = "crate_wide_allow", allow(crate_wide_allow))]
+#![cfg_attr(dylint_lib = "general", allow(crate_wide_allow))]
 // smoelius: All work is done in temporary directories. So there are no races.
-#![cfg_attr(
-    dylint_lib = "non_thread_safe_call_in_test",
-    allow(non_thread_safe_call_in_test)
-)]
+#![cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #![cfg_attr(dylint_lib = "try_io_result", allow(try_io_result))]
 
 use anyhow::Result;

@@ -1,4 +1,4 @@
-#![cfg_attr(dylint_lib = "crate_wide_allow", allow(crate_wide_allow))]
+#![cfg_attr(dylint_lib = "general", allow(crate_wide_allow))]
 #![allow(clippy::default_constructed_unit_structs)]
 #![allow(clippy::disallowed_names)]
 #![allow(clippy::ptr_arg)]
