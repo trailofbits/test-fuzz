@@ -19,10 +19,7 @@ mod tests {
     use super::cargo_test_fuzz as cargo;
     use anyhow::Result;
 
-    #[cfg_attr(
-        dylint_lib = "non_thread_safe_call_in_test",
-        allow(non_thread_safe_call_in_test)
-    )]
+    #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     #[test]
     fn build_no_instrumentation_with_target() {
         #[allow(clippy::unwrap_used)]

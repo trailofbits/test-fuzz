@@ -1,4 +1,4 @@
-#![cfg_attr(dylint_lib = "crate_wide_allow", allow(crate_wide_allow))]
+#![cfg_attr(dylint_lib = "general", allow(crate_wide_allow))]
 #![allow(clippy::use_self)]
 #![deny(clippy::expect_used)]
 #![deny(clippy::unwrap_used)]
@@ -105,10 +105,7 @@ struct Executable {
 }
 
 impl Debug for Executable {
-    #[cfg_attr(
-        dylint_lib = "non_local_effect_before_error_return",
-        allow(non_local_effect_before_error_return)
-    )]
+    #[cfg_attr(dylint_lib = "general", allow(non_local_effect_before_error_return))]
     fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
         let test_fuzz_version = self
             .test_fuzz_version

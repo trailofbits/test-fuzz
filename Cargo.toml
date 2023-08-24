@@ -12,8 +12,8 @@ resolver = "2"
 
 [workspace.metadata.dylint]
 libraries = [
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/general/*" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/supplementary/*" },
+    { git = "https://github.com/trailofbits/dylint", pattern = "examples/general" },
+    { git = "https://github.com/trailofbits/dylint", pattern = "examples/supplementary" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/collapsible_unwrap" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/const_path_join" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/inconsistent_qualification" },
