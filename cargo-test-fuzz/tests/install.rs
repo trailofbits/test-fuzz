@@ -47,7 +47,7 @@ fn uninstalled_cargo_afl() -> Result<()> {
 #[test]
 fn incompatible_cargo_afl() -> Result<()> {
     run_test(
-        Some("0.11.0"),
+        Some("0.13.2"),
         &[],
         &[
             "^Error: `[^`]*` depends on `afl [^`]*`, which is incompatible with `cargo-afl \
@@ -76,9 +76,9 @@ fn incompatible_cargo_afl() -> Result<()> {
 #[test]
 fn newer_afl() -> Result<()> {
     run_test(
-        Some("0.12.2"),
+        Some("0.13.2"),
         &[(
-            r#"s/^\(afl = {.*\<version = "\)[^"]*\(".*}\)$/\1=0.12.3\2/"#,
+            r#"s/^\(afl = {.*\<version = "\)[^"]*\(".*}\)$/\1=0.13.3\2/"#,
             &["test-fuzz/Cargo.toml"],
         )],
         &[
@@ -177,7 +177,7 @@ fn run_test(
 ) -> Result<()> {
     sandbox(|sh| {
         if let Some(version) = afl_version {
-            cmd!(sh, "cargo install afl --version={version} --quiet").run()?;
+            cmd!(sh, "cargo install cargo-afl --version={version} --quiet").run()?;
         }
 
         for &(script, paths) in sed_scripts_and_paths {
