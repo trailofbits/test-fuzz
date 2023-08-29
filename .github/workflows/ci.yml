@@ -122,14 +122,11 @@ jobs:
       - name: Install protoc
         run: sudo apt-get install protobuf-compiler
 
-      - name: Install afl
-        run: cargo install afl
+      - name: Install cargo-afl
+        run: cargo install cargo-afl
 
       - name: Run afl-system-config
-        run: |
-          test "$(ls ~/.local/share/afl.rs | wc -l)" -eq 1
-          test "$(ls ~/.local/share/afl.rs/rustc-* | wc -l)" -eq 1
-          sudo "$HOME"/.local/share/afl.rs/rustc-*/afl.rs-*/afl/bin/afl-system-config
+        run: cargo afl system-config
 
       # smoelius: The wasm32 target is needed for some Substrate tests, regardless of the toolchain
       # used to build test-fuzz.
