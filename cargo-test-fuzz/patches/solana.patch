@@ -21,7 +21,7 @@ index 02983f9..da311b8 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index a105048..d04ae6a 100644
+index 12f8230..c3ff480 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -117,4 +117,5 @@ impl fmt::Display for AllocErr {
@@ -176,10 +176,10 @@ index 0e2e495..a380f89 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index f979b73..fc996b0 100644
+index 16a52c0..e2683ac 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -24,4 +24,7 @@ solana_rbpf = { workspace = true }
+@@ -23,4 +23,7 @@ solana_rbpf = { workspace = true }
  thiserror = { workspace = true }
  
 +serde = "1.0"
@@ -188,10 +188,10 @@ index f979b73..fc996b0 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 45430a3..68d1d49 100644
+index 342d383..d48c3bc 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -357,6 +357,7 @@ pub fn process_instruction(
+@@ -353,6 +353,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
@@ -202,17 +202,17 @@ index 45430a3..68d1d49 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 629fbe5..3f5ab42 100644
+index 061b16c..3d02d73 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -68,5 +68,5 @@ rand = { workspace = true, optional = true }
+@@ -69,5 +69,5 @@ rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
  rustversion = { workspace = true }
 -serde = { workspace = true }
 +serde = { version = "1.0.152", features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -84,4 +84,6 @@ uriparse = { workspace = true }
+@@ -85,4 +85,6 @@ uriparse = { workspace = true }
  wasm-bindgen = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -220,10 +220,10 @@ index 629fbe5..3f5ab42 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 52db257..174775a 100644
+index 386a696..8f73f70 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -900,5 +900,5 @@ lazy_static! {
+@@ -890,5 +890,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]

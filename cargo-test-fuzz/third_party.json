@@ -2,7 +2,7 @@
   {
     "flags": [],
     "url": "https://github.com/CosmWasm/cw-plus",
-    "rev": "dd2ca3dd5558b4a65ca112b2f655ae043d956c20",
+    "rev": "362423321cfd16ba51590a90413a048e47e1063a",
     "patch": "cw-plus.patch",
     "subdir": ".",
     "package": "cw20-base",
@@ -29,7 +29,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP"],
     "url": "https://github.com/solana-labs/solana",
-    "rev": "92a0b310c1619f1951d18b49e41417699f37bc49",
+    "rev": "a145ade564c5181b264247adb4a3347eb883aed6",
     "patch": "solana.patch",
     "subdir": ".",
     "package": "solana-bpf-loader-program",
@@ -38,7 +38,7 @@
   {
     "flags": [],
     "url": "https://github.com/substrate-developer-hub/substrate-node-template",
-    "rev": "f3083ac2c10994bfbc32135c17ed11f56c5a9874",
+    "rev": "41ad4a6c9d712ac4b6e16e79a8b3837af8234f46",
     "patch": "substrate_node_template.patch",
     "subdir": ".",
     "package": "pallet-template",
