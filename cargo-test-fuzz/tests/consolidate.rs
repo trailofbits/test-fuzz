@@ -42,7 +42,7 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
         .logged_assert()
         .success();
 
-    assert_eq!(read_dir(&corpus).unwrap().count(), 1);
+    assert_eq!(1, read_dir(&corpus).unwrap().count());
 
     retry(3, || {
         let mut args = vec!["--no-ui"];

@@ -14,6 +14,7 @@ resolver = "2"
 libraries = [
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/general" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/supplementary" },
+    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/assert_eq_arg_misordering" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/collapsible_unwrap" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/const_path_join" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/inconsistent_qualification" },
