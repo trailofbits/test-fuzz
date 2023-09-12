@@ -17,8 +17,8 @@ static README_PATH: Lazy<PathBuf> =
 fn versions_are_equal() {
     for package in &METADATA.packages {
         assert_eq!(
-            package.version.to_string(),
             env!("CARGO_PKG_VERSION"),
+            package.version.to_string(),
             "{}",
             package.name
         );
