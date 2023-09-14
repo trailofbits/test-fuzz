@@ -1,0 +1,38 @@
+name: Update patches
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#triggering-further-workflow-runs
+          # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#push-using-ssh-deploy-keys
+          ssh-key: ${{ secrets.PR_SSH_KEY }}
+
+      # smoelius: The next use of `actions/cache` should match what is in ci.yml.
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.dylint_drivers/
+            ~/.rustup/toolchains/
+            target/dylint/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Update patches
+        run: scripts/update_patches.sh
+
+      - name: Create pull request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: Update patches
+          token: ${{ secrets.PR_GITHUB_TOKEN }}
+          branch-suffix: random
