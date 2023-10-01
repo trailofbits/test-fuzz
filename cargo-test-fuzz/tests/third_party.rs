@@ -195,7 +195,7 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
             ])
             .logged_assert()
             .success()
-            .stdout(predicate::str::is_match(r#"(?m)^[[:xdigit:]]{40}:"#).unwrap());
+            .stdout(predicate::str::is_match(r"(?m)^[[:xdigit:]]{40}:").unwrap());
 
         Command::cargo_bin("cargo-test-fuzz")
             .unwrap()
@@ -225,7 +225,7 @@ fn check_test_fuzz_dependency(subdir: &Path, test_package: &str) {
         .packages
         .iter()
         .find(|package| package.name == test_package)
-        .unwrap_or_else(|| panic!("Could not find package `{}`", test_package));
+        .unwrap_or_else(|| panic!("Could not find package `{test_package}`"));
     let dep = package
         .dependencies
         .iter()
