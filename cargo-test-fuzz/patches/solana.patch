@@ -10,10 +10,10 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index 44fb070..547d338 100644
+index f923922..0054d03 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
-@@ -33,5 +33,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
+@@ -32,5 +32,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
  }
  
 -#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -188,10 +188,10 @@ index 16a52c0..e2683ac 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 9a91286..c68abaf 100644
+index 82c6237..6abf051 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -371,6 +371,7 @@ pub fn process_instruction(
+@@ -388,6 +388,7 @@ pub fn process_instruction(
  }
  
 -fn process_instruction_inner(
@@ -220,10 +220,10 @@ index 061b16c..3d02d73 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 418d328..345ffc9 100644
+index b414a5f..47ad755 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -900,5 +900,5 @@ lazy_static! {
+@@ -909,5 +909,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
