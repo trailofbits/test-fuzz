@@ -23,11 +23,8 @@ subprocess = "0.2"
 syn = { version = "2.0", features = ["full", "parsing", "visit", "visit-mut"] }
 toolchain_find = "0.4"
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=4.0.1" }
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=4.0.1", optional = true }
 
 [features]
-__auto_concretize = []
+__auto_concretize = ["internal"]
 __persistent = []
-__serde_bincode = ["internal/__serde_bincode"]
-__serde_cbor = ["internal/__serde_cbor"]
-__serde_cbor4ii = ["internal/__serde_cbor4ii"]

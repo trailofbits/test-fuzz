@@ -9,7 +9,7 @@ pub use afl;
 // smoelius: Unfortunately, the same trick doesn't work for serde.
 // https://github.com/serde-rs/serde/issues/1465
 
-pub use internal::{serde_format, SerdeFormat};
+pub use internal::serde_format;
 
 mod utils;
 pub use utils::{deserialize_ref, serialize_ref};

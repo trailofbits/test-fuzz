@@ -9,26 +9,10 @@ authors = ["Samuel E. Moelius III <sam@moeli.us>"]
 license = "AGPL-3.0 WITH mif-exception"
 repository = "https://github.com/trailofbits/test-fuzz"
 
-# smoelius: https://github.com/rust-lang/cargo/issues/1839
-# Because of the above issue, the crate for the default format (bincode) must be included regardless
-# of whether it is selected. A test-fuzz test (`link`) verifies that the crate's code is not linked
-# in when another format is selected.
-
 [dependencies]
-bincode = "1.3"
-cbor4ii = { version = "0.3", features = ["serde1", "use_std"], optional = true }
 hex = "0.4"
 num-traits = "0.2"
 serde = { version = "1.0", features = ["derive"] }
-serde_cbor = { version = "0.11", optional = true }
 sha-1 = "0.10"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=4.0.1" }
-
-[features]
-__serde_bincode = []
-__serde_cbor = ["serde_cbor"]
-__serde_cbor4ii = ["cbor4ii"]
-
-[package.metadata.cargo-udeps.ignore]
-normal = ["bincode"]

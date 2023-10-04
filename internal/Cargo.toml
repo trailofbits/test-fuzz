@@ -9,15 +9,24 @@ authors = ["Samuel E. Moelius III <sam@moeli.us>"]
 license = "AGPL-3.0 WITH mif-exception"
 repository = "https://github.com/trailofbits/test-fuzz"
 
+# smoelius: https://github.com/rust-lang/cargo/issues/1839
+# Because of the above issue, the crate for the default format (bincode) must be included regardless
+# of whether it is selected. A test-fuzz test (`link`) verifies that the crate's code is not linked
+# in when another format is selected.
+
 [dependencies]
 cargo_metadata = "0.18"
-proc-macro2 = "1.0"
-quote = "1.0"
 serde = "1.0"
-strum_macros = "0.25"
+
+bincode = "1.3"
+cbor4ii = { version = "0.3", features = ["serde1", "use_std"], optional = true }
+serde_cbor = { version = "0.11", optional = true }
 
 [features]
 __auto_concretize = []
 __serde_bincode = []
-__serde_cbor = []
-__serde_cbor4ii = []
+__serde_cbor = ["serde_cbor"]
+__serde_cbor4ii = ["cbor4ii"]
+
+[package.metadata.cargo-udeps.ignore]
+normal = ["bincode"]

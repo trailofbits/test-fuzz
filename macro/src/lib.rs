@@ -2,7 +2,6 @@
 #![cfg_attr(feature = "__auto_concretize", feature(proc_macro_span))]
 
 use darling::{ast::NestedMeta, FromMeta};
-use internal::serde_format;
 use itertools::MultiUnzip;
 use once_cell::sync::Lazy;
 use proc_macro::TokenStream;
@@ -453,7 +452,6 @@ fn map_method_or_fn(
         )
     };
 
-    let serde_format = serde_format();
     let write_concretizations = quote! {
         let impl_concretization = [
             #(#impl_ty_names),*
@@ -628,7 +626,7 @@ fn map_method_or_fn(
                 let args = Args(
                     #(#args_is),*
                 );
-                test_fuzz::runtime::write_args(#serde_format, &args);
+                test_fuzz::runtime::write_args(&args);
             }
 
             struct UsingReader<R>(R);
@@ -639,7 +637,7 @@ fn map_method_or_fn(
                     struct Args #ty_generics (
                         #(#pub_arg_tys),*
                     ) #args_where_clause;
-                    let args = test_fuzz::runtime::read_args::<Args #ty_generics_as_turbofish, _>(#serde_format, reader);
+                    let args = test_fuzz::runtime::read_args::<Args #ty_generics_as_turbofish, _>(reader);
                     args.map(|args| #mod_ident :: Args(
                         #(#args_is),*
                     ))
