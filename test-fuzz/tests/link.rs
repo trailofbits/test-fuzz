@@ -13,7 +13,7 @@ fn link() {
             "--manifest-path",
             &MANIFEST_PATH,
             "--features",
-            &("test-fuzz/".to_owned() + test_fuzz::serde_format().as_feature()),
+            &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
         ])
         .logged_assert()
         .success();

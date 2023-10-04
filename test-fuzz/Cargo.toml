@@ -40,18 +40,12 @@ auto_concretize = [
 ]
 serde_bincode = [
     "internal/__serde_bincode",
-    "runtime/__serde_bincode",
-    "test-fuzz-macro/__serde_bincode",
 ]
 serde_cbor = [
     "internal/__serde_cbor",
-    "runtime/__serde_cbor",
-    "test-fuzz-macro/__serde_cbor",
 ]
 serde_cbor4ii = [
     "internal/__serde_cbor4ii",
-    "runtime/__serde_cbor4ii",
-    "test-fuzz-macro/__serde_cbor4ii",
 ]
 __persistent = ["afl", "test-fuzz-macro/__persistent"]
 

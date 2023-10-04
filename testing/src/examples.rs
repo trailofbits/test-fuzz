@@ -23,7 +23,7 @@ pub static MANIFEST_PATH: Lazy<String> = Lazy::new(|| {
 pub fn test(krate: &str, test: &str) -> Result<Command> {
     // smoelius: Put --message-format=json last so that it is easy to copy-and-paste the command
     // without it.
-    let serde_format_feature = "test-fuzz/".to_owned() + serde_format().as_feature();
+    let serde_format_feature = "test-fuzz/".to_owned() + serde_format::as_feature();
     let mut args = vec![
         "test",
         "--manifest-path",
@@ -93,7 +93,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
 }
 
 pub fn test_fuzz_all() -> Result<Command> {
-    let serde_format_feature = "test-fuzz/".to_owned() + serde_format().as_feature();
+    let serde_format_feature = "test-fuzz/".to_owned() + serde_format::as_feature();
     let mut args = vec![
         "test-fuzz",
         "--manifest-path",

@@ -3,7 +3,7 @@ use internal::{
         concretizations_directory_from_args_type, corpus_directory_from_args_type,
         impl_concretizations_directory_from_args_type,
     },
-    SerdeFormat,
+    serde_format,
 };
 use serde::{de::DeserializeOwned, Serialize};
 use sha1::{Digest, Sha1};
@@ -20,9 +20,6 @@ use std::{
 pub use num_traits;
 
 pub mod traits;
-
-#[cfg(any(serde_default, feature = "__serde_bincode"))]
-const BYTE_LIMIT: u64 = 1024 * 1024 * 1024;
 
 // smoelius: TryDebug, etc. use Nikolai Vazquez's trick from `impls`.
 // https://github.com/nvzqz/impls#how-it-works
@@ -160,33 +157,9 @@ pub fn write_concretization<T>(args: &[&str]) {
     write_data(&concretizations, data.as_bytes()).unwrap();
 }
 
-#[allow(unused_variables)]
-pub fn write_args<T: Serialize>(serde_format: SerdeFormat, args: &T) {
+pub fn write_args<T: Serialize>(args: &T) {
     let corpus = corpus_directory_from_args_type::<T>();
-    let data = match serde_format {
-        #[cfg(any(serde_default, feature = "__serde_bincode"))]
-        SerdeFormat::Bincode => {
-            use bincode::Options;
-            // smoelius: From
-            // https://github.com/bincode-org/bincode/blob/c44b5e364e7084cdbabf9f94b63a3c7f32b8fb68/src/lib.rs#L102-L103 :
-            // /// **Warning:** the default configuration used by [`bincode::serialize`] is not
-            // /// the same as that used by the `DefaultOptions` struct. ...
-            // The point is that `bincode::serialize(..)` and `bincode::options().serialize(..)` use
-            // different encodings, even though the latter uses "default" options.
-            bincode::options()
-                .with_limit(BYTE_LIMIT)
-                .serialize(args)
-                .unwrap()
-        }
-        #[cfg(feature = "__serde_cbor")]
-        SerdeFormat::Cbor => serde_cbor::to_vec(args).unwrap(),
-        #[cfg(feature = "__serde_cbor4ii")]
-        SerdeFormat::Cbor4ii => {
-            let mut data = Vec::new();
-            cbor4ii::serde::to_writer(&mut data, args).unwrap();
-            data
-        }
-    };
+    let data = serde_format::serialize(args);
     write_data(&corpus, &data).unwrap();
 }
 
@@ -200,22 +173,6 @@ pub fn write_data(dir: &Path, data: &[u8]) -> io::Result<()> {
     write(path_buf, data)
 }
 
-pub fn read_args<T: DeserializeOwned, R: Read>(serde_format: SerdeFormat, reader: R) -> Option<T> {
-    match serde_format {
-        #[cfg(any(serde_default, feature = "__serde_bincode"))]
-        SerdeFormat::Bincode => {
-            use bincode::Options;
-            bincode::options()
-                .with_limit(BYTE_LIMIT)
-                .deserialize_from(reader)
-                .ok()
-        }
-        #[cfg(feature = "__serde_cbor")]
-        SerdeFormat::Cbor => serde_cbor::from_reader(reader).ok(),
-        #[cfg(feature = "__serde_cbor4ii")]
-        SerdeFormat::Cbor4ii => {
-            let reader = std::io::BufReader::new(reader);
-            cbor4ii::serde::from_reader(reader).ok()
-        }
-    }
+pub fn read_args<T: DeserializeOwned, R: Read>(reader: R) -> Option<T> {
+    serde_format::deserialize(reader)
 }

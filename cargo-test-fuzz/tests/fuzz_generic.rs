@@ -10,13 +10,14 @@ const TIMEOUT: &str = "60";
 fn fuzz_foo_qwerty() {
     // smoelius: When `bincode` is enabled, `cargo-afl` fails because "the program crashed with one
     // of the test cases provided."
-    // smoelius: `to_string` is used here because `SerdeFormat` won't necessarily contain the
-    // `Bincode` variant.
-    if serde_format().to_string() == "Bincode" {
-        fuzz("test_foo_qwerty", 2);
-    } else {
-        fuzz("test_foo_qwerty", 1);
-    };
+    fuzz(
+        "test_foo_qwerty",
+        if serde_format::serializes_variant_names() {
+            1
+        } else {
+            2
+        },
+    );
 }
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
