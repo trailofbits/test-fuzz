@@ -24,7 +24,7 @@ fn uninstalled_cargo_afl() -> Result<()> {
         &[],
         &[
             "^Error: Could not determine `cargo-afl` version. Is it installed? Try `cargo install \
-             afl`.$",
+             cargo-afl`.$",
         ],
     )
 }

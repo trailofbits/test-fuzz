@@ -583,7 +583,8 @@ fn cargo_afl_version() -> Result<Version> {
     let stdout = String::from_utf8_lossy(&output.stdout);
     let version = stdout.strip_prefix("cargo-afl ").ok_or_else(|| {
         anyhow!(
-            "Could not determine `cargo-afl` version. Is it installed? Try `cargo install afl`."
+            "Could not determine `cargo-afl` version. Is it installed? Try `cargo install \
+             cargo-afl`."
         )
     })?;
     Version::parse(version.trim_end()).map_err(Into::into)
