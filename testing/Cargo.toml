@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-testing"
-version = "4.0.1"
+version = "4.0.2"
 edition = "2021"
 publish = false
 
@@ -16,4 +16,4 @@ once_cell = "1.18"
 retry = "2.0"
 subprocess = "0.2"
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=4.0.1" }
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=4.0.2" }

@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.2
+
+- Significant refactoring regarding Serde format handling and Cargo feature use, but users should experience no differences ([#284](https://github.com/trailofbits/test-fuzz/pull/284))
+- Correct error message when `cargo-afl` cannot be found ([#286](https://github.com/trailofbits/test-fuzz/pull/286))
+
 ## 4.0.1
 
 - Remove last reference to `syn` 1.0 ([#244](https://github.com/trailofbits/test-fuzz/pull/244))
