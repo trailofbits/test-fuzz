@@ -34,6 +34,7 @@ testing = { path = "../testing", package = "test-fuzz-testing" }
 # https://github.com/djkoloski/rust_serialization_benchmark
 
 [features]
+self_ty_in_mod_name = ["test-fuzz-macro/__self_ty_in_mod_name"]
 serde_bincode = ["internal/__serde_bincode"]
 serde_cbor = ["internal/__serde_cbor"]
 serde_cbor4ii = ["internal/__serde_cbor4ii"]

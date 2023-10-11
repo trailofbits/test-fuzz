@@ -397,10 +397,10 @@ where
 
 ## `test-fuzz` package features
 
-The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book]. For example, to enable the `serde_cbor4ii` feature, use:
+The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book]. For example, to enable the `self_ty_in_mod_name` feature, use:
 
 ```toml
-test-fuzz = { version = "4.0", features = ["serde_cbor4ii"] }
+test-fuzz = { version = "4.0", features = ["self_ty_in_mod_name"] }
 ```
 
 The `test-fuzz` package currently supports the following features:

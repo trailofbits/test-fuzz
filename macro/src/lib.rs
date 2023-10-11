@@ -331,7 +331,7 @@ fn map_method_or_fn(
         args_as_turbofish(&args)
     };
 
-    let self_ty_base = self_ty.map(type_utils::type_base);
+    let self_ty_base = self_ty.and_then(type_utils::type_base);
 
     let (receiver, mut arg_tys, fmt_args, mut ser_args, de_args) = {
         let mut candidates = BTreeSet::new();
@@ -381,8 +381,7 @@ fn map_method_or_fn(
     };
 
     let target_ident = &sig.ident;
-    let renamed_target_ident = opts.rename.as_ref().unwrap_or(target_ident);
-    let mod_ident = Ident::new(&format!("{renamed_target_ident}_fuzz"), Span::call_site());
+    let mod_ident = mod_ident(opts, self_ty_base, target_ident);
 
     // smoelius: This is a hack. When `only_concretizations` is specified, the user should not have
     // to also specify trait bounds. But `Args` is used to get the module path at runtime via
@@ -1010,6 +1009,25 @@ fn args_from_autos(autos: &[Expr]) -> Expr {
             Args( #(#args),* )
         )
     }}
+}
+
+#[allow(unused_variables)]
+fn mod_ident(opts: &TestFuzzOpts, self_ty_base: Option<&Ident>, target_ident: &Ident) -> Ident {
+    let mut s = String::new();
+    if let Some(name) = &opts.rename {
+        s.push_str(&name.to_string());
+    } else {
+        #[cfg(feature = "__self_ty_in_mod_name")]
+        if let Some(ident) = self_ty_base {
+            s.push_str(&<str as heck::ToSnakeCase>::to_snake_case(
+                &ident.to_string(),
+            ));
+            s.push('_');
+        }
+        s.push_str(&target_ident.to_string());
+    }
+    s.push_str("_fuzz");
+    Ident::new(&s, Span::call_site())
 }
 
 fn log(tokens: &TokenStream2) {
