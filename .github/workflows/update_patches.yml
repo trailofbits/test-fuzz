@@ -34,5 +34,6 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         with:
           title: Update patches
+          commit-message: Update patches
           token: ${{ secrets.PR_GITHUB_TOKEN }}
           branch-suffix: random
