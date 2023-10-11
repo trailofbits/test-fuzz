@@ -10,6 +10,9 @@ fi
 
 # cargo clean
 
+# smoelius: Allow `iter-without-into-iter` until the following issue is resolved:
+# https://github.com/bitflags/bitflags/issues/379
+
 cargo +nightly clippy --features=test-fuzz/auto_concretize --all-targets -- \
     -D warnings \
     -W clippy::pedantic \
@@ -17,6 +20,7 @@ cargo +nightly clippy --features=test-fuzz/auto_concretize --all-targets -- \
     -A clippy::cognitive-complexity \
     -A clippy::collection-is-never-read \
     -A clippy::items-after-test-module \
+    -A clippy::iter-without-into-iter \
     -A clippy::let-underscore-untyped \
     -A clippy::missing-const-for-fn \
     -A clippy::missing-errors-doc \
