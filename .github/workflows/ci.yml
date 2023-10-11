@@ -104,6 +104,7 @@ jobs:
       matrix:
         serde_format: [bincode, cbor, cbor4ii]
         toolchain: [stable, nightly]
+        self_ty_in_mod_name: [false, true]
 
     steps:
       - uses: actions/checkout@v4
@@ -142,7 +143,8 @@ jobs:
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
             SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
           fi
-          TEST_CMD="cargo test --features=test-fuzz/serde_${{ matrix.serde_format }} -- --nocapture $SHUFFLE"
+          SELF_TY_IN_MOD_NAME="$(${{ matrix.self_ty_in_mod_name }} && echo '--features test-fuzz/self_ty_in_mod_name')" || true
+          TEST_CMD="cargo test --features=test-fuzz/serde_${{ matrix.serde_format }} $SELF_TY_IN_MOD_NAME -- --nocapture $SHUFFLE"
           $TEST_CMD
           if [[ ${{ github.event_name }} = 'schedule' ]] ||
             git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -w 'patches\|third_party' >/dev/null

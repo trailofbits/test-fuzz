@@ -74,15 +74,12 @@ pub fn match_type_path(path: &TypePath, other: &[&str]) -> Option<PathArguments>
     }
 }
 
-pub fn type_base(ty: &Type) -> Type {
-    let mut ty = ty.clone();
-
-    if let Type::Path(ref mut path) = ty {
-        if let Some(segment) = path.path.segments.last_mut() {
-            let ident = &segment.ident;
-            *segment = parse_quote! { #ident };
+pub fn type_base(ty: &Type) -> Option<&Ident> {
+    if let Type::Path(path) = ty {
+        if let Some(segment) = path.path.segments.last() {
+            return Some(&segment.ident);
         }
     }
 
-    ty
+    None
 }
