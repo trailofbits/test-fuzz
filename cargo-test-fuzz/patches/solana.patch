@@ -21,75 +21,22 @@ index f923922..0054d03 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 12f8230..c3ff480 100644
+index abe49cc..dec4bc3 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -117,4 +117,5 @@ impl fmt::Display for AllocErr {
+@@ -112,4 +112,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -145,4 +146,5 @@ impl BpfAllocator {
+@@ -140,4 +141,5 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -160,8 +162,52 @@ pub struct SerializedAccountMetadata {
- }
- 
-+pub fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
-+where
-+    S: serde::Serializer,
-+    T: serde::Serialize,
-+{
-+    <T as serde::Serialize>::serialize(*x, serializer)
-+}
-+
-+pub fn deserialize_ref<'de, D, T>(deserializer: D) -> Result<&'static T, D::Error>
-+where
-+    D: serde::Deserializer<'de>,
-+    T: serde::de::DeserializeOwned + std::fmt::Debug,
-+{
-+    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
-+    Ok(Box::leak(Box::new(x)))
-+}
-+
-+pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
-+where
-+    S: serde::Serializer,
-+    T: serde::Serialize,
-+{
-+    <T as serde::Serialize>::serialize(*x, serializer)
-+}
-+
-+pub fn deserialize_ref_mut<'de, D, T>(deserializer: D) -> Result<&'static mut T, D::Error>
-+where
-+    D: serde::Deserializer<'de>,
-+    T: serde::de::DeserializeOwned + std::fmt::Debug,
-+{
-+    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
-+    Ok(Box::leak(Box::new(x)))
-+}
-+
-+fn default_builtin_programs() -> &'static BuiltinPrograms {
-+    Box::leak(Box::new(BuiltinPrograms::default()))
-+}
-+
-+#[derive(serde::Deserialize, serde::Serialize)]
- pub struct InvokeContext<'a> {
-+    #[serde(
-+        serialize_with = "serialize_ref_mut",
-+        deserialize_with = "deserialize_ref_mut"
-+    )]
-     pub transaction_context: &'a mut TransactionContext,
-     rent: Rent,
-     pre_accounts: Vec<PreAccount>,
-+    #[serde(serialize_with = "serialize_ref", deserialize_with = "deserialize_ref")]
-     sysvar_cache: &'a SysvarCache,
-     log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -170,6 +216,9 @@ pub struct InvokeContext<'a> {
+@@ -163,6 +165,9 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip)]
@@ -99,7 +46,7 @@ index 12f8230..c3ff480 100644
 +    #[serde(skip)]
      pub programs_updated_only_for_global_cache: &'a mut LoadedProgramsForTxBatch,
      pub feature_set: Arc<FeatureSet>,
-@@ -181,4 +230,25 @@ pub struct InvokeContext<'a> {
+@@ -174,4 +179,25 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -135,17 +82,6 @@ index 8c801b8..090f2ca 100644
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct LogCollector {
      messages: Vec<String>,
-diff --git a/program-runtime/src/pre_account.rs b/program-runtime/src/pre_account.rs
-index 2ca91ba..d94725c 100644
---- a/program-runtime/src/pre_account.rs
-+++ b/program-runtime/src/pre_account.rs
-@@ -13,5 +13,5 @@ use {
- // The relevant state of an account before an Instruction executes, used
- // to verify account integrity after the Instruction completes
--#[derive(Clone, Debug, Default)]
-+#[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
- pub struct PreAccount {
-     key: Pubkey,
 diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
 index c403f1c..45b9844 100644
 --- a/program-runtime/src/sysvar_cache.rs
@@ -220,10 +156,10 @@ index 061b16c..3d02d73 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 9ec56b0..53f87df 100644
+index bc81d78..eea6ff2 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -914,5 +914,5 @@ lazy_static! {
+@@ -939,5 +939,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
@@ -231,7 +167,7 @@ index 9ec56b0..53f87df 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index cdfb162..81225ce 100644
+index 266456f..81d1355 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -36,5 +36,5 @@ pub type IndexOfAccount = u16;
@@ -248,7 +184,7 @@ index cdfb162..81225ce 100644
 +#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct TransactionAccounts {
      accounts: Vec<RefCell<AccountSharedData>>,
-@@ -137,9 +137,31 @@ impl TransactionAccounts {
+@@ -130,9 +130,31 @@ impl TransactionAccounts {
  }
  
 +fn serialize_account_keys<'a, S>(
@@ -281,7 +217,7 @@ index cdfb162..81225ce 100644
 +    )]
      account_keys: Pin<Box<[Pubkey]>>,
      accounts: Rc<TransactionAccounts>,
-@@ -481,5 +503,5 @@ pub struct TransactionReturnData {
+@@ -459,5 +481,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone, Default, Eq, PartialEq)]

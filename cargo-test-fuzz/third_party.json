@@ -29,7 +29,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP"],
     "url": "https://github.com/solana-labs/solana",
-    "rev": "c66af12bdba62ace3191f562b266bd71b9d72c76",
+    "rev": "0f82662a7f86c9595c15bb10d60c193b06c0cc80",
     "patch": "solana.patch",
     "subdir": ".",
     "package": "solana-bpf-loader-program",
