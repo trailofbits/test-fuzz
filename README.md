@@ -401,6 +401,12 @@ test-fuzz = { version = "*", features = ["self_ty_in_mod_name"] }
 
 The `test-fuzz` package currently supports the following features:
 
+### `self_ty_in_mod_name`
+
+Incorporate an `impl`'s `Self` type into the names of modules generated for the `impl`. Expansion of the `test_fuzz` macro adds a module definition to the enclosing scope. By default, the module is named `target_fuzz`, where `target` is the name of the target. If the target appears in an `impl` block, then use of this feature causes the module to instead be named `path_target_fuzz`, where `path` is the path of the `impl`'s `Self` type converted to snake case and joined with `_`. (See also [`rename`] above.)
+
+In a future version of `test-fuzz`, this behavior will be the default.
+
 ### Serde formats
 
 `test-fuzz` can serialize target arguments in multiple Serde formats. The following are the features used to select a format.
