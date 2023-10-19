@@ -53,30 +53,21 @@ Fuzzing with `test-fuzz` is essentially three steps:\*
 2. **Generate a corpus** by running `cargo test`:
 
    ```
-   $ cargo test
+   cargo test
    ```
 
 3. **Fuzz your target** by running [`cargo test-fuzz`](#cargo-test-fuzz-command):
    ```
-   $ cargo test-fuzz foo
+   cargo test-fuzz foo
    ```
 
-\* Some additional steps may be necessary following a reboot. AFL requires the following commands to be run as root:
+\* An additional, preliminary step may be necessary following a reboot:
 
-- Linux
+```sh
+cargo afl system-config
+```
 
-  ```sh
-  echo core >/proc/sys/kernel/core_pattern
-  cd /sys/devices/system/cpu
-  echo performance | tee cpu*/cpufreq/scaling_governor
-  ```
-
-- OSX
-  ```sh
-  SL=/System/Library; PL=com.apple.ReportCrash
-  launchctl unload -w ${SL}/LaunchAgents/${PL}.plist
-  sudo launchctl unload -w ${SL}/LaunchDaemons/${PL}.Root.plist
-  ```
+Note that the above command runs `sudo` internally. Hence, you may be prompted to enter your password.
 
 ## Components
 
