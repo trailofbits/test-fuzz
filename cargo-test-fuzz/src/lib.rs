@@ -330,7 +330,12 @@ fn remove_profraw_files(dir: PathBuf) -> Result<()> {
 }
 
 #[allow(clippy::too_many_lines)]
-fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<Executable>> {
+fn build(
+    opts: &TestFuzz,
+    use_instrumentation: bool,
+    quiet: bool,
+    coverage: bool,
+) -> Result<Vec<Executable>> {
     let metadata = metadata(opts)?;
     let silence_stderr = quiet && !opts.verbose;
 
@@ -389,7 +394,18 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
         );
     }
     debug!("{exec:?}");
-    let mut popen = exec.clone().popen()?;
+
+    let mut envs = Vec::new();
+
+    if coverage {
+        //envs.push(("LLVM_PROFILE_FILE", profraws.to_str().unwrap()));
+        envs.push((
+            "RUSTFLAGS",
+            "-C instrument-coverage --cfg=coverage --cfg=trybuild_no_target",
+        ));
+    }
+    debug!("{:?}", exec);
+    let mut popen = exec.clone().env_extend(&envs).clone().popen()?;
     let messages = popen
         .stdout
         .take()
@@ -535,11 +551,17 @@ fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec
 }
 
 fn targets(executable: &Path) -> Result<Vec<String>> {
-    let exec = Exec::cmd(executable)
+    let profraws = target_directory(false).join("ignore-%p-%8m.profraw");
+
+    let mut exec = Exec::cmd(executable)
         .env_extend(&[("AFL_QUIET", "1")])
         .args(&["--list", "--format=terse"])
         .stderr(NullFile);
     debug!("{exec:?}");
+
+    exec = exec.env("LLVM_PROFILE_FILE", profraws.to_str().unwrap());
+
+    debug!("{:?}", exec);
     let stream = exec.clone().stream_stdout()?;
 
     // smoelius: A test executable's --list output ends with an empty line followed by
@@ -807,6 +829,13 @@ fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) 
     }
 }
 
+fn get_last_component(path: &PathBuf) -> Option<String> {
+    path.components()
+        .filter(|comp| comp.as_os_str() != OsStr::new(""))
+        .map(|comp| comp.as_os_str().to_str().unwrap().to_owned())
+        .last()
+}
+
 #[allow(clippy::too_many_lines)]
 fn for_each_entry(
     opts: &TestFuzz,
@@ -817,6 +846,7 @@ fn for_each_entry(
     replay: bool,
     flags: Flags,
     dir: &Path,
+    coverage: bool,
 ) -> Result<()> {
     ensure!(
         dir.exists(),
