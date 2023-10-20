@@ -1,6 +1,6 @@
 # test-fuzz
 
-At a high-level, `test-fuzz` is a convenient front end for [`afl.rs`](https://github.com/rust-fuzz/afl.rs). In more concrete terms, `test-fuzz` is a collection of Rust macros and a Cargo subcommand that automate certain fuzzing-related tasks, most notably:
+`test-fuzz` is a Cargo subcommand and a collection of Rust macros to automate certain tasks related to fuzzing with [`afl.rs`](https://github.com/rust-fuzz/afl.rs), including:
 
 - generating a fuzzing corpus
 - implementing a fuzzing harness
