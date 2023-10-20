@@ -11,27 +11,12 @@ use cargo_metadata::{
 };
 use clap::{crate_version, ValueEnum};
 use heck::ToKebabCase;
-use internal::dirs::{
-    concretizations_directory_from_target, corpus_directory_from_target,
-    crashes_directory_from_target, hangs_directory_from_target,
-    impl_concretizations_directory_from_target, output_directory_from_target,
-    queue_directory_from_target, target_directory,
-};
+use internal::dirs::{concretizations_directory_from_target, corpus_directory_from_target, crashes_directory_from_target, hangs_directory_from_target, impl_concretizations_directory_from_target, output_directory_from_target, queue_directory_from_target, target_directory, workspace_root};
 use log::debug;
 use semver::Version;
 use semver::VersionReq;
 use serde::{Deserialize, Serialize};
-use std::{
-    ffi::OsStr,
-    fmt::{Debug, Formatter},
-    fs::{create_dir_all, read, read_dir, remove_dir_all, File},
-    io::{BufRead, Read},
-    iter,
-    path::{Path, PathBuf},
-    process::{exit, Command},
-    sync::Mutex,
-    time::Duration,
-};
+use std::{ffi::OsStr, fmt::{Debug, Formatter}, fs::{create_dir_all, read, read_dir, remove_dir_all, File}, fs, io::{BufRead, Read}, io, iter, path::{Path, PathBuf}, process::{exit, Command}, sync::Mutex, time::Duration};
 use strum_macros::Display;
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
 
@@ -71,6 +56,7 @@ pub struct TestFuzz {
     pub backtrace: bool,
     pub consolidate: bool,
     pub consolidate_all: bool,
+    pub coverage: bool,
     pub display: Option<Object>,
     pub exact: bool,
     pub exit_code: bool,
@@ -161,7 +147,7 @@ pub fn run(opts: TestFuzz) -> Result<()> {
 
     let replay = opts.replay.is_some();
 
-    let executables = build(&opts, display || replay)?;
+    let executables = build(&opts, display || replay, opts.coverage)?;
 
     let mut executable_targets = executable_targets(&executables)?;
 
@@ -196,6 +182,10 @@ pub fn run(opts: TestFuzz) -> Result<()> {
         return reset(&opts, &executable_targets);
     }
 
+    if opts.coverage {
+        remove_profraw_files(target_directory(false))?;
+    }
+
     let (flags, dir) = None
         .or_else(|| {
             opts.display
@@ -208,8 +198,32 @@ pub fn run(opts: TestFuzz) -> Result<()> {
         .unwrap_or((Flags::empty(), PathBuf::default()));
 
     if display || replay {
-        return for_each_entry(&opts, &executable, &target, display, replay, flags, &dir);
+        let result =  for_each_entry(&opts, &executable, &target, display, replay, flags, &dir, opts.coverage);
+        if opts.coverage {
+            return match result {
+                Ok(_) => {
+                    let mut exec = Exec::cmd("cargo-llvm-cov")
+                        .args(
+                            &["llvm-cov", "report", "--profile", "debug", "--html", "--hide-instantiations", "-v", "--ignore-filename-regex", "test-fuzz"]
+                        )
+                        .env("CARGO_LLVM_COV", "1")
+                        .env("CARGO_LLVM_COV_SHOW_ENV", "1")
+                        .env("CARGO_LLVM_COV_TARGET_DIR", target_directory(false))
+                        .stdout(Redirection::Pipe);
+                    debug!("{:?}", exec);
+                    let mut popen = exec.clone().popen()?;
+                    println!("{:?}", popen.stdout);
+                    popen.wait(); // TODO Handle
+                    Ok(())
+                }
+                Err(e) => Err(e)
+            }
+        }
+
+        return result;
     }
+
+
 
     if opts.no_instrumentation {
         eprintln!("Stopping before fuzzing since --no-instrumentation was specified.");
@@ -225,7 +239,25 @@ pub fn run(opts: TestFuzz) -> Result<()> {
     })
 }
 
-fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
+fn remove_profraw_files(dir: PathBuf) -> io::Result<()> {
+    if dir.is_dir() {
+        for entry in fs::read_dir(dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_file() {
+                if let Some(extension) = path.extension() {
+                    if extension == "profraw" {
+                        println!("{:?}", &path);
+                        fs::remove_file(path)?;
+                    }
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn build(opts: &TestFuzz, quiet: bool, coverage: bool) -> Result<Vec<Executable>> {
     let metadata = metadata(opts)?;
 
     let mut args = vec![];
@@ -272,8 +304,18 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     if quiet && !opts.verbose {
         exec = exec.stderr(NullFile);
     }
+
+    let mut envs = Vec::new();
+    let target_dir = target_directory(false);
+    let workspace = workspace_root(); // TODO
+    let profraws = target_dir.join("examples-%p-%8m.profraw");
+
+    if coverage {
+        //envs.push(("LLVM_PROFILE_FILE", profraws.to_str().unwrap()));
+        envs.push(("RUSTFLAGS", "-C instrument-coverage --cfg=coverage --cfg=trybuild_no_target"));
+    }
     debug!("{:?}", exec);
-    let mut popen = exec.clone().popen()?;
+    let mut popen = exec.clone().env_extend(&envs).clone().popen()?;
     let artifacts = popen
         .stdout
         .take()
@@ -298,7 +340,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     // smoelius: If the command failed, re-execute it without --message-format=json. This is easier
     // than trying to capture and colorize `CompilerMessage`s like Cargo does.
     if !status.success() {
-        let mut popen = Exec::cmd("cargo").args(&args).popen()?;
+        let mut popen = Exec::cmd("cargo").args(&args).env_extend(&envs).popen()?;
         let status = popen
             .wait()
             .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
@@ -434,10 +476,15 @@ fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec
 }
 
 fn targets(executable: &Path) -> Result<Vec<String>> {
-    let exec = Exec::cmd(executable)
+    let profraws = target_directory(false).join("ignore-%p-%8m.profraw");
+
+    let mut exec = Exec::cmd(executable)
         .env_extend(&[("AFL_QUIET", "1")])
         .args(&["--list"])
         .stderr(NullFile);
+
+    exec = exec.env("LLVM_PROFILE_FILE", profraws.to_str().unwrap());
+
     debug!("{:?}", exec);
     let stream = exec.clone().stream_stdout()?;
 
@@ -716,6 +763,13 @@ fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) 
     }
 }
 
+fn get_last_component(path: &PathBuf) -> Option<String> {
+    path.components()
+        .filter(|comp| comp.as_os_str() != OsStr::new(""))
+        .map(|comp| comp.as_os_str().to_str().unwrap().to_owned())
+        .last()
+}
+
 #[allow(clippy::too_many_lines)]
 fn for_each_entry(
     opts: &TestFuzz,
@@ -725,6 +779,7 @@ fn for_each_entry(
     replay: bool,
     flags: Flags,
     dir: &Path,
+    coverage: bool
 ) -> Result<()> {
     ensure!(
         dir.exists(),
@@ -750,6 +805,13 @@ fn for_each_entry(
     }
     if opts.pretty_print {
         envs.push(("TEST_FUZZ_PRETTY_PRINT", "1"));
+    }
+
+    let target_dir = target_directory(false);
+    let workspace = get_last_component(&workspace_root()).unwrap();
+    let profraws = target_dir.join(format!("{workspace}-%p-%8m.profraw"));
+    if coverage {
+        envs.push(("LLVM_PROFILE_FILE", profraws.to_str().unwrap()));
     }
 
     let args: Vec<String> = vec![

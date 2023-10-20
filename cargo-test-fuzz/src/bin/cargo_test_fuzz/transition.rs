@@ -37,6 +37,8 @@ struct TestFuzzWithDeprecations {
     consolidate: bool,
     #[arg(long, hide = true)]
     consolidate_all: bool,
+    #[arg(long, hide = true)]
+    coverage: bool,
     #[arg(
         long,
         value_name = "OBJECT",
@@ -131,6 +133,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             backtrace,
             consolidate,
             consolidate_all,
+            coverage,
             display,
             exact,
             exit_code,
@@ -159,6 +162,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             backtrace,
             consolidate,
             consolidate_all,
+            coverage,
             display,
             exact,
             exit_code,
