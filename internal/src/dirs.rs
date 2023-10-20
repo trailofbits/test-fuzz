@@ -114,6 +114,12 @@ pub fn target_directory(instrumented: bool) -> PathBuf {
     }
     target_dir.into()
 }
+#[must_use]
+pub fn workspace_root() -> PathBuf {
+    let mut command = MetadataCommand::new();
+    let mut workspace_root = command.no_deps().exec().unwrap().workspace_root;
+    workspace_root.into()
+}
 
 #[must_use]
 fn path_from_args_type<T>() -> String {

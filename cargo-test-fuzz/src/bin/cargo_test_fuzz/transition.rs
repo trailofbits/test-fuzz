@@ -34,6 +34,8 @@ struct TestFuzzWithDeprecations {
     consolidate: bool,
     #[arg(long, hide = true)]
     consolidate_all: bool,
+    #[arg(long, hide = true)]
+    coverage: bool,
     #[arg(
         long,
         value_name = "N",
@@ -153,6 +155,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             backtrace,
             consolidate,
             consolidate_all,
+            coverage,
             cpus,
             display,
             exact,
@@ -191,6 +194,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             backtrace,
             consolidate,
             consolidate_all,
+            coverage,
             cpus,
             display,
             exact,
