@@ -36,6 +36,13 @@ struct TestFuzzWithDeprecations {
     consolidate_all: bool,
     #[arg(
         long,
+        help = "Generate coverage for corpus, crashes, hangs, or work queue. By default, an \
+                uninstrumented fuzz target is used. To generate coverage with instrumentation, \
+                append `-instrumented` to <OBJECT>, e.g., --coverage corpus-instrumented."
+    )]
+    coverage: Option<Object>,
+    #[arg(
+        long,
         value_name = "N",
         help = "Fuzz using at most <N> cpus; default is all but one"
     )]
@@ -153,6 +160,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             backtrace,
             consolidate,
             consolidate_all,
+            coverage,
             cpus,
             display,
             exact,
@@ -191,6 +199,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             backtrace,
             consolidate,
             consolidate_all,
+            coverage,
             cpus,
             display,
             exact,
