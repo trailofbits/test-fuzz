@@ -1,6 +1,6 @@
 # test-fuzz
 
-`test-fuzz` is a Cargo subcommand and a collection of Rust macros to automate certain tasks related to fuzzing with [`afl.rs`](https://github.com/rust-fuzz/afl.rs), including:
+`test-fuzz` is a Cargo subcommand and a collection of Rust macros to automate certain tasks related to fuzzing with [`afl.rs`], including:
 
 - generating a fuzzing corpus
 - implementing a fuzzing harness
@@ -9,29 +9,29 @@
 
 **Contents**
 
-1. [Installation](#installation)
-2. [Usage](#usage)
-3. [Components](#components)
-   - [`test_fuzz` macro](#test_fuzz-macro)
-   - [`test_fuzz_impl` macro](#test_fuzz_impl-macro)
-   - [`cargo test-fuzz` command](#cargo-test-fuzz-command)
-   - [Convenience functions and macros](#convenience-functions-and-macros)
-4. [`test-fuzz` package features](#test-fuzz-package-features)
-5. [Auto-generated corpus files](#auto-generated-corpus-files)
-6. [Environment variables](#environment-variables)
-7. [Limitations](#limitations)
-8. [Tips and tricks](#tips-and-tricks)
-9. [License](#license)
+1. [Installation]
+2. [Overview]
+3. [Components]
+   - [`test_fuzz` macro]
+   - [`test_fuzz_impl` macro]
+   - [`cargo test-fuzz` command]
+   - [Convenience functions and macros]
+4. [`test-fuzz` package features]
+5. [Auto-generated corpus files]
+6. [Environment variables]
+7. [Limitations]
+8. [Tips and tricks]
+9. [License]
 
 ## Installation
 
-Install `cargo-test-fuzz` and [`afl.rs`](https://github.com/rust-fuzz/afl.rs) with the following command:
+Install `cargo-test-fuzz` and [`afl.rs`] with the following command:
 
 ```sh
 cargo install cargo-test-fuzz cargo-afl
 ```
 
-## Usage
+## Overview
 
 Fuzzing with `test-fuzz` is essentially three steps:\*
 
@@ -42,7 +42,7 @@ Fuzzing with `test-fuzz` is essentially three steps:\*
      serde = "1.0"
      test-fuzz = "4.0"
      ```
-   - Precede the target function with the [`test_fuzz`](#test_fuzz-macro) macro:
+   - Precede the target function with the [`test_fuzz`] macro:
      ```rust
      #[test_fuzz::test_fuzz]
      fn foo(...) {
@@ -56,7 +56,7 @@ Fuzzing with `test-fuzz` is essentially three steps:\*
    cargo test
    ```
 
-3. **Fuzz your target** by running [`cargo test-fuzz`](#cargo-test-fuzz-command):
+3. **Fuzz your target** by running [`cargo test-fuzz`]:
    ```
    cargo test-fuzz foo
    ```
@@ -77,104 +77,122 @@ Preceding a function with the `test_fuzz` macro indicates that the function is a
 
 The primary effects of the `test_fuzz` macro are:
 
-- Add instrumentation to the target to serialize its arguments and write them to a corpus file each time the target is called. The instrumentation is guarded by `#[cfg(test)]` so that corpus files are generated only when running tests (however, see [`enable_in_production`](#arguments) below).
-- Add a test to read and deserialize arguments from standard input and apply the target to them. The test checks an environment variable, set by [`cargo test-fuzz`](#cargo-test-fuzz-command), so that the test does not block trying to read from standard input during a normal invocation of `cargo test`. The test is enclosed in a module to reduce the likelihood of a name collision. Currently, the name of the module is `target_fuzz`, where `target` is the name of the target (however, see [`rename`](#arguments) below).
+- Add instrumentation to the target to serialize its arguments and write them to a corpus file each time the target is called. The instrumentation is guarded by `#[cfg(test)]` so that corpus files are generated only when running tests (however, see [`enable_in_production`] below).
+- Add a test to read and deserialize arguments from standard input and apply the target to them. The test checks an environment variable, set by [`cargo test-fuzz`], so that the test does not block trying to read from standard input during a normal invocation of `cargo test`. The test is enclosed in a module to reduce the likelihood of a name collision. Currently, the name of the module is `target_fuzz`, where `target` is the name of the target (however, see [`rename`] below).
 
 #### Arguments
 
-- **`bounds = "where_predicates"`** - Impose `where_predicates` (e.g., trait bounds) on the struct used to serialize/deserialize arguments. This may be necessary, e.g., if a target's argument type is an associated type. For an example, see [associated_type.rs](https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/associated_type.rs#L26) in this repository.
+##### `bounds = "where_predicates"`
 
-- **`concretize = "parameters"`** - Use `parameters` as the target's type parameters when fuzzing. Example:
+Impose `where_predicates` (e.g., trait bounds) on the struct used to serialize/deserialize arguments. This may be necessary, e.g., if a target's argument type is an associated type. For an example, see [associated_type.rs] in this repository.
 
-  ```rust
-  #[test_fuzz(concretize = "String")]
-  fn foo<T: Clone + Debug + Serialize>(x: &T) {
-      ...
-  }
-  ```
+##### `concretize = "parameters"`
 
-  Note: The target's arguments must be serializable for **every** instantiation of its type parameters. But the target's arguments are required to be deserializable only when the target is instantiated with `parameters`.
+Use `parameters` as the target's type parameters when fuzzing. Example:
 
-- **`concretize_impl = "parameters"`** - Use `parameters` as the target's `Self` type parameters when fuzzing. Example:
+```rust
+#[test_fuzz(concretize = "String")]
+fn foo<T: Clone + Debug + Serialize>(x: &T) {
+    ...
+}
+```
 
-  ```rust
-  #[test_fuzz_impl]
-  impl<T: Clone + Debug + Serialize> for Foo {
-      #[test_fuzz(concretize_impl = "String")]
-      fn bar(&self, x: &T) {
-          ...
-      }
-  }
-  ```
+Note: The target's arguments must be serializable for **every** instantiation of its type parameters. But the target's arguments are required to be deserializable only when the target is instantiated with `parameters`.
 
-  Note: The target's arguments must be serializable for **every** instantiation of its `Self` type parameters. But the target's arguments are required to be deserializable only when the target's `Self` is instantiated with `parameters`.
+##### `concretize_impl = "parameters"`
 
-- **`convert = "X, Y"`** - When serializing the target's arguments, convert values of type `X` to type `Y` using `Y`'s implementation of `From<X>`, or of type `&X` to type `Y` using `Y`'s implementation of the non-standard trait `test_fuzz::FromRef<X>`. When deserializing, convert those values back to type `X` using `Y`'s implementation of the non-standard trait `test_fuzz::Into<X>`.
+Use `parameters` as the target's `Self` type parameters when fuzzing. Example:
 
-  That is, use of `convert = "X, Y"` must be accompanied by certain implementations. If `X` implements [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html), then `Y` may implement the following:
+```rust
+#[test_fuzz_impl]
+impl<T: Clone + Debug + Serialize> for Foo {
+    #[test_fuzz(concretize_impl = "String")]
+    fn bar(&self, x: &T) {
+        ...
+    }
+}
+```
 
-  ```rust
-  impl From<X> for Y {
-      fn from(x: X) -> Self {
-          ...
-      }
-  }
-  ```
+Note: The target's arguments must be serializable for **every** instantiation of its `Self` type parameters. But the target's arguments are required to be deserializable only when the target's `Self` is instantiated with `parameters`.
 
-  If `X` does not implement [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html), then `Y` must implement the following:
+##### `convert = "X, Y"`
 
-  ```rust
-  impl test_fuzz::FromRef<X> for Y {
-      fn from_ref(x: &X) -> Self {
-          ...
-      }
-  }
-  ```
+When serializing the target's arguments, convert values of type `X` to type `Y` using `Y`'s implementation of `From<X>`, or of type `&X` to type `Y` using `Y`'s implementation of the non-standard trait `test_fuzz::FromRef<X>`. When deserializing, convert those values back to type `X` using `Y`'s implementation of the non-standard trait `test_fuzz::Into<X>`.
 
-  Additionally, `Y` must implement the following (regardless of whether `X` implements [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html)):
+That is, use of `convert = "X, Y"` must be accompanied by certain implementations. If `X` implements [`Clone`], then `Y` may implement the following:
 
-  ```rust
-  impl test_fuzz::Into<X> for Y {
-      fn into(self) -> X {
-          ...
-      }
-  }
-  ```
+```rust
+impl From<X> for Y {
+    fn from(x: X) -> Self {
+        ...
+    }
+}
+```
 
-  The definition of `test_fuzz::Into` is identical to that of [`std::convert::Into`](https://doc.rust-lang.org/std/convert/trait.Into.html). The reason for using a non-standard trait is to avoid conflicts that could arise from blanket implementations of standard traits.
+If `X` does not implement [`Clone`], then `Y` must implement the following:
 
-- **`enable_in_production`** - Generate corpus files when not running tests, provided the environment variable [`TEST_FUZZ_WRITE`](#environment-variables) is set. The default is to generate corpus files only when running tests, regardless of whether [`TEST_FUZZ_WRITE`](#environment-variables) is set. When running a target from outside its package directory, set [`TEST_FUZZ_MANIFEST_PATH`](#environment-variables) to the path of the package's `Cargo.toml` file.
+```rust
+impl test_fuzz::FromRef<X> for Y {
+    fn from_ref(x: &X) -> Self {
+        ...
+    }
+}
+```
 
-  **WARNING**: Setting `enable_in_production` could introduce a denial-of-service vector. For example, setting this option for a function that is called many times with different arguments could fill up the disk. The check of [`TEST_FUZZ_WRITE`](#environment-variables) is meant to provide some defense against this possibility. Nonetheless, consider this option carefully before using it.
+Additionally, `Y` must implement the following (regardless of whether `X` implements [`Clone`]):
 
-- **`execute_with = "function"`** - Rather than call the target directly:
+```rust
+impl test_fuzz::Into<X> for Y {
+    fn into(self) -> X {
+        ...
+    }
+}
+```
 
-  - construct a closure of type `FnOnce() -> R`, where `R` is the target's return type, so that calling the closure calls the target;
-  - call `function` with the closure.
+The definition of `test_fuzz::Into` is identical to that of [`std::convert::Into`]. The reason for using a non-standard trait is to avoid conflicts that could arise from blanket implementations of standard traits.
 
-  Calling the target in this way allows `function` to set up the call's environment. This can be useful, e.g., for fuzzing [Substrate externalities](https://substrate.dev/docs/en/knowledgebase/runtime/tests#mock-runtime-storage).
+##### `enable_in_production`
 
-- **`no_auto_generate`** - Do not try to [auto-generate corpus files](#auto-generated-corpus-files) for the target.
+Generate corpus files when not running tests, provided the environment variable [`TEST_FUZZ_WRITE`] is set. The default is to generate corpus files only when running tests, regardless of whether [`TEST_FUZZ_WRITE`] is set. When running a target from outside its package directory, set [`TEST_FUZZ_MANIFEST_PATH`] to the path of the package's `Cargo.toml` file.
 
-- **`only_concretizations`** - Record the target's concretizations when running tests, but do not generate corpus files and do not implement a fuzzing harness. This can be useful when the target is a generic function, but it is unclear what type parameters should be used for fuzzing.
+**WARNING**: Setting `enable_in_production` could introduce a denial-of-service vector. For example, setting this option for a function that is called many times with different arguments could fill up the disk. The check of [`TEST_FUZZ_WRITE`] is meant to provide some defense against this possibility. Nonetheless, consider this option carefully before using it.
 
-  The intended workflow is: enable `only_concretizations`, then run `cargo test` followed by `cargo test-fuzz --display-concretizations`. One of the resulting concretizations might be usable as `concretize`'s `parameters`. Similarly, a concretization resulting from `cargo test-fuzz --display-imply-concretizations` might be usable as `concretize_impl`'s `parameters`.
+##### `execute_with = "function"`
 
-  Note, however, that just because a target was concretized with certain parameters during tests, it does not imply the target's arguments are serializable/deserializable when so concretized. The results of `--display-concretizations`/`--display-impl-concretizations` are merely suggestive.
+Rather than call the target directly:
 
-- **`rename = "name"`** - Treat the target as though its name is `name` when adding a module to the enclosing scope. Expansion of the `test_fuzz` macro adds a module definition to the enclosing scope. Currently, the module is named `target_fuzz`, where `target` is the name of the target. Use of this option causes the module to instead be be named `name_fuzz`. Example:
+- construct a closure of type `FnOnce() -> R`, where `R` is the target's return type, so that calling the closure calls the target;
+- call `function` with the closure.
 
-  ```rust
-  #[test_fuzz(rename = "bar")]
-  fn foo() {}
+Calling the target in this way allows `function` to set up the call's environment. This can be useful, e.g., for fuzzing [Substrate externalities].
 
-  // Without the use of `rename`, a name collision and compile error would result.
-  mod foo_fuzz {}
-  ```
+##### `no_auto_generate`
+
+Do not try to [auto-generate corpus files] for the target.
+
+##### `only_concretizations`
+
+Record the target's concretizations when running tests, but do not generate corpus files and do not implement a fuzzing harness. This can be useful when the target is a generic function, but it is unclear what type parameters should be used for fuzzing.
+
+The intended workflow is: enable `only_concretizations`, then run `cargo test` followed by `cargo test-fuzz --display-concretizations`. One of the resulting concretizations might be usable as `concretize`'s `parameters`. Similarly, a concretization resulting from `cargo test-fuzz --display-imply-concretizations` might be usable as `concretize_impl`'s `parameters`.
+
+Note, however, that just because a target was concretized with certain parameters during tests, it does not imply the target's arguments are serializable/deserializable when so concretized. The results of `--display-concretizations`/`--display-impl-concretizations` are merely suggestive.
+
+##### `rename = "name"`
+
+Treat the target as though its name is `name` when adding a module to the enclosing scope. Expansion of the `test_fuzz` macro adds a module definition to the enclosing scope. Currently, the module is named `target_fuzz`, where `target` is the name of the target. Use of this option causes the module to instead be be named `name_fuzz`. Example:
+
+```rust
+#[test_fuzz(rename = "bar")]
+fn foo() {}
+
+// Without the use of `rename`, a name collision and compile error would result.
+mod foo_fuzz {}
+```
 
 ### `test_fuzz_impl` macro
 
-Whenever the [`test_fuzz`](#test_fuzz-macro) macro is used in an `impl` block,
+Whenever the [`test_fuzz`] macro is used in an `impl` block,
 the `impl` must be preceded with the `test_fuzz_impl` macro. Example:
 
 ```rust
@@ -187,7 +205,7 @@ impl Foo {
 }
 ```
 
-The reason for this requirement is as follows. Expansion of the [`test_fuzz`](#test_fuzz-macro) macro adds a module definition to the enclosing scope. However, a module definition cannot appear inside an `impl` block. Preceding the `impl` with the `test_fuzz_impl` macro causes the module to be added outside the `impl` block.
+The reason for this requirement is as follows. Expansion of the [`test_fuzz`] macro adds a module definition to the enclosing scope. However, a module definition cannot appear inside an `impl` block. Preceding the `impl` with the `test_fuzz_impl` macro causes the module to be added outside the `impl` block.
 
 If you see an error like the following, it likely means a use of the `test_fuzz_impl` macro is missing:
 
@@ -227,19 +245,13 @@ The `cargo test-fuzz` command is used to interact with fuzz targets, and to mani
 #### Usage
 
 ```
- cargo test-fuzz [OPTIONS] [TARGETNAME] [-- <ARGS>...]
-```
+Usage: cargo test-fuzz [OPTIONS] [TARGETNAME] [-- <ARGS>...]
 
-#### Arguments
-
-```
+Arguments:
   [TARGETNAME]  String that fuzz target's name must contain
   [ARGS]...     Arguments for the fuzzer
-```
 
-#### Options
-
-```
+Options:
       --backtrace             Display backtraces
       --consolidate           Move one target's crashes, hangs, and work queue to its corpus; to
                               consolidate all targets, use --consolidate-all
@@ -290,100 +302,100 @@ Try `cargo afl fuzz --help` to see additional fuzzer options.
 
 **Warning:** These utilties are excluded from semantic versioning and may be removed in future versions of `test-fuzz`.
 
-- **`dont_care!`**
+#### `dont_care!`
 
-  The `dont_care!` macro can be used to implement `serde::Serialize`/`serde::Deserialize` for types that are easy to construct and whose values you do not care to record. Intuitively, `dont_care!($ty, $expr)` says:
+The `dont_care!` macro can be used to implement `serde::Serialize`/`serde::Deserialize` for types that are easy to construct and whose values you do not care to record. Intuitively, `dont_care!($ty, $expr)` says:
 
-  - Skip values of type `$ty` when serializing.
-  - Initialize values of type `$ty` with `$expr` when deserializing.
+- Skip values of type `$ty` when serializing.
+- Initialize values of type `$ty` with `$expr` when deserializing.
 
-  More specifically, `dont_care!($ty, $expr)` expands to the following:
+More specifically, `dont_care!($ty, $expr)` expands to the following:
 
-  ```rust
-  impl serde::Serialize for $ty {
-      fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
-      where
-          S: serde::Serializer,
-      {
-          ().serialize(serializer)
-      }
-  }
+```rust
+impl serde::Serialize for $ty {
+    fn serialize<S>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        ().serialize(serializer)
+    }
+}
 
-  impl<'de> serde::Deserialize<'de> for $ty {
-      fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
-      where
-          D: serde::Deserializer<'de>,
-      {
-          <()>::deserialize(deserializer).map(|_| $expr)
-      }
-  }
-  ```
+impl<'de> serde::Deserialize<'de> for $ty {
+    fn deserialize<D>(deserializer: D) -> std::result::Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        <()>::deserialize(deserializer).map(|_| $expr)
+    }
+}
+```
 
-  If `$ty` is a unit struct, then `$expr` can be be omitted. That is, `dont_care!($ty)` is equivalent to `dont_care!($ty, $ty)`.
+If `$ty` is a unit struct, then `$expr` can be be omitted. That is, `dont_care!($ty)` is equivalent to `dont_care!($ty, $ty)`.
 
-- **`leak!`**
+#### `leak!`
 
-  The `leak!` macro can help to serialize target arguments that are references and whose types implement the [`ToOwned`](https://doc.rust-lang.org/std/borrow/trait.ToOwned.html) trait. It is meant to be used with the [`convert`](#arguments) option.
+The `leak!` macro can help to serialize target arguments that are references and whose types implement the [`ToOwned`] trait. It is meant to be used with the [`convert`] option.
 
-  Specifically, an invocation of the following form declares a type `LeakedX`, and implements the `From` and `test_fuzz::Into` traits for it:
+Specifically, an invocation of the following form declares a type `LeakedX`, and implements the `From` and `test_fuzz::Into` traits for it:
 
-  ```rust
-  leak!(X, LeakedX);
-  ```
+```rust
+leak!(X, LeakedX);
+```
 
-  One can then use `LeakedX` with the `convert` option as follows:
+One can then use `LeakedX` with the `convert` option as follows:
 
-  ```rust
-  #[test_fuzz::test_fuzz(convert = "&X, LeakedX")
-  ```
+```rust
+#[test_fuzz::test_fuzz(convert = "&X, LeakedX")
+```
 
-  An example where `X` is [`Path`](https://doc.rust-lang.org/std/path/struct.Path.html) appears in [conversion.rs](https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/conversion.rs#L5) in this repository.
+An example where `X` is [`Path`] appears in [conversion.rs] in this repository.
 
-  More generally, an invocation of the form `leak!($ty, $ident)` expands to the following:
+More generally, an invocation of the form `leak!($ty, $ident)` expands to the following:
 
-  ```rust
-  #[derive(Clone, std::fmt::Debug, serde::Deserialize, serde::Serialize)]
-  struct $ident(<$ty as ToOwned>::Owned);
+```rust
+#[derive(Clone, std::fmt::Debug, serde::Deserialize, serde::Serialize)]
+struct $ident(<$ty as ToOwned>::Owned);
 
-  impl From<&$ty> for $ident {
-      fn from(ty: &$ty) -> Self {
-          Self(ty.to_owned())
-      }
-  }
+impl From<&$ty> for $ident {
+    fn from(ty: &$ty) -> Self {
+        Self(ty.to_owned())
+    }
+}
 
-  impl test_fuzz::Into<&$ty> for $ident {
-      fn into(self) -> &'static $ty {
-          Box::leak(Box::new(self.0))
-      }
-  }
-  ```
+impl test_fuzz::Into<&$ty> for $ident {
+    fn into(self) -> &'static $ty {
+        Box::leak(Box::new(self.0))
+    }
+}
+```
 
-- **`serialize_ref` / `deserialize_ref`**
+#### `serialize_ref` / `deserialize_ref`
 
-  `serialize_ref` and `deserialize_ref` function similar to `leak!`, but they are meant to be used wth Serde's [`serialize_with`](https://serde.rs/field-attrs.html#serialize_with) and [`deserialize_with`](https://serde.rs/field-attrs.html#deserialize_with) field attributes (respectively).
+`serialize_ref` and `deserialize_ref` function similar to `leak!`, but they are meant to be used wth Serde's [`serialize_with`] and [`deserialize_with`] field attributes (respectively).
 
-  ```rust
-  fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
-  where
-      S: serde::Serializer,
-      T: serde::Serialize,
-  {
-      <T as serde::Serialize>::serialize(*x, serializer)
-  }
+```rust
+fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+    T: serde::Serialize,
+{
+    <T as serde::Serialize>::serialize(*x, serializer)
+}
 
-  fn deserialize_ref<'de, D, T>(deserializer: D) -> Result<&'static T, D::Error>
-  where
-      D: serde::Deserializer<'de>,
-      T: serde::de::DeserializeOwned + std::fmt::Debug,
-  {
-      let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
-      Ok(Box::leak(Box::new(x)))
-  }
-  ```
+fn deserialize_ref<'de, D, T>(deserializer: D) -> Result<&'static T, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+{
+    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
+    Ok(Box::leak(Box::new(x)))
+}
+```
 
 ## `test-fuzz` package features
 
-The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#choosing-features). For example, to enable the `auto_concretize` feature, use:
+The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book]. For example, to enable the `auto_concretize` feature, use:
 
 ```toml
 test-fuzz = { version = "4.0", features = ["auto_concretize"] }
@@ -391,17 +403,21 @@ test-fuzz = { version = "4.0", features = ["auto_concretize"] }
 
 The `test-fuzz` package currently supports the following features:
 
-- **`auto_concretize`** - When this feature is enabled, `test-fuzz` tries to infer `impl` and non-`impl` concretizations. Success requires that a target be called with exactly one `impl` concretization and exactly one non-`impl` concretization during tests. Success is not guaranteed by these conditions, however.
+### `auto_concretize`
 
-  The implementation of `auto_concretize` uses the unstable language feature [`proc_macro_span`](https://github.com/rust-lang/rust/issues/54725). So enabling `auto_concretize` requires that targets be built with a nightly compiler.
+When this feature is enabled, `test-fuzz` tries to infer `impl` and non-`impl` concretizations. Success requires that a target be called with exactly one `impl` concretization and exactly one non-`impl` concretization during tests. Success is not guaranteed by these conditions, however.
 
-- **Serde formats** - `test-fuzz` can serialize target arguments in multiple Serde formats. The following are the features used to select a format.
+The implementation of `auto_concretize` uses the unstable language feature [`proc_macro_span`]. So enabling `auto_concretize` requires that targets be built with a nightly compiler.
 
-  - **`serde_bincode`** - [Bincode](https://github.com/bincode-org/bincode) (default)
+### Serde formats
 
-  - **`serde_cbor`** - [Serde CBOR](https://github.com/pyfisch/cbor)
+`test-fuzz` can serialize target arguments in multiple Serde formats. The following are the features used to select a format.
 
-  - **`serde_cbor4ii`** - [CBOR 0x(4+4)9 0x49](https://github.com/quininer/cbor4ii)
+- `serde_bincode` - [Bincode] (default)
+
+- `serde_cbor` - [Serde CBOR]
+
+- `serde_cbor4ii` - [CBOR 0x(4+4)9 0x49]
 
 ## Auto-generated corpus files
 
@@ -420,52 +436,116 @@ The traits that `cargo-test-fuzz` currently supports and the values generated fo
 
 **Key**
 
-- `Add` - [`core::ops::Add`](https://doc.rust-lang.org/beta/core/ops/trait.Add.html)
-- `Bounded` - [`num_traits::bounds::Bounded`](https://docs.rs/num-traits/0.2.14/num_traits/bounds/trait.Bounded.html)
-- `Default` - [`std::default::Default`](https://doc.rust-lang.org/std/default/trait.Default.html)
-- `Div` - [`core::ops::Div`](https://doc.rust-lang.org/beta/core/ops/trait.Div.html)
-- `One` - [`num_traits::One`](https://docs.rs/num-traits/0.2.14/num_traits/identities/trait.One.html)
-- `Sub` - [`core::ops::Sub`](https://doc.rust-lang.org/beta/core/ops/trait.Sub.html)
+- `Add` - [`core::ops::Add`]
+- `Bounded` - [`num_traits::bounds::Bounded`]
+- `Default` - [`std::default::Default`]
+- `Div` - [`core::ops::Div`]
+- `One` - [`num_traits::One`]
+- `Sub` - [`core::ops::Sub`]
 - `Two` - `test_fuzz::runtime::traits::Two` (essentially `Add + One`)
 
 ## Environment variables
 
-- **`TEST_FUZZ_LOG`** - During macro expansion:
+### `TEST_FUZZ_LOG`
 
-  - If `TEST_FUZZ_LOG` is set to `1`, write all instrumented fuzz targets and module definitions to standard output.
-  - If `TEST_FUZZ_LOG` is set to a crate name, write that crate's instrumented fuzz targets and module definitions to standard output.
+During macro expansion:
 
-  This can be useful for debugging.
+- If `TEST_FUZZ_LOG` is set to `1`, write all instrumented fuzz targets and module definitions to standard output.
+- If `TEST_FUZZ_LOG` is set to a crate name, write that crate's instrumented fuzz targets and module definitions to standard output.
 
-- **`TEST_FUZZ_MANIFEST_PATH`** - When running a target from outside its package directory, find the package's `Cargo.toml` file at this location. One may need to set this environment variable when [`enable_in_production`](#arguments) is used.
+This can be useful for debugging.
 
-- **`TEST_FUZZ_WRITE`** - Generate corpus files when not running tests for those targets for which [`enable_in_production`](#arguments) is set.
+### `TEST_FUZZ_MANIFEST_PATH`
+
+When running a target from outside its package directory, find the package's `Cargo.toml` file at this location. One may need to set this environment variable when [`enable_in_production`] is used.
+
+### `TEST_FUZZ_WRITE`
+
+Generate corpus files when not running tests for those targets for which [`enable_in_production`] is set.
 
 ## Limitations
 
-- **Clonable arguments** - A target's arguments must implement the [`Clone`](https://doc.rust-lang.org/std/clone/trait.Clone.html) trait. The reason for this requirement is that the arguments are needed in two places: in a `test-fuzz`-internal function that writes corpus files, and in the body of the target function. To resolve this conflict, the arguments are cloned before being passed to the former.
+### Clonable arguments
 
-- **Serializable / deserializable arguments** - In general, a target's arguments must implement the [`serde::Serialize`](https://docs.serde.rs/serde/trait.Serialize.html) and [`serde::Deserialize`](https://docs.serde.rs/serde/trait.Deserialize.html) traits, e.g., by [deriving them](https://serde.rs/derive.html). We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable/deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`concretize` and `concretize_impl`](#arguments) above.
+A target's arguments must implement the [`Clone`] trait. The reason for this requirement is that the arguments are needed in two places: in a `test-fuzz`-internal function that writes corpus files, and in the body of the target function. To resolve this conflict, the arguments are cloned before being passed to the former.
 
-- **Global variables** - The fuzzing harnesses that `test-fuzz` implements do not initialize global variables. While [`execute_with`](#arguments) provides some remedy, it is not a complete solution. In general, fuzzing a function that relies on global variables requires ad-hoc methods.
+### Serializable / deserializable arguments
 
-- **[`convert`](#arguments) and [`concretize`](#arguments) / [`concretize_impl`](#arguments)** - These options are incompatible in the following sense. If a fuzz target's argument type is a type parameter, [`convert`](#arguments) will try to match the type parameter, not the type to which it is concretized. Supporting the latter would seem to require simulating type substitution as the compiler would perform it. However, this is not currently implemented.
+In general, a target's arguments must implement the [`serde::Serialize`] and [`serde::Deserialize`] traits, e.g., by [deriving them]. We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable/deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`concretize`] and []`concretize_impl`] above.
+
+### Global variables
+
+The fuzzing harnesses that `test-fuzz` implements do not initialize global variables. While [`execute_with`] provides some remedy, it is not a complete solution. In general, fuzzing a function that relies on global variables requires ad-hoc methods.
+
+### [`convert`] and [`concretize`] / [`concretize_impl`]
+
+These options are incompatible in the following sense. If a fuzz target's argument type is a type parameter, [`convert`] will try to match the type parameter, not the type to which it is concretized. Supporting the latter would seem to require simulating type substitution as the compiler would perform it. However, this is not currently implemented.
 
 ## Tips and tricks
 
-- `#[cfg(test)]` [is not enabled](https://github.com/rust-lang/rust/issues/45599#issuecomment-460488107) for integration tests. If your target is tested only by integration tests, then consider using [`enable_in_production`](#arguments) and [`TEST_FUZZ_WRITE`](#environment-variables) to generate a corpus. (Note the warning accompanying [`enable_in_production`](#arguments), however.)
+- `#[cfg(test)]` [is not enabled] for integration tests. If your target is tested only by integration tests, then consider using [`enable_in_production`] and [`TEST_FUZZ_WRITE`] to generate a corpus. (Note the warning accompanying [`enable_in_production`], however.)
 
-- If you know the package in which your target resides, passing `-p <package>` to `cargo test`/[`cargo test-fuzz`](#cargo-test-fuzz-command) can significantly reduce build times. Similarly, if you know your target is called from only one integration test, passing `--test <name>` can reduce build times.
+- If you know the package in which your target resides, passing `-p <package>` to `cargo test`/[`cargo test-fuzz`] can significantly reduce build times. Similarly, if you know your target is called from only one integration test, passing `--test <name>` can reduce build times.
 
-- Rust [won't allow you to](https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types) implement `serde::Serialize` for other repositories' types. But you may be able to [patch](https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html) other repositories to make their types serializeble. Also, [`cargo-clone`](https://github.com/JanLikar/cargo-clone) can be useful for grabbing dependencies' repositories.
+- Rust [won't allow you to] implement `serde::Serialize` for other repositories' types. But you may be able to [patch] other repositories to make their types serializable. Also, [`cargo-clone`] can be useful for grabbing dependencies' repositories.
 
-- [Serde attributes](https://serde.rs/attributes.html) can be helpful in implementing `serde::Serialize`/`serde::Deserialize` for difficult types.
+- [Serde attributes] can be helpful in implementing `serde::Serialize`/`serde::Deserialize` for difficult types.
 
 ## License
 
 `test-fuzz` is licensed and distributed under the AGPLv3 license with the [Macros and Inline Functions Exception]. In plain language, using the [`test_fuzz` macro], the [`test_fuzz_impl` macro], or `test-fuzz`'s [convenience functions and macros] in your software does not require it to be covered by the AGPLv3 license.
 
-[`test_fuzz` macro]: #test_fuzz-macro
-[`test_fuzz_impl` macro]: #test_fuzz_impl-macro
-[convenience functions and macros]: #convenience-functions-and-macros
+[Auto-generated corpus files]: #auto-generated-corpus-files
+[Bincode]: https://github.com/bincode-org/bincode
+[CBOR 0x(4+4)9 0x49]: https://github.com/quininer/cbor4ii
+[Components]: #components
+[Convenience functions and macros]: #convenience-functions-and-macros
+[Environment variables]: #environment-variables
+[Installation]: #installation
+[License]: #license
+[Limitations]: #limitations
 [Macros and Inline Functions Exception]: https://spdx.org/licenses/mif-exception.html
+[Overview]: #overview
+[Serde CBOR]: https://github.com/pyfisch/cbor
+[Serde attributes]: https://serde.rs/attributes.html
+[Substrate externalities]: https://substrate.dev/docs/en/knowledgebase/runtime/tests#mock-runtime-storage
+[The Cargo Book]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#choosing-features
+[Tips and tricks]: #tips-and-tricks
+[`Clone`]: https://doc.rust-lang.org/std/clone/trait.Clone.html
+[`Path`]: https://doc.rust-lang.org/std/path/struct.Path.html
+[`TEST_FUZZ_MANIFEST_PATH`]: #test_fuzz_manifest_path
+[`TEST_FUZZ_WRITE`]: #test_fuzz_write
+[`ToOwned`]: https://doc.rust-lang.org/std/borrow/trait.ToOwned.html
+[`afl.rs`]: https://github.com/rust-fuzz/afl.rs
+[`cargo test-fuzz` command]: #cargo-test-fuzz-command
+[`cargo test-fuzz`]: #cargo-test-fuzz-command
+[`cargo-clone`]: https://github.com/JanLikar/cargo-clone
+[`concretize_impl`]: #concretize_impl--parameters
+[`concretize`]: #concretize--parameters
+[`convert`]: #convert--x-y
+[`core::ops::Add`]: https://doc.rust-lang.org/beta/core/ops/trait.Add.html
+[`core::ops::Div`]: https://doc.rust-lang.org/beta/core/ops/trait.Div.html
+[`core::ops::Sub`]: https://doc.rust-lang.org/beta/core/ops/trait.Sub.html
+[`deserialize_with`]: https://serde.rs/field-attrs.html#deserialize_with
+[`enable_in_production`]: #enable_in_production
+[`execute_with`]: #execute_with--function
+[`num_traits::One`]: https://docs.rs/num-traits/0.2.14/num_traits/identities/trait.One.html
+[`num_traits::bounds::Bounded`]: https://docs.rs/num-traits/0.2.14/num_traits/bounds/trait.Bounded.html
+[`proc_macro_span`]: https://github.com/rust-lang/rust/issues/54725
+[`rename`]: #rename--name
+[`serde::Deserialize`]: https://docs.serde.rs/serde/trait.Deserialize.html
+[`serde::Serialize`]: https://docs.serde.rs/serde/trait.Serialize.html
+[`serialize_with`]: https://serde.rs/field-attrs.html#serialize_with
+[`std::convert::Into`]: https://doc.rust-lang.org/std/convert/trait.Into.html
+[`std::default::Default`]: https://doc.rust-lang.org/std/default/trait.Default.html
+[`test-fuzz` package features]: #test-fuzz-package-features
+[`test_fuzz_impl` macro]: #test_fuzz_impl-macro
+[`test_fuzz` macro]: #test_fuzz-macro
+[`test_fuzz`]: #test_fuzz-macro
+[associated_type.rs]: https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/associated_type.rs#L26
+[auto-generate corpus files]: #auto-generated-corpus-files
+[conversion.rs]: https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/conversion.rs#L5
+[deriving them]: https://serde.rs/derive.html
+[is not enabled]: https://github.com/rust-lang/rust/issues/45599#issuecomment-460488107
+[patch]: https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html
+[won't allow you to]: https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types
