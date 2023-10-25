@@ -174,9 +174,9 @@ Do not try to [auto-generate corpus files] for the target.
 
 Record the target's concretizations when running tests, but do not generate corpus files and do not implement a fuzzing harness. This can be useful when the target is a generic function, but it is unclear what type parameters should be used for fuzzing.
 
-The intended workflow is: enable `only_concretizations`, then run `cargo test` followed by `cargo test-fuzz --display-concretizations`. One of the resulting concretizations might be usable as `concretize`'s `parameters`. Similarly, a concretization resulting from `cargo test-fuzz --display-imply-concretizations` might be usable as `concretize_impl`'s `parameters`.
+The intended workflow is: enable `only_concretizations`, then run `cargo test` followed by `cargo test-fuzz --display concretizations`. One of the resulting concretizations might be usable as `concretize`'s `parameters`. Similarly, a concretization resulting from `cargo test-fuzz --display impl-concretizations` might be usable as `concretize_impl`'s `parameters`.
 
-Note, however, that just because a target was concretized with certain parameters during tests, it does not imply the target's arguments are serializable/deserializable when so concretized. The results of `--display-concretizations`/`--display-impl-concretizations` are merely suggestive.
+Note, however, that just because a target was concretized with certain parameters during tests, it does not imply the target's arguments are serializable/deserializable when so concretized. The results of `--display concretizations`/`--display impl-concretizations` are merely suggestive.
 
 ##### `rename = "name"`
 
