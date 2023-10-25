@@ -1,3 +1,14 @@
+diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
+index ed4b2a6..670e9e1 100644
+--- a/program-runtime/Cargo.toml
++++ b/program-runtime/Cargo.toml
+@@ -31,4 +31,6 @@ solana_rbpf = { workspace = true }
+ thiserror = { workspace = true }
+ 
++test-fuzz = { path = "../../../test-fuzz" }
++
+ [dev-dependencies]
+ assert_matches = { workspace = true }
 diff --git a/program-runtime/src/accounts_data_meter.rs b/program-runtime/src/accounts_data_meter.rs
 index 3e0553d..5136a8b 100644
 --- a/program-runtime/src/accounts_data_meter.rs
@@ -21,99 +32,83 @@ index f923922..0054d03 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 12f8230..c3ff480 100644
+index be95fca..426503f 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -117,4 +117,5 @@ impl fmt::Display for AllocErr {
+@@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -145,4 +146,5 @@ impl BpfAllocator {
+@@ -143,4 +144,5 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -160,8 +162,52 @@ pub struct SerializedAccountMetadata {
+@@ -149,5 +151,11 @@ pub struct SyscallContext {
  }
  
-+pub fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
-+where
-+    S: serde::Serializer,
-+    T: serde::Serialize,
-+{
-+    <T as serde::Serialize>::serialize(*x, serializer)
+-#[derive(Debug, Clone)]
++impl std::fmt::Debug for SyscallContext {
++    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
++        Ok(())
++    }
 +}
 +
-+pub fn deserialize_ref<'de, D, T>(deserializer: D) -> Result<&'static T, D::Error>
-+where
-+    D: serde::Deserializer<'de>,
-+    T: serde::de::DeserializeOwned + std::fmt::Debug,
-+{
-+    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
-+    Ok(Box::leak(Box::new(x)))
-+}
-+
-+pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
-+where
-+    S: serde::Serializer,
-+    T: serde::Serialize,
-+{
-+    <T as serde::Serialize>::serialize(*x, serializer)
-+}
-+
-+pub fn deserialize_ref_mut<'de, D, T>(deserializer: D) -> Result<&'static mut T, D::Error>
++#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+ pub struct SerializedAccountMetadata {
+     pub original_data_len: usize,
+@@ -158,6 +166,22 @@ pub struct SerializedAccountMetadata {
+ }
+ 
++fn default_loaded_programs<'de, D>(_: D) -> Result<&'static mut LoadedProgramsForTxBatch, D::Error>
 +where
 +    D: serde::Deserializer<'de>,
-+    T: serde::de::DeserializeOwned + std::fmt::Debug,
 +{
-+    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
-+    Ok(Box::leak(Box::new(x)))
++    Ok(Box::leak(Box::new(LoadedProgramsForTxBatch::default())))
 +}
 +
-+fn default_builtin_programs() -> &'static BuiltinPrograms {
-+    Box::leak(Box::new(BuiltinPrograms::default()))
-+}
-+
-+#[derive(serde::Deserialize, serde::Serialize)]
++#[derive(Debug, serde::Deserialize, serde::Serialize)]
  pub struct InvokeContext<'a> {
 +    #[serde(
-+        serialize_with = "serialize_ref_mut",
-+        deserialize_with = "deserialize_ref_mut"
++        serialize_with = "test_fuzz::serialize_ref_mut",
++        deserialize_with = "test_fuzz::deserialize_ref_mut"
 +    )]
      pub transaction_context: &'a mut TransactionContext,
-     rent: Rent,
-     pre_accounts: Vec<PreAccount>,
-+    #[serde(serialize_with = "serialize_ref", deserialize_with = "deserialize_ref")]
++    #[serde(
++        serialize_with = "test_fuzz::serialize_ref",
++        deserialize_with = "test_fuzz::deserialize_ref"
++    )]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -170,6 +216,9 @@ pub struct InvokeContext<'a> {
+@@ -166,6 +190,9 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
-+    #[serde(skip)]
++    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
      pub programs_loaded_for_tx_batch: &'a LoadedProgramsForTxBatch,
-+    #[serde(skip)]
++    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
      pub programs_modified_by_tx: &'a mut LoadedProgramsForTxBatch,
-+    #[serde(skip)]
++    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
      pub programs_updated_only_for_global_cache: &'a mut LoadedProgramsForTxBatch,
      pub feature_set: Arc<FeatureSet>,
-@@ -181,4 +230,25 @@ pub struct InvokeContext<'a> {
+@@ -177,4 +204,26 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
 +    fn clone(&self) -> Self {
 +        Self {
 +            transaction_context: Box::leak(Box::new(self.transaction_context.clone())),
-+            pre_accounts: self.pre_accounts.clone(),
 +            log_collector: self.log_collector.clone(),
 +            compute_meter: self.compute_meter.clone(),
-+            programs_loaded_for_tx_batch: self.programs_loaded_for_tx_batch.clone(),
-+            programs_modified_by_tx: self.programs_modified_by_tx.clone(),
-+            programs_updated_only_for_global_cache: self
-+                .programs_updated_only_for_global_cache
-+                .clone(),
++            programs_loaded_for_tx_batch: Box::leak(Box::new(
++                self.programs_loaded_for_tx_batch.clone(),
++            )),
++            programs_modified_by_tx: Box::leak(Box::new(self.programs_modified_by_tx.clone())),
++            programs_updated_only_for_global_cache: Box::leak(Box::new(
++                self.programs_updated_only_for_global_cache.clone(),
++            )),
 +            feature_set: self.feature_set.clone(),
 +            timings: self.timings.clone(),
 +            syscall_context: self.syscall_context.clone(),
@@ -126,26 +121,15 @@ index 12f8230..c3ff480 100644
  impl<'a> InvokeContext<'a> {
      #[allow(clippy::too_many_arguments)]
 diff --git a/program-runtime/src/log_collector.rs b/program-runtime/src/log_collector.rs
-index 8c801b8..090f2ca 100644
+index 8c801b8..93bb50b 100644
 --- a/program-runtime/src/log_collector.rs
 +++ b/program-runtime/src/log_collector.rs
 @@ -4,4 +4,5 @@ use std::{cell::RefCell, rc::Rc};
  const LOG_MESSAGES_BYTES_LIMIT: usize = 10 * 1000;
  
-+#[derive(Clone, serde::Deserialize, serde::Serialize)]
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct LogCollector {
      messages: Vec<String>,
-diff --git a/program-runtime/src/pre_account.rs b/program-runtime/src/pre_account.rs
-index 2ca91ba..d94725c 100644
---- a/program-runtime/src/pre_account.rs
-+++ b/program-runtime/src/pre_account.rs
-@@ -13,5 +13,5 @@ use {
- // The relevant state of an account before an Instruction executes, used
- // to verify account integrity after the Instruction completes
--#[derive(Clone, Debug, Default)]
-+#[derive(Clone, Debug, Default, serde::Deserialize, serde::Serialize)]
- pub struct PreAccount {
-     key: Pubkey,
 diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
 index c403f1c..45b9844 100644
 --- a/program-runtime/src/sysvar_cache.rs
@@ -188,28 +172,28 @@ index 16a52c0..e2683ac 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 82c6237..6abf051 100644
+index dd944b7..d0099e5 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -388,6 +388,7 @@ pub fn process_instruction(
- }
+@@ -389,6 +389,7 @@ declare_builtin_function!(
+ );
  
--fn process_instruction_inner(
+-pub fn process_instruction_inner(
 -    invoke_context: &mut InvokeContext,
 +#[test_fuzz::test_fuzz]
-+fn process_instruction_inner<'a>(
++pub fn process_instruction_inner<'a>(
 +    invoke_context: &mut InvokeContext<'a>,
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 061b16c..3d02d73 100644
+index 061b16c..d994737 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -69,5 +69,5 @@ rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
  rustversion = { workspace = true }
 -serde = { workspace = true }
-+serde = { version = "1.0.152", features = ["rc"] }
++serde = { version = "1.0", features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
 @@ -85,4 +85,6 @@ uriparse = { workspace = true }
@@ -220,10 +204,10 @@ index 061b16c..3d02d73 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 9ec56b0..53f87df 100644
+index 8682836..e8c2a2d 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -914,5 +914,5 @@ lazy_static! {
+@@ -939,5 +939,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
@@ -231,7 +215,7 @@ index 9ec56b0..53f87df 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index cdfb162..81225ce 100644
+index 77cbb83..e1ea764 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -36,5 +36,5 @@ pub type IndexOfAccount = u16;
@@ -248,7 +232,7 @@ index cdfb162..81225ce 100644
 +#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct TransactionAccounts {
      accounts: Vec<RefCell<AccountSharedData>>,
-@@ -137,9 +137,31 @@ impl TransactionAccounts {
+@@ -130,9 +130,31 @@ impl TransactionAccounts {
  }
  
 +fn serialize_account_keys<'a, S>(
@@ -281,7 +265,18 @@ index cdfb162..81225ce 100644
 +    )]
      account_keys: Pin<Box<[Pubkey]>>,
      accounts: Rc<TransactionAccounts>,
-@@ -481,5 +503,5 @@ pub struct TransactionReturnData {
+@@ -185,7 +207,7 @@ impl TransactionContext {
+         }
+ 
+-        Ok(Rc::try_unwrap(self.accounts)
+-            .expect("transaction_context.accounts has unexpected outstanding refs")
+-            .into_accounts())
++        // smoelius: Our implementation of `Clone` for `InvokeContext` leaks a copy of a
++        // `TransactionContext`, which is why a call to `Rc::try_unwrap(self.accounts)` would fail.
++        Ok((*self.accounts).clone().into_accounts())
+     }
+ 
+@@ -450,5 +472,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone, Default, Eq, PartialEq)]

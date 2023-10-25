@@ -393,6 +393,10 @@ where
 }
 ```
 
+#### `serialize_ref_mut` / `deserialize_ref_mut`
+
+`serialize_ref_mut` and `deserialize_ref_mut` are similar to `serialize_ref` and `deserialize_ref` (respectively), expect they operate on mutable references instead of immutable ones.
+
 ## `test-fuzz` package features
 
 The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book]. For example, to enable the `auto_concretize` feature, use:
