@@ -17,7 +17,7 @@ use testing::CommandExt;
 option_set! {
     struct Flags: UpperSnake + u8 {
         const EXPENSIVE = 1 << 0;
-        const SKIP = 1 << 1;
+        // const SKIP = 1 << 1;
         const SKIP_NIGHTLY = 1 << 2;
         const REQUIRES_ISOLATION = 1 << 3;
     }
@@ -44,6 +44,7 @@ static TESTS: Lazy<Vec<Test>> = Lazy::new(|| {
 // smoelius: This should match `scripts/update_patches.sh`.
 const LINES_OF_CONTEXT: u32 = 2;
 
+#[cfg_attr(dylint_lib = "supplementary", allow(commented_code))]
 mod cheap_tests {
     use super::*;
     #[test]
@@ -54,7 +55,7 @@ mod cheap_tests {
                 module_path!(),
                 test,
                 test.flags.contains(Flags::EXPENSIVE)
-                    || test.flags.contains(Flags::SKIP)
+                    // || test.flags.contains(Flags::SKIP)
                     || (test.flags.contains(Flags::SKIP_NIGHTLY)
                         && version_meta.channel == Channel::Nightly),
             );
@@ -72,9 +73,9 @@ mod all_tests {
             run_test(
                 module_path!(),
                 test,
-                test.flags.contains(Flags::SKIP)
-                    || (test.flags.contains(Flags::SKIP_NIGHTLY)
-                        && version_meta.channel == Channel::Nightly),
+                // test.flags.contains(Flags::SKIP) ||
+                test.flags.contains(Flags::SKIP_NIGHTLY)
+                    && version_meta.channel == Channel::Nightly,
             );
         }
     }

@@ -12,7 +12,7 @@ pub use afl;
 pub use internal::serde_format;
 
 mod utils;
-pub use utils::{deserialize_ref, serialize_ref};
+pub use utils::{deserialize_ref, deserialize_ref_mut, serialize_ref, serialize_ref_mut};
 
 mod convert;
 pub use convert::{FromRef, Into};

@@ -89,3 +89,24 @@ where
     let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
     Ok(Box::leak(Box::new(x)))
 }
+
+/// `serialize_ref_mut` is similar to `serialize_ref`, except it operates on a mutable reference
+/// instead of an immutable one.
+pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: serde::Serializer,
+    T: serde::Serialize,
+{
+    <T as serde::Serialize>::serialize(*x, serializer)
+}
+
+/// `deserialize_ref_mut` is similar to `deserialize_ref`, except it operates on a mutable reference
+/// instead of an immutable one.
+pub fn deserialize_ref_mut<'de, D, T>(deserializer: D) -> Result<&'static mut T, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: serde::de::DeserializeOwned + std::fmt::Debug,
+{
+    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
+    Ok(Box::leak(Box::new(x)))
+}
