@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-runtime"
-version = "4.0.2"
+version = "4.0.3"
 edition = "2021"
 
 description = "test-fuzz-runtime"
@@ -15,4 +15,4 @@ num-traits = "0.2"
 serde = { version = "1.0", features = ["derive"] }
 sha-1 = "0.10"
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=4.0.2" }
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=4.0.3" }

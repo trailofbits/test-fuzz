@@ -1,5 +1,11 @@
 # Changelog
 
+## 4.0.3
+
+- Fix install command in documentation ([#294](https://github.com/trailofbits/test-fuzz/pull/294))&mdash;thanks [@maxammann](https://github.com/maxammann)
+- Other documentation improvements ([#295](https://github.com/trailofbits/test-fuzz/pull/295), [#297](https://github.com/trailofbits/test-fuzz/pull/297), [#298](https://github.com/trailofbits/test-fuzz/pull/298), [#300](https://github.com/trailofbits/test-fuzz/pull/300))
+- Add unstable utility functions `serialize_ref_mut` and `deserialize_ref_mut` ([#301](https://github.com/trailofbits/test-fuzz/pull/301))
+
 ## 4.0.2
 
 - Significant refactoring regarding Serde format handling and Cargo feature use, but users should experience no differences ([#284](https://github.com/trailofbits/test-fuzz/pull/284))
