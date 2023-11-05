@@ -21,18 +21,18 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index f923922..0054d03 100644
+index a568162..7889a27 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
-@@ -32,5 +32,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
- }
+@@ -19,5 +19,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
+ pub const DEFAULT_HEAP_COST: u64 = 8;
  
 -#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 +#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index be95fca..426503f 100644
+index 6ee87fe..6954e02 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
@@ -204,10 +204,10 @@ index 061b16c..d994737 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 8682836..e8c2a2d 100644
+index 376880e..9dbfb9c 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -939,5 +939,5 @@ lazy_static! {
+@@ -934,5 +934,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
