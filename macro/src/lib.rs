@@ -272,10 +272,16 @@ fn map_method_or_fn(
         .map(|s| parse_generic_arguments(s, false))
         .or_else(|| {
             #[cfg(feature = "__auto_concretize")]
-            return auto_concretize::unique_concretization(sig)
-                .map(|s| parse_generic_arguments(&s, true))
-                .map_err(|error| concretization_error = Some(error))
-                .ok();
+            {
+                eprintln!(
+                    "`auto_concretize` is deprecated and will be removed in the next major \
+                     version of test-fuzz."
+                );
+                auto_concretize::unique_concretization(sig)
+                    .map(|s| parse_generic_arguments(&s, true))
+                    .map_err(|error| concretization_error = Some(error))
+                    .ok()
+            }
             #[cfg(not(feature = "__auto_concretize"))]
             return None;
         });
