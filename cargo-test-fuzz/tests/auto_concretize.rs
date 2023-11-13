@@ -2,6 +2,7 @@ use internal::{
     auto_concretize_enabled,
     dirs::{concretizations_directory_from_target, impl_concretizations_directory_from_target},
 };
+use predicates::prelude::*;
 use std::fs::remove_dir_all;
 use testing::{examples, CommandExt};
 
@@ -53,6 +54,10 @@ fn test_fuzz() {
             .unwrap()
             .args(["--no-run"])
             .logged_assert()
-            .success();
+            .success()
+            .stderr(predicate::str::contains(
+                "`auto_concretize` is deprecated and will be removed in the next major version of \
+                 test-fuzz.",
+            ));
     }
 }
