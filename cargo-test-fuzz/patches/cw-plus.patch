@@ -1,8 +1,8 @@
 diff --git a/contracts/cw20-base/Cargo.toml b/contracts/cw20-base/Cargo.toml
-index d9b40fd..676ff40 100644
+index 2b35f1b..3e333b4 100644
 --- a/contracts/cw20-base/Cargo.toml
 +++ b/contracts/cw20-base/Cargo.toml
-@@ -30,4 +30,6 @@ serde = { version = "1.0.188", default-features = false, features = ["derive"] }
+@@ -29,4 +29,6 @@ serde = { version = "1.0.188", default-features = false, features = ["derive"] }
  thiserror = { version = "1.0.49" }
  
 +test-fuzz = { path = "../../../../test-fuzz" }
@@ -10,10 +10,10 @@ index d9b40fd..676ff40 100644
  [dev-dependencies]
  cw-multi-test = "0.16.5"
 diff --git a/contracts/cw20-base/src/contract.rs b/contracts/cw20-base/src/contract.rs
-index 30335e4..4c854af 100644
+index 6f92ac2..2df8ffe 100644
 --- a/contracts/cw20-base/src/contract.rs
 +++ b/contracts/cw20-base/src/contract.rs
-@@ -92,7 +92,33 @@ fn verify_logo(logo: &Logo) -> Result<(), ContractError> {
+@@ -91,7 +91,33 @@ fn verify_logo(logo: &Logo) -> Result<(), ContractError> {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
@@ -49,7 +49,7 @@ index 30335e4..4c854af 100644
 +    mut deps: DepsMut<'a>,
      _env: Env,
      _info: MessageInfo,
-@@ -186,6 +212,7 @@ pub fn validate_accounts(accounts: &[Cw20Coin]) -> Result<(), ContractError> {
+@@ -185,6 +211,7 @@ pub fn validate_accounts(accounts: &[Cw20Coin]) -> Result<(), ContractError> {
  
  #[cfg_attr(not(feature = "library"), entry_point)]
 -pub fn execute(
@@ -59,7 +59,7 @@ index 30335e4..4c854af 100644
 +    deps: DepsMut<'a>,
      env: Env,
      info: MessageInfo,
-@@ -505,6 +532,32 @@ pub fn execute_upload_logo(
+@@ -504,6 +531,32 @@ pub fn execute_upload_logo(
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
@@ -93,7 +93,7 @@ index 30335e4..4c854af 100644
 +pub fn query<'a>(deps: Deps<'a>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
      match msg {
          QueryMsg::Balance { address } => to_binary(&query_balance(deps, address)?),
-@@ -588,5 +641,10 @@ pub fn query_download_logo(deps: Deps) -> StdResult<DownloadLogoResponse> {
+@@ -587,5 +640,10 @@ pub fn query_download_logo(deps: Deps) -> StdResult<DownloadLogoResponse> {
  
  #[cfg_attr(not(feature = "library"), entry_point)]
 -pub fn migrate(deps: DepsMut, _env: Env, _msg: MigrateMsg) -> Result<Response, ContractError> {
