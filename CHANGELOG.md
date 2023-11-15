@@ -1,5 +1,9 @@
 # Changelog
 
+## 4.0.4
+
+- Add `auto_concretize` deprecation message ([#305](https://github.com/trailofbits/test-fuzz/pull/305))
+
 ## 4.0.3
 
 - Fix install command in documentation ([#294](https://github.com/trailofbits/test-fuzz/pull/294))&mdash;thanks [@maxammann](https://github.com/maxammann)
