@@ -32,7 +32,7 @@ index a568162..7889a27 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index db73672..66ae597 100644
+index bdb870a..a36e5be 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
@@ -83,17 +83,15 @@ index db73672..66ae597 100644
 +    )]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -166,6 +190,9 @@ pub struct InvokeContext<'a> {
+@@ -166,5 +190,7 @@ pub struct InvokeContext<'a> {
      compute_meter: RefCell<u64>,
      accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
      pub programs_loaded_for_tx_batch: &'a LoadedProgramsForTxBatch,
 +    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
      pub programs_modified_by_tx: &'a mut LoadedProgramsForTxBatch,
-+    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
-     pub programs_updated_only_for_global_cache: &'a mut LoadedProgramsForTxBatch,
      pub feature_set: Arc<FeatureSet>,
-@@ -177,4 +204,26 @@ pub struct InvokeContext<'a> {
+@@ -176,4 +202,23 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -106,9 +104,6 @@ index db73672..66ae597 100644
 +                self.programs_loaded_for_tx_batch.clone(),
 +            )),
 +            programs_modified_by_tx: Box::leak(Box::new(self.programs_modified_by_tx.clone())),
-+            programs_updated_only_for_global_cache: Box::leak(Box::new(
-+                self.programs_updated_only_for_global_cache.clone(),
-+            )),
 +            feature_set: self.feature_set.clone(),
 +            timings: self.timings.clone(),
 +            syscall_context: self.syscall_context.clone(),
@@ -142,7 +137,7 @@ index c403f1c..45b9844 100644
  pub struct SysvarCache {
      clock: Option<Arc<Clock>>,
 diff --git a/program-runtime/src/timings.rs b/program-runtime/src/timings.rs
-index 0e2e495..a380f89 100644
+index 8eeb9c5..d95800a 100644
 --- a/program-runtime/src/timings.rs
 +++ b/program-runtime/src/timings.rs
 @@ -9,5 +9,5 @@ use {
@@ -152,7 +147,7 @@ index 0e2e495..a380f89 100644
 +#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
  pub struct ProgramTiming {
      pub accumulated_us: u64,
-@@ -388,5 +388,5 @@ impl ExecuteAccessoryTimings {
+@@ -381,5 +381,5 @@ impl ExecuteAccessoryTimings {
  }
  
 -#[derive(Default, Debug, PartialEq, Eq)]
@@ -172,10 +167,10 @@ index 16a52c0..e2683ac 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 2b745d8..0213982 100644
+index 0f9e830..47bce28 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -389,6 +389,7 @@ declare_builtin_function!(
+@@ -381,6 +381,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(
@@ -204,10 +199,10 @@ index 061b16c..d994737 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 5357811..f06c15e 100644
+index 806c3e0..ed60850 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -939,5 +939,5 @@ lazy_static! {
+@@ -949,5 +949,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]

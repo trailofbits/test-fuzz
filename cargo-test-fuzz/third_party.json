@@ -2,7 +2,7 @@
   {
     "flags": [],
     "url": "https://github.com/CosmWasm/cw-plus",
-    "rev": "12a5f5afab8ece3f7af8374d5c652dd92dae8937",
+    "rev": "1a598fd99f788e1f0a2d735ff7d19571ca70205c",
     "patch": "cw-plus.patch",
     "subdir": ".",
     "package": "cw20-base",
@@ -29,7 +29,7 @@
   {
     "flags": ["EXPENSIVE"],
     "url": "https://github.com/solana-labs/solana",
-    "rev": "ad65c82d6d3928c542b80967101d951c347e8cb7",
+    "rev": "da9fad84b337533150bffadec0eae09537544655",
     "patch": "solana.patch",
     "subdir": ".",
     "package": "solana-bpf-loader-program",
