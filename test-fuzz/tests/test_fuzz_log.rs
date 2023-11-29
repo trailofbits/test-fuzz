@@ -14,6 +14,7 @@ fn test_fuzz_log() {
             "--no-run",
             "--features",
             &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
+            "--test=parse_duration",
         ])
         .logged_assert()
         .success()
