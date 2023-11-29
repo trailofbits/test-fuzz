@@ -131,6 +131,8 @@ jobs:
         run: |
           rustup          target add wasm32-unknown-unknown
           rustup +nightly target add wasm32-unknown-unknown
+          rustup          component add rust-src
+          rustup +nightly component add rust-src
 
       # smoelius: I expect this list to grow.
       - name: Install tools
