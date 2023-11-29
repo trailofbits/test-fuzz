@@ -109,8 +109,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # smoelius: The Substrate tests require the `rust-src` component and the wasm32 target.
       - name: Set toolchain
-        run: rustup default ${{ matrix.toolchain }}
+        run: |
+          rustup default ${{ matrix.toolchain }}
+          rustup component add rust-src
+          rustup target add wasm32-unknown-unknown
 
       - name: Install llvm
         run: sudo apt-get install llvm
@@ -124,15 +128,6 @@ jobs:
 
       - name: Run afl-system-config
         run: cargo afl system-config
-
-      # smoelius: The wasm32 target is needed for some Substrate tests, regardless of the toolchain
-      # used to build test-fuzz.
-      - name: Add wasm32 target
-        run: |
-          rustup          target add wasm32-unknown-unknown
-          rustup +nightly target add wasm32-unknown-unknown
-          rustup          component add rust-src
-          rustup +nightly component add rust-src
 
       # smoelius: I expect this list to grow.
       - name: Install tools
