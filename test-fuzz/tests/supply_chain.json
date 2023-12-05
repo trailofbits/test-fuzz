@@ -757,50 +757,6 @@
         "name": "KokaKiwi"
       }
     ],
-    "home": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/147214?v=4",
-        "id": 443,
-        "kind": "user",
-        "login": "brson",
-        "name": "Brian Anderson"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/5758045?v=4",
-        "id": 3959,
-        "kind": "user",
-        "login": "LucioFranco",
-        "name": "Lucio Franco"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/43198?v=4",
-        "id": 6202,
-        "kind": "user",
-        "login": "ehuss",
-        "name": "Eric Huss"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/1469421?v=4",
-        "id": 45329,
-        "kind": "user",
-        "login": "kinnison",
-        "name": "Daniel Silverstone"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/53090244?v=4",
-        "id": 55123,
-        "kind": "user",
-        "login": "rust-lang-owner",
-        "name": null
-      }
-    ],
     "humantime": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/321799?v=4",
@@ -1114,6 +1070,15 @@
         "name": "Ed Page"
       }
     ],
+    "prettyplease": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/1940490?v=4",
+        "id": 3618,
+        "kind": "user",
+        "login": "dtolnay",
+        "name": "David Tolnay"
+      }
+    ],
     "proc-macro2": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/1940490?v=4",
@@ -1345,15 +1310,6 @@
         "name": "David Tolnay"
       }
     ],
-    "same-file": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/456674?v=4",
-        "id": 189,
-        "kind": "user",
-        "login": "BurntSushi",
-        "name": "Andrew Gallant"
-      }
-    ],
     "semver": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/1940490?v=4",
@@ -1515,15 +1471,6 @@
         "name": "David Tolnay"
       }
     ],
-    "toolchain_find": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/2665334?v=4",
-        "id": 2989,
-        "kind": "user",
-        "login": "gsquire",
-        "name": "Garrett Squire"
-      }
-    ],
     "typenum": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/4908217?v=4",
@@ -1625,15 +1572,6 @@
         "kind": "user",
         "login": "alexcrichton",
         "name": "Alex Crichton"
-      }
-    ],
-    "walkdir": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/456674?v=4",
-        "id": 189,
-        "kind": "user",
-        "login": "BurntSushi",
-        "name": "Andrew Gallant"
       }
     ],
     "wasi": [
