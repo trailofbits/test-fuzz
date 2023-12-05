@@ -11,18 +11,15 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     convert::TryFrom,
     env::var,
-    io::Write,
     str::FromStr,
 };
-use subprocess::{Exec, Redirection};
 use syn::{
-    parse::Parser, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated, token,
-    Attribute, Block, Expr, FnArg, GenericArgument, GenericParam, Generics, Ident, ImplItem,
-    ImplItemFn, ItemFn, ItemImpl, ItemMod, LifetimeParam, PatType, Path, PathArguments,
+    parse::Parser, parse2, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated,
+    token, Attribute, Block, Expr, File, FnArg, GenericArgument, GenericParam, Generics, Ident,
+    ImplItem, ImplItemFn, ItemFn, ItemImpl, ItemMod, LifetimeParam, PatType, Path, PathArguments,
     PathSegment, Receiver, ReturnType, Signature, Stmt, Type, TypeParam, TypePath, TypeReference,
     TypeSlice, Visibility, WhereClause, WherePredicate,
 };
-use toolchain_find::find_installed_component;
 
 mod auto_concretize;
 
@@ -1077,25 +1074,9 @@ fn args_from_autos(autos: &[Expr]) -> Expr {
 
 fn log(tokens: &TokenStream2) {
     if log_enabled() {
-        find_installed_component("rustfmt").map_or_else(
-            || {
-                println!("{tokens}");
-            },
-            |rustfmt| {
-                let mut popen = Exec::cmd(rustfmt)
-                    .stdin(Redirection::Pipe)
-                    .popen()
-                    .expect("`popen` failed");
-                let mut stdin = popen
-                    .stdin
-                    .take()
-                    .expect("Could not take `rustfmt`'s standard input");
-                write!(stdin, "{tokens}").expect("Could not write to `rustfmt`'s standard input");
-                drop(stdin);
-                let status = popen.wait().expect("`wait` failed");
-                assert!(status.success(), "`rustfmt` failed");
-            },
-        );
+        let syntax_tree: File = parse2(tokens.clone()).expect("Could not parse tokens");
+        let formatted = prettyplease::unparse(&syntax_tree);
+        print!("{formatted}");
     }
 }
 
