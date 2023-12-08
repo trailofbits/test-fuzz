@@ -153,7 +153,7 @@ fn map_impl_item_fn(
                 sig,
                 block,
             );
-            (parse_quote!( #method ), module)
+            (parse_quote!( #method ), Some(module))
         },
     )
 }
@@ -229,7 +229,7 @@ fn map_method_or_fn(
     defaultness: &Option<token::Default>,
     sig: &Signature,
     block: &Block,
-) -> (TokenStream2, Option<ItemMod>) {
+) -> (TokenStream2, ItemMod) {
     let stmts = &block.stmts;
 
     let mut conversions = Conversions::new();
@@ -734,7 +734,7 @@ fn map_method_or_fn(
                 #(#stmts)*
             }
         },
-        Some(parse_quote! {
+        parse_quote! {
             #mod_attr
             mod #mod_ident {
                 use super::*;
@@ -750,7 +750,7 @@ fn map_method_or_fn(
                     #entry_stmts
                 }
             }
-        }),
+        },
     )
 }
 
