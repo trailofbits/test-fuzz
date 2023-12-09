@@ -32,7 +32,7 @@ index a568162..7889a27 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index bdb870a..9dd5f55 100644
+index 9786d50..580d24e 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
@@ -155,7 +155,7 @@ index 8eeb9c5..d95800a 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 16a52c0..e2683ac 100644
+index 48d771b..1d1d527 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -23,4 +23,7 @@ solana_rbpf = { workspace = true }
@@ -199,10 +199,10 @@ index 061b16c..d994737 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 806c3e0..ed60850 100644
+index 2373eeb..3cc99d8 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -949,5 +949,5 @@ lazy_static! {
+@@ -959,5 +959,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
@@ -210,7 +210,7 @@ index 806c3e0..ed60850 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 77cbb83..e1ea764 100644
+index 7df7fc9..d5ff356 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -36,5 +36,5 @@ pub type IndexOfAccount = u16;
