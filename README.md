@@ -407,7 +407,7 @@ test-fuzz = { version = "4.0", features = ["auto_concretize"] }
 
 The `test-fuzz` package currently supports the following features:
 
-### `auto_concretize`
+### `auto_concretize` (deprecated)
 
 When this feature is enabled, `test-fuzz` tries to infer `impl` and non-`impl` concretizations. Success requires that a target be called with exactly one `impl` concretization and exactly one non-`impl` concretization during tests. Success is not guaranteed by these conditions, however.
 
@@ -475,7 +475,7 @@ A target's arguments must implement the [`Clone`] trait. The reason for this req
 
 ### Serializable / deserializable arguments
 
-In general, a target's arguments must implement the [`serde::Serialize`] and [`serde::Deserialize`] traits, e.g., by [deriving them]. We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable/deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`concretize`] and []`concretize_impl`] above.
+In general, a target's arguments must implement the [`serde::Serialize`] and [`serde::Deserialize`] traits, e.g., by [deriving them]. We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable/deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`concretize`] and [`concretize_impl`] above.
 
 ### Global variables
 
