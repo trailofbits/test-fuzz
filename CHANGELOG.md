@@ -1,5 +1,10 @@
 # Changelog
 
+## 4.0.5
+
+- Format macro-generated code with `prettyplease` ([#314](https://github.com/trailofbits/test-fuzz/pull/314))
+- Update `afl` to version 0.15.0 ([#321](https://github.com/trailofbits/test-fuzz/pull/321))
+
 ## 4.0.4
 
 - Add `auto_concretize` deprecation message ([#305](https://github.com/trailofbits/test-fuzz/pull/305))
