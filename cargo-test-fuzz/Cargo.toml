@@ -1,6 +1,6 @@
 [package]
 name = "cargo-test-fuzz"
-version = "4.0.4"
+version = "4.0.5"
 edition = "2021"
 
 description = "cargo-test-fuzz"
@@ -32,8 +32,8 @@ serde = { version = "1.0", features = ["derive"] }
 strum_macros = "0.25"
 subprocess = "0.2"
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=4.0.4" }
-test-fuzz = { path = "../test-fuzz", version = "=4.0.4" }
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=4.0.5" }
+test-fuzz = { path = "../test-fuzz", version = "=4.0.5" }
 
 [dev-dependencies]
 assert_cmd = "2.0"
