@@ -3,7 +3,7 @@ use predicates::prelude::*;
 use std::{fs::remove_dir_all, sync::Mutex};
 use testing::{examples, retry, CommandExt};
 
-const TIMEOUT: &str = "60";
+const MAX_TOTAL_TIME: &str = "60";
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
@@ -45,7 +45,12 @@ fn fuzz(test: &str, code: i32) {
     retry(3, || {
         examples::test_fuzz("generic", "target")
             .unwrap()
-            .args(["--exit-code", "--run-until-crash", "--", "-V", TIMEOUT])
+            .args([
+                "--exit-code",
+                "--run-until-crash",
+                "--max-total-time",
+                MAX_TOTAL_TIME,
+            ])
             .logged_assert()
             .try_code(predicate::eq(code))
     })

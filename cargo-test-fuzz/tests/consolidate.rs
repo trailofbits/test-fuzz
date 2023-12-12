@@ -4,9 +4,9 @@ use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
 use testing::{examples, retry, CommandExt};
 
-const CRASH_TIMEOUT: &str = "60";
+const CRASH_MAX_TOTAL_TIME: &str = "60";
 
-const HANG_TIMEOUT: &str = "120";
+const HANG_MAX_TOTAL_TIME: &str = "120";
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
@@ -14,7 +14,11 @@ fn consolidate_crashes() {
     consolidate(
         "assert",
         "target",
-        &["--run-until-crash", "--", "-V", CRASH_TIMEOUT],
+        &[
+            "--run-until-crash",
+            "--max-total-time",
+            CRASH_MAX_TOTAL_TIME,
+        ],
         "Args { x: true }",
     );
 }
@@ -25,7 +29,7 @@ fn consolidate_hangs() {
     consolidate(
         "parse_duration",
         "parse",
-        &["--persistent", "--", "-V", HANG_TIMEOUT],
+        &["--persistent", "--max-total-time", HANG_MAX_TOTAL_TIME],
         "",
     );
 }

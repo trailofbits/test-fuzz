@@ -10,7 +10,7 @@ use testing::{examples, retry, CommandExt};
 // smoelius: MEMORY_LIMIT must be large enough for the build process to complete.
 const MEMORY_LIMIT: u64 = 1024 * 1024 * 1024;
 
-const TIMEOUT: &str = "240";
+const MAX_TOTAL_TIME: &str = "240";
 
 #[derive(Clone, Copy)]
 enum Object {
@@ -42,7 +42,7 @@ fn replay_hangs() {
     replay(
         "parse_duration",
         "parse",
-        &["--persistent", "--", "-V", TIMEOUT],
+        &["--persistent", "--max-total-time", MAX_TOTAL_TIME],
         Object::Hangs,
         r"(?m)\bTimeout$",
     );
