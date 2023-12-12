@@ -4,7 +4,7 @@ use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
 use testing::{examples, retry, CommandExt};
 
-const TIMEOUT: &str = "60";
+const MAX_TOTAL_TIME: &str = "60";
 
 // smoelius: It would be nice if these first two tests could distinguish how many "auto_generate"
 // tests get run (0 vs. 1). But right now, I can't think of an easy way to do this.
@@ -43,7 +43,12 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
     retry(3, || {
         let assert = examples::test_fuzz(krate, target)
             .unwrap()
-            .args(["--no-ui", "--run-until-crash", "--", "-V", TIMEOUT])
+            .args([
+                "--no-ui",
+                "--run-until-crash",
+                "--max-total-time",
+                MAX_TOTAL_TIME,
+            ])
             .logged_assert();
 
         let assert = if success {

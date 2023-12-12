@@ -19,10 +19,7 @@ enum SubCommand {
 // smoelius: Wherever possible, try to reuse cargo test and libtest option names.
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Deserialize, Parser, Serialize)]
-#[command(version = crate_version!(), after_help = "To fuzz at most <SECONDS> of time, use:
-
-    cargo test-fuzz ... -- -V <SECONDS>
-
+#[command(version = crate_version!(), after_help = "\
 Try `cargo afl fuzz --help` to see additional fuzzer options.
 ")]
 #[remain::sorted]
@@ -51,8 +48,8 @@ struct TestFuzzWithDeprecations {
     #[arg(
         long,
         help = "Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 \
-                if an error occurred; implies --no-ui, does not imply --run-until-crash or -- -V \
-                <SECONDS>"
+                if an error occurred; implies --no-ui, does not imply --run-until-crash or -- \
+                --max-total-time <SECONDS>"
     )]
     exit_code: bool,
     #[arg(
@@ -65,6 +62,12 @@ struct TestFuzzWithDeprecations {
     list: bool,
     #[arg(long, value_name = "PATH", help = "Path to Cargo.toml")]
     manifest_path: Option<String>,
+    #[arg(
+        long,
+        value_name = "SECONDS",
+        help = "Fuzz at most <SECONDS> of time (equivalent to -- -V <SECONDS>)"
+    )]
+    max_total_time: Option<u64>,
     #[arg(long, help = "Do not activate the `default` feature")]
     no_default_features: bool,
     #[arg(
@@ -137,6 +140,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             features,
             list,
             manifest_path,
+            max_total_time,
             no_default_features,
             no_instrumentation,
             no_run,
@@ -165,6 +169,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             features,
             list,
             manifest_path,
+            max_total_time,
             no_default_features,
             no_instrumentation,
             no_run,

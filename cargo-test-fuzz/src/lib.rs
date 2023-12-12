@@ -77,6 +77,7 @@ pub struct TestFuzz {
     pub features: Vec<String>,
     pub list: bool,
     pub manifest_path: Option<String>,
+    pub max_total_time: Option<u64>,
     pub no_default_features: bool,
     pub no_instrumentation: bool,
     pub no_run: bool,
@@ -936,6 +937,9 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
         .into_iter()
         .map(String::from),
     );
+    if let Some(max_total_time) = opts.max_total_time {
+        args.extend(["-V".to_owned(), max_total_time.to_string()]);
+    }
     if let Some(timeout) = opts.timeout {
         args.extend(["-t".to_owned(), format!("{}", timeout * MILLIS_PER_SEC)]);
     }
