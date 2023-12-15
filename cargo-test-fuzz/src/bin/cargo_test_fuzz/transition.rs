@@ -48,7 +48,7 @@ struct TestFuzzWithDeprecations {
     #[arg(
         long,
         help = "Exit with 0 if the time limit was reached, 1 for other programmatic aborts, and 2 \
-                if an error occurred; implies --no-ui, does not imply --run-until-crash or -- \
+                if an error occurred; implies --no-ui, does not imply --run-until-crash or \
                 --max-total-time <SECONDS>"
     )]
     exit_code: bool,
