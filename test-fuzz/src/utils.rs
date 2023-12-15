@@ -29,8 +29,8 @@ macro_rules! dont_care {
     };
 }
 
-/// Wrap `<$ty as ToOwned>::Owned` in a type `$ident` and implement `From` and `test_fuzz::Into`
-/// for `$ident` so that `convert = "&$ty, $ident"` can be used.
+/// Wrap `<$ty as ToOwned>::Owned` in a type `$ident` and implement `From` so that `convert = "&$ty,
+/// $ident"` can be used.
 #[macro_export]
 macro_rules! leak {
     ($ty:ty, $ident:ident) => {
@@ -43,9 +43,9 @@ macro_rules! leak {
             }
         }
 
-        impl test_fuzz::Into<&$ty> for $ident {
-            fn into(self) -> &'static $ty {
-                Box::leak(Box::new(self.0))
+        impl From<$ident> for &$ty {
+            fn from(value: $ident) -> Self {
+                Box::leak(Box::new(value.0))
             }
         }
     };

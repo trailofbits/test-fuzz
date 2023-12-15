@@ -117,13 +117,13 @@ Note: The target's arguments must be serializable for **every** instantiation of
 
 ##### `convert = "X, Y"`
 
-When serializing the target's arguments, convert values of type `X` to type `Y` using `Y`'s implementation of `From<X>`, or of type `&X` to type `Y` using `Y`'s implementation of the non-standard trait `test_fuzz::FromRef<X>`. When deserializing, convert those values back to type `X` using `Y`'s implementation of the non-standard trait `test_fuzz::Into<X>`.
+When serializing the target's arguments, convert values of type `X` to type `Y` using `Y`'s implementation of `From<X>`, or of type `&X` to type `Y` using `Y`'s implementation of the non-standard trait `test_fuzz::FromRef<X>`. When deserializing, convert those values back to type `X` using `X`'s implementation of `From<Y>`.
 
 That is, use of `convert = "X, Y"` must be accompanied by certain implementations. If `X` implements [`Clone`], then `Y` may implement the following:
 
 ```rust
 impl From<X> for Y {
-    fn from(x: X) -> Self {
+    fn from(value: X) -> Self {
         ...
     }
 }
@@ -133,23 +133,21 @@ If `X` does not implement [`Clone`], then `Y` must implement the following:
 
 ```rust
 impl test_fuzz::FromRef<X> for Y {
-    fn from_ref(x: &X) -> Self {
+    fn from_ref(value: &X) -> Self {
         ...
     }
 }
 ```
 
-Additionally, `Y` must implement the following (regardless of whether `X` implements [`Clone`]):
+Additionally, `X` must implement the following (regardless of whether `X` implements [`Clone`]):
 
 ```rust
-impl test_fuzz::Into<X> for Y {
-    fn into(self) -> X {
+impl From<Y> for X {
+    fn from(value: Y) -> Self {
         ...
     }
 }
 ```
-
-The definition of `test_fuzz::Into` is identical to that of [`std::convert::Into`]. The reason for using a non-standard trait is to avoid conflicts that could arise from blanket implementations of standard traits.
 
 ##### `enable_in_production`
 
@@ -335,7 +333,7 @@ If `$ty` is a unit struct, then `$expr` can be be omitted. That is, `dont_care!(
 
 The `leak!` macro can help to serialize target arguments that are references and whose types implement the [`ToOwned`] trait. It is meant to be used with the [`convert`] option.
 
-Specifically, an invocation of the following form declares a type `LeakedX`, and implements the `From` and `test_fuzz::Into` traits for it:
+Specifically, an invocation of the following form declares a type `LeakedX`, and implements the traits `From<&X>` for it and `From<LeakedX>` for `&X`:
 
 ```rust
 leak!(X, LeakedX);
@@ -361,9 +359,9 @@ impl From<&$ty> for $ident {
     }
 }
 
-impl test_fuzz::Into<&$ty> for $ident {
-    fn into(self) -> &'static $ty {
-        Box::leak(Box::new(self.0))
+impl From<$ident> for &$ty {
+    fn from(value: $ident) -> Self {
+        Box::leak(Box::new(value.0))
     }
 }
 ```

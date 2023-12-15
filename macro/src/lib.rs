@@ -839,7 +839,7 @@ fn map_typed_arg(
         return (
             parse_quote! { #arg_ty },
             parse_quote! { <#arg_ty as test_fuzz::FromRef::<#ty>>::from_ref( & #expr ) },
-            parse_quote! { <_ as test_fuzz::Into::<_>>::into(args.#i) },
+            parse_quote! { <#ty as From::<#arg_ty>>::from(args.#i) },
         );
     }
     match &ty {

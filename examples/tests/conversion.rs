@@ -42,8 +42,8 @@ mod receiver {
         }
     }
 
-    impl test_fuzz::Into<&'static X> for Y {
-        fn into(self) -> &'static X {
+    impl From<Y> for &X {
+        fn from(_: Y) -> Self {
             Box::leak(Box::new(X))
         }
     }
@@ -81,9 +81,9 @@ mod lifetime {
         }
     }
 
-    impl test_fuzz::Into<X<'static>> for Y {
-        fn into(self) -> X<'static> {
-            X(Box::leak(Box::new(self.0)))
+    impl<'a> From<Y> for X<'a> {
+        fn from(value: Y) -> Self {
+            Self(Box::leak(Box::new(value.0)))
         }
     }
 
@@ -111,9 +111,9 @@ mod mutable {
         }
     }
 
-    impl test_fuzz::Into<X> for Y {
-        fn into(self) -> X {
-            X(self.0)
+    impl From<Y> for X {
+        fn from(value: Y) -> Self {
+            Self(value.0)
         }
     }
 
@@ -142,9 +142,9 @@ mod uncloneable {
         }
     }
 
-    impl test_fuzz::Into<X> for Y {
-        fn into(self) -> X {
-            X
+    impl From<Y> for X {
+        fn from(_: Y) -> Self {
+            Self
         }
     }
 
@@ -176,9 +176,9 @@ mod inapplicable_conversion {
         }
     }
 
-    impl test_fuzz::Into<Y> for Z {
-        fn into(self) -> Y {
-            Y
+    impl From<Z> for Y {
+        fn from(_: Z) -> Self {
+            Self
         }
     }
 

@@ -36,12 +36,12 @@ index 9550d3d..4306d04 100644
 +		}
 +	}
 +
-+	impl<Origin, AccountId> test_fuzz::Into<Origin> for SerializableAccountId<AccountId>
++	impl<Origin, AccountId> From<SerializableAccountId<AccountId>> for Origin
 +	where
 +		Origin: From<frame_system::RawOrigin<AccountId>>,
 +	{
-+		fn into(self) -> Origin {
-+			frame_system::RawOrigin::from(self.0).into()
++		fn from(value: SerializableAccountId<AccountId>) -> Self {
++			frame_system::RawOrigin::from(value.0).into()
 +		}
 +	}
 +

@@ -25,15 +25,15 @@ index 6f92ac2..2df8ffe 100644
 +    }
 +}
 +
-+impl<'a> test_fuzz::Into<DepsMut<'a>> for MockDepsMut {
-+    fn into(self) -> DepsMut<'a> {
++impl<'a> From<MockDepsMut> for DepsMut<'a> {
++    fn from(_: MockDepsMut) -> Self {
 +        let cosmwasm_std::OwnedDeps {
 +            storage,
 +            api,
 +            querier,
 +            ..
 +        } = cosmwasm_std::testing::mock_dependencies();
-+        DepsMut {
++        Self {
 +            storage: Box::leak(Box::new(storage)),
 +            api: Box::leak(Box::new(api)),
 +            querier: cosmwasm_std::QuerierWrapper::new(Box::leak(Box::new(querier))),
@@ -71,15 +71,15 @@ index 6f92ac2..2df8ffe 100644
 +    }
 +}
 +
-+impl<'a> test_fuzz::Into<Deps<'a>> for MockDeps {
-+    fn into(self) -> Deps<'a> {
++impl<'a> From<MockDeps> for Deps<'a> {
++    fn from(_: MockDeps) -> Self {
 +        let cosmwasm_std::OwnedDeps {
 +            storage,
 +            api,
 +            querier,
 +            ..
 +        } = cosmwasm_std::testing::mock_dependencies();
-+        Deps {
++        Self {
 +            storage: Box::leak(Box::new(storage)),
 +            api: Box::leak(Box::new(api)),
 +            querier: cosmwasm_std::QuerierWrapper::new(Box::leak(Box::new(querier))),

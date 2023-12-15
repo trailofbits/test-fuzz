@@ -15,4 +15,4 @@ mod utils;
 pub use utils::{deserialize_ref, deserialize_ref_mut, serialize_ref, serialize_ref_mut};
 
 mod convert;
-pub use convert::{FromRef, Into};
+pub use convert::FromRef;
