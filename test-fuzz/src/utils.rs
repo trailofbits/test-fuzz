@@ -49,22 +49,6 @@ macro_rules! leak {
             }
         }
     };
-    ([$ty:ty], $ident:ident) => {
-        #[derive(Clone, std::fmt::Debug, serde::Deserialize, serde::Serialize)]
-        struct $ident(<[$ty] as ToOwned>::Owned);
-
-        impl From<&[$ty]> for $ident {
-            fn from(ty: &[$ty]) -> Self {
-                Self(ty.to_owned())
-            }
-        }
-
-        impl test_fuzz::Into<&[$ty]> for $ident {
-            fn into(self) -> &'static [$ty] {
-                Box::leak(Box::new(self.0))
-            }
-        }
-    };
 }
 
 /// `serialize_ref` functions similar to `leak!`, but it is meant to be used with Serde's
