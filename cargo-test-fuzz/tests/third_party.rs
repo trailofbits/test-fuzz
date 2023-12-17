@@ -128,7 +128,6 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
 
     if test.flags.contains(Flags::REQUIRES_ISOLATION) {
         let mut file = OpenOptions::new()
-            .write(true)
             .append(true)
             .open(subdir.join("Cargo.toml"))
             .unwrap();
