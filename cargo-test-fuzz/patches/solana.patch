@@ -21,10 +21,10 @@ index 3e0553d..5136a8b 100644
  pub struct AccountsDataMeter {
      /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
-index a568162..7889a27 100644
+index 0657df5..f1bd04f 100644
 --- a/program-runtime/src/compute_budget.rs
 +++ b/program-runtime/src/compute_budget.rs
-@@ -19,5 +19,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
+@@ -16,5 +16,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for ComputeBudget {
  pub const DEFAULT_HEAP_COST: u64 = 8;
  
 -#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -167,10 +167,10 @@ index 48d771b..1d1d527 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 0f9e830..47bce28 100644
+index 25b2df3..cc41016 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -381,6 +381,7 @@ declare_builtin_function!(
+@@ -372,6 +372,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(

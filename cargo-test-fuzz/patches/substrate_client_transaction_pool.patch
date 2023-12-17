@@ -1,8 +1,8 @@
 diff --git a/substrate/client/transaction-pool/Cargo.toml b/substrate/client/transaction-pool/Cargo.toml
-index 3e90304..ad7aa61 100644
+index 493f668..31e6229 100644
 --- a/substrate/client/transaction-pool/Cargo.toml
 +++ b/substrate/client/transaction-pool/Cargo.toml
-@@ -20,6 +20,6 @@ futures-timer = "3.0.2"
+@@ -23,6 +23,6 @@ futures-timer = "3.0.2"
  linked-hash-map = "0.5.4"
  log = "0.4.17"
 -parking_lot = "0.12.1"
@@ -11,7 +11,7 @@ index 3e90304..ad7aa61 100644
 +serde = { version = "1.0.193", features = ["derive", "rc"] }
  thiserror = "1.0.48"
  prometheus-endpoint = { package = "substrate-prometheus-endpoint", path = "../../utils/prometheus" }
-@@ -33,4 +33,5 @@ sp-runtime = { path = "../../primitives/runtime" }
+@@ -36,4 +36,5 @@ sp-runtime = { path = "../../primitives/runtime" }
  sp-tracing = { path = "../../primitives/tracing" }
  sp-transaction-pool = { path = "../../primitives/transaction-pool" }
 +test-fuzz = { path = "../../../../../test-fuzz" }
