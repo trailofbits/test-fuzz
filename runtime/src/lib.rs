@@ -166,8 +166,8 @@ pub fn write_args<T: Serialize>(args: &T) {
 pub fn write_data(dir: &Path, data: &[u8]) -> io::Result<()> {
     create_dir_all(dir).unwrap_or_default();
     let hex = {
-        let hash = Sha1::digest(data);
-        hex::encode(hash)
+        let digest = Sha1::digest(data);
+        hex::encode(digest)
     };
     let path_buf = dir.join(hex);
     write(path_buf, data)
