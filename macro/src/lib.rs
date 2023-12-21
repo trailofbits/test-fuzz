@@ -145,7 +145,7 @@ fn map_impl_item_fn(
             let (method, module) = map_method_or_fn(
                 &generics.clone(),
                 trait_path,
-                &Some(self_ty.clone()),
+                Some(self_ty),
                 &opts,
                 &attrs,
                 vis,
@@ -196,7 +196,7 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
     let (item, module) = map_method_or_fn(
         &Generics::default(),
         &None,
-        &None,
+        None,
         &opts,
         attrs,
         vis,
@@ -222,7 +222,7 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
 fn map_method_or_fn(
     generics: &Generics,
     trait_path: &Option<Path>,
-    self_ty: &Option<Type>,
+    self_ty: Option<&Type>,
     opts: &TestFuzzOpts,
     attrs: &Vec<Attribute>,
     vis: &Visibility,
@@ -374,15 +374,15 @@ fn map_method_or_fn(
         args_as_turbofish(&args)
     };
 
-    let self_ty_base = self_ty.as_ref().map(type_utils::type_base);
+    let self_ty_base = self_ty.map(type_utils::type_base);
 
     let (receiver, mut arg_tys, fmt_args, mut ser_args, de_args) = {
         let mut candidates = BTreeSet::new();
         let result = map_args(
             &mut conversions,
             &mut candidates,
-            self_ty,
             trait_path,
+            self_ty,
             sig.inputs.iter(),
         );
         for (from, (to, used)) in conversions {
@@ -418,7 +418,7 @@ fn map_method_or_fn(
     let args_from_autos = args_from_autos(&autos);
     let ret_ty = match &sig.output {
         ReturnType::Type(_, ty) => self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
-            type_utils::expand_self(self_ty, trait_path, ty)
+            type_utils::expand_self(trait_path, self_ty, ty)
         }),
         ReturnType::Default => parse_quote! { () },
     };
@@ -757,8 +757,8 @@ fn map_method_or_fn(
 fn map_args<'a, I>(
     conversions: &mut Conversions,
     candidates: &mut BTreeSet<OrdType>,
-    self_ty: &Option<Type>,
     trait_path: &Option<Path>,
+    self_ty: Option<&Type>,
     inputs: I,
 ) -> (bool, Vec<Type>, Vec<Stmt>, Vec<Expr>, Vec<Expr>)
 where
@@ -766,7 +766,7 @@ where
 {
     let (receiver, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
         .enumerate()
-        .map(map_arg(conversions, candidates, self_ty, trait_path))
+        .map(map_arg(conversions, candidates, trait_path, self_ty))
         .multiunzip();
 
     let receiver = receiver.first().map_or(false, |&x| x);
@@ -777,11 +777,9 @@ where
 fn map_arg<'a>(
     conversions: &'a mut Conversions,
     candidates: &'a mut BTreeSet<OrdType>,
-    self_ty: &Option<Type>,
-    trait_path: &Option<Path>,
+    trait_path: &'a Option<Path>,
+    self_ty: Option<&'a Type>,
 ) -> impl FnMut((usize, &FnArg)) -> (bool, Type, Stmt, Expr, Expr) + 'a {
-    let self_ty = self_ty.clone();
-    let trait_path = trait_path.clone();
     move |(i, arg)| {
         let i = Literal::usize_unsuffixed(i);
         let (receiver, expr, ty, fmt) = match arg {
@@ -810,7 +808,7 @@ fn map_arg<'a>(
                 };
                 let expr = parse_quote! { #ident };
                 let ty = self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
-                    type_utils::expand_self(self_ty, &trait_path, ty)
+                    type_utils::expand_self(trait_path, self_ty, ty)
                 });
                 let name = ident.to_string();
                 let fmt = parse_quote! {
