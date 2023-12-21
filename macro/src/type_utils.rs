@@ -24,12 +24,22 @@ pub fn collapse_crate(ty: &Type) -> Type {
     ty
 }
 
-struct TypeVisitor<'a> {
-    self_ty: &'a Type,
-    trait_path: &'a Option<Path>,
+pub fn expand_self(trait_path: &Option<Path>, self_ty: &Type, ty: &Type) -> Type {
+    let mut ty = ty.clone();
+    let mut visitor = ExpandSelfVisitor {
+        trait_path,
+        self_ty,
+    };
+    visitor.visit_type_mut(&mut ty);
+    ty
 }
 
-impl<'a> VisitMut for TypeVisitor<'a> {
+struct ExpandSelfVisitor<'a> {
+    trait_path: &'a Option<Path>,
+    self_ty: &'a Type,
+}
+
+impl<'a> VisitMut for ExpandSelfVisitor<'a> {
     fn visit_type_mut(&mut self, ty: &mut Type) {
         // smoelius: Rewrite this using if-let-guards once the feature is stable.
         // https://rust-lang.github.io/rfcs/2294-if-let-guard.html
@@ -56,16 +66,6 @@ impl<'a> VisitMut for TypeVisitor<'a> {
         }
         visit_type_mut(self, ty);
     }
-}
-
-pub fn expand_self(self_ty: &Type, trait_path: &Option<Path>, ty: &Type) -> Type {
-    let mut ty = ty.clone();
-    let mut visitor = TypeVisitor {
-        self_ty,
-        trait_path,
-    };
-    visitor.visit_type_mut(&mut ty);
-    ty
 }
 
 pub fn match_type_path(path: &TypePath, other: &[&str]) -> Option<PathArguments> {
