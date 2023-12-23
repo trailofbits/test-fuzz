@@ -87,7 +87,8 @@ jobs:
 
       - name: Dylint
         run: |
-          cargo install cargo-dylint dylint-link || true
+          cargo install cargo-dylint --git=https://github.com/trailofbits/dylint --no-default-features --features=metadata-cli || true
+          cargo install dylint-link || true
           ./scripts/dylint.sh
 
       - name: Udeps
