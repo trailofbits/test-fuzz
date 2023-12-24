@@ -24,3 +24,6 @@ libraries = [
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/suboptimal_pattern" },
     { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/try_io_result" },
 ]
+
+[workspace.metadata.unmaintained]
+ignore = ["parse_duration"]
