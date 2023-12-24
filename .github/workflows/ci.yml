@@ -134,6 +134,7 @@ jobs:
       - name: Install tools
         run: |
           cargo install cargo-supply-chain || true
+          cargo install cargo-unmaintained || true
 
       - name: Test
         run: |

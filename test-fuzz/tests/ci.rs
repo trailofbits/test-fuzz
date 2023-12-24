@@ -94,6 +94,14 @@ fn supply_chain() {
     }
 }
 
+#[test]
+fn unmaintained() {
+    Command::new("cargo")
+        .args(["unmaintained", "--color=never", "--fail-fast"])
+        .assert()
+        .success();
+}
+
 #[must_use]
 pub fn enabled(key: &str) -> bool {
     var(key).map_or(false, |value| value != "0")
