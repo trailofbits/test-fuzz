@@ -1367,7 +1367,14 @@
         "name": "publish"
       }
     ],
-    "sha-1": [
+    "sha1": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/797?v=4",
+        "id": 267,
+        "kind": "user",
+        "login": "tarcieri",
+        "name": "Tony Arcieri"
+      },
       {
         "avatar": "https://avatars.githubusercontent.com/u/22351541?v=4",
         "id": 2369,
