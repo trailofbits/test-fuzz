@@ -94,7 +94,7 @@ jobs:
       - name: Udeps
         run: |
           cargo install cargo-udeps || true
-          cargo clean && cargo +nightly udeps --features=test-fuzz/auto_concretize --all-targets
+          cargo clean && cargo +nightly udeps --all-targets
 
   test:
     runs-on: ubuntu-latest
@@ -138,13 +138,11 @@ jobs:
 
       - name: Test
         run: |
-          AUTO_CONCRETIZE=
           SHUFFLE=
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
-            AUTO_CONCRETIZE='--features=test-fuzz/auto_concretize'
             SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
           fi
-          TEST_CMD="cargo test --features=test-fuzz/serde_${{ matrix.serde_format }} $AUTO_CONCRETIZE -- --nocapture $SHUFFLE"
+          TEST_CMD="cargo test --features=test-fuzz/serde_${{ matrix.serde_format }} -- --nocapture $SHUFFLE"
           $TEST_CMD
           if [[ ${{ github.event_name }} = 'schedule' ]] ||
             git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -w 'patches\|third_party' >/dev/null

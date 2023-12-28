@@ -34,10 +34,6 @@ testing = { path = "../testing", package = "test-fuzz-testing" }
 # https://github.com/djkoloski/rust_serialization_benchmark
 
 [features]
-auto_concretize = [
-    "internal/__auto_concretize",
-    "test-fuzz-macro/__auto_concretize",
-]
 serde_bincode = ["internal/__serde_bincode"]
 serde_cbor = ["internal/__serde_cbor"]
 serde_cbor4ii = ["internal/__serde_cbor4ii"]

@@ -2,7 +2,7 @@ use anyhow::{bail, ensure, Context, Result};
 use assert_cmd::Command;
 use cargo_metadata::{Artifact, ArtifactProfile, Message};
 use if_chain::if_chain;
-use internal::{auto_concretize_enabled, serde_format};
+use internal::serde_format;
 use log::debug;
 use once_cell::sync::Lazy;
 use std::path::Path;
@@ -33,9 +33,6 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
         "--features",
         &serde_format_feature,
     ];
-    if auto_concretize_enabled() {
-        args.extend_from_slice(&["--features", "__auto_concretize"]);
-    }
     args.extend_from_slice(&["--no-run", "--message-format=json"]);
 
     let exec = Exec::cmd("cargo").args(&args).stdout(Redirection::Pipe);
@@ -94,16 +91,13 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
 
 pub fn test_fuzz_all() -> Result<Command> {
     let serde_format_feature = "test-fuzz/".to_owned() + serde_format::as_feature();
-    let mut args = vec![
+    let args = vec![
         "test-fuzz",
         "--manifest-path",
         &*MANIFEST_PATH,
         "--features",
         &serde_format_feature,
     ];
-    if auto_concretize_enabled() {
-        args.extend_from_slice(&["--features", "__auto_concretize"]);
-    }
 
     let mut command = Command::cargo_bin("cargo-test-fuzz")?;
     command.args(&args);

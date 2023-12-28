@@ -1,28 +1,9 @@
-use crate::CARGO_CRATE_NAME;
-use if_chain::if_chain;
 use proc_macro2::Span;
 use syn::{
     parse_quote,
     visit_mut::{visit_type_mut, VisitMut},
     Ident, Path, PathArguments, PathSegment, Type, TypePath,
 };
-
-pub fn collapse_crate(ty: &Type) -> Type {
-    let mut ty = ty.clone();
-    if_chain! {
-        if let Type::Path(ref mut path) = ty;
-        if path.qself.is_none();
-        if path.path.leading_colon.is_none();
-        let mut iter_mut = path.path.segments.iter_mut();
-        if let Some(ref mut segment) = iter_mut.next();
-        if segment.ident == *CARGO_CRATE_NAME;
-        if segment.arguments == PathArguments::None;
-        then {
-            segment.ident = Ident::new("crate", Span::call_site());
-        }
-    }
-    ty
-}
 
 pub fn expand_self(trait_path: &Option<Path>, self_ty: &Type, ty: &Type) -> Type {
     let mut ty = ty.clone();

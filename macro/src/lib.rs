@@ -1,5 +1,4 @@
 #![deny(clippy::unwrap_used)]
-#![cfg_attr(feature = "__auto_concretize", feature(proc_macro_span))]
 
 use darling::{ast::NestedMeta, FromMeta};
 use itertools::MultiUnzip;
@@ -20,11 +19,6 @@ use syn::{
     PathSegment, Receiver, ReturnType, Signature, Stmt, Type, TypeParam, TypePath, TypeReference,
     TypeSlice, Visibility, WhereClause, WherePredicate,
 };
-
-mod auto_concretize;
-
-#[cfg(feature = "__auto_concretize")]
-mod mod_utils;
 
 mod ord_type;
 use ord_type::OrdType;
@@ -244,61 +238,24 @@ fn map_method_or_fn(
         conversions.insert(OrdType(key), (value, false));
     });
 
-    #[allow(unused_mut, unused_variables)]
-    let mut impl_concretization_error: Option<auto_concretize::Error> = None;
-    #[allow(unused_mut, unused_variables)]
-    let mut concretization_error: Option<auto_concretize::Error> = None;
+    let opts_concretize_impl = opts.concretize_impl.as_deref().map(parse_generic_arguments);
 
-    let opts_concretize_impl = opts
-        .concretize_impl
-        .as_ref()
-        .map(|s| parse_generic_arguments(s, false))
-        .or_else(|| {
-            #[cfg(feature = "__auto_concretize")]
-            return auto_concretize::unique_impl_concretization(sig)
-                .map(|s| parse_generic_arguments(&s, true))
-                .map_err(|error| impl_concretization_error = Some(error))
-                .ok();
-            #[cfg(not(feature = "__auto_concretize"))]
-            return None;
-        });
-
-    let opts_concretize = opts
-        .concretize
-        .as_ref()
-        .map(|s| parse_generic_arguments(s, false))
-        .or_else(|| {
-            #[cfg(feature = "__auto_concretize")]
-            {
-                eprintln!(
-                    "`auto_concretize` is deprecated and will be removed in the next major \
-                     version of test-fuzz."
-                );
-                auto_concretize::unique_concretization(sig)
-                    .map(|s| parse_generic_arguments(&s, true))
-                    .map_err(|error| concretization_error = Some(error))
-                    .ok()
-            }
-            #[cfg(not(feature = "__auto_concretize"))]
-            return None;
-        });
+    let opts_concretize = opts.concretize.as_deref().map(parse_generic_arguments);
 
     // smoelius: Error early.
     #[cfg(fuzzing)]
     if !opts.only_concretizations {
         if is_generic(generics) && opts_concretize_impl.is_none() {
             panic!(
-                "`{}` appears in a generic impl but `concretize_impl` was not specified{}",
+                "`{}` appears in a generic impl but `concretize_impl` was not specified",
                 sig.ident.to_string(),
-                impl_concretization_error.map_or("".to_owned(), |error| format!(" and {}", error))
             );
         }
 
         if is_generic(&sig.generics) && opts_concretize.is_none() {
             panic!(
-                "`{}` is generic but `concretize` was not specified{}",
+                "`{}` is generic but `concretize` was not specified",
                 sig.ident.to_string(),
-                concretization_error.map_or("".to_owned(), |error| format!(" and {}", error))
             );
         }
     }
@@ -925,28 +882,13 @@ fn is_test_fuzz(attr: &Attribute) -> bool {
         .all(|PathSegment { ident, .. }| ident == "test_fuzz")
 }
 
-fn parse_generic_arguments(
-    s: &str,
-    collapse_crate: bool,
-) -> Punctuated<GenericArgument, token::Comma> {
+fn parse_generic_arguments(s: &str) -> Punctuated<GenericArgument, token::Comma> {
     let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
-    let args = Parser::parse(
+    Parser::parse(
         Punctuated::<GenericArgument, token::Comma>::parse_terminated,
         tokens,
     )
-    .expect("Could not parse generic arguments");
-    if collapse_crate {
-        args.into_iter()
-            .map(|mut arg| {
-                if let GenericArgument::Type(ref mut ty) = arg {
-                    *ty = type_utils::collapse_crate(ty);
-                }
-                arg
-            })
-            .collect()
-    } else {
-        args
-    }
+    .expect("Could not parse generic arguments")
 }
 
 #[cfg(fuzzing)]

@@ -23,7 +23,6 @@ cbor4ii = { version = "0.3", features = ["serde1", "use_std"], optional = true }
 serde_cbor = { version = "0.11", optional = true }
 
 [features]
-__auto_concretize = []
 __serde_bincode = []
 __serde_cbor = ["serde_cbor"]
 __serde_cbor4ii = ["cbor4ii"]

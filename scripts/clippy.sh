@@ -13,7 +13,7 @@ fi
 # smoelius: Allow `iter-without-into-iter` until the following issue is resolved:
 # https://github.com/bitflags/bitflags/issues/379
 
-cargo +nightly clippy --features=test-fuzz/auto_concretize --all-targets -- \
+cargo +nightly clippy --all-targets -- \
     -D warnings \
     -W clippy::pedantic \
     -W clippy::nursery \

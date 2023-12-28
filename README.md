@@ -397,19 +397,13 @@ where
 
 ## `test-fuzz` package features
 
-The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book]. For example, to enable the `auto_concretize` feature, use:
+The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book]. For example, to enable the `serde_cbor4ii` feature, use:
 
 ```toml
-test-fuzz = { version = "4.0", features = ["auto_concretize"] }
+test-fuzz = { version = "4.0", features = ["serde_cbor4ii"] }
 ```
 
 The `test-fuzz` package currently supports the following features:
-
-### `auto_concretize` (deprecated)
-
-When this feature is enabled, `test-fuzz` tries to infer `impl` and non-`impl` concretizations. Success requires that a target be called with exactly one `impl` concretization and exactly one non-`impl` concretization during tests. Success is not guaranteed by these conditions, however.
-
-The implementation of `auto_concretize` uses the unstable language feature [`proc_macro_span`]. So enabling `auto_concretize` requires that targets be built with a nightly compiler.
 
 ### Serde formats
 

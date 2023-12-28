@@ -8,7 +8,7 @@ if [[ $# -ne 0 ]]; then
     exit 1
 fi
 
-cargo +nightly clippy --features=test-fuzz/auto_concretize --all-targets --message-format=json -- \
+cargo +nightly clippy --all-targets --message-format=json -- \
     --force-warn=clippy::all \
     --force-warn=clippy::pedantic \
     --force-warn=clippy::expect_used \
@@ -16,4 +16,4 @@ cargo +nightly clippy --features=test-fuzz/auto_concretize --all-targets --messa
     --force-warn=clippy::panic \
     > warnings.json
 
-DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all -- --features=test-fuzz/auto_concretize --all-targets
+DYLINT_RUSTFLAGS='--deny warnings' cargo dylint --all -- --all-targets
