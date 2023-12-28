@@ -10,7 +10,7 @@ index 0f01e33..338df34 100644
 +path = "../../../../test-fuzz"
 +
 +[dependencies.serde]
-+version = '1.0.130'
++version = '1.0'
 diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
 index 9550d3d..4306d04 100644
 --- a/pallets/template/src/lib.rs
