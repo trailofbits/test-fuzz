@@ -19,12 +19,7 @@ cargo +nightly clippy --all-targets -- \
     -W clippy::nursery \
     -A clippy::cognitive-complexity \
     -A clippy::collection-is-never-read \
-    -A clippy::items-after-test-module \
-    -A clippy::iter-without-into-iter \
-    -A clippy::let-underscore-untyped \
-    -A clippy::missing-const-for-fn \
     -A clippy::missing-errors-doc \
     -A clippy::missing-panics-doc \
     -A clippy::option-if-let-else \
-    -A clippy::redundant-pub-crate \
-    -A clippy::type-repetition-in-bounds
+    -A clippy::redundant-pub-crate

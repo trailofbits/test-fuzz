@@ -28,7 +28,7 @@ pub fn as_feature() -> &'static str {
 }
 
 #[must_use]
-pub fn serializes_variant_names() -> bool {
+pub const fn serializes_variant_names() -> bool {
     #[cfg(any(serde_default, feature = "__serde_bincode"))]
     return false;
 
