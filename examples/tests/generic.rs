@@ -31,7 +31,7 @@ struct Baz<T>(T);
 
 #[test_fuzz::test_fuzz_impl]
 impl<T> BazTrait for Baz<T> {
-    #[test_fuzz::test_fuzz(concretize_impl = "Bar")]
+    #[test_fuzz::test_fuzz(impl_generic_args = "Bar")]
     fn qux() {}
 }
 
@@ -41,7 +41,7 @@ trait Trait<T: FooBarTrait> {
     fn target_where_clause<U>(&self, x: &T, y: &U)
     where
         U: BazTrait + Clone + Debug + Serialize;
-    fn target_only_concretizations<U>(&self, x: &T, y: &U);
+    fn target_only_generic_args<U>(&self, x: &T, y: &U);
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -54,7 +54,7 @@ impl<T: FooBarTrait + Clone + Debug + Serialize> Trait<T> for Struct {
     // Derived `Debug` formats are not stable, and so may change with future Rust versions.
     // So `x` should not be compared to a string constant.
     #[allow(clippy::uninlined_format_args)]
-    #[test_fuzz::test_fuzz(concretize_impl = "Bar")]
+    #[test_fuzz::test_fuzz(impl_generic_args = "Bar")]
     fn target(&self, x: &T) {
         assert_ne!(
             format!("{:?}", x),
@@ -62,18 +62,18 @@ impl<T: FooBarTrait + Clone + Debug + Serialize> Trait<T> for Struct {
         );
     }
 
-    #[test_fuzz::test_fuzz(concretize_impl = "Bar", concretize = "Baz<Bar>")]
+    #[test_fuzz::test_fuzz(impl_generic_args = "Bar", generic_args = "Baz<Bar>")]
     fn target_bound<U: BazTrait + Clone + Debug + Serialize>(&self, x: &T, y: &U) {}
 
-    #[test_fuzz::test_fuzz(concretize_impl = "Bar", concretize = "Baz<Bar>")]
+    #[test_fuzz::test_fuzz(impl_generic_args = "Bar", generic_args = "Baz<Bar>")]
     fn target_where_clause<U>(&self, x: &T, y: &U)
     where
         U: BazTrait + Clone + Debug + Serialize,
     {
     }
 
-    #[test_fuzz::test_fuzz(only_concretizations)]
-    fn target_only_concretizations<U>(&self, _: &T, _: &U) {}
+    #[test_fuzz::test_fuzz(only_generic_args)]
+    fn target_only_generic_args<U>(&self, _: &T, _: &U) {}
 }
 
 static FOO: Lazy<Foo> = Lazy::new(|| Foo::A("qwerty".to_owned()));
@@ -102,7 +102,7 @@ fn test_where_clause() {
 }
 
 #[test]
-fn test_only_concretizations() {
-    Struct.target_only_concretizations(&*FOO, &Baz(FOO.clone()));
-    Struct.target_only_concretizations(&*BAR, &Baz(BAR.clone()));
+fn test_only_generic_args() {
+    Struct.target_only_generic_args(&*FOO, &Baz(FOO.clone()));
+    Struct.target_only_generic_args(&*BAR, &Baz(BAR.clone()));
 }

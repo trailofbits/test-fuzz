@@ -102,7 +102,7 @@ index b4a5d9e..1c421e1 100644
 @@ -176,8 +181,12 @@ impl<Hash: hash::Hash + Member + Serialize, Ex> ReadyTransactions<Hash, Ex> {
  	/// that are in this queue.
  	/// Returns transactions that were replaced by the one imported.
-+	#[test_fuzz::test_fuzz(concretize_impl = "u64, Vec<u8>", bounds = "Hash: Eq + hash::Hash")]
++	#[test_fuzz::test_fuzz(impl_generic_args = "u64, Vec<u8>", bounds = "Hash: Eq + hash::Hash")]
  	pub fn import(
  		&mut self,
  		tx: WaitingTransaction<Hash, Ex>,

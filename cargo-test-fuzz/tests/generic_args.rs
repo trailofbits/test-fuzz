@@ -1,6 +1,4 @@
-use internal::dirs::{
-    concretizations_directory_from_target, impl_concretizations_directory_from_target,
-};
+use internal::dirs::{generic_args_directory_from_target, impl_generic_args_directory_from_target};
 use std::fs::remove_dir_all;
 use testing::{examples, CommandExt};
 
@@ -25,8 +23,8 @@ fn generic() {
     );
     test(
         "generic",
-        "test_only_concretizations",
-        "target_only_concretizations",
+        "test_only_generic_args",
+        "target_only_generic_args",
         &impl_expected,
         &expected,
     );
@@ -48,16 +46,16 @@ fn unserde() {
 }
 
 fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected: &[&str]) {
-    let impl_concretizations = impl_concretizations_directory_from_target(krate, target);
+    let impl_generic_args = impl_generic_args_directory_from_target(krate, target);
 
     // smoelius: `corpus` is distinct for all tests. So there is no race here.
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
-    remove_dir_all(impl_concretizations).unwrap_or_default();
+    remove_dir_all(impl_generic_args).unwrap_or_default();
 
-    let concretizations = concretizations_directory_from_target(krate, target);
+    let generic_args = generic_args_directory_from_target(krate, target);
 
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
-    remove_dir_all(concretizations).unwrap_or_default();
+    remove_dir_all(generic_args).unwrap_or_default();
 
     examples::test(krate, test)
         .unwrap()
@@ -65,8 +63,8 @@ fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected:
         .success();
 
     for (option, expected) in &[
-        ("--display=impl-concretizations", impl_expected),
-        ("--display=concretizations", expected),
+        ("--display=impl-generic-args", impl_expected),
+        ("--display=generic-args", expected),
     ] {
         let assert = &examples::test_fuzz(krate, target)
             .unwrap()

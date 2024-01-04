@@ -1,7 +1,7 @@
 use internal::{
     dirs::{
-        concretizations_directory_from_args_type, corpus_directory_from_args_type,
-        impl_concretizations_directory_from_args_type,
+        corpus_directory_from_args_type, generic_args_directory_from_args_type,
+        impl_generic_args_directory_from_args_type,
     },
     serde_format,
 };
@@ -145,16 +145,16 @@ fn enabled(opt: &str) -> bool {
     env::var(key).map_or(false, |value| value != "0")
 }
 
-pub fn write_impl_concretization<T>(args: &[&str]) {
-    let impl_concretizations = impl_concretizations_directory_from_args_type::<T>();
+pub fn write_impl_generic_args<T>(args: &[&str]) {
+    let impl_generic_args = impl_generic_args_directory_from_args_type::<T>();
     let data = args.join(", ");
-    write_data(&impl_concretizations, data.as_bytes()).unwrap();
+    write_data(&impl_generic_args, data.as_bytes()).unwrap();
 }
 
-pub fn write_concretization<T>(args: &[&str]) {
-    let concretizations = concretizations_directory_from_args_type::<T>();
+pub fn write_generic_args<T>(args: &[&str]) {
+    let generic_args = generic_args_directory_from_args_type::<T>();
     let data = args.join(", ");
-    write_data(&concretizations, data.as_bytes()).unwrap();
+    write_data(&generic_args, data.as_bytes()).unwrap();
 }
 
 pub fn write_args<T: Serialize>(args: &T) {

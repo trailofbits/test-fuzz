@@ -37,8 +37,9 @@ struct TestFuzzWithDeprecations {
     #[arg(
         long,
         value_name = "OBJECT",
-        help = "Display concretizations, corpus, crashes, `impl` concretizations, hangs, or work \
-                queue. By default, corpus uses an uninstrumented fuzz target; the others use an \
+        hide_possible_values = true,
+        help = "Display corpus, crashes, generic args, `impl` generic args, hangs, or work queue. \
+                By default, corpus uses an uninstrumented fuzz target; the others use an \
                 instrumented fuzz target. To display the corpus with instrumentation, use \
                 --display corpus-instrumented."
     )]
@@ -88,6 +89,7 @@ struct TestFuzzWithDeprecations {
     #[arg(
         long,
         value_name = "OBJECT",
+        hide_possible_values = true,
         help = "Replay corpus, crashes, hangs, or work queue. By default, corpus uses an \
                 uninstrumented fuzz target; the others use an instrumented fuzz target. To replay \
                 the corpus with instrumentation, use --replay corpus-instrumented."
@@ -191,30 +193,26 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
     }
 }
 
-#[allow(unused_macros)]
 macro_rules! process_deprecated_action_object {
-    ($opts:ident, $action:ident, $object:ident) => {
-        paste::paste! {
-            if $opts.[< $action _ $object >] {
-                use heck::ToKebabCase;
-                eprintln!(
-                    "`--{}-{}` is deprecated. Use `--{} {}` (no hyphen).",
-                    stringify!($action),
-                    stringify!($object).to_kebab_case(),
-                    stringify!($action),
-                    stringify!($object).to_kebab_case(),
-                );
-                if $opts.$action.is_none() {
-                    $opts.$action = Some(Object::[< $object:camel >]);
-                }
-            }
+    ($opts:ident, $action:ident, $object_old:ident, $object_new:ident) => {
+        if $opts.$action == Some(Object::$object_old) {
+            use heck::ToKebabCase;
+            eprintln!(
+                "{}` is deprecated. Use `{}`.",
+                stringify!($object_old).to_kebab_case(),
+                stringify!($object_new).to_kebab_case(),
+            );
+            $opts.$action = Some(Object::$object_new);
         }
     };
 }
 
+#[allow(deprecated)]
 pub(crate) fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
-    #[allow(unused_mut)]
     let SubCommand::TestFuzz(mut opts) = Opts::parse_from(args).subcmd;
+
+    process_deprecated_action_object!(opts, display, Concretizations, GenericArgs);
+    process_deprecated_action_object!(opts, display, ImplConcretizations, ImplGenericArgs);
 
     super::run(super::TestFuzz::from(opts))
 }

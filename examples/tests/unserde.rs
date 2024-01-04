@@ -1,10 +1,10 @@
 // smoelius: `Struct` is *not* serializable/deserializable.
 struct Struct;
 
-#[test_fuzz::test_fuzz(only_concretizations)]
+#[test_fuzz::test_fuzz(only_generic_args)]
 fn target<T>(_: &T) {}
 
-#[test_fuzz::test_fuzz(enable_in_production, only_concretizations)]
+#[test_fuzz::test_fuzz(enable_in_production, only_generic_args)]
 fn target_in_production<T>(_: &T) {}
 
 #[test]
