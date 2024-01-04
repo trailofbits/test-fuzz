@@ -86,12 +86,12 @@ The primary effects of the `test_fuzz` macro are:
 
 Impose `where_predicates` (e.g., trait bounds) on the struct used to serialize/deserialize arguments. This may be necessary, e.g., if a target's argument type is an associated type. For an example, see [associated_type.rs] in this repository.
 
-##### `concretize = "parameters"`
+##### `generic_args = "parameters"`
 
 Use `parameters` as the target's type parameters when fuzzing. Example:
 
 ```rust
-#[test_fuzz(concretize = "String")]
+#[test_fuzz(generic_args = "String")]
 fn foo<T: Clone + Debug + Serialize>(x: &T) {
     ...
 }
@@ -99,14 +99,14 @@ fn foo<T: Clone + Debug + Serialize>(x: &T) {
 
 Note: The target's arguments must be serializable for **every** instantiation of its type parameters. But the target's arguments are required to be deserializable only when the target is instantiated with `parameters`.
 
-##### `concretize_impl = "parameters"`
+##### `impl_generic_args = "parameters"`
 
 Use `parameters` as the target's `Self` type parameters when fuzzing. Example:
 
 ```rust
 #[test_fuzz_impl]
 impl<T: Clone + Debug + Serialize> for Foo {
-    #[test_fuzz(concretize_impl = "String")]
+    #[test_fuzz(impl_generic_args = "String")]
     fn bar(&self, x: &T) {
         ...
     }
@@ -170,13 +170,13 @@ Calling the target in this way allows `function` to set up the call's environmen
 
 Do not try to [auto-generate corpus files] for the target.
 
-##### `only_concretizations`
+##### `only_generic_args`
 
-Record the target's concretizations when running tests, but do not generate corpus files and do not implement a fuzzing harness. This can be useful when the target is a generic function, but it is unclear what type parameters should be used for fuzzing.
+Record the target's generic args when running tests, but do not generate corpus files and do not implement a fuzzing harness. This can be useful when the target is a generic function, but it is unclear what type parameters should be used for fuzzing.
 
-The intended workflow is: enable `only_concretizations`, then run `cargo test` followed by `cargo test-fuzz --display concretizations`. One of the resulting concretizations might be usable as `concretize`'s `parameters`. Similarly, a concretization resulting from `cargo test-fuzz --display impl-concretizations` might be usable as `concretize_impl`'s `parameters`.
+The intended workflow is: enable `only_generic_args`, then run `cargo test` followed by `cargo test-fuzz --display generic-args`. One of the resulting generic args might be usable as `generic_args`'s `parameters`. Similarly, generic args resulting from `cargo test-fuzz --display impl-generic-args` might be usable as `impl_generic_args`'s `parameters`.
 
-Note, however, that just because a target was concretized with certain parameters during tests, it does not imply the target's arguments are serializable/deserializable when so concretized. The results of `--display concretizations`/`--display impl-concretizations` are merely suggestive.
+Note, however, that just because a target was called with certain parameters during tests, it does not imply the target's arguments are serializable/deserializable when those parameters are used. The results of `--display generic-args`/`--display impl-generic-args` are merely suggestive.
 
 ##### `rename = "name"`
 
@@ -255,12 +255,10 @@ Options:
       --backtrace                 Display backtraces
       --consolidate               Move one target's crashes, hangs, and work queue to its corpus; to
                                   consolidate all targets, use --consolidate-all
-      --display <OBJECT>          Display concretizations, corpus, crashes, `impl` concretizations,
-                                  hangs, or work queue. By default, corpus uses an uninstrumented
-                                  fuzz target; the others use an instrumented fuzz target. To
-                                  display the corpus with instrumentation, use --display
-                                  corpus-instrumented. [possible values: concretizations, corpus,
-                                  corpus-instrumented, crashes, hangs, impl-concretizations, queue]
+      --display <OBJECT>          Display corpus, crashes, generic args, `impl` generic args, hangs,
+                                  or work queue. By default, corpus uses an uninstrumented fuzz
+                                  target; the others use an instrumented fuzz target. To display the
+                                  corpus with instrumentation, use --display corpus-instrumented.
       --exact                     Target name is an exact name rather than a substring
       --exit-code                 Exit with 0 if the time limit was reached, 1 for other
                                   programmatic aborts, and 2 if an error occurred; implies --no-ui,
@@ -279,9 +277,7 @@ Options:
       --replay <OBJECT>           Replay corpus, crashes, hangs, or work queue. By default, corpus
                                   uses an uninstrumented fuzz target; the others use an instrumented
                                   fuzz target. To replay the corpus with instrumentation, use
-                                  --replay corpus-instrumented. [possible values: concretizations,
-                                  corpus, corpus-instrumented, crashes, hangs, impl-concretizations,
-                                  queue]
+                                  --replay corpus-instrumented.
       --reset                     Clear fuzzing data for one target, but leave corpus intact; to
                                   reset all targets, use --reset-all
       --resume                    Resume target's last fuzzing session
@@ -467,15 +463,15 @@ A target's arguments must implement the [`Clone`] trait. The reason for this req
 
 ### Serializable / deserializable arguments
 
-In general, a target's arguments must implement the [`serde::Serialize`] and [`serde::Deserialize`] traits, e.g., by [deriving them]. We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable/deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`concretize`] and [`concretize_impl`] above.
+In general, a target's arguments must implement the [`serde::Serialize`] and [`serde::Deserialize`] traits, e.g., by [deriving them]. We say "in general" because `test-fuzz` knows how to handle certain special cases that wouldn't normally be serializable/deserializable. For example, an argument of type `&str` is converted to `String` when serializing, and back to a `&str` when deserializing. See also [`generic_args`] and [`impl_generic_args`] above.
 
 ### Global variables
 
 The fuzzing harnesses that `test-fuzz` implements do not initialize global variables. While [`execute_with`] provides some remedy, it is not a complete solution. In general, fuzzing a function that relies on global variables requires ad-hoc methods.
 
-### [`convert`] and [`concretize`] / [`concretize_impl`]
+### [`convert`] and [`generic_args`] / [`impl_generic_args`]
 
-These options are incompatible in the following sense. If a fuzz target's argument type is a type parameter, [`convert`] will try to match the type parameter, not the type to which it is concretized. Supporting the latter would seem to require simulating type substitution as the compiler would perform it. However, this is not currently implemented.
+These options are incompatible in the following sense. If a fuzz target's argument type is a type parameter, [`convert`] will try to match the type parameter, not the type to which the parameter is set. Supporting the latter would seem to require simulating type substitution as the compiler would perform it. However, this is not currently implemented.
 
 ## Tips and tricks
 
@@ -516,8 +512,6 @@ These options are incompatible in the following sense. If a fuzz target's argume
 [`cargo test-fuzz` command]: #cargo-test-fuzz-command
 [`cargo test-fuzz`]: #cargo-test-fuzz-command
 [`cargo-clone`]: https://github.com/JanLikar/cargo-clone
-[`concretize_impl`]: #concretize_impl--parameters
-[`concretize`]: #concretize--parameters
 [`convert`]: #convert--x-y
 [`core::ops::Add`]: https://doc.rust-lang.org/beta/core/ops/trait.Add.html
 [`core::ops::Div`]: https://doc.rust-lang.org/beta/core/ops/trait.Div.html
@@ -525,6 +519,8 @@ These options are incompatible in the following sense. If a fuzz target's argume
 [`deserialize_with`]: https://serde.rs/field-attrs.html#deserialize_with
 [`enable_in_production`]: #enable_in_production
 [`execute_with`]: #execute_with--function
+[`generic_args`]: #generic_args--parameters
+[`impl_generic_args`]: #impl_generic_args--parameters
 [`num_traits::One`]: https://docs.rs/num-traits/0.2.14/num_traits/identities/trait.One.html
 [`num_traits::bounds::Bounded`]: https://docs.rs/num-traits/0.2.14/num_traits/bounds/trait.Bounded.html
 [`proc_macro_span`]: https://github.com/rust-lang/rust/issues/54725

@@ -2,23 +2,23 @@ use cargo_metadata::MetadataCommand;
 use std::{any::type_name, env, path::PathBuf};
 
 #[must_use]
-pub fn impl_concretizations_directory_from_args_type<T>() -> PathBuf {
-    impl_concretizations_directory().join(path_from_args_type::<T>())
+pub fn impl_generic_args_directory_from_args_type<T>() -> PathBuf {
+    impl_generic_args_directory().join(path_from_args_type::<T>())
 }
 
 #[must_use]
-pub fn impl_concretizations_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    impl_concretizations_directory().join(path_from_target(krate, target))
+pub fn impl_generic_args_directory_from_target(krate: &str, target: &str) -> PathBuf {
+    impl_generic_args_directory().join(path_from_target(krate, target))
 }
 
 #[must_use]
-pub fn concretizations_directory_from_args_type<T>() -> PathBuf {
-    concretizations_directory().join(path_from_args_type::<T>())
+pub fn generic_args_directory_from_args_type<T>() -> PathBuf {
+    generic_args_directory().join(path_from_args_type::<T>())
 }
 
 #[must_use]
-pub fn concretizations_directory_from_target(krate: &str, target: &str) -> PathBuf {
-    concretizations_directory().join(path_from_target(krate, target))
+pub fn generic_args_directory_from_target(krate: &str, target: &str) -> PathBuf {
+    generic_args_directory().join(path_from_target(krate, target))
 }
 
 #[must_use]
@@ -52,13 +52,13 @@ pub fn output_directory_from_target(krate: &str, target: &str) -> PathBuf {
 }
 
 #[must_use]
-fn impl_concretizations_directory() -> PathBuf {
-    target_directory(false).join("impl_concretizations")
+fn impl_generic_args_directory() -> PathBuf {
+    target_directory(false).join("impl_generic_args")
 }
 
 #[must_use]
-fn concretizations_directory() -> PathBuf {
-    target_directory(false).join("concretizations")
+fn generic_args_directory() -> PathBuf {
+    target_directory(false).join("generic_args")
 }
 
 #[must_use]

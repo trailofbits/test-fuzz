@@ -23,7 +23,7 @@ where
     }
 }
 
-#[test_fuzz::test_fuzz(concretize = "Address", bounds = "T: Serializable")]
+#[test_fuzz::test_fuzz(generic_args = "Address", bounds = "T: Serializable")]
 fn serializes_to<T>(x: &T, y: &T::Out) -> bool
 where
     T: Clone + DeserializeOwned + Serialize + Serializable,

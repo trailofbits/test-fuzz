@@ -61,7 +61,7 @@ index 9550d3d..4306d04 100644
  		#[pallet::weight(T::WeightInfo::do_something())]
 +		#[test_fuzz::test_fuzz(
 +			bounds = "T: frame_system::Config",
-+			concretize_impl = "crate::mock::Test",
++			impl_generic_args = "crate::mock::Test",
 +			convert = "OriginFor<T>, SerializableAccountId<AccountIdFor<T>>",
 +			execute_with = "crate::mock::new_test_ext().execute_with"
 +		)]

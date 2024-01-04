@@ -1,5 +1,5 @@
 #![cfg_attr(dylint_lib = "general", allow(crate_wide_allow))]
-#![allow(clippy::use_self)]
+#![allow(deprecated)]
 #![deny(clippy::expect_used)]
 #![deny(clippy::unwrap_used)]
 #![warn(clippy::panic)]
@@ -12,9 +12,9 @@ use cargo_metadata::{
 use clap::{crate_version, ValueEnum};
 use heck::ToKebabCase;
 use internal::dirs::{
-    concretizations_directory_from_target, corpus_directory_from_target,
-    crashes_directory_from_target, hangs_directory_from_target,
-    impl_concretizations_directory_from_target, output_directory_from_target,
+    corpus_directory_from_target, crashes_directory_from_target,
+    generic_args_directory_from_target, hangs_directory_from_target,
+    impl_generic_args_directory_from_target, output_directory_from_target,
     queue_directory_from_target, target_directory,
 };
 use log::debug;
@@ -55,12 +55,16 @@ bitflags! {
 #[derive(Clone, Copy, Debug, Display, Deserialize, PartialEq, Eq, Serialize, ValueEnum)]
 #[remain::sorted]
 pub enum Object {
+    #[deprecated]
     Concretizations,
     Corpus,
     CorpusInstrumented,
     Crashes,
+    GenericArgs,
     Hangs,
+    #[deprecated]
     ImplConcretizations,
+    ImplGenericArgs,
     Queue,
 }
 
@@ -136,7 +140,7 @@ pub fn run(opts: TestFuzz) -> Result<()> {
         if opts.list
             || matches!(
                 opts.display,
-                Some(Object::Corpus | Object::ImplConcretizations | Object::Concretizations)
+                Some(Object::Corpus | Object::ImplGenericArgs | Object::GenericArgs)
             )
             || opts.replay == Some(Object::Corpus)
         {
@@ -147,10 +151,7 @@ pub fn run(opts: TestFuzz) -> Result<()> {
 
     if let Some(object) = opts.replay {
         ensure!(
-            !matches!(
-                object,
-                Object::ImplConcretizations | Object::Concretizations
-            ),
+            !matches!(object, Object::ImplGenericArgs | Object::GenericArgs),
             "`--replay {}` is invalid.",
             object.to_string().to_kebab_case()
         );
@@ -697,8 +698,12 @@ fn reset(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> R
     Ok(())
 }
 
+#[allow(clippy::panic)]
 fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) {
     match object {
+        Object::Concretizations | Object::ImplConcretizations => {
+            panic!("`{object}` should have been filter out")
+        }
         Object::Corpus | Object::CorpusInstrumented => (
             Flags::REQUIRES_CARGO_TEST,
             corpus_directory_from_target(krate, target),
@@ -706,13 +711,13 @@ fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) 
         Object::Crashes => (Flags::empty(), crashes_directory_from_target(krate, target)),
         Object::Hangs => (Flags::empty(), hangs_directory_from_target(krate, target)),
         Object::Queue => (Flags::empty(), queue_directory_from_target(krate, target)),
-        Object::ImplConcretizations => (
+        Object::ImplGenericArgs => (
             Flags::REQUIRES_CARGO_TEST | Flags::RAW,
-            impl_concretizations_directory_from_target(krate, target),
+            impl_generic_args_directory_from_target(krate, target),
         ),
-        Object::Concretizations => (
+        Object::GenericArgs => (
             Flags::REQUIRES_CARGO_TEST | Flags::RAW,
-            concretizations_directory_from_target(krate, target),
+            generic_args_directory_from_target(krate, target),
         ),
     }
 }

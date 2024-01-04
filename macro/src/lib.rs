@@ -1,3 +1,5 @@
+#![cfg_attr(dylint_lib = "general", allow(crate_wide_allow))]
+#![allow(deprecated)]
 #![deny(clippy::unwrap_used)]
 
 use darling::{ast::NestedMeta, FromMeta};
@@ -152,13 +154,16 @@ fn map_impl_item_fn(
     )
 }
 
+#[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Default, FromMeta)]
 struct TestFuzzOpts {
     #[darling(default)]
     bounds: Option<String>,
     #[darling(default)]
+    #[deprecated]
     concretize: Option<String>,
     #[darling(default)]
+    #[deprecated]
     concretize_impl: Option<String>,
     #[darling(multiple)]
     convert: Vec<String>,
@@ -167,9 +172,16 @@ struct TestFuzzOpts {
     #[darling(default)]
     execute_with: Option<String>,
     #[darling(default)]
+    generic_args: Option<String>,
+    #[darling(default)]
+    impl_generic_args: Option<String>,
+    #[darling(default)]
     no_auto_generate: bool,
     #[darling(default)]
+    #[deprecated]
     only_concretizations: bool,
+    #[darling(default)]
+    only_generic_args: bool,
     #[darling(default)]
     rename: Option<Ident>,
 }
@@ -178,7 +190,27 @@ struct TestFuzzOpts {
 pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
     let attr_args =
         NestedMeta::parse_meta_list(args.into()).expect("Could not parse attribute args");
-    let opts = TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options");
+    let opts = {
+        let mut opts =
+            TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options");
+        if let Some(concretization) = opts.concretize.take() {
+            eprintln!("`concretize` is deprecated. Use `generic_args`.");
+            if opts.generic_args.is_none() {
+                opts.generic_args = Some(concretization);
+            }
+        }
+        if let Some(impl_concretization) = opts.concretize_impl.take() {
+            eprintln!("`concretize_impl` is deprecated. Use `impl_generic_args`.");
+            if opts.impl_generic_args.is_none() {
+                opts.impl_generic_args = Some(impl_concretization);
+            }
+        }
+        if opts.only_concretizations {
+            eprintln!("`only_concretizations` is deprecated. Use `only_generic_args`.");
+            opts.only_generic_args = true;
+        }
+        opts
+    };
 
     let item = parse_macro_input!(item as ItemFn);
     let ItemFn {
@@ -238,23 +270,26 @@ fn map_method_or_fn(
         conversions.insert(OrdType(key), (value, false));
     });
 
-    let opts_concretize_impl = opts.concretize_impl.as_deref().map(parse_generic_arguments);
+    let opts_impl_generic_args = opts
+        .impl_generic_args
+        .as_deref()
+        .map(parse_generic_arguments);
 
-    let opts_concretize = opts.concretize.as_deref().map(parse_generic_arguments);
+    let opts_generic_args = opts.generic_args.as_deref().map(parse_generic_arguments);
 
     // smoelius: Error early.
     #[cfg(fuzzing)]
-    if !opts.only_concretizations {
-        if is_generic(generics) && opts_concretize_impl.is_none() {
+    if !opts.only_generic_args {
+        if is_generic(generics) && opts_impl_generic_args.is_none() {
             panic!(
-                "`{}` appears in a generic impl but `concretize_impl` was not specified",
+                "`{}` appears in a generic impl but `impl_generic_args` was not specified",
                 sig.ident.to_string(),
             );
         }
 
-        if is_generic(&sig.generics) && opts_concretize.is_none() {
+        if is_generic(&sig.generics) && opts_generic_args.is_none() {
             panic!(
-                "`{}` is generic but `concretize` was not specified",
+                "`{}` is generic but `generic_args` was not specified",
                 sig.ident.to_string(),
             );
         }
@@ -303,20 +338,23 @@ fn map_method_or_fn(
         })
         .collect();
 
-    let impl_concretization = opts_concretize_impl.as_ref().map(args_as_turbofish);
-    let concretization = opts_concretize.as_ref().map(args_as_turbofish);
-    let combined_concretization_base =
-        combine_options(opts_concretize_impl, opts_concretize, |mut left, right| {
+    let impl_generic_args = opts_impl_generic_args.as_ref().map(args_as_turbofish);
+    let generic_args = opts_generic_args.as_ref().map(args_as_turbofish);
+    let combined_generic_args_base = combine_options(
+        opts_impl_generic_args,
+        opts_generic_args,
+        |mut left, right| {
             left.extend(right);
             left
-        });
-    let combined_concretization = combined_concretization_base.as_ref().map(args_as_turbofish);
+        },
+    );
+    let combined_generic_args = combined_generic_args_base.as_ref().map(args_as_turbofish);
     // smoelius: The macro generates code like this:
     //  struct Ret(<Args as HasRetTy>::RetTy);
     // If `Args` has lifetime parameters, this code won't compile. Insert `'static` for each
     // parameter that is not filled.
-    let combined_concretization_with_dummy_lifetimes = {
-        let mut args = combined_concretization_base.unwrap_or_default();
+    let combined_generic_args_with_dummy_lifetimes = {
+        let mut args = combined_generic_args_base.unwrap_or_default();
         let n_lifetime_params = combined_generics.lifetimes().count();
         let n_lifetime_args = args
             .iter()
@@ -383,9 +421,9 @@ fn map_method_or_fn(
     let target_ident = &sig.ident;
     let mod_ident = mod_ident(opts, self_ty_base, target_ident);
 
-    // smoelius: This is a hack. When `only_concretizations` is specified, the user should not have
+    // smoelius: This is a hack. When `only_generic_args` is specified, the user should not have
     // to also specify trait bounds. But `Args` is used to get the module path at runtime via
-    // `type_name`. So when `only_concretizations` is specified, `Args` gets an empty declaration.
+    // `type_name`. So when `only_generic_args` is specified, `Args` gets an empty declaration.
     let empty_generics = Generics {
         lt_token: None,
         params: parse_quote! {},
@@ -393,7 +431,7 @@ fn map_method_or_fn(
         where_clause: None,
     };
     let (_, empty_ty_generics, _) = empty_generics.split_for_impl();
-    let (ty_generics_as_turbofish, struct_args) = if opts.only_concretizations {
+    let (ty_generics_as_turbofish, struct_args) = if opts.only_generic_args {
         (
             empty_ty_generics.as_turbofish(),
             quote! {
@@ -411,17 +449,17 @@ fn map_method_or_fn(
         )
     };
 
-    let write_concretizations = quote! {
-        let impl_concretization = [
+    let write_generic_args = quote! {
+        let impl_generic_args = [
             #(#impl_ty_names),*
         ];
-        let concretization = [
+        let generic_args = [
             #(#ty_names),*
         ];
-        test_fuzz::runtime::write_impl_concretization::< #mod_ident :: Args #ty_generics_as_turbofish>(&impl_concretization);
-        test_fuzz::runtime::write_concretization::< #mod_ident :: Args #ty_generics_as_turbofish>(&concretization);
+        test_fuzz::runtime::write_impl_generic_args::< #mod_ident :: Args #ty_generics_as_turbofish>(&impl_generic_args);
+        test_fuzz::runtime::write_generic_args::< #mod_ident :: Args #ty_generics_as_turbofish>(&generic_args);
     };
-    let write_args = if opts.only_concretizations {
+    let write_args = if opts.only_generic_args {
         quote! {}
     } else {
         quote! {
@@ -430,19 +468,19 @@ fn map_method_or_fn(
             ));
         }
     };
-    let write_concretizations_and_args = quote! {
+    let write_generic_args_and_args = quote! {
         #[cfg(test)]
         if !test_fuzz::runtime::test_fuzz_enabled() {
-            #write_concretizations
+            #write_generic_args
             #write_args
         }
     };
-    let (in_production_write_concretizations_and_args, mod_attr) = if opts.enable_in_production {
+    let (in_production_write_generic_args_and_args, mod_attr) = if opts.enable_in_production {
         (
             quote! {
                 #[cfg(not(test))]
                 if test_fuzz::runtime::write_enabled() {
-                    #write_concretizations
+                    #write_generic_args
                     #write_args
                 }
             },
@@ -462,7 +500,7 @@ fn map_method_or_fn(
         quote! {
             #[test]
             fn auto_generate() {
-                Args #combined_concretization :: auto_generate();
+                Args #combined_generic_args :: auto_generate();
             }
         }
     };
@@ -471,7 +509,7 @@ fn map_method_or_fn(
         quote! {}
         #[cfg(not(feature = "__persistent"))]
         quote! {
-            let mut args = UsingReader::<_>::read_args #combined_concretization (std::io::stdin());
+            let mut args = UsingReader::<_>::read_args #combined_generic_args (std::io::stdin());
         }
     };
     let output_args = {
@@ -490,7 +528,7 @@ fn map_method_or_fn(
         }
     };
     let args_ret_ty: Type = parse_quote! {
-        <Args #combined_concretization_with_dummy_lifetimes as HasRetTy>::RetTy
+        <Args #combined_generic_args_with_dummy_lifetimes as HasRetTy>::RetTy
     };
     let call: Expr = if receiver {
         let mut de_args = de_args.iter();
@@ -498,19 +536,19 @@ fn map_method_or_fn(
             .next()
             .expect("Should have at least one deserialized argument");
         parse_quote! {
-            ( #self_arg ). #target_ident #concretization (
+            ( #self_arg ). #target_ident #generic_args (
                 #(#de_args),*
             )
         }
     } else if let Some(self_ty_base) = self_ty_base {
         parse_quote! {
-            #self_ty_base #impl_concretization :: #target_ident #concretization (
+            #self_ty_base #impl_generic_args :: #target_ident #generic_args (
                 #(#de_args),*
             )
         }
     } else {
         parse_quote! {
-            super :: #target_ident #concretization (
+            super :: #target_ident #generic_args (
                 #(#de_args),*
             )
         }
@@ -527,7 +565,7 @@ fn map_method_or_fn(
         #[cfg(feature = "__persistent")]
         quote! {
             test_fuzz::afl::fuzz!(|data: &[u8]| {
-                let mut args = UsingReader::<_>::read_args #combined_concretization (data);
+                let mut args = UsingReader::<_>::read_args #combined_generic_args (data);
                 let ret: Option< #args_ret_ty > = args.map(|mut args|
                     #call_in_environment
                 );
@@ -570,7 +608,7 @@ fn map_method_or_fn(
             eprintln!();
         }
     };
-    let mod_items = if opts.only_concretizations {
+    let mod_items = if opts.only_generic_args {
         quote! {}
     } else {
         quote! {
@@ -624,13 +662,13 @@ fn map_method_or_fn(
         }
     };
     // smoelius: The `Args`' implementation and the `auto_generate` test won't compile without
-    // concretizations.
+    // generic args.
     //   Also, cargo-test-fuzz finds targets by looking for tests that end with `_fuzz::entry`. So
-    // create such a test regardless. If say `only_concretizations` was specified, then give the
+    // create such a test regardless. If say `only_generic_args` was specified, then give the
     // test an empty body.
-    let (concretization_dependent_mod_items, entry_stmts) = if opts.only_concretizations
-        || (generics.type_params().next().is_some() && impl_concretization.is_none())
-        || (sig.generics.type_params().next().is_some() && concretization.is_none())
+    let (generic_args_dependent_mod_items, entry_stmts) = if opts.only_generic_args
+        || (generics.type_params().next().is_some() && impl_generic_args.is_none())
+        || (sig.generics.type_params().next().is_some() && generic_args.is_none())
     {
         (quote! {}, quote! {})
     } else {
@@ -676,16 +714,16 @@ fn map_method_or_fn(
                 #auto_generate
             },
             quote! {
-                Args #combined_concretization :: entry();
+                Args #combined_generic_args :: entry();
             },
         )
     };
     (
         parse_quote! {
             #(#attrs)* #vis #defaultness #sig {
-                #write_concretizations_and_args
+                #write_generic_args_and_args
 
-                #in_production_write_concretizations_and_args
+                #in_production_write_generic_args_and_args
 
                 #(#stmts)*
             }
@@ -699,7 +737,7 @@ fn map_method_or_fn(
 
                 #mod_items
 
-                #concretization_dependent_mod_items
+                #generic_args_dependent_mod_items
 
                 #[test]
                 fn entry() {
