@@ -10,7 +10,7 @@ index ed4b2a6..670e9e1 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/accounts_data_meter.rs b/program-runtime/src/accounts_data_meter.rs
-index 3e0553d..5136a8b 100644
+index 21db92f..6c0f378 100644
 --- a/program-runtime/src/accounts_data_meter.rs
 +++ b/program-runtime/src/accounts_data_meter.rs
 @@ -10,5 +10,5 @@ pub const MAX_ACCOUNTS_DATA_LEN: u64 = 128_000_000_000;
@@ -32,7 +32,7 @@ index 0657df5..f1bd04f 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 76ecb10..dd93fce 100644
+index fc40cdb..8a8acb0 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
@@ -167,10 +167,10 @@ index 48d771b..1d1d527 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 570efb0..1d3d3d9 100644
+index 18ca167..0f5d042 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -372,6 +372,7 @@ declare_builtin_function!(
+@@ -373,6 +373,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(
@@ -199,10 +199,10 @@ index 061b16c..d994737 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 2096bea..a5721a0 100644
+index 0a06cdd..8ba3425 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -969,5 +969,5 @@ lazy_static! {
+@@ -984,5 +984,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
@@ -210,7 +210,7 @@ index 2096bea..a5721a0 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 8922a01..0e12e1f 100644
+index 981f648..4cba7ff 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -37,5 +37,5 @@ pub type IndexOfAccount = u16;
