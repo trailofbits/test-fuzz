@@ -29,7 +29,7 @@ use std::{
     iter,
     path::{Path, PathBuf},
     process::{exit, Command},
-    sync::Mutex,
+    sync::OnceLock,
     time::Duration,
 };
 use strum_macros::Display;
@@ -157,7 +157,8 @@ pub fn run(opts: TestFuzz) -> Result<()> {
         );
     }
 
-    cache_cargo_afl_version()?;
+    // smoelius: Ensure `cargo-afl` is installed.
+    let _ = cached_cargo_afl_version();
 
     let display = opts.display.is_some();
 
@@ -552,27 +553,18 @@ fn check_test_fuzz_and_afl_versions(
             "afl",
             executable.afl_version.as_ref(),
             "cargo-afl",
-            CARGO_AFL_VERSION
-                .lock()
-                .expect("Could not lock `CARGO_AFL_VERSION`")
-                .as_ref()
-                .expect("Could not determine `cargo-afl` version"),
+            cached_cargo_afl_version(),
         )?;
     }
     Ok(())
 }
 
-#[allow(clippy::significant_drop_tightening)]
-fn cache_cargo_afl_version() -> Result<()> {
-    let cargo_afl_version = cargo_afl_version()?;
-    let mut lock = CARGO_AFL_VERSION
-        .lock()
-        .map_err(|error| anyhow!(error.to_string()))?;
-    *lock = Some(cargo_afl_version);
-    Ok(())
+fn cached_cargo_afl_version() -> &'static Version {
+    #[allow(clippy::unwrap_used)]
+    CARGO_AFL_VERSION.get_or_init(|| cargo_afl_version().unwrap())
 }
 
-static CARGO_AFL_VERSION: Mutex<Option<Version>> = Mutex::new(None);
+static CARGO_AFL_VERSION: OnceLock<Version> = OnceLock::new();
 
 fn cargo_afl_version() -> Result<Version> {
     let mut command = Command::new("cargo");
