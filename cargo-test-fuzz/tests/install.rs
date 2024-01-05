@@ -80,7 +80,7 @@ fn newer_afl() -> Result<()> {
         )],
         &[
             "^`[^`]*` depends on `afl [^`]*`, which is newer than `cargo-afl [^`]*`.",
-            "Consider upgrading with `cargo install afl --force --version [^`]*`.$",
+            "Consider upgrading with `cargo install cargo-afl --force --version [^`]*`.$",
         ],
     )
 }
