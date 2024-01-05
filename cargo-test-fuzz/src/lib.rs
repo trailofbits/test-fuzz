@@ -545,7 +545,6 @@ fn check_test_fuzz_and_afl_versions(
             executable.test_fuzz_version.as_ref(),
             "cargo-test-fuzz",
             &cargo_test_fuzz_version,
-            "cargo-test-fuzz",
         )?;
         #[allow(clippy::expect_used)]
         check_dependency_version(
@@ -558,7 +557,6 @@ fn check_test_fuzz_and_afl_versions(
                 .expect("Could not lock `CARGO_AFL_VERSION`")
                 .as_ref()
                 .expect("Could not determine `cargo-afl` version"),
-            "afl",
         )?;
     }
     Ok(())
@@ -598,7 +596,6 @@ fn check_dependency_version(
     dependency_version: Option<&Version>,
     binary: &str,
     binary_version: &Version,
-    krate: &str,
 ) -> Result<()> {
     if let Some(dependency_version) = dependency_version {
         ensure!(
@@ -614,7 +611,7 @@ fn check_dependency_version(
         if !as_version_req(dependency_version).matches(binary_version) {
             eprintln!(
                 "`{name}` depends on `{dependency} {dependency_version}`, which is newer than \
-                 `{binary} {binary_version}`. Consider upgrading with `cargo install {krate} \
+                 `{binary} {binary_version}`. Consider upgrading with `cargo install {binary} \
                  --force --version '>={dependency_version}'`."
             );
         }
