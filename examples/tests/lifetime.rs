@@ -1,5 +1,6 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+#[derive(Debug)]
 struct Foo;
 
 #[derive(Clone)]
@@ -24,7 +25,9 @@ impl<'de, 'a> Deserialize<'de> for Bar<'a> {
 }
 
 #[test_fuzz::test_fuzz]
-fn target<'a>(bar: Bar<'a>) {}
+fn target<'a>(bar: Bar<'a>) {
+    println!("{:?}", bar.0);
+}
 
 #[test]
 fn test() {
