@@ -18,13 +18,22 @@
     "targets": ["import"]
   },
   {
-    "flags": ["REQUIRES_ISOLATION"],
+    "flags": [],
     "url": "https://github.com/solana-labs/example-helloworld",
     "rev": "354e890721068fa5d38e16f380bf994e1c678eb7",
     "patch": "example-helloworld.patch",
     "subdir": "src/program-rust",
     "package": "solana-bpf-helloworld",
     "targets": ["process_instruction"]
+  },
+  {
+    "flags": [],
+    "url": "https://github.com/solana-labs/rbpf",
+    "rev": "179a0f94b68ae0bef892b214750a54448d61b1be",
+    "patch": "solana_rbpf.patch",
+    "subdir": ".",
+    "package": "solana_rbpf",
+    "targets": ["syscall_str_cmp_rust"]
   },
   {
     "flags": ["EXPENSIVE"],

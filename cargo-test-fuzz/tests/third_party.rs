@@ -7,7 +7,7 @@ use regex::Regex;
 use rustc_version::{version_meta, Channel};
 use serde::Deserialize;
 use std::{
-    fs::{read_to_string, OpenOptions},
+    fs::read_to_string,
     io::{stderr, Write},
     path::Path,
 };
@@ -19,7 +19,6 @@ option_set! {
         const EXPENSIVE = 1 << 0;
         // const SKIP = 1 << 1;
         const SKIP_NIGHTLY = 1 << 2;
-        const REQUIRES_ISOLATION = 1 << 3;
     }
 }
 
@@ -126,17 +125,6 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
 
     let subdir = tempdir.path().join(&test.subdir);
 
-    if test.flags.contains(Flags::REQUIRES_ISOLATION) {
-        let mut file = OpenOptions::new()
-            .append(true)
-            .open(subdir.join("Cargo.toml"))
-            .unwrap();
-
-        writeln!(file)
-            .and_then(|()| writeln!(file, "[workspace]"))
-            .unwrap();
-    }
-
     // smoelius: Right now, Substrate's lockfile refers to `pin-project:0.4.27`, which is
     // incompatible with `syn:1.0.84`.
     // smoelius: The `pin-project` issue has been resolved. But Substrate now chokes when
@@ -177,6 +165,7 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
     // runs. `assert_cmd::Command` would capture the output.
     assert!(std::process::Command::new("cargo")
         .current_dir(&subdir)
+        .env("TEST_FUZZ_WRITE", "1")
         .args(["test", "--package", &test.package, "--", "--nocapture"])
         .status()
         .unwrap()

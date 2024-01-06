@@ -1,5 +1,5 @@
 diff --git a/src/program-rust/Cargo.toml b/src/program-rust/Cargo.toml
-index a4976a0..80e2ab7 100644
+index a4976a0..90124ef 100644
 --- a/src/program-rust/Cargo.toml
 +++ b/src/program-rust/Cargo.toml
 @@ -18,4 +18,9 @@ borsh-derive = "0.10.0"
@@ -12,6 +12,11 @@ index a4976a0..80e2ab7 100644
 +
  [dev-dependencies]
  solana-program-test = "~1.10.35"
+@@ -25,2 +30,4 @@ solana-sdk = "~1.10.35"
+ name = "helloworld"
+ crate-type = ["cdylib", "lib"]
++
++[workspace]
 diff --git a/src/program-rust/src/lib.rs b/src/program-rust/src/lib.rs
 index 88714a8..026b733 100644
 --- a/src/program-rust/src/lib.rs
