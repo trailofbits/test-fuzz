@@ -1,0 +1,539 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 5486da2..dba030e 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -32,4 +32,7 @@ scroll = "0.11"
+ thiserror = "1.0.26"
+ 
++serde = "1.0"
++test-fuzz = { path = "../../test-fuzz", features = ["self_ty_in_mod_name"] }
++
+ [target.'cfg(windows)'.dependencies]
+ winapi = { version = "0.3", features = ["memoryapi", "sysinfoapi", "winnt", "errhandlingapi"], optional = true }
+@@ -48,2 +51,4 @@ elf = "0.0.10"
+ json = "0.12"
+ test_utils = { path = "test_utils/" }
++
++[workspace]
+diff --git a/src/memory_region.rs b/src/memory_region.rs
+index e864855..9922267 100644
+--- a/src/memory_region.rs
++++ b/src/memory_region.rs
+@@ -34,5 +34,5 @@ use std::{
+ 
+ /// The state of a memory region.
+-#[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
++#[derive(Debug, Copy, Clone, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
+ pub enum MemoryState {
+     /// The memory region is readable
+@@ -50,5 +50,5 @@ pub type MemoryCowCallback = Box<dyn Fn(u64) -> Result<u64, ()>>;
+ 
+ /// Memory region for bounds checking and address translation
+-#[derive(Default, Eq, PartialEq)]
++#[derive(Default, Eq, PartialEq, Clone)]
+ #[repr(C, align(32))]
+ pub struct MemoryRegion {
+@@ -67,4 +67,85 @@ pub struct MemoryRegion {
+ }
+ 
++#[derive(Debug, serde::Deserialize, serde::Serialize)]
++struct SerializableMemoryRegion {
++    pub host_mem_seed: Option<u64>,
++    pub vm_addr: u64,
++    pub vm_addr_end: u64,
++    pub len: u64,
++    pub vm_gap_shift: u8,
++    pub state: MemoryState,
++}
++
++impl From<SerializableMemoryRegion> for MemoryRegion {
++    fn from(value: SerializableMemoryRegion) -> Self {
++        use rand::{rngs::StdRng, RngCore, SeedableRng};
++        let SerializableMemoryRegion {
++            host_mem_seed,
++            vm_addr,
++            vm_addr_end,
++            len,
++            vm_gap_shift,
++            state,
++        } = value;
++        if len > 0x100000000 {
++            std::process::exit(0);
++        }
++        let mut bytes = vec![0u8; len as usize];
++        if let Some(seed) = host_mem_seed {
++            let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
++            rng.fill_bytes(&mut bytes);
++        };
++        Self {
++            host_addr: Cell::new(bytes.leak().as_ptr() as u64),
++            vm_addr,
++            vm_addr_end,
++            len,
++            vm_gap_shift,
++            state: Cell::new(state),
++        }
++    }
++}
++
++impl From<&MemoryRegion> for SerializableMemoryRegion {
++    fn from(value: &MemoryRegion) -> Self {
++        let MemoryRegion {
++            host_addr: _,
++            vm_addr,
++            vm_addr_end,
++            len,
++            vm_gap_shift,
++            state,
++        } = value;
++        Self {
++            host_mem_seed: None,
++            vm_addr: *vm_addr,
++            vm_addr_end: *vm_addr_end,
++            len: *len,
++            vm_gap_shift: *vm_gap_shift,
++            state: state.get(),
++        }
++    }
++}
++
++impl<'de> serde::Deserialize<'de> for MemoryRegion {
++    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
++    where
++        D: serde::Deserializer<'de>,
++    {
++        let value = SerializableMemoryRegion::deserialize(deserializer)?;
++        Ok(Self::from(value))
++    }
++}
++
++impl serde::Serialize for MemoryRegion {
++    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
++    where
++        S: serde::Serializer,
++    {
++        let value = SerializableMemoryRegion::from(self);
++        value.serialize(serializer)
++    }
++}
++
+ impl MemoryRegion {
+     fn new(slice: &[u8], vm_addr: u64, vm_gap_size: u64, state: MemoryState) -> Self {
+@@ -181,5 +262,5 @@ pub enum AccessType {
+ 
+ /// Memory mapping based on eytzinger search.
+-pub struct UnalignedMemoryMapping<'a> {
++pub struct UnalignedMemoryMapping {
+     /// Mapped memory regions
+     regions: Box<[MemoryRegion]>,
+@@ -189,12 +270,93 @@ pub struct UnalignedMemoryMapping<'a> {
+     cache: UnsafeCell<MappingCache>,
+     /// VM configuration
+-    config: &'a Config,
++    config: Config,
+     /// Executable sbpf_version
+-    sbpf_version: &'a SBPFVersion,
++    sbpf_version: SBPFVersion,
+     /// CoW callback
+     cow_cb: Option<MemoryCowCallback>,
+ }
+ 
+-impl<'a> fmt::Debug for UnalignedMemoryMapping<'a> {
++#[derive(serde::Deserialize, serde::Serialize)]
++struct SerializableUnalignedMemoryMapping {
++    regions: Box<[MemoryRegion]>,
++    config: Config,
++    sbpf_version: SBPFVersion,
++}
++
++impl<'a> From<SerializableUnalignedMemoryMapping> for UnalignedMemoryMapping {
++    fn from(value: SerializableUnalignedMemoryMapping) -> Self {
++        let SerializableUnalignedMemoryMapping {
++            regions,
++            config,
++            sbpf_version,
++        } = value;
++        let region_addresses = regions
++            .iter()
++            .map(|region| region.vm_addr)
++            .collect::<Vec<_>>()
++            .into_boxed_slice();
++        Self {
++            regions,
++            region_addresses,
++            cache: UnsafeCell::new(MappingCache::new()),
++            config: config.clone(),
++            sbpf_version,
++            cow_cb: None,
++        }
++    }
++}
++
++impl<'a> From<&'a UnalignedMemoryMapping> for SerializableUnalignedMemoryMapping {
++    fn from(value: &'a UnalignedMemoryMapping) -> Self {
++        let UnalignedMemoryMapping {
++            regions,
++            region_addresses: _,
++            cache: _,
++            config,
++            sbpf_version,
++            cow_cb: _,
++        } = value;
++        Self {
++            regions: regions.clone(),
++            config: config.clone(),
++            sbpf_version: *sbpf_version,
++        }
++    }
++}
++
++impl<'de> serde::Deserialize<'de> for UnalignedMemoryMapping {
++    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
++    where
++        D: serde::Deserializer<'de>,
++    {
++        let value = SerializableUnalignedMemoryMapping::deserialize(deserializer)?;
++        Ok(Self::from(value))
++    }
++}
++
++impl serde::Serialize for UnalignedMemoryMapping {
++    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
++    where
++        S: serde::Serializer,
++    {
++        let value = SerializableUnalignedMemoryMapping::from(self);
++        value.serialize(serializer)
++    }
++}
++
++impl Clone for UnalignedMemoryMapping {
++    fn clone(&self) -> Self {
++        Self {
++            regions: self.regions.clone(),
++            region_addresses: self.region_addresses.clone(),
++            cache: UnsafeCell::new(unsafe { &*self.cache.get() as &MappingCache }.clone()),
++            config: self.config,
++            sbpf_version: self.sbpf_version,
++            cow_cb: None,
++        }
++    }
++}
++
++impl fmt::Debug for UnalignedMemoryMapping {
+     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+         f.debug_struct("UnalignedMemoryMapping")
+@@ -215,5 +377,5 @@ impl<'a> fmt::Debug for UnalignedMemoryMapping<'a> {
+ }
+ 
+-impl<'a> UnalignedMemoryMapping<'a> {
++impl<'a> UnalignedMemoryMapping {
+     fn construct_eytzinger_order(
+         &mut self,
+@@ -261,6 +423,6 @@ impl<'a> UnalignedMemoryMapping<'a> {
+             region_addresses: vec![0; regions.len()].into_boxed_slice(),
+             cache: UnsafeCell::new(MappingCache::new()),
+-            config,
+-            sbpf_version,
++            config: config.clone(),
++            sbpf_version: *sbpf_version,
+             cow_cb,
+         };
+@@ -332,6 +494,6 @@ impl<'a> UnalignedMemoryMapping<'a> {
+             None => {
+                 return generate_access_violation(
+-                    self.config,
+-                    self.sbpf_version,
++                    &self.config,
++                    &self.sbpf_version,
+                     access_type,
+                     vm_addr,
+@@ -347,5 +509,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+         }
+ 
+-        generate_access_violation(self.config, self.sbpf_version, access_type, vm_addr, len)
++        generate_access_violation(&self.config, &self.sbpf_version, access_type, vm_addr, len)
+     }
+ 
+@@ -377,6 +539,6 @@ impl<'a> UnalignedMemoryMapping<'a> {
+             None => {
+                 return generate_access_violation(
+-                    self.config,
+-                    self.sbpf_version,
++                    &self.config,
++                    &self.sbpf_version,
+                     AccessType::Load,
+                     vm_addr,
+@@ -420,6 +582,6 @@ impl<'a> UnalignedMemoryMapping<'a> {
+ 
+         generate_access_violation(
+-            self.config,
+-            self.sbpf_version,
++            &self.config,
++            &self.sbpf_version,
+             AccessType::Load,
+             initial_vm_addr,
+@@ -457,6 +619,6 @@ impl<'a> UnalignedMemoryMapping<'a> {
+             _ => {
+                 return generate_access_violation(
+-                    self.config,
+-                    self.sbpf_version,
++                    &self.config,
++                    &self.sbpf_version,
+                     AccessType::Store,
+                     vm_addr,
+@@ -499,6 +661,6 @@ impl<'a> UnalignedMemoryMapping<'a> {
+ 
+         generate_access_violation(
+-            self.config,
+-            self.sbpf_version,
++            &self.config,
++            &self.sbpf_version,
+             AccessType::Store,
+             initial_vm_addr,
+@@ -526,5 +688,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+         }
+         Err(
+-            generate_access_violation(self.config, self.sbpf_version, access_type, vm_addr, 0)
++            generate_access_violation(&self.config, &self.sbpf_version, access_type, vm_addr, 0)
+                 .unwrap_err(),
+         )
+@@ -549,15 +711,36 @@ impl<'a> UnalignedMemoryMapping<'a> {
+ /// Memory mapping that uses the upper half of an address to identify the
+ /// underlying memory region.
++#[derive(serde::Deserialize, serde::Serialize)]
+ pub struct AlignedMemoryMapping<'a> {
+     /// Mapped memory regions
+     regions: Box<[MemoryRegion]>,
+     /// VM configuration
++    #[serde(
++        serialize_with = "test_fuzz::serialize_ref",
++        deserialize_with = "test_fuzz::deserialize_ref"
++    )]
+     config: &'a Config,
+     /// Executable sbpf_version
++    #[serde(
++        serialize_with = "test_fuzz::serialize_ref",
++        deserialize_with = "test_fuzz::deserialize_ref"
++    )]
+     sbpf_version: &'a SBPFVersion,
+     /// CoW callback
++    #[serde(skip)]
+     cow_cb: Option<MemoryCowCallback>,
+ }
+ 
++impl<'a> Clone for AlignedMemoryMapping<'a> {
++    fn clone(&self) -> Self {
++        Self {
++            regions: self.regions.clone(),
++            config: self.config,
++            sbpf_version: self.sbpf_version,
++            cow_cb: None,
++        }
++    }
++}
++
+ impl<'a> fmt::Debug for AlignedMemoryMapping<'a> {
+     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+@@ -728,5 +911,5 @@ impl<'a> AlignedMemoryMapping<'a> {
+ 
+ /// Maps virtual memory to host memory.
+-#[derive(Debug)]
++#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
+ pub enum MemoryMapping<'a> {
+     /// Used when address translation is disabled
+@@ -736,5 +919,5 @@ pub enum MemoryMapping<'a> {
+     Aligned(AlignedMemoryMapping<'a>),
+     /// Memory mapping that allows mapping unaligned memory regions.
+-    Unaligned(UnalignedMemoryMapping<'a>),
++    Unaligned(UnalignedMemoryMapping),
+ }
+ 
+@@ -906,5 +1089,5 @@ fn generate_access_violation(
+ 
+ /// Fast, small linear cache used to speed up unaligned memory mapping.
+-#[derive(Debug)]
++#[derive(Debug, Clone)]
+ struct MappingCache {
+     // The cached entries.
+diff --git a/src/program.rs b/src/program.rs
+index 6605814..3cf47e4 100644
+--- a/src/program.rs
++++ b/src/program.rs
+@@ -10,5 +10,5 @@ use {
+ 
+ /// Defines a set of sbpf_version of an executable
+-#[derive(Debug, PartialEq, Eq, Clone)]
++#[derive(Debug, PartialEq, Eq, Clone, Copy, serde::Deserialize, serde::Serialize)]
+ pub enum SBPFVersion {
+     /// The legacy format
+@@ -289,5 +289,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
+ #[macro_export]
+ macro_rules! declare_builtin_function {
+-    ($(#[$attr:meta])* $name:ident $(<$($generic_ident:tt : $generic_type:tt),+>)?, fn rust(
++    ($(#[$attr:meta])* $name:ident, fn rust $(<$($lifetime:tt),+>)? (
+         $vm:ident : &mut $ContextObject:ty,
+         $arg_a:ident : u64,
+@@ -300,7 +300,9 @@ macro_rules! declare_builtin_function {
+         $(#[$attr])*
+         pub struct $name {}
++        #[test_fuzz::test_fuzz_impl]
+         impl $name {
+             /// Rust interface
+-            pub fn rust $(<$($generic_ident : $generic_type),+>)? (
++            #[test_fuzz::test_fuzz(enable_in_production)]
++            pub fn rust $(<$($lifetime),+>)? (
+                 $vm: &mut $ContextObject,
+                 $arg_a: u64,
+@@ -311,9 +313,12 @@ macro_rules! declare_builtin_function {
+                 $memory_mapping: &mut $MemoryMapping,
+             ) -> $Result {
++                if matches!($memory_mapping, MemoryMapping::Identity) {
++                    std::process::exit(0);
++                }
+                 $($rust)*
+             }
+             /// VM interface
+             #[allow(clippy::too_many_arguments)]
+-            pub fn vm $(<$($generic_ident : $generic_type),+>)? (
++            pub fn vm $(<$($lifetime),+>)? (
+                 $vm: *mut $crate::vm::EbpfVm<$ContextObject>,
+                 $arg_a: u64,
+@@ -325,5 +330,5 @@ macro_rules! declare_builtin_function {
+                 use $crate::vm::ContextObject;
+                 let vm = unsafe {
+-                    &mut *($vm.cast::<u64>().offset(-($crate::vm::get_runtime_environment_key() as isize)).cast::<$crate::vm::EbpfVm<$ContextObject>>())
++                    &mut *(($vm as *mut u64).offset(-($crate::vm::get_runtime_environment_key() as isize)) as *mut $crate::vm::EbpfVm<$ContextObject>)
+                 };
+                 let config = vm.loader.get_config();
+@@ -331,5 +336,5 @@ macro_rules! declare_builtin_function {
+                     vm.context_object_pointer.consume(vm.previous_instruction_meter - vm.due_insn_count);
+                 }
+-                let converted_result: $crate::error::ProgramResult = Self::rust $(::<$($generic_ident),+>)?(
++                let converted_result: $crate::error::ProgramResult = Self::rust(
+                     vm.context_object_pointer, $arg_a, $arg_b, $arg_c, $arg_d, $arg_e, &mut vm.memory_mapping,
+                 ).map_err(|err| $crate::error::EbpfError::SyscallError(err)).into();
+diff --git a/src/syscalls.rs b/src/syscalls.rs
+index c597d9b..1996c56 100644
+--- a/src/syscalls.rs
++++ b/src/syscalls.rs
+@@ -34,5 +34,5 @@ declare_builtin_function!(
+     /// **unused**. Returns the number of bytes written.
+     SyscallTracePrintf,
+-    fn rust(
++    fn rust<'a>(
+         _context_object: &mut TestContextObject,
+         _arg1: u64,
+@@ -41,5 +41,5 @@ declare_builtin_function!(
+         arg4: u64,
+         arg5: u64,
+-        _memory_mapping: &mut MemoryMapping,
++        _memory_mapping: &mut MemoryMapping<'a>,
+     ) -> Result<u64, Box<dyn std::error::Error>> {
+         println!("bpf_trace_printf: {arg3:#x}, {arg4:#x}, {arg5:#x}");
+@@ -62,5 +62,5 @@ declare_builtin_function!(
+     /// each argument must be a `u64`.
+     SyscallGatherBytes,
+-    fn rust(
++    fn rust<'a>(
+         _context_object: &mut TestContextObject,
+         arg1: u64,
+@@ -69,5 +69,5 @@ declare_builtin_function!(
+         arg4: u64,
+         arg5: u64,
+-        _memory_mapping: &mut MemoryMapping,
++        _memory_mapping: &mut MemoryMapping<'a>,
+     ) -> Result<u64, Box<dyn std::error::Error>> {
+         Ok(arg1.wrapping_shl(32)
+@@ -84,5 +84,5 @@ declare_builtin_function!(
+     /// cases. Arguments 3 to 5 are unused.
+     SyscallMemFrob,
+-    fn rust(
++    fn rust<'a>(
+         _context_object: &mut TestContextObject,
+         vm_addr: u64,
+@@ -91,5 +91,5 @@ declare_builtin_function!(
+         _arg4: u64,
+         _arg5: u64,
+-        memory_mapping: &mut MemoryMapping,
++        memory_mapping: &mut MemoryMapping<'a>,
+     ) -> Result<u64, Box<dyn std::error::Error>> {
+         let host_addr: Result<u64, EbpfError> =
+@@ -109,5 +109,5 @@ declare_builtin_function!(
+     /// C-like `strcmp`, return 0 if the strings are equal, and a non-null value otherwise.
+     SyscallStrCmp,
+-    fn rust(
++    fn rust<'a>(
+         _context_object: &mut TestContextObject,
+         arg1: u64,
+@@ -116,5 +116,5 @@ declare_builtin_function!(
+         _arg4: u64,
+         _arg5: u64,
+-        memory_mapping: &mut MemoryMapping,
++        memory_mapping: &mut MemoryMapping<'a>,
+     ) -> Result<u64, Box<dyn std::error::Error>> {
+         // C-like strcmp, maybe shorter than converting the bytes to string and comparing?
+@@ -147,5 +147,5 @@ declare_builtin_function!(
+     /// Prints a NULL-terminated UTF-8 string.
+     SyscallString,
+-    fn rust(
++    fn rust<'a>(
+         _context_object: &mut TestContextObject,
+         vm_addr: u64,
+@@ -154,5 +154,5 @@ declare_builtin_function!(
+         _arg4: u64,
+         _arg5: u64,
+-        memory_mapping: &mut MemoryMapping,
++        memory_mapping: &mut MemoryMapping<'a>,
+     ) -> Result<u64, Box<dyn std::error::Error>> {
+         let host_addr: Result<u64, EbpfError> =
+@@ -172,5 +172,5 @@ declare_builtin_function!(
+     /// Prints the five arguments formated as u64 in decimal.
+     SyscallU64,
+-    fn rust(
++    fn rust<'a>(
+         _context_object: &mut TestContextObject,
+         arg1: u64,
+@@ -179,5 +179,5 @@ declare_builtin_function!(
+         arg4: u64,
+         arg5: u64,
+-        memory_mapping: &mut MemoryMapping,
++        memory_mapping: &mut MemoryMapping<'a>,
+     ) -> Result<u64, Box<dyn std::error::Error>> {
+         println!(
+diff --git a/src/vm.rs b/src/vm.rs
+index 40c222a..937e1b6 100644
+--- a/src/vm.rs
++++ b/src/vm.rs
+@@ -38,5 +38,5 @@ pub fn get_runtime_environment_key() -> i32 {
+ 
+ /// VM configuration settings
+-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
++#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+ pub struct Config {
+     /// Maximum call depth
+@@ -140,5 +140,5 @@ pub trait ContextObject {
+ 
+ /// Simple instruction meter for testing
+-#[derive(Debug, Clone, Default)]
++#[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize)]
+ pub struct TestContextObject {
+     /// Contains the register state at every instruction in order of execution
+diff --git a/tests/execution.rs b/tests/execution.rs
+index f7ef536..773e3de 100644
+--- a/tests/execution.rs
++++ b/tests/execution.rs
+@@ -2503,5 +2503,5 @@ declare_builtin_function!(
+     /// For test_nested_vm_syscall()
+     SyscallNestedVm,
+-    fn rust(
++    fn rust<'a>(
+         _context_object: &mut TestContextObject,
+         depth: u64,
+@@ -2510,5 +2510,5 @@ declare_builtin_function!(
+         _arg4: u64,
+         _arg5: u64,
+-        _memory_mapping: &mut MemoryMapping,
++        _memory_mapping: &mut MemoryMapping<'a>,
+     ) -> Result<u64, Box<dyn std::error::Error>> {
+         let (result, expected_result): (Result<u64, Box<dyn std::error::Error>>, ProgramResult) =
