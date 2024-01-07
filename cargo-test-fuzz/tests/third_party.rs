@@ -1,4 +1,4 @@
-use assert_cmd::Command;
+use assert_cmd::{assert::Assert, Command};
 use cargo_metadata::MetadataCommand;
 use once_cell::sync::Lazy;
 use option_set::option_set;
@@ -7,8 +7,9 @@ use regex::Regex;
 use rustc_version::{version_meta, Channel};
 use serde::Deserialize;
 use std::{
+    ffi::OsStr,
     fs::read_to_string,
-    io::{stderr, Write},
+    io::{stderr, stdout, Write},
     path::Path,
 };
 use tempfile::tempdir_in;
@@ -172,35 +173,12 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
         .success());
 
     for target in &test.targets {
-        Command::cargo_bin("cargo-test-fuzz")
-            .unwrap()
-            .current_dir(&subdir)
-            .args([
-                "test-fuzz",
-                "--package",
-                &test.package,
-                "--display=corpus",
-                target,
-            ])
-            .logged_assert()
-            .success()
+        test_fuzz(&subdir, &test.package, target, ["--display=corpus"])
             .stdout(predicate::str::is_match(r"(?m)^[[:xdigit:]]{40}:").unwrap());
 
-        Command::cargo_bin("cargo-test-fuzz")
-            .unwrap()
-            .current_dir(&subdir)
-            .args([
-                "test-fuzz",
-                "--package",
-                &test.package,
-                "--replay=corpus",
-                target,
-            ])
-            .logged_assert()
-            .success()
-            .stdout(
-                predicate::str::is_match(r"(?m)^[[:xdigit:]]{40}: Ret\((Ok|Err)\(.*\)\)$").unwrap(),
-            );
+        test_fuzz(&subdir, &test.package, target, ["--replay=corpus"]).stdout(
+            predicate::str::is_match(r"(?m)^[[:xdigit:]]{40}: Ret\((Ok|Err)\(.*\)\)$").unwrap(),
+        );
     }
 }
 
@@ -221,6 +199,25 @@ fn check_test_fuzz_dependency(subdir: &Path, test_package: &str) {
         .find(|dep| dep.name == "test-fuzz")
         .expect("Could not find dependency `test-fuzz`");
     assert!(dep.path.is_some());
+}
+
+fn test_fuzz<P, I, S>(subdir: P, package: &str, target: &str, args: I) -> Assert
+where
+    P: AsRef<Path>,
+    I: IntoIterator<Item = S>,
+    S: AsRef<OsStr>,
+{
+    let assert = Command::cargo_bin("cargo-test-fuzz")
+        .unwrap()
+        .current_dir(subdir)
+        .env("RUST_LOG", "debug")
+        .args(["test-fuzz", "--package", package, target])
+        .args(args)
+        .logged_assert()
+        .success();
+    stderr().write_all(&assert.get_output().stderr).unwrap();
+    stdout().write_all(&assert.get_output().stdout).unwrap();
+    assert
 }
 
 #[test]
