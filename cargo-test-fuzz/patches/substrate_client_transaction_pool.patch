@@ -1,14 +1,14 @@
 diff --git a/substrate/client/transaction-pool/Cargo.toml b/substrate/client/transaction-pool/Cargo.toml
-index a3608c4..1eb1d8e 100644
+index 8832c0b..6ef6189 100644
 --- a/substrate/client/transaction-pool/Cargo.toml
 +++ b/substrate/client/transaction-pool/Cargo.toml
 @@ -23,6 +23,6 @@ futures-timer = "3.0.2"
  linked-hash-map = "0.5.4"
  log = "0.4.17"
 -parking_lot = "0.12.1"
--serde = { version = "1.0.194", features = ["derive"] }
+-serde = { version = "1.0.195", features = ["derive"] }
 +parking_lot = { version = "0.12.1", features = ["serde"] }
-+serde = { version = "1.0.194", features = ["derive", "rc"] }
++serde = { version = "1.0.195", features = ["derive", "rc"] }
  thiserror = "1.0.48"
  prometheus-endpoint = { package = "substrate-prometheus-endpoint", path = "../../utils/prometheus" }
 @@ -36,4 +36,5 @@ sp-runtime = { path = "../../primitives/runtime" }
@@ -63,7 +63,7 @@ index bad4663..b10e15c 100644
  	pub imported_at: Instant,
  }
 diff --git a/substrate/client/transaction-pool/src/graph/ready.rs b/substrate/client/transaction-pool/src/graph/ready.rs
-index b4a5d9e..1c421e1 100644
+index b4a5d9e..f43a43d 100644
 --- a/substrate/client/transaction-pool/src/graph/ready.rs
 +++ b/substrate/client/transaction-pool/src/graph/ready.rs
 @@ -39,5 +39,5 @@ use super::{
