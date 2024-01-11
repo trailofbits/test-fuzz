@@ -9,17 +9,6 @@ index ed4b2a6..670e9e1 100644
 +
  [dev-dependencies]
  assert_matches = { workspace = true }
-diff --git a/program-runtime/src/accounts_data_meter.rs b/program-runtime/src/accounts_data_meter.rs
-index 21db92f..6c0f378 100644
---- a/program-runtime/src/accounts_data_meter.rs
-+++ b/program-runtime/src/accounts_data_meter.rs
-@@ -10,5 +10,5 @@ pub const MAX_ACCOUNTS_DATA_LEN: u64 = 128_000_000_000;
- 
- /// Meter and track the amount of available accounts data space
--#[derive(Debug, Default, Clone, Copy, Eq, PartialEq)]
-+#[derive(Debug, Default, Clone, Copy, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
- pub struct AccountsDataMeter {
-     /// The initial amount of accounts data space used (in bytes)
 diff --git a/program-runtime/src/compute_budget.rs b/program-runtime/src/compute_budget.rs
 index 0657df5..f1bd04f 100644
 --- a/program-runtime/src/compute_budget.rs
@@ -32,22 +21,22 @@ index 0657df5..f1bd04f 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 582fa90..ee8442b 100644
+index 3ac29b5..19c14ec 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
+@@ -114,4 +114,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -143,4 +144,5 @@ impl BpfAllocator {
+@@ -142,4 +143,5 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -149,5 +151,11 @@ pub struct SyscallContext {
+@@ -148,5 +150,11 @@ pub struct SyscallContext {
  }
  
 -#[derive(Debug, Clone)]
@@ -60,7 +49,7 @@ index 582fa90..ee8442b 100644
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub struct SerializedAccountMetadata {
      pub original_data_len: usize,
-@@ -158,6 +166,22 @@ pub struct SerializedAccountMetadata {
+@@ -157,6 +165,22 @@ pub struct SerializedAccountMetadata {
  }
  
 +fn default_loaded_programs<'de, D>(_: D) -> Result<&'static mut LoadedProgramsForTxBatch, D::Error>
@@ -83,15 +72,15 @@ index 582fa90..ee8442b 100644
 +    )]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -166,5 +190,7 @@ pub struct InvokeContext<'a> {
+@@ -164,5 +188,7 @@ pub struct InvokeContext<'a> {
+     current_compute_budget: ComputeBudget,
      compute_meter: RefCell<u64>,
-     accounts_data_meter: AccountsDataMeter,
 +    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
      pub programs_loaded_for_tx_batch: &'a LoadedProgramsForTxBatch,
 +    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
      pub programs_modified_by_tx: &'a mut LoadedProgramsForTxBatch,
      pub feature_set: Arc<FeatureSet>,
-@@ -176,4 +202,23 @@ pub struct InvokeContext<'a> {
+@@ -174,4 +200,23 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
