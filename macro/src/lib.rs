@@ -341,7 +341,7 @@ fn map_method_or_fn(
     let impl_generic_args = opts_impl_generic_args.as_ref().map(args_as_turbofish);
     let generic_args = opts_generic_args.as_ref().map(args_as_turbofish);
     let combined_generic_args_base = combine_options(
-        opts_impl_generic_args,
+        opts_impl_generic_args.clone(),
         opts_generic_args,
         |mut left, right| {
             left.extend(right);
@@ -371,7 +371,7 @@ fn map_method_or_fn(
 
     let self_ty_base = self_ty.and_then(type_utils::type_base);
 
-    let (receiver, mut arg_tys, fmt_args, mut ser_args, de_args) = {
+    let (mut arg_tys, fmt_args, mut ser_args, de_args) = {
         let mut candidates = BTreeSet::new();
         let result = map_args(
             &mut conversions,
@@ -530,19 +530,23 @@ fn map_method_or_fn(
     let args_ret_ty: Type = parse_quote! {
         <Args #combined_generic_args_with_dummy_lifetimes as HasRetTy>::RetTy
     };
-    let call: Expr = if receiver {
-        let mut de_args = de_args.iter();
-        let self_arg = de_args
-            .next()
-            .expect("Should have at least one deserialized argument");
+    let call: Expr = if let Some(self_ty) = self_ty {
+        let opts_impl_generic_args = opts_impl_generic_args.unwrap_or_default();
+        let map = generic_params_map(generics, &opts_impl_generic_args);
+        let self_ty_with_generic_args =
+            type_utils::type_as_turbofish(&type_utils::map_type_generic_params(&map, self_ty));
+        let qualified_self = if let Some(trait_path) = trait_path {
+            let trait_path_with_generic_args = type_utils::path_as_turbofish(
+                &type_utils::map_path_generic_params(&map, trait_path),
+            );
+            quote! {
+                < #self_ty_with_generic_args as #trait_path_with_generic_args >
+            }
+        } else {
+            self_ty_with_generic_args
+        };
         parse_quote! {
-            ( #self_arg ). #target_ident #generic_args (
-                #(#de_args),*
-            )
-        }
-    } else if let Some(self_ty_base) = self_ty_base {
-        parse_quote! {
-            #self_ty_base #impl_generic_args :: #target_ident #generic_args (
+            #qualified_self :: #target_ident #generic_args (
                 #(#de_args),*
             )
         }
@@ -748,24 +752,51 @@ fn map_method_or_fn(
     )
 }
 
+fn generic_params_map<'a, 'b>(
+    generics: &'a Generics,
+    impl_generic_args: &'b Punctuated<GenericArgument, token::Comma>,
+) -> BTreeMap<&'a Ident, &'b GenericArgument> {
+    let n = generics
+        .params
+        .len()
+        .checked_sub(impl_generic_args.len())
+        .unwrap_or_else(|| {
+            panic!(
+                "{:?} is shorter than {:?}",
+                generics.params, impl_generic_args
+            );
+        });
+    generics
+        .params
+        .iter()
+        .skip(n)
+        .zip(impl_generic_args)
+        .filter_map(|(key, value)| {
+            if let GenericParam::Type(TypeParam { ident, .. }) = key {
+                Some((ident, value))
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 fn map_args<'a, I>(
     conversions: &mut Conversions,
     candidates: &mut BTreeSet<OrdType>,
     trait_path: &Option<Path>,
     self_ty: Option<&Type>,
     inputs: I,
-) -> (bool, Vec<Type>, Vec<Stmt>, Vec<Expr>, Vec<Expr>)
+) -> (Vec<Type>, Vec<Stmt>, Vec<Expr>, Vec<Expr>)
 where
     I: Iterator<Item = &'a FnArg>,
 {
-    let (receiver, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
+    let (ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
         .enumerate()
         .map(map_arg(conversions, candidates, trait_path, self_ty))
         .multiunzip();
 
-    let receiver = receiver.first().map_or(false, |&x| x);
-
-    (receiver, ty, fmt, ser, de)
+    (ty, fmt, ser, de)
 }
 
 fn map_arg<'a>(
@@ -773,10 +804,10 @@ fn map_arg<'a>(
     candidates: &'a mut BTreeSet<OrdType>,
     trait_path: &'a Option<Path>,
     self_ty: Option<&'a Type>,
-) -> impl FnMut((usize, &FnArg)) -> (bool, Type, Stmt, Expr, Expr) + 'a {
+) -> impl FnMut((usize, &FnArg)) -> (Type, Stmt, Expr, Expr) + 'a {
     move |(i, arg)| {
         let i = Literal::usize_unsuffixed(i);
-        let (receiver, expr, ty, fmt) = match arg {
+        let (expr, ty, fmt) = match arg {
             FnArg::Receiver(Receiver {
                 reference,
                 mutability,
@@ -792,7 +823,7 @@ fn map_arg<'a>(
                         debug_struct.field("self", value);
                     });
                 };
-                (true, expr, ty, fmt)
+                (expr, ty, fmt)
             }
             FnArg::Typed(PatType { pat, ty, .. }) => {
                 let ident = match *pat_utils::pat_idents(pat).as_slice() {
@@ -810,11 +841,11 @@ fn map_arg<'a>(
                         debug_struct.field(#name, value);
                     });
                 };
-                (false, expr, ty, fmt)
+                (expr, ty, fmt)
             }
         };
         let (ty, ser, de) = map_typed_arg(conversions, candidates, &i, &expr, &ty);
-        (receiver, ty, fmt, ser, de)
+        (ty, fmt, ser, de)
     }
 }
 
