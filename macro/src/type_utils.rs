@@ -1,9 +1,103 @@
-use proc_macro2::Span;
+use proc_macro2::{Punct, Spacing, Span, TokenStream, TokenTree};
+use quote::ToTokens;
+use std::collections::BTreeMap;
 use syn::{
     parse_quote,
+    visit::{visit_path_arguments, Visit},
     visit_mut::{visit_type_mut, VisitMut},
-    Ident, Path, PathArguments, PathSegment, Type, TypePath,
+    GenericArgument, Ident, Path, PathArguments, PathSegment, Type, TypePath,
 };
+
+pub fn map_path_generic_params(map: &BTreeMap<&Ident, &GenericArgument>, path: &Path) -> Path {
+    let mut path = path.clone();
+    let mut visitor = GenericParamVisitor { map };
+    visitor.visit_path_mut(&mut path);
+    path
+}
+
+pub fn map_type_generic_params(map: &BTreeMap<&Ident, &GenericArgument>, ty: &Type) -> Type {
+    let mut ty = ty.clone();
+    let mut visitor = GenericParamVisitor { map };
+    visitor.visit_type_mut(&mut ty);
+    ty
+}
+
+struct GenericParamVisitor<'a> {
+    map: &'a BTreeMap<&'a Ident, &'a GenericArgument>,
+}
+
+impl<'a> VisitMut for GenericParamVisitor<'a> {
+    fn visit_type_mut(&mut self, ty: &mut Type) {
+        if let Type::Path(TypePath { qself: None, path }) = ty {
+            if let Some(ident) = path.get_ident() {
+                if let Some(generic_arg) = self.map.get(ident) {
+                    let GenericArgument::Type(ty_new) = generic_arg else {
+                        panic!(
+                            "Unexpected generic argument: {}",
+                            generic_arg.to_token_stream()
+                        );
+                    };
+                    *ty = ty_new.clone();
+                    return;
+                }
+            }
+        }
+        visit_type_mut(self, ty);
+    }
+}
+
+pub fn path_as_turbofish(path: &Path) -> TokenStream {
+    let tokens = path.to_token_stream().into_iter().collect::<Vec<_>>();
+    let mut visitor = TurbofishVisitor { tokens };
+    visitor.visit_path(path);
+    visitor.tokens.into_iter().collect()
+}
+
+pub fn type_as_turbofish(ty: &Type) -> TokenStream {
+    let tokens = ty.to_token_stream().into_iter().collect::<Vec<_>>();
+    let mut visitor = TurbofishVisitor { tokens };
+    visitor.visit_type(ty);
+    visitor.tokens.into_iter().collect()
+}
+
+struct TurbofishVisitor {
+    tokens: Vec<TokenTree>,
+}
+
+impl<'a> Visit<'a> for TurbofishVisitor {
+    fn visit_path_arguments(&mut self, path_args: &PathArguments) {
+        if !path_args.is_none() {
+            let mut visitor_token_strings = token_strings(&self.tokens);
+            let path_args_tokens = path_args.to_token_stream().into_iter().collect::<Vec<_>>();
+            let path_args_token_strings = token_strings(&path_args_tokens);
+            let n = path_args_tokens.len();
+            let mut i: usize = 0;
+            while i + n <= self.tokens.len() {
+                if visitor_token_strings[i..i + n] == path_args_token_strings
+                    && (i < 2 || visitor_token_strings[i - 2..i] != [":", ":"])
+                {
+                    self.tokens = [
+                        &self.tokens[..i],
+                        &[
+                            TokenTree::Punct(Punct::new(':', Spacing::Joint)),
+                            TokenTree::Punct(Punct::new(':', Spacing::Alone)),
+                        ],
+                        &self.tokens[i..],
+                    ]
+                    .concat();
+                    visitor_token_strings = token_strings(&self.tokens);
+                    i += 2;
+                }
+                i += 1;
+            }
+        }
+        visit_path_arguments(self, path_args);
+    }
+}
+
+fn token_strings(tokens: &[TokenTree]) -> Vec<String> {
+    tokens.iter().map(ToString::to_string).collect::<Vec<_>>()
+}
 
 pub fn expand_self(trait_path: &Option<Path>, self_ty: &Type, ty: &Type) -> Type {
     let mut ty = ty.clone();
