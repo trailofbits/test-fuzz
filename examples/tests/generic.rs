@@ -106,3 +106,17 @@ fn test_only_generic_args() {
     Struct.target_only_generic_args(&*FOO, &Baz(FOO.clone()));
     Struct.target_only_generic_args(&*BAR, &Baz(BAR.clone()));
 }
+
+mod receiverless_trait_function {
+    use super::*;
+
+    trait Trait<T: Clone + Serialize> {
+        fn target(x: &T);
+    }
+
+    #[test_fuzz::test_fuzz_impl]
+    impl<T: Clone + Serialize> Trait<T> for Struct {
+        #[test_fuzz::test_fuzz(impl_generic_args = "Bar")]
+        fn target(x: &T) {}
+    }
+}
