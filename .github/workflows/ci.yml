@@ -34,7 +34,7 @@ jobs:
       # * https://github.com/actions/cache/blob/main/examples.md#rust---cargo.
       # * https://doc.rust-lang.org/cargo/guide/cargo-home.html#caching-the-cargo-home-in-ci
       # The rest were added by me.
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/.cargo/bin/
