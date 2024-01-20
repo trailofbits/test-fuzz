@@ -16,7 +16,6 @@ pub fn main() -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::cargo_test_fuzz as cargo;
     use anyhow::Result;
 
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
@@ -34,8 +33,8 @@ mod tests {
     }
 
     fn cargo_test_fuzz(args: &[&str]) -> Result<()> {
-        let mut cargo_args = vec!["cargo-test-fuzz", "test-fuzz"];
-        cargo_args.extend_from_slice(args);
-        cargo(&cargo_args)
+        let mut cargo_test_fuzz_args = vec!["cargo-test-fuzz", "test-fuzz"];
+        cargo_test_fuzz_args.extend_from_slice(args);
+        super::cargo_test_fuzz(&cargo_test_fuzz_args)
     }
 }
