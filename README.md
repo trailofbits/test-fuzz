@@ -39,8 +39,8 @@ Fuzzing with `test-fuzz` is essentially three steps:\*
 
    - Add the following `dependencies` to the target crate's `Cargo.toml` file:
      ```toml
-     serde = "1.0"
-     test-fuzz = "4.0"
+     serde = "*"
+     test-fuzz = "*"
      ```
    - Precede the target function with the [`test_fuzz`] macro:
      ```rust
@@ -396,7 +396,7 @@ where
 The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book]. For example, to enable the `self_ty_in_mod_name` feature, use:
 
 ```toml
-test-fuzz = { version = "4.0", features = ["self_ty_in_mod_name"] }
+test-fuzz = { version = "*", features = ["self_ty_in_mod_name"] }
 ```
 
 The `test-fuzz` package currently supports the following features:

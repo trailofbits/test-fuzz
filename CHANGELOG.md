@@ -1,5 +1,15 @@
 # Changelog
 
+## 5.0.0
+
+- BREAKING CHANGE: Remove `auto_concretize` feature ([#336](https://github.com/trailofbits/test-fuzz/pull/336))
+- FEATURE: Add `--max-total-time` option ([#323](https://github.com/trailofbits/test-fuzz/pull/323))
+- FEATURE: Add `self_ty_in_mod_name` feature ([#328](https://github.com/trailofbits/test-fuzz/pull/328))
+- Fix typo in `cargo-test-fuzz` help message ([#325](https://github.com/trailofbits/test-fuzz/pull/325))
+- Deprecate `concretizations` terminology in favor of `generic-args` ([#340](https://github.com/trailofbits/test-fuzz/pull/340))
+- Give correct advice for installing `cargo-afl` when it cannot be found ([9101dbe](https://github.com/trailofbits/test-fuzz/commit/9101dbee8e45d5c7aeb77a3b94f316e2b9aa16bd))
+- Properly handle receiverless trait functions ([#346](https://github.com/trailofbits/test-fuzz/pull/346))
+
 ## 4.0.5
 
 - Format macro-generated code with `prettyplease` ([#314](https://github.com/trailofbits/test-fuzz/pull/314))
