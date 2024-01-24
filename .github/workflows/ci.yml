@@ -136,15 +136,27 @@ jobs:
         run: |
           cargo install cargo-supply-chain || true
           cargo install cargo-unmaintained || true
+          cargo install group-runner       || true
 
-      - name: Test
+      - name: Setup
         run: |
+          SERDE_FORMAT='--features=test-fuzz/serde_${{ matrix.serde_format }}'
           SHUFFLE=
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
             SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
           fi
           SELF_TY_IN_MOD_NAME="$(${{ matrix.self_ty_in_mod_name }} && echo '--features test-fuzz/self_ty_in_mod_name')" || true
-          TEST_CMD="cargo test --features=test-fuzz/serde_${{ matrix.serde_format }} $SELF_TY_IN_MOD_NAME -- --nocapture $SHUFFLE"
+          CONFIG_GROUP_RUNNER="--config target.'cfg(all())'.runner='group-runner'"
+          BUILD_CMD="cargo build $SERDE_FORMAT $SELF_TY_IN_MOD_NAME --all-targets"
+          TEST_CMD="cargo test $SERDE_FORMAT $SELF_TY_IN_MOD_NAME $CONFIG_GROUP_RUNNER -- --nocapture $SHUFFLE"
+          echo "BUILD_CMD=$BUILD_CMD" >> "$GITHUB_ENV"
+          echo "TEST_CMD=$TEST_CMD" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: $BUILD_CMD
+
+      - name: Test
+        run: |
           $TEST_CMD
           if [[ ${{ github.event_name }} = 'schedule' ]] ||
             git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -w 'patches\|third_party' >/dev/null
