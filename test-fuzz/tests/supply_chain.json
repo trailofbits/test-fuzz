@@ -583,6 +583,22 @@
         "name": "Jack Wrenn"
       }
     ],
+    "env_filter": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/37223191?v=4",
+        "id": 460,
+        "kind": "team",
+        "login": "github:rust-cli:maintainers",
+        "name": "Maintainers"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/60961?v=4",
+        "id": 6743,
+        "kind": "user",
+        "login": "epage",
+        "name": "Ed Page"
+      }
+    ],
     "env_logger": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",
@@ -739,22 +755,6 @@
         "name": "Jonas Platte"
       }
     ],
-    "hermit-abi": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/5888473?v=4",
-        "id": 29348,
-        "kind": "user",
-        "login": "stlankes",
-        "name": "Stefan Lankes"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/28776973?v=4",
-        "id": 91569,
-        "kind": "user",
-        "login": "mkroening",
-        "name": "Martin Kröning"
-      }
-    ],
     "hex": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/183116?v=4",
@@ -789,15 +789,6 @@
         "kind": "user",
         "login": "lambda-fairy",
         "name": "Chris Wong"
-      }
-    ],
-    "is-terminal": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/4503403?v=4",
-        "id": 6825,
-        "kind": "user",
-        "login": "sunfishcode",
-        "name": "Dan Gohman"
       }
     ],
     "itertools": [
@@ -1440,15 +1431,6 @@
         "name": "David Tolnay"
       }
     ],
-    "termcolor": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/456674?v=4",
-        "id": 189,
-        "kind": "user",
-        "login": "BurntSushi",
-        "name": "Andrew Gallant"
-      }
-    ],
     "terminal_size": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/402454?v=4",
@@ -1627,15 +1609,6 @@
         "kind": "user",
         "login": "retep998",
         "name": "Peter Atashian"
-      }
-    ],
-    "winapi-util": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/456674?v=4",
-        "id": 189,
-        "kind": "user",
-        "login": "BurntSushi",
-        "name": "Andrew Gallant"
       }
     ],
     "winapi-x86_64-pc-windows-gnu": [
