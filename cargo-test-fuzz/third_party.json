@@ -11,7 +11,7 @@
   {
     "flags": ["EXPENSIVE"],
     "url": "https://github.com/paritytech/polkadot-sdk",
-    "rev": "c45732d18b31d4cf307be13818f97a5dc07da015",
+    "rev": "b177c2860e6d75d189e66185954a283db000f7ef",
     "patch": "substrate_client_transaction_pool.patch",
     "subdir": ".",
     "package": "sc-transaction-pool",
@@ -38,7 +38,7 @@
   {
     "flags": ["EXPENSIVE"],
     "url": "https://github.com/solana-labs/solana",
-    "rev": "a203f1489e72ff33562225936788f2362e963514",
+    "rev": "056930483531424f2ef584be8aeaa1cee56b0db7",
     "patch": "solana.patch",
     "subdir": ".",
     "package": "solana-bpf-loader-program",

@@ -1,5 +1,5 @@
 diff --git a/substrate/client/transaction-pool/Cargo.toml b/substrate/client/transaction-pool/Cargo.toml
-index 8832c0b..6ef6189 100644
+index b491f7b..480184a 100644
 --- a/substrate/client/transaction-pool/Cargo.toml
 +++ b/substrate/client/transaction-pool/Cargo.toml
 @@ -23,6 +23,6 @@ futures-timer = "3.0.2"
@@ -11,7 +11,7 @@ index 8832c0b..6ef6189 100644
 +serde = { version = "1.0.195", features = ["derive", "rc"] }
  thiserror = "1.0.48"
  prometheus-endpoint = { package = "substrate-prometheus-endpoint", path = "../../utils/prometheus" }
-@@ -36,4 +36,5 @@ sp-runtime = { path = "../../primitives/runtime" }
+@@ -37,4 +37,5 @@ sp-runtime = { path = "../../primitives/runtime" }
  sp-tracing = { path = "../../primitives/tracing" }
  sp-transaction-pool = { path = "../../primitives/transaction-pool" }
 +test-fuzz = { path = "../../../../../test-fuzz" }
