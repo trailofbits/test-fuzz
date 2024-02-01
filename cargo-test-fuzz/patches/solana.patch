@@ -21,22 +21,22 @@ index 0657df5..f1bd04f 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 3ac29b5..19c14ec 100644
+index 7e930fa..95fadc5 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -114,4 +114,5 @@ impl fmt::Display for AllocErr {
+@@ -111,4 +111,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -142,4 +143,5 @@ impl BpfAllocator {
+@@ -139,4 +140,5 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -148,5 +150,11 @@ pub struct SyscallContext {
+@@ -145,5 +147,11 @@ pub struct SyscallContext {
  }
  
 -#[derive(Debug, Clone)]
@@ -49,7 +49,7 @@ index 3ac29b5..19c14ec 100644
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub struct SerializedAccountMetadata {
      pub original_data_len: usize,
-@@ -157,6 +165,22 @@ pub struct SerializedAccountMetadata {
+@@ -154,6 +162,22 @@ pub struct SerializedAccountMetadata {
  }
  
 +fn default_loaded_programs<'de, D>(_: D) -> Result<&'static mut LoadedProgramsForTxBatch, D::Error>
@@ -72,7 +72,7 @@ index 3ac29b5..19c14ec 100644
 +    )]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -164,5 +188,7 @@ pub struct InvokeContext<'a> {
+@@ -161,5 +185,7 @@ pub struct InvokeContext<'a> {
      current_compute_budget: ComputeBudget,
      compute_meter: RefCell<u64>,
 +    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
@@ -80,7 +80,7 @@ index 3ac29b5..19c14ec 100644
 +    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
      pub programs_modified_by_tx: &'a mut LoadedProgramsForTxBatch,
      pub feature_set: Arc<FeatureSet>,
-@@ -174,4 +200,23 @@ pub struct InvokeContext<'a> {
+@@ -171,4 +197,23 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -156,10 +156,10 @@ index 48d771b..1d1d527 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 18ca167..0f5d042 100644
+index 48d44b7..5d1380f 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -373,6 +373,7 @@ declare_builtin_function!(
+@@ -370,6 +370,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(
@@ -170,7 +170,7 @@ index 18ca167..0f5d042 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 061b16c..d994737 100644
+index 57bf073..f28e99f 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -69,5 +69,5 @@ rand = { workspace = true, optional = true }
@@ -180,7 +180,7 @@ index 061b16c..d994737 100644
 +serde = { version = "1.0", features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -85,4 +85,6 @@ uriparse = { workspace = true }
+@@ -86,4 +86,6 @@ uriparse = { workspace = true }
  wasm-bindgen = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -188,10 +188,10 @@ index 061b16c..d994737 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 0a06cdd..8ba3425 100644
+index 2201ed5..ad9d31a 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -984,5 +984,5 @@ lazy_static! {
+@@ -1009,5 +1009,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
