@@ -36,7 +36,7 @@ jobs:
           BLESS: 1
 
       - name: Create pull request
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v6
         with:
           title: Update supply_chain.json
           commit-message: Update supply_chain.json
