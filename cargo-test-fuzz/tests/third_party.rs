@@ -44,19 +44,23 @@ static TESTS: Lazy<Vec<Test>> = Lazy::new(|| {
 // smoelius: This should match `scripts/update_patches.sh`.
 const LINES_OF_CONTEXT: u32 = 2;
 
-#[cfg_attr(dylint_lib = "supplementary", allow(commented_code))]
 mod cheap_tests {
     use super::*;
+
+    #[cfg_attr(dylint_lib = "supplementary", allow(commented_code))]
     #[test]
     fn test() {
         let version_meta = version_meta().unwrap();
         for test in TESTS.iter() {
+            #[allow(clippy::nonminimal_bool)]
             run_test(
                 module_path!(),
                 test,
                 test.flags.contains(Flags::EXPENSIVE)
                     // || test.flags.contains(Flags::SKIP)
-                    || (test.flags.contains(Flags::SKIP_NIGHTLY)
+                    // smoelius: Temporarily disable all nightly third-party tests.
+                    // See: https://github.com/tkaitchuck/aHash/issues/200
+                    || (true // test.flags.contains(Flags::SKIP_NIGHTLY)
                         && version_meta.channel == Channel::Nightly),
             );
         }
@@ -65,16 +69,21 @@ mod cheap_tests {
 
 mod all_tests {
     use super::*;
+
+    #[cfg_attr(dylint_lib = "supplementary", allow(commented_code))]
     #[test]
     #[ignore]
     fn test() {
         let version_meta = version_meta().unwrap();
         for test in TESTS.iter() {
+            #[allow(clippy::nonminimal_bool)]
             run_test(
                 module_path!(),
                 test,
                 // test.flags.contains(Flags::SKIP) ||
-                test.flags.contains(Flags::SKIP_NIGHTLY)
+                // smoelius: Temporarily disable all nightly third-party tests.
+                // See: https://github.com/tkaitchuck/aHash/issues/200
+                true // test.flags.contains(Flags::SKIP_NIGHTLY)
                     && version_meta.channel == Channel::Nightly,
             );
         }
