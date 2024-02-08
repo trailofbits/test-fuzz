@@ -87,7 +87,7 @@ jobs:
 
       - name: Dylint
         run: |
-          cargo install cargo-dylint --git=https://github.com/trailofbits/dylint --no-default-features --features=metadata-cli || true
+          cargo install cargo-dylint --git=https://github.com/trailofbits/dylint --no-default-features --features=cargo-cli || true
           cargo install dylint-link || true
           ./scripts/dylint.sh
 
