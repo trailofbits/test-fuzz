@@ -138,6 +138,14 @@ jobs:
           cargo install cargo-unmaintained || true
           cargo install group-runner       || true
 
+      - name: Free up space
+        run: |
+          # https://github.com/actions/runner-images/issues/2606#issuecomment-772683150
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/share/swift
+          # du -sh /usr/*/* 2>/dev/null | sort -h || true
+
       - name: Setup
         run: |
           SERDE_FORMAT='--features=test-fuzz/serde_${{ matrix.serde_format }}'
