@@ -156,10 +156,10 @@ index 48d771b..1d1d527 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 21a7b5f..ad85633 100644
+index 5ba8b26..469c09e 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -368,6 +368,7 @@ declare_builtin_function!(
+@@ -366,6 +366,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(
