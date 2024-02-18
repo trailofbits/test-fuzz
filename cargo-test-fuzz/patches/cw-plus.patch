@@ -1,5 +1,5 @@
 diff --git a/contracts/cw20-base/Cargo.toml b/contracts/cw20-base/Cargo.toml
-index 2f49e44..40409d0 100644
+index e35a05d..d687203 100644
 --- a/contracts/cw20-base/Cargo.toml
 +++ b/contracts/cw20-base/Cargo.toml
 @@ -29,4 +29,6 @@ serde = { version = "1.0.188", default-features = false, features = ["derive"] }
