@@ -1,6 +1,6 @@
 [
   {
-    "flags": [],
+    "flags": ["SKIP_NIGHTLY"],
     "url": "https://github.com/CosmWasm/cw-plus",
     "rev": "f40c2c07465e309a01d2d881e5c0346ac4825ca2",
     "patch": "cw-plus.patch",
@@ -9,7 +9,7 @@
     "targets": ["instantiate", "execute", "query", "migrate"]
   },
   {
-    "flags": ["EXPENSIVE"],
+    "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/paritytech/polkadot-sdk",
     "rev": "6185b002dfb54c73881257913a830416f2e17a15",
     "patch": "substrate_client_transaction_pool.patch",
@@ -36,7 +36,7 @@
     "targets": ["syscall_str_cmp_rust"]
   },
   {
-    "flags": ["EXPENSIVE"],
+    "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/solana-labs/solana",
     "rev": "69345899f3b7449daac57ec1a28142bb410d7f06",
     "patch": "solana.patch",
