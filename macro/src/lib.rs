@@ -10,7 +10,6 @@ use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
 use std::{
     collections::{BTreeMap, BTreeSet},
-    convert::TryFrom,
     env::var,
     str::FromStr,
 };

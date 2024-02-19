@@ -5,7 +5,6 @@
 #![allow(clippy::similar_names)]
 
 use serde::{Deserialize, Serialize};
-use std::convert::{TryFrom, TryInto};
 
 #[derive(Clone, Deserialize, Serialize)]
 struct Foo;
