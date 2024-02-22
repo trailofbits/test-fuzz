@@ -188,10 +188,10 @@ index 57bf073..f28e99f 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 2201ed5..ad9d31a 100644
+index abecf4f..43b536e 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -1009,5 +1009,5 @@ lazy_static! {
+@@ -1014,5 +1014,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
