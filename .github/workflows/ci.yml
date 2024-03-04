@@ -83,7 +83,7 @@ jobs:
       - name: Clippy
         run: |
           rustup +nightly component add clippy
-          ./scripts/clippy.sh
+          cargo +nightly clippy --all-targets
 
       - name: Dylint
         run: |

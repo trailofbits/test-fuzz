@@ -49,5 +49,8 @@ xshell = "0.2"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
 
+[lints]
+workspace = true
+
 [package.metadata.cargo-udeps.ignore]
 normal = ["paste"]

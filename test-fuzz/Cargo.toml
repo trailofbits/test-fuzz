@@ -40,5 +40,8 @@ serde_cbor = ["internal/__serde_cbor"]
 serde_cbor4ii = ["internal/__serde_cbor4ii"]
 __persistent = ["afl", "test-fuzz-macro/__persistent"]
 
+[lints]
+workspace = true
+
 [package.metadata.cargo-udeps.ignore]
 normal = ["afl"]
