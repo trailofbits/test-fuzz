@@ -16,3 +16,6 @@ serde = { version = "1.0", features = ["derive"] }
 sha1 = "0.10"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=5.0.0" }
+
+[lints]
+workspace = true

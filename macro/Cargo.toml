@@ -25,3 +25,6 @@ syn = { version = "2.0", features = ["full", "parsing", "visit", "visit-mut"] }
 [features]
 __persistent = []
 __self_ty_in_mod_name = ["heck"]
+
+[lints]
+workspace = true

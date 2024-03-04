@@ -21,3 +21,6 @@ serde_json = "1.0"
 __bar_fuzz = []
 __inapplicable_conversion = []
 __self_ty_conflict = []
+
+[lints]
+workspace = true

@@ -27,5 +27,8 @@ __serde_bincode = []
 __serde_cbor = ["serde_cbor"]
 __serde_cbor4ii = ["cbor4ii"]
 
+[lints]
+workspace = true
+
 [package.metadata.cargo-udeps.ignore]
 normal = ["bincode"]

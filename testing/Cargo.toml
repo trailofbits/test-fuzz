@@ -17,3 +17,6 @@ retry = "2.0"
 subprocess = "0.2"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=5.0.0" }
+
+[lints]
+workspace = true
