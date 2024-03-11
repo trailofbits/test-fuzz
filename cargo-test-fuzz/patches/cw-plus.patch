@@ -1,16 +1,16 @@
 diff --git a/contracts/cw20-base/Cargo.toml b/contracts/cw20-base/Cargo.toml
-index e35a05d..d687203 100644
+index e3cffc3..77ad75e 100644
 --- a/contracts/cw20-base/Cargo.toml
 +++ b/contracts/cw20-base/Cargo.toml
-@@ -29,4 +29,6 @@ serde = { version = "1.0.188", default-features = false, features = ["derive"] }
- thiserror = { version = "1.0.49" }
+@@ -28,4 +28,6 @@ serde = { workspace = true }
+ thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../../test-fuzz" }
 +
  [dev-dependencies]
- cw-multi-test = "0.16.5"
+ cw-multi-test = { workspace = true }
 diff --git a/contracts/cw20-base/src/contract.rs b/contracts/cw20-base/src/contract.rs
-index 6f92ac2..2df8ffe 100644
+index 4fd8a99..2aca2ac 100644
 --- a/contracts/cw20-base/src/contract.rs
 +++ b/contracts/cw20-base/src/contract.rs
 @@ -91,7 +91,33 @@ fn verify_logo(logo: &Logo) -> Result<(), ContractError> {
@@ -92,7 +92,7 @@ index 6f92ac2..2df8ffe 100644
 +#[test_fuzz::test_fuzz(convert = "Deps<'a>, MockDeps")]
 +pub fn query<'a>(deps: Deps<'a>, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
      match msg {
-         QueryMsg::Balance { address } => to_binary(&query_balance(deps, address)?),
+         QueryMsg::Balance { address } => to_json_binary(&query_balance(deps, address)?),
 @@ -587,5 +640,10 @@ pub fn query_download_logo(deps: Deps) -> StdResult<DownloadLogoResponse> {
  
  #[cfg_attr(not(feature = "library"), entry_point)]

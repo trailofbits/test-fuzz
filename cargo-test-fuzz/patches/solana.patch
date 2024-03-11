@@ -1,5 +1,5 @@
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index ed4b2a6..670e9e1 100644
+index afec735..6896c4d 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -31,4 +31,6 @@ solana_rbpf = { workspace = true }
@@ -156,10 +156,10 @@ index 48d771b..1d1d527 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 5ba8b26..469c09e 100644
+index a9c34fb..d730e44 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -366,6 +366,7 @@ declare_builtin_function!(
+@@ -367,6 +367,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(
@@ -188,10 +188,10 @@ index 57bf073..f28e99f 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  js-sys = { workspace = true }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index abecf4f..43b536e 100644
+index 98dc5a4..45bdbc7 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -1014,5 +1014,5 @@ lazy_static! {
+@@ -1004,5 +1004,5 @@ lazy_static! {
  
  /// `FeatureSet` holds the set of currently active/inactive runtime features
 -#[derive(AbiExample, Debug, Clone, Eq, PartialEq)]
