@@ -2,7 +2,7 @@
   {
     "flags": ["SKIP_NIGHTLY"],
     "url": "https://github.com/CosmWasm/cw-plus",
-    "rev": "f40c2c07465e309a01d2d881e5c0346ac4825ca2",
+    "rev": "df67017591c38dd50850a538cebe746c98c59e48",
     "patch": "cw-plus.patch",
     "subdir": ".",
     "package": "cw20-base",
@@ -11,7 +11,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/paritytech/polkadot-sdk",
-    "rev": "de6d02591b57d03f70ed8db0c674f045ad2ea029",
+    "rev": "7a644fa082f09b557a8a198ed56412f02062bbcf",
     "patch": "substrate_client_transaction_pool.patch",
     "subdir": ".",
     "package": "sc-transaction-pool",
@@ -38,7 +38,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/solana-labs/solana",
-    "rev": "e74d5ccca32086b8ab5b7ba1e0584a1292a550f2",
+    "rev": "e0203f22dc83cb792fa97f91dbe6e924cbd08af1",
     "patch": "solana.patch",
     "subdir": ".",
     "package": "solana-bpf-loader-program",
