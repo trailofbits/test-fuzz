@@ -927,8 +927,6 @@ fn fuzz(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
             "-D",
             "-M",
             "default",
-            "-p",
-            "fast",
         ]
         .into_iter()
         .map(String::from),
