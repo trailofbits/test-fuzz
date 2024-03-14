@@ -11,7 +11,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/paritytech/polkadot-sdk",
-    "rev": "7a644fa082f09b557a8a198ed56412f02062bbcf",
+    "rev": "3c6ebd9e9bfda58f199cba6ec3023e0d12d6b506",
     "patch": "substrate_client_transaction_pool.patch",
     "subdir": ".",
     "package": "sc-transaction-pool",
