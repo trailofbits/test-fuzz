@@ -10,7 +10,7 @@ index e3cffc3..77ad75e 100644
  [dev-dependencies]
  cw-multi-test = { workspace = true }
 diff --git a/contracts/cw20-base/src/contract.rs b/contracts/cw20-base/src/contract.rs
-index 4fd8a99..2aca2ac 100644
+index c74281f..7ac51a7 100644
 --- a/contracts/cw20-base/src/contract.rs
 +++ b/contracts/cw20-base/src/contract.rs
 @@ -91,7 +91,33 @@ fn verify_logo(logo: &Logo) -> Result<(), ContractError> {
