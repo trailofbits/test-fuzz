@@ -357,7 +357,7 @@ index e864855..9922267 100644
  struct MappingCache {
      // The cached entries.
 diff --git a/src/program.rs b/src/program.rs
-index 6605814..3cf47e4 100644
+index 64752df..d04a761 100644
 --- a/src/program.rs
 +++ b/src/program.rs
 @@ -10,5 +10,5 @@ use {
