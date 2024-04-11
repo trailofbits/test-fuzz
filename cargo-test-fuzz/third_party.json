@@ -11,7 +11,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/paritytech/polkadot-sdk",
-    "rev": "12eb285dbe6271c365db7ba17cf643bfc77fe753",
+    "rev": "832570545b0311f533499ead57d764a2bc04145c",
     "patch": "substrate_client_transaction_pool.patch",
     "subdir": ".",
     "package": "sc-transaction-pool",
@@ -47,7 +47,7 @@
   {
     "flags": [],
     "url": "https://github.com/substrate-developer-hub/substrate-node-template",
-    "rev": "2ad9b78c7b56434c8036d1447120f4566583e54e",
+    "rev": "d70f8f9793cdd869571c21d7253faa50baaa5c5b",
     "patch": "substrate_node_template.patch",
     "subdir": ".",
     "package": "pallet-template",
