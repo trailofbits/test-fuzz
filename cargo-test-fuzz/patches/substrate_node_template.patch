@@ -1,10 +1,10 @@
 diff --git a/pallets/template/Cargo.toml b/pallets/template/Cargo.toml
-index 0f01e33..5220245 100644
+index b753841..1261fb7 100644
 --- a/pallets/template/Cargo.toml
 +++ b/pallets/template/Cargo.toml
-@@ -38,2 +38,8 @@ std = [
- runtime-benchmarks = ["frame-benchmarking/runtime-benchmarks"]
- try-runtime = ["frame-support/try-runtime"]
+@@ -57,2 +57,8 @@ try-runtime = [
+ 	"sp-runtime/try-runtime",
+ ]
 +
 +[dependencies.test-fuzz]
 +path = "../../../../test-fuzz"
@@ -12,10 +12,10 @@ index 0f01e33..5220245 100644
 +[dependencies.serde]
 +version = '1.0'
 diff --git a/pallets/template/src/lib.rs b/pallets/template/src/lib.rs
-index 9550d3d..f9c7576 100644
+index 90dfe37..1476318 100644
 --- a/pallets/template/src/lib.rs
 +++ b/pallets/template/src/lib.rs
-@@ -62,13 +62,50 @@ pub mod pallet {
+@@ -132,4 +132,31 @@ pub mod pallet {
  	}
  
 +	#[cfg(test)]
@@ -45,9 +45,10 @@ index 9550d3d..f9c7576 100644
 +		}
 +	}
 +
- 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
- 	// These functions materialize as "extrinsics", which are often compared to transactions.
- 	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
+ 	/// The pallet's dispatchable functions ([`Call`]s).
+ 	///
+@@ -145,5 +172,9 @@ pub mod pallet {
+ 	/// The [`weight`] macro is used to assign a weight to each call.
  	#[pallet::call]
 -	impl<T: Config> Pallet<T> {
 +	#[test_fuzz::test_fuzz_impl]
@@ -55,8 +56,9 @@ index 9550d3d..f9c7576 100644
 +	where
 +		T: serde::Serialize,
 +	{
- 		/// An example dispatchable that takes a singles value as a parameter, writes the value to
- 		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
+ 		/// An example dispatchable that takes a single u32 value as a parameter, writes the value
+ 		/// to storage and emits an event.
+@@ -153,4 +184,10 @@ pub mod pallet {
  		#[pallet::call_index(0)]
  		#[pallet::weight(T::WeightInfo::do_something())]
 +		#[test_fuzz::test_fuzz(
