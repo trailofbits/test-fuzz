@@ -4,6 +4,12 @@ use std::io::Read;
 #[cfg(any(serde_default, feature = "__serde_bincode"))]
 const BYTE_LIMIT: u64 = 1024 * 1024 * 1024;
 
+// smoelius: I can't find any guidance on how to choose this size. 2048 is used in the `loopback`
+// test in the `postcard` repository:
+// https://github.com/jamesmunns/postcard/blob/03865c2b7d694d000c0457e8cfaf4ff1b128ed81/tests/loopback.rs#L191
+#[cfg(feature = "__serde_postcard")]
+const SLIDING_BUFFER_SIZE: usize = 2048;
+
 #[allow(clippy::vec_init_then_push)]
 #[must_use]
 pub fn as_feature() -> &'static str {
@@ -17,6 +23,9 @@ pub fn as_feature() -> &'static str {
 
     #[cfg(feature = "__serde_cbor4ii")]
     formats.push("serde_cbor4ii");
+
+    #[cfg(feature = "__serde_postcard")]
+    formats.push("serde_postcard");
 
     assert!(
         formats.len() <= 1,
@@ -37,6 +46,9 @@ pub const fn serializes_variant_names() -> bool {
 
     #[cfg(feature = "__serde_cbor4ii")]
     return true;
+
+    #[cfg(feature = "__serde_postcard")]
+    return false;
 }
 
 pub fn serialize<T: Serialize>(args: &T) -> Vec<u8> {
@@ -64,6 +76,13 @@ pub fn serialize<T: Serialize>(args: &T) -> Vec<u8> {
         cbor4ii::serde::to_writer(&mut data, args).unwrap();
         data
     };
+
+    #[cfg(feature = "__serde_postcard")]
+    return {
+        let mut data = Vec::new();
+        postcard::to_io(args, &mut data).unwrap();
+        data
+    };
 }
 
 pub fn deserialize<T: DeserializeOwned, R: Read>(reader: R) -> Option<T> {
@@ -83,5 +102,13 @@ pub fn deserialize<T: DeserializeOwned, R: Read>(reader: R) -> Option<T> {
     return {
         let reader = std::io::BufReader::new(reader);
         cbor4ii::serde::from_reader(reader).ok()
+    };
+
+    #[cfg(feature = "__serde_postcard")]
+    return {
+        let mut buff = [0; SLIDING_BUFFER_SIZE];
+        postcard::from_io((reader, &mut buff))
+            .map(|(value, _)| value)
+            .ok()
     };
 }

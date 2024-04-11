@@ -411,6 +411,8 @@ The `test-fuzz` package currently supports the following features:
 
 - `serde_cbor4ii` - [CBOR 0x(4+4)9 0x49]
 
+- `serde_postcard` - [Postcard]
+
 ## Auto-generated corpus files
 
 `cargo-test-fuzz` can auto-generate values for types that implement certain traits. If all of a target's argument types implement such traits, `cargo-test-fuzz` can auto-generate corpus files for the target.
@@ -498,6 +500,7 @@ These options are incompatible in the following sense. If a fuzz target's argume
 [Limitations]: #limitations
 [Macros and Inline Functions Exception]: https://spdx.org/licenses/mif-exception.html
 [Overview]: #overview
+[Postcard]: https://github.com/jamesmunns/postcard
 [Serde CBOR]: https://github.com/pyfisch/cbor
 [Serde attributes]: https://serde.rs/attributes.html
 [Substrate externalities]: https://substrate.dev/docs/en/knowledgebase/runtime/tests#mock-runtime-storage
