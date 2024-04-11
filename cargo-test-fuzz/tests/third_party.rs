@@ -135,7 +135,13 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
     // However, rather than try to upgrade everything and then downgrade just `x25519-dalek`
     // (similar to how I did for `libp2p-swarm-derive`), I am instead trying to upgrade just the
     // packages that need it.
-    for package in ["ahash@0.7.6", "libc", "num-bigint@0.4.0", "tempfile"] {
+    for package in [
+        "ahash@0.7.6",
+        "ahash@0.7.7",
+        "libc",
+        "num-bigint@0.4.0",
+        "tempfile",
+    ] {
         #[allow(clippy::let_unit_value)]
         let () = Command::new("cargo")
             .current_dir(&subdir)
