@@ -104,7 +104,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        serde_format: [bincode, cbor, cbor4ii]
+        serde_format: [bincode, cbor, cbor4ii, postcard]
         toolchain: [stable, nightly]
         self_ty_in_mod_name: [false, true]
 
