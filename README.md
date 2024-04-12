@@ -407,9 +407,9 @@ The `test-fuzz` package currently supports the following features:
 
 - `serde_bincode` - [Bincode] (default)
 
-- `serde_cbor` - [Serde CBOR]
+- `serde_cbor` - [Serde CBOR] (deprecated)
 
-- `serde_cbor4ii` - [CBOR 0x(4+4)9 0x49]
+- `serde_cbor4ii` - [CBOR 0x(4+4)9 0x49] (deprecated)
 
 - `serde_postcard` - [Postcard]
 

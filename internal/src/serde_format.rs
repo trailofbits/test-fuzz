@@ -36,21 +36,6 @@ pub fn as_feature() -> &'static str {
     formats.pop().expect("No serde format selected")
 }
 
-#[must_use]
-pub const fn serializes_variant_names() -> bool {
-    #[cfg(any(serde_default, feature = "__serde_bincode"))]
-    return false;
-
-    #[cfg(feature = "__serde_cbor")]
-    return true;
-
-    #[cfg(feature = "__serde_cbor4ii")]
-    return true;
-
-    #[cfg(feature = "__serde_postcard")]
-    return false;
-}
-
 pub fn serialize<T: Serialize>(args: &T) -> Vec<u8> {
     #[cfg(any(serde_default, feature = "__serde_bincode"))]
     return {

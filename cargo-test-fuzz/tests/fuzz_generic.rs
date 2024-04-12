@@ -1,4 +1,4 @@
-use internal::{dirs::corpus_directory_from_target, serde_format};
+use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::{fs::remove_dir_all, sync::Mutex};
 use testing::{examples, retry, CommandExt};
@@ -10,14 +10,7 @@ const MAX_TOTAL_TIME: &str = "60";
 fn fuzz_foo_qwerty() {
     // smoelius: When `bincode` is enabled, `cargo-afl` fails because "the program crashed with one
     // of the test cases provided."
-    fuzz(
-        "test_foo_qwerty",
-        if serde_format::serializes_variant_names() {
-            1
-        } else {
-            2
-        },
-    );
+    fuzz("test_foo_qwerty", 2);
 }
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]

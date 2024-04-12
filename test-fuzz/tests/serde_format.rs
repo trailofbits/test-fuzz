@@ -22,10 +22,8 @@ fn serde_format() {
         let mut file = File::open(path).unwrap();
         let mut buf = Vec::new();
         file.read_to_end(&mut buf).unwrap();
-        // smoelius: CBOR stores the variant name.
-        assert_eq!(
-            cfg!(any(feature = "serde_cbor", feature = "serde_cbor4ii")),
-            buf.iter().any(u8::is_ascii_uppercase)
-        );
+        // smoelius: CBOR stores the variant name. Hence, this test will fail if CBOR is used as the
+        // serialization format.
+        assert!(!buf.iter().any(u8::is_ascii_uppercase));
     }
 }
