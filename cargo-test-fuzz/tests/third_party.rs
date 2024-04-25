@@ -35,7 +35,7 @@ struct Test {
 }
 
 static TESTS: Lazy<Vec<Test>> = Lazy::new(|| {
-    #[allow(unknown_lints, env_cargo_path)]
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     let content =
         read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("third_party.json")).unwrap();
     serde_json::from_str(&content).unwrap()
@@ -97,7 +97,7 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
 
     // smoelius: Each patch expects test-fuzz to be an ancestor of the directory in which the patch
     // is applied.
-    #[allow(unknown_lints, env_cargo_path)]
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     let tempdir = tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();
 
     Command::new("git")
@@ -112,7 +112,7 @@ fn run_test(module_path: &str, test: &Test, no_run: bool) {
         .logged_assert()
         .success();
 
-    #[allow(unknown_lints, env_cargo_path)]
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     let patch = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("patches")
         .join(&test.patch)

@@ -201,7 +201,6 @@ fn run_test(
     })
 }
 
-#[allow(unknown_lints, env_cargo_path)]
 fn sandbox(f: impl FnOnce(Shell) -> Result<()>) -> Result<()> {
     let sh = Shell::new()?;
 
@@ -216,6 +215,7 @@ fn sandbox(f: impl FnOnce(Shell) -> Result<()>) -> Result<()> {
     // https://github.com/rust-lang/rustup/issues/1884#issuecomment-498157692
     sh.set_var("HOME", home.path());
 
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
 
     cmd!(sh, "git clone {repo} workdir").run()?;

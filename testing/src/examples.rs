@@ -9,7 +9,7 @@ use std::path::Path;
 use subprocess::{Exec, Redirection};
 
 pub static MANIFEST_PATH: Lazy<String> = Lazy::new(|| {
-    #[allow(unknown_lints, env_cargo_path)]
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../examples/Cargo.toml")
         .to_string_lossy()
