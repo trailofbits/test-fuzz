@@ -23,6 +23,7 @@ fn write() {
 
 #[cfg(test)]
 static MANIFEST_PATH: Lazy<String> = Lazy::new(|| {
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("Cargo.toml")
         .to_string_lossy()
