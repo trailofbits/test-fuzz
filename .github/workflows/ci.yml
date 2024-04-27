@@ -120,15 +120,20 @@ jobs:
           rustup component add rust-src
           rustup target add wasm32-unknown-unknown
 
-      - name: Install llvm
-        run: sudo apt-get install llvm
-
       # smoelius: The Substrate tests require `protoc`.
       - name: Install protoc
         run: sudo apt-get install protobuf-compiler
 
       - name: Install cargo-afl
-        run: cargo install cargo-afl
+        run: |
+          cargo install cargo-afl
+          # smoelius: If using a nightly toolchain, use LLVM plugins.
+          if [[ ${{ matrix.toolchain }} = nightly ]]; then
+            wget https://apt.llvm.org/llvm.sh
+            chmod +x llvm.sh
+            sudo ./llvm.sh
+            cargo afl config --build --force --plugins
+          fi
 
       - name: Run afl-system-config
         run: cargo afl system-config
