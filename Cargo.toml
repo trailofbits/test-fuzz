@@ -21,20 +21,5 @@ multiple-bound-locations = "allow"
 option-if-let-else = "allow"
 redundant-pub-crate = "allow"
 
-[workspace.metadata.dylint]
-libraries = [
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/general" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/supplementary" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/assert_eq_arg_misordering" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/collapsible_unwrap" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/const_path_join" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/inconsistent_qualification" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/misleading_variable_name" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/question_mark_in_expression" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/ref_aware_redundant_closure_for_method_calls" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/suboptimal_pattern" },
-    { git = "https://github.com/trailofbits/dylint", pattern = "examples/restriction/try_io_result" },
-]
-
 [workspace.metadata.unmaintained]
 ignore = ["parse_duration"]
