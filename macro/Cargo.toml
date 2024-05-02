@@ -23,6 +23,7 @@ quote = "1.0"
 syn = { version = "2.0", features = ["full", "parsing", "visit", "visit-mut"] }
 
 [features]
+__cast_checks = []
 __persistent = []
 __self_ty_in_mod_name = ["heck"]
 

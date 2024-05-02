@@ -11,6 +11,7 @@ repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
 afl = { version = "0.15", optional = true }
+cast_checks = { version = "0.1", optional = true }
 serde = "1.0"
 
 internal = { path = "../internal", package = "test-fuzz-internal", version = "=5.0.0" }
@@ -34,6 +35,7 @@ testing = { path = "../testing", package = "test-fuzz-testing" }
 # https://github.com/djkoloski/rust_serialization_benchmark
 
 [features]
+cast_checks = ["dep:cast_checks", "test-fuzz-macro/__cast_checks"]
 self_ty_in_mod_name = ["test-fuzz-macro/__self_ty_in_mod_name"]
 serde_bincode = ["internal/__serde_bincode"]
 serde_cbor = ["internal/__serde_cbor"]
