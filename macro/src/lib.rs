@@ -294,6 +294,18 @@ fn map_method_or_fn(
         }
     }
 
+    let mut attrs = attrs.clone();
+    let maybe_use_cast_checks = if cfg!(feature = "__cast_checks") {
+        attrs.push(parse_quote! {
+            #[test_fuzz::cast_checks::enable]
+        });
+        quote! {
+            use test_fuzz::cast_checks;
+        }
+    } else {
+        quote! {}
+    };
+
     let impl_ty_idents = type_idents(generics);
     let ty_idents = type_idents(&sig.generics);
     let combined_type_idents = [impl_ty_idents.clone(), ty_idents.clone()].concat();
@@ -724,6 +736,8 @@ fn map_method_or_fn(
     (
         parse_quote! {
             #(#attrs)* #vis #defaultness #sig {
+                #maybe_use_cast_checks
+
                 #write_generic_args_and_args
 
                 #in_production_write_generic_args_and_args

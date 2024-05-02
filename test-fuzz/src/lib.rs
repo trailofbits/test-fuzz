@@ -6,6 +6,10 @@ pub use test_fuzz_macro::{test_fuzz, test_fuzz_impl};
 #[cfg(feature = "__persistent")]
 pub use afl;
 
+// smoelius: Do the same for `cast_checks`.
+#[cfg(feature = "cast_checks")]
+pub use cast_checks;
+
 // smoelius: Unfortunately, the same trick doesn't work for serde.
 // https://github.com/serde-rs/serde/issues/1465
 
