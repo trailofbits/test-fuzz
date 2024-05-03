@@ -31,5 +31,13 @@ fn fuzz_cast() {
                 .try_code(predicate::eq(code))
         })
         .unwrap();
+        if use_cast_checks {
+            examples::test_fuzz("cast", "target")
+                .unwrap()
+                .args(["--replay=crashes", "--features=test-fuzz/cast_checks"])
+                .logged_assert()
+                .success()
+                .stdout(predicate::str::contains("invalid cast"));
+        }
     }
 }
