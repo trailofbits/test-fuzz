@@ -791,6 +791,15 @@
         "name": "Chris Wong"
       }
     ],
+    "is_terminal_polyfill": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/60961?v=4",
+        "id": 6743,
+        "kind": "user",
+        "login": "epage",
+        "name": "Ed Page"
+      }
+    ],
     "itertools": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/3209739?v=4",
