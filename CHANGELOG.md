@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.1.0
+
+- FEATURE: Add `cast_checks` feature ([#384](https://github.com/trailofbits/test-fuzz/pull/384))
+
 ## 5.0.0
 
 - BREAKING CHANGE: Remove `auto_concretize` feature ([#336](https://github.com/trailofbits/test-fuzz/pull/336))
