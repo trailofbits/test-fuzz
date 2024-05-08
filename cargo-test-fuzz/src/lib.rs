@@ -18,8 +18,7 @@ use internal::dirs::{
     queue_directory_from_target, target_directory,
 };
 use log::debug;
-use semver::Version;
-use semver::VersionReq;
+use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::{
     ffi::OsStr,
