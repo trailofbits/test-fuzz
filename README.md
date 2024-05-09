@@ -255,6 +255,7 @@ Options:
       --backtrace                 Display backtraces
       --consolidate               Move one target's crashes, hangs, and work queue to its corpus; to
                                   consolidate all targets, use --consolidate-all
+      --cpus <N>                  Fuzz using at most <N> cpus; default is all but one
       --display <OBJECT>          Display corpus, crashes, generic args, `impl` generic args, hangs,
                                   or work queue. By default, corpus uses an uninstrumented fuzz
                                   target; the others use an instrumented fuzz target. To display the
@@ -282,6 +283,8 @@ Options:
                                   reset all targets, use --reset-all
       --resume                    Resume target's last fuzzing session
       --run-until-crash           Stop fuzzing once a crash is found
+      --slice <SECONDS>           When there are not sufficiently many cpus to fuzz all targets
+                                  concurrently, fuzz them in intervals of <SECONDS> [default: 1200]
       --test <NAME>               Integration test containing fuzz target
       --timeout <TIMEOUT>         Number of seconds to consider a hang when fuzzing or replaying
                                   (equivalent to -- -t <TIMEOUT * 1000> when fuzzing)

@@ -36,6 +36,12 @@ struct TestFuzzWithDeprecations {
     consolidate_all: bool,
     #[arg(
         long,
+        value_name = "N",
+        help = "Fuzz using at most <N> cpus; default is all but one"
+    )]
+    cpus: Option<usize>,
+    #[arg(
+        long,
         value_name = "OBJECT",
         hide_possible_values = true,
         help = "Display corpus, crashes, generic args, `impl` generic args, hangs, or work queue. \
@@ -109,6 +115,14 @@ struct TestFuzzWithDeprecations {
     run_until_crash: bool,
     #[arg(
         long,
+        value_name = "SECONDS",
+        default_value = "1200",
+        help = "When there are not sufficiently many cpus to fuzz all targets concurrently, fuzz \
+                them in intervals of <SECONDS>"
+    )]
+    slice: u64,
+    #[arg(
+        long,
         value_name = "NAME",
         help = "Integration test containing fuzz target"
     )]
@@ -136,6 +150,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             backtrace,
             consolidate,
             consolidate_all,
+            cpus,
             display,
             exact,
             exit_code,
@@ -155,6 +170,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             reset_all,
             resume,
             run_until_crash,
+            slice,
             test,
             timeout,
             verbose,
@@ -165,6 +181,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             backtrace,
             consolidate,
             consolidate_all,
+            cpus,
             display,
             exact,
             exit_code,
@@ -184,6 +201,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             reset_all,
             resume,
             run_until_crash,
+            slice,
             test,
             timeout,
             verbose,
