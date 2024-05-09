@@ -515,7 +515,6 @@ fn executable_target(
         executable_targets.1
     );
 
-    #[allow(clippy::expect_used)]
     Ok((
         executable_targets.0,
         executable_targets
