@@ -755,6 +755,22 @@
         "name": "Jonas Platte"
       }
     ],
+    "hermit-abi": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/5888473?v=4",
+        "id": 29348,
+        "kind": "user",
+        "login": "stlankes",
+        "name": "Stefan Lankes"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/28776973?v=4",
+        "id": 91569,
+        "kind": "user",
+        "login": "mkroening",
+        "name": "Martin Kröning"
+      }
+    ],
     "hex": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/183116?v=4",
@@ -968,6 +984,22 @@
         "name": null
       }
     ],
+    "mio": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/6180?v=4",
+        "id": 10,
+        "kind": "user",
+        "login": "carllerche",
+        "name": "Carl Lerche"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/20248544?v=4",
+        "id": 1846,
+        "kind": "team",
+        "login": "github:tokio-rs:mio-core",
+        "name": "mio-core"
+      }
+    ],
     "normalize-line-endings": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/1392222?v=4",
@@ -984,6 +1016,15 @@
         "kind": "user",
         "login": "cuviper",
         "name": "Josh Stone"
+      }
+    ],
+    "num_cpus": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/51479?v=4",
+        "id": 359,
+        "kind": "user",
+        "login": "seanmonstar",
+        "name": "Sean McArthur"
       }
     ],
     "object": [
