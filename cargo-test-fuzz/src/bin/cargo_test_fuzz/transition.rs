@@ -117,7 +117,7 @@ struct TestFuzzWithDeprecations {
         long,
         value_name = "SECONDS",
         default_value = "1200",
-        help = "When there are not sufficiently many cpus to fuzz all targets concurrently, fuzz \
+        help = "If there are not sufficiently many cpus to fuzz all targets simultaneously, fuzz \
                 them in intervals of <SECONDS>"
     )]
     slice: u64,

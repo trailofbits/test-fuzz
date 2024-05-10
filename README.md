@@ -283,8 +283,9 @@ Options:
                                   reset all targets, use --reset-all
       --resume                    Resume target's last fuzzing session
       --run-until-crash           Stop fuzzing once a crash is found
-      --slice <SECONDS>           When there are not sufficiently many cpus to fuzz all targets
-                                  concurrently, fuzz them in intervals of <SECONDS> [default: 1200]
+      --slice <SECONDS>           If there are not sufficiently many cpus to fuzz all targets
+                                  simultaneously, fuzz them in intervals of <SECONDS> [default:
+                                  1200]
       --test <NAME>               Integration test containing fuzz target
       --timeout <TIMEOUT>         Number of seconds to consider a hang when fuzzing or replaying
                                   (equivalent to -- -t <TIMEOUT * 1000> when fuzzing)
