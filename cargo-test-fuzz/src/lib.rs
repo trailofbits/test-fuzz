@@ -151,6 +151,16 @@ pub fn run(opts: TestFuzz) -> Result<()> {
         opts
     };
 
+    run_without_exit_code(&opts).map_err(|error| {
+        if opts.exit_code {
+            eprintln!("{error:?}");
+            exit(2);
+        }
+        error
+    })
+}
+
+pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
     if let Some(object) = opts.replay {
         ensure!(
             !matches!(object, Object::ImplGenericArgs | Object::GenericArgs),
@@ -223,13 +233,7 @@ pub fn run(opts: TestFuzz) -> Result<()> {
 
     let executable_targets = flatten_executable_targets(&opts, executable_targets)?;
 
-    fuzz(&opts, &executable_targets).map_err(|error| {
-        if opts.exit_code {
-            eprintln!("{error:?}");
-            exit(2);
-        }
-        error
-    })
+    fuzz(&opts, &executable_targets)
 }
 
 fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
