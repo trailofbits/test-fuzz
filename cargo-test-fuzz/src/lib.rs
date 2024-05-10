@@ -26,7 +26,6 @@ use std::{
     fmt::{Debug, Formatter},
     fs::{create_dir_all, read, read_dir, remove_dir_all, File},
     io::{BufRead, Read},
-    iter,
     path::{Path, PathBuf},
     process::{exit, Child as StdChild, Command, Stdio},
     sync::OnceLock,
@@ -272,19 +271,19 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to /dev/null.
     // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when
     // displaying/replaying.
-    let mut exec = Exec::cmd("cargo")
-        .args(
-            &args
-                .iter()
-                .chain(iter::once(&"--message-format=json"))
-                .collect::<Vec<_>>(),
-        )
-        .stdout(Redirection::Pipe);
+    let mut command = Command::new("cargo");
+    command
+        .args(&args)
+        .arg("--message-format=json")
+        .stdout(Stdio::piped());
     if quiet && !opts.verbose {
-        exec = exec.stderr(NullFile);
+        command.stderr(Stdio::null());
     }
-    debug!("{:?}", exec);
-    let mut popen = exec.clone().popen()?;
+    debug!("{command:?}");
+    let exec = format!("{command:?}");
+    let mut popen = command
+        .spawn()
+        .with_context(|| format!("Could not spawn `{exec:?}`"))?;
     let artifacts = popen
         .stdout
         .take()

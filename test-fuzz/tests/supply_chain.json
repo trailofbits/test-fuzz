@@ -1463,15 +1463,6 @@
         "name": "Peter Glotfelty"
       }
     ],
-    "subprocess": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/1078190?v=4",
-        "id": 5697,
-        "kind": "user",
-        "login": "hniksic",
-        "name": "Hrvoje Nikšić"
-      }
-    ],
     "syn": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/1940490?v=4",
@@ -1641,33 +1632,6 @@
         "kind": "user",
         "login": "sunfishcode",
         "name": "Dan Gohman"
-      }
-    ],
-    "winapi": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/666308?v=4",
-        "id": 63,
-        "kind": "user",
-        "login": "retep998",
-        "name": "Peter Atashian"
-      }
-    ],
-    "winapi-i686-pc-windows-gnu": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/666308?v=4",
-        "id": 63,
-        "kind": "user",
-        "login": "retep998",
-        "name": "Peter Atashian"
-      }
-    ],
-    "winapi-x86_64-pc-windows-gnu": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/666308?v=4",
-        "id": 63,
-        "kind": "user",
-        "login": "retep998",
-        "name": "Peter Atashian"
       }
     ],
     "windows-sys": [
