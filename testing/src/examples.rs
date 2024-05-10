@@ -110,3 +110,10 @@ pub fn test_fuzz(krate: &str, target: &str) -> Result<Command> {
         command
     })
 }
+
+pub fn test_fuzz_inexact(krate: &str, target: &str) -> Result<Command> {
+    test_fuzz_all().map(|mut command| {
+        command.args(["--test", krate, target]);
+        command
+    })
+}
