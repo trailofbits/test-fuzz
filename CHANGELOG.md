@@ -1,5 +1,10 @@
 # Changelog
 
+## 5.2.0
+
+- Fix a bug causing incorrect exit codes to be produced ([3ab762f](https://github.com/trailofbits/test-fuzz/commit/3ab762f28ec73ae5692bce43267c539f56107545))
+- FEATURE: `cargo-test-fuzz` now fuzzes all targets matching `TARGETNAME` concurrently, using at most all but one available cpu by default. If `TARGETNAME` is omitted, then `cargo-test-fuzz` fuzzes all targets concurrently. If there are not sufficiently many cpus to fuzz all targets simultaneously, then they are fuzzed in a time-sliced manner, in intervals of 20 minutes by default. ([c36d10d](https://github.com/trailofbits/test-fuzz/commit/c36d10d36fd81dde260c72fe02e7b52ba652f90b) and [8f36a0b](https://github.com/trailofbits/test-fuzz/commit/8f36a0b64b00b8615abb44baa3556fc66753a360))
+
 ## 5.1.0
 
 - FEATURE: Add `cast_checks` feature ([#384](https://github.com/trailofbits/test-fuzz/pull/384))
