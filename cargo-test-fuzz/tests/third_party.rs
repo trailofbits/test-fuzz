@@ -3,7 +3,6 @@ use cargo_metadata::MetadataCommand;
 use once_cell::sync::Lazy;
 use option_set::option_set;
 use predicates::prelude::*;
-use regex::Regex;
 use rustc_version::{version_meta, Channel};
 use serde::Deserialize;
 use std::{
@@ -41,55 +40,27 @@ static TESTS: Lazy<Vec<Test>> = Lazy::new(|| {
     serde_json::from_str(&content).unwrap()
 });
 
-// smoelius: This should match `scripts/update_patches.sh`.
-const LINES_OF_CONTEXT: u32 = 2;
-
-mod cheap_tests {
-    use super::*;
-
-    #[cfg_attr(dylint_lib = "supplementary", allow(commented_code))]
-    #[test]
-    fn test() {
-        let version_meta = version_meta().unwrap();
-        for test in TESTS.iter() {
-            run_test(
-                module_path!(),
-                test,
-                test.flags.contains(Flags::EXPENSIVE)
+#[cfg_attr(dylint_lib = "supplementary", allow(commented_code))]
+#[test]
+fn test() {
+    let version_meta = version_meta().unwrap();
+    for test in TESTS.iter() {
+        run_test(
+            test,
+            (!cfg!(feature = "test-third-party-full") && test.flags.contains(Flags::EXPENSIVE))
                     // || test.flags.contains(Flags::SKIP)
                     || (test.flags.contains(Flags::SKIP_NIGHTLY)
                         && version_meta.channel == Channel::Nightly),
-            );
-        }
-    }
-}
-
-mod all_tests {
-    use super::*;
-    #[test]
-    #[ignore]
-    fn test() {
-        let version_meta = version_meta().unwrap();
-        for test in TESTS.iter() {
-            run_test(
-                module_path!(),
-                test,
-                // test.flags.contains(Flags::SKIP) ||
-                test.flags.contains(Flags::SKIP_NIGHTLY)
-                    && version_meta.channel == Channel::Nightly,
-            );
-        }
+        );
     }
 }
 
 #[allow(clippy::too_many_lines)]
-fn run_test(module_path: &str, test: &Test, no_run: bool) {
-    let (_, module) = module_path.split_once("::").unwrap();
+fn run_test(test: &Test, no_run: bool) {
     #[allow(clippy::explicit_write)]
     writeln!(
         stderr(),
-        "{}: {}{}",
-        module,
+        "{}{}",
         test.url,
         if no_run { " (no-run)" } else { "" }
     )
@@ -227,10 +198,13 @@ where
     assert
 }
 
+#[cfg(feature = "test-third-party-full")]
 #[test]
-#[ignore]
 fn patches_are_current() {
-    let re = Regex::new(r"^index [[:xdigit:]]{7}\.\.[[:xdigit:]]{7} [0-7]{6}$").unwrap();
+    // smoelius: This should match `scripts/update_patches.sh`.
+    const LINES_OF_CONTEXT: u32 = 2;
+
+    let re = regex::Regex::new(r"^index [[:xdigit:]]{7}\.\.[[:xdigit:]]{7} [0-7]{6}$").unwrap();
 
     for test in TESTS.iter() {
         let tempdir = tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();

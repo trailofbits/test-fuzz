@@ -16,6 +16,10 @@ path = "src/bin/cargo_test_fuzz/main.rs"
 [lib]
 doctest = false
 
+[[test]]
+name = "install"
+required-features = ["test-install"]
+
 [dependencies]
 anyhow = { version = "1.0", features = ["backtrace"] }
 bitflags = "2.5"
@@ -51,5 +55,14 @@ xshell = "0.2"
 
 testing = { path = "../testing", package = "test-fuzz-testing" }
 
+[features]
+test-install = []
+test-third-party-full = []
+
 [lints]
 workspace = true
+
+# smoelius: `xshell` is used only by the `install` tests, which are guarded by the `test-install`
+# feature.
+[package.metadata.cargo-udeps.ignore]
+development = ["xshell"]
