@@ -19,7 +19,7 @@ fn build() {
 }
 
 #[test]
-fn build_pesistent() {
+fn build_persistent() {
     examples::test_fuzz_all()
         .unwrap()
         .args(["--no-run", "--persistent"])
