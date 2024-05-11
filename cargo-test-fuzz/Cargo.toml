@@ -26,7 +26,6 @@ heck = "0.5"
 log = "0.4"
 mio = { version = "0.8", features = ["os-ext", "os-poll"] }
 num_cpus = "1.16"
-paste = "1.0"
 remain = "0.2"
 semver = "1.0"
 serde = { version = "1.0", features = ["derive"] }
@@ -54,6 +53,3 @@ testing = { path = "../testing", package = "test-fuzz-testing" }
 
 [lints]
 workspace = true
-
-[package.metadata.cargo-udeps.ignore]
-normal = ["paste"]
