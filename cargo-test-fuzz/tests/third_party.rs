@@ -144,6 +144,7 @@ fn run_test(test: &Test, no_run: bool) {
     // runs. `assert_cmd::Command` would capture the output.
     assert!(std::process::Command::new("cargo")
         .current_dir(&subdir)
+        .env_remove("RUSTUP_TOOLCHAIN")
         .env("TEST_FUZZ_WRITE", "1")
         .args(["test", "--package", &test.package, "--", "--nocapture"])
         .status()
