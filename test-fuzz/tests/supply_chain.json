@@ -1533,50 +1533,6 @@
         "name": "David Tolnay"
       }
     ],
-    "unicode-segmentation": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
-      {
-        "avatar": "https://avatars1.githubusercontent.com/u/1203825?v=4",
-        "id": 3,
-        "kind": "user",
-        "login": "huonw",
-        "name": "Huon Wilson"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/291359?v=4",
-        "id": 7,
-        "kind": "user",
-        "login": "SimonSapin",
-        "name": "Simon Sapin"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/1617736?v=4",
-        "id": 1139,
-        "kind": "user",
-        "login": "Manishearth",
-        "name": "Manish Goregaokar"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/716593?v=4",
-        "id": 1458,
-        "kind": "user",
-        "login": "kwantam",
-        "name": "Riad S. Wahby"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/5784949?v=4",
-        "id": 21056,
-        "kind": "user",
-        "login": "sujayakar",
-        "name": "Sujay Jayakar"
-      }
-    ],
     "utf8parse": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/4285147?v=4",
