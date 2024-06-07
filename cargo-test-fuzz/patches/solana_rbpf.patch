@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 5486da2..dba030e 100644
+index 60774f6..c7469e8 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -32,4 +32,7 @@ scroll = "0.11"
@@ -357,7 +357,7 @@ index e864855..9922267 100644
  struct MappingCache {
      // The cached entries.
 diff --git a/src/program.rs b/src/program.rs
-index 64752df..d04a761 100644
+index 7fce239..59aeb50 100644
 --- a/src/program.rs
 +++ b/src/program.rs
 @@ -10,5 +10,5 @@ use {
@@ -502,7 +502,7 @@ index c597d9b..1996c56 100644
      ) -> Result<u64, Box<dyn std::error::Error>> {
          println!(
 diff --git a/src/vm.rs b/src/vm.rs
-index 40c222a..937e1b6 100644
+index ffe478f..6fc90c9 100644
 --- a/src/vm.rs
 +++ b/src/vm.rs
 @@ -38,5 +38,5 @@ pub fn get_runtime_environment_key() -> i32 {
@@ -520,17 +520,17 @@ index 40c222a..937e1b6 100644
  pub struct TestContextObject {
      /// Contains the register state at every instruction in order of execution
 diff --git a/tests/execution.rs b/tests/execution.rs
-index f7ef536..773e3de 100644
+index d467e49..187789c 100644
 --- a/tests/execution.rs
 +++ b/tests/execution.rs
-@@ -2503,5 +2503,5 @@ declare_builtin_function!(
+@@ -2515,5 +2515,5 @@ declare_builtin_function!(
      /// For test_nested_vm_syscall()
      SyscallNestedVm,
 -    fn rust(
 +    fn rust<'a>(
          _context_object: &mut TestContextObject,
          depth: u64,
-@@ -2510,5 +2510,5 @@ declare_builtin_function!(
+@@ -2522,5 +2522,5 @@ declare_builtin_function!(
          _arg4: u64,
          _arg5: u64,
 -        _memory_mapping: &mut MemoryMapping,
