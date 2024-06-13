@@ -1,5 +1,5 @@
 diff --git a/compute-budget/Cargo.toml b/compute-budget/Cargo.toml
-index c011176..1499f67 100644
+index 211aa93..5a8fbcd 100644
 --- a/compute-budget/Cargo.toml
 +++ b/compute-budget/Cargo.toml
 @@ -14,4 +14,6 @@ solana-frozen-abi = { workspace = true, optional = true }
@@ -7,8 +7,8 @@ index c011176..1499f67 100644
  
 +serde = "1.0"
 +
- [features]
- frozen-abi = [
+ [build-dependencies]
+ rustc_version = { workspace = true }
 diff --git a/compute-budget/src/compute_budget.rs b/compute-budget/src/compute_budget.rs
 index 6b91aff..c0cc371 100644
 --- a/compute-budget/src/compute_budget.rs
@@ -32,10 +32,10 @@ index 1e96d68..7902b47 100644
  pub struct Measure {
      name: &'static str,
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index a3d25a9..0d916e8 100644
+index c714945..24c8596 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
-@@ -32,4 +32,6 @@ solana_rbpf = { workspace = true }
+@@ -34,4 +34,6 @@ solana_rbpf = { workspace = true }
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -43,21 +43,24 @@ index a3d25a9..0d916e8 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index ace5e0d..fa442be 100644
+index 393098b..f9d173a 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -117,4 +117,5 @@ impl fmt::Display for AllocErr {
+@@ -118,4 +118,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -145,8 +146,13 @@ impl BpfAllocator {
+@@ -146,10 +147,16 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct EnvironmentConfig<'a> {
      pub blockhash: Hash,
+     epoch_total_stake: Option<u64>,
++    #[serde(skip)]
+     epoch_vote_accounts: Option<&'a VoteAccountsHashMap>,
      pub feature_set: Arc<FeatureSet>,
      pub lamports_per_signature: u64,
 +    #[serde(
@@ -66,13 +69,13 @@ index ace5e0d..fa442be 100644
 +    )]
      sysvar_cache: &'a SysvarCache,
  }
-@@ -167,4 +173,5 @@ impl<'a> EnvironmentConfig<'a> {
+@@ -174,4 +181,5 @@ impl<'a> EnvironmentConfig<'a> {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -173,5 +180,11 @@ pub struct SyscallContext {
+@@ -180,5 +188,11 @@ pub struct SyscallContext {
  }
  
 -#[derive(Debug, Clone)]
@@ -85,7 +88,7 @@ index ace5e0d..fa442be 100644
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub struct SerializedAccountMetadata {
      pub original_data_len: usize,
-@@ -182,9 +195,27 @@ pub struct SerializedAccountMetadata {
+@@ -189,9 +203,27 @@ pub struct SerializedAccountMetadata {
  }
  
 +fn default_program_cache_for_tx_batch<'de, D>(
@@ -111,21 +114,15 @@ index ace5e0d..fa442be 100644
 +        skip_serializing,
 +        deserialize_with = "default_program_cache_for_tx_batch"
 +    )]
-     pub program_cache_for_tx_batch: &'a ProgramCacheForTxBatch,
+     pub program_cache_for_tx_batch: &'a mut ProgramCacheForTxBatch,
      /// Runtime configurations used to provision the invocation environment.
-@@ -196,6 +227,11 @@ pub struct InvokeContext<'a> {
-     compute_meter: RefCell<u64>,
+@@ -204,4 +236,5 @@ pub struct InvokeContext<'a> {
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-+    #[serde(
-+        skip_serializing,
-+        deserialize_with = "default_program_cache_for_tx_batch"
-+    )]
-     pub programs_modified_by_tx: &'a mut ProgramCacheForTxBatch,
      /// Latest measurement not yet accumulated in [ExecuteDetailsTimings::execute_us]
 +    #[serde(skip)]
      pub execute_time: Option<Measure>,
      pub timings: ExecuteDetailsTimings,
-@@ -204,4 +240,24 @@ pub struct InvokeContext<'a> {
+@@ -210,4 +243,23 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -139,7 +136,6 @@ index ace5e0d..fa442be 100644
 +            compute_budget: self.compute_budget.clone(),
 +            compute_meter: self.compute_meter.clone(),
 +            log_collector: self.log_collector.clone(),
-+            programs_modified_by_tx: Box::leak(Box::new(self.programs_modified_by_tx.clone())),
 +            execute_time: self.execute_time.clone(),
 +            timings: self.timings.clone(),
 +            syscall_context: self.syscall_context.clone(),
@@ -161,7 +157,7 @@ index 0a06bd1..6378df3 100644
  pub struct LogCollector {
      pub messages: Vec<String>,
 diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
-index 313faec..72dccd5 100644
+index 1a27048..8ef5cd1 100644
 --- a/program-runtime/src/sysvar_cache.rs
 +++ b/program-runtime/src/sysvar_cache.rs
 @@ -25,5 +25,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for SysvarCache {
@@ -172,7 +168,7 @@ index 313faec..72dccd5 100644
  pub struct SysvarCache {
      // full account data as provided by bank, including any trailing zero bytes
 diff --git a/program-runtime/src/timings.rs b/program-runtime/src/timings.rs
-index 121ae0b..918a398 100644
+index f1966ba..ab5d1b5 100644
 --- a/program-runtime/src/timings.rs
 +++ b/program-runtime/src/timings.rs
 @@ -9,5 +9,5 @@ use {
@@ -182,7 +178,7 @@ index 121ae0b..918a398 100644
 +#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
  pub struct ProgramTiming {
      pub accumulated_us: u64,
-@@ -357,5 +357,5 @@ impl ExecuteAccessoryTimings {
+@@ -365,5 +365,5 @@ impl ExecuteAccessoryTimings {
  }
  
 -#[derive(Default, Debug, PartialEq, Eq)]
@@ -190,10 +186,10 @@ index 121ae0b..918a398 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 6d3147d..4cad7e8 100644
+index 148c0c9..298aa36 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -25,4 +25,7 @@ solana_rbpf = { workspace = true }
+@@ -26,4 +26,7 @@ solana_rbpf = { workspace = true }
  thiserror = { workspace = true }
  
 +serde = "1.0"
@@ -202,10 +198,10 @@ index 6d3147d..4cad7e8 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 8f14544..7b90886 100644
+index 016fcf7..c327afe 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -395,6 +395,7 @@ declare_builtin_function!(
+@@ -391,6 +391,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(
@@ -216,7 +212,7 @@ index 8f14544..7b90886 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 0bb1317..e8f5ee8 100644
+index 33d7bd2..f3e7861 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -72,5 +72,5 @@ rand = { workspace = true, optional = true }
@@ -226,18 +222,18 @@ index 0bb1317..e8f5ee8 100644
 +serde = { version = "1.0", features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -88,4 +88,6 @@ uriparse = { workspace = true }
- wasm-bindgen = { workspace = true }
+@@ -87,4 +87,6 @@ thiserror = { workspace = true }
+ uriparse = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
 +
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index ed3a7ff..3bae43a 100644
+index e4970cf..d2e111c 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -1056,5 +1056,5 @@ lazy_static! {
+@@ -1070,5 +1070,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
