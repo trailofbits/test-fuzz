@@ -27,8 +27,8 @@ where
 ///
 /// [`convert`]: https://github.com/trailofbits/test-fuzz/blob/master/README.md#convert--x-y
 /// [`test_fuzz` macro]: https://github.com/trailofbits/test-fuzz/blob/master/README.md#test_fuzz-macro
-/// [Substrate Node Template]: https://github.com/trailofbits/test-fuzz/blob/master/cargo-test-fuzz/patches/substrate_node_template.patch
-/// [third-party test]: https://github.com/trailofbits/test-fuzz/blob/master/cargo-test-fuzz/tests/third_party.rs
+/// [Substrate Node Template]: https://github.com/trailofbits/test-fuzz/blob/master/third-party/patches/substrate_node_template.patch
+/// [third-party test]: https://github.com/trailofbits/test-fuzz/blob/master/third-party/tests/third_party.rs
 pub trait Into<T> {
     fn into(self) -> T;
 }

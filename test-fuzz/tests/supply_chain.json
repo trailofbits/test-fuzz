@@ -1717,7 +1717,8 @@
       "test-fuzz-internal",
       "test-fuzz-macro",
       "test-fuzz-runtime",
-      "test-fuzz-testing"
+      "test-fuzz-testing",
+      "third-party"
     ]
   }
 }

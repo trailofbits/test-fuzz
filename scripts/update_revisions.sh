@@ -14,7 +14,7 @@ DIR="$(dirname "$(realpath "$0")")/.."
 
 cd "$DIR"
 
-paste <(jq -r .[].url cargo-test-fuzz/third_party.json) <(jq -r .[].rev cargo-test-fuzz/third_party.json) |
+paste <(jq -r .[].url third-party/third_party.json) <(jq -r .[].rev third-party/third_party.json) |
 while read -r URL REV_OLD; do
     pushd "$(mktemp -d)"
 
@@ -22,7 +22,7 @@ while read -r URL REV_OLD; do
 
     REV_NEW="$(git rev-parse HEAD)"
 
-    sed -i "s/\"$REV_OLD\"/\"$REV_NEW\"/" "$DIR"/cargo-test-fuzz/third_party.json
+    sed -i "s/\"$REV_OLD\"/\"$REV_NEW\"/" "$DIR"/third-party/third_party.json
 
     popd
 done

@@ -113,7 +113,11 @@ fn incompatible_test_fuzz() -> Result<()> {
             ),
             (
                 r#"s/^\(test-fuzz = {.*\<version = "=\)[^.]*\.[^.]*\.\([^"]*".*}\)$/\10.0.\2/"#,
-                &["cargo-test-fuzz/Cargo.toml", "examples/Cargo.toml"],
+                &[
+                    "cargo-test-fuzz/Cargo.toml",
+                    "examples/Cargo.toml",
+                    "third-party/Cargo.toml",
+                ],
             ),
         ],
         &[
@@ -153,7 +157,11 @@ fn newer_test_fuzz() -> Result<()> {
             ),
             (
                 r#"s/^\(test-fuzz = {.*\<version = "=[^.]*\.[^.]*\)\.[^"]*\(".*}\)$/\1.255\2/"#,
-                &["cargo-test-fuzz/Cargo.toml", "examples/Cargo.toml"],
+                &[
+                    "cargo-test-fuzz/Cargo.toml",
+                    "examples/Cargo.toml",
+                    "third-party/Cargo.toml",
+                ],
             ),
             (
                 r#"s/^\(version = "[^-]*\)-[^"]*\("\)$/\1\2/"#,

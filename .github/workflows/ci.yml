@@ -128,7 +128,7 @@ jobs:
       - name: Udeps
         run: |
           cargo install cargo-udeps || true
-          cargo clean && cargo +nightly udeps --all-targets
+          cargo clean && cargo +nightly udeps --features=test-install --all-targets
 
   test:
     needs: [maybe-expedite]
@@ -142,6 +142,7 @@ jobs:
       matrix:
         serde_format: [bincode, postcard]
         toolchain: [stable, nightly]
+        package: [third-party, other]
         self_ty_in_mod_name: [false, true]
 
     steps:
@@ -191,11 +192,15 @@ jobs:
 
       - name: Setup
         run: |
-          TEST_THIRD_PARTY_FULL=
-          if [[ ${{ github.event_name }} = 'schedule' ]] ||
-            git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -w 'patches\|third_party' >/dev/null
-          then
-            TEST_THIRD_PARTY_FULL='--features=test-third-party-full'
+          if [[ ${{ matrix.package }} = 'third-party' ]]; then
+            MAYBE_THIRD_PARTY='--package third-party'
+            if [[ ${{ github.event_name }} = 'schedule' ]] ||
+              git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -w 'patches\|third_party' >/dev/null
+            then
+              MAYBE_THIRD_PARTY="$MAYBE_THIRD_PARTY --features=test-third-party-full"
+            fi
+          else
+            MAYBE_THIRD_PARTY='--workspace --exclude third-party --features=test-install'
           fi
           SERDE_FORMAT='--features=test-fuzz/serde_${{ matrix.serde_format }}'
           SHUFFLE=
@@ -204,8 +209,8 @@ jobs:
           fi
           SELF_TY_IN_MOD_NAME="$(${{ matrix.self_ty_in_mod_name }} && echo '--features test-fuzz/self_ty_in_mod_name')" || true
           CONFIG_GROUP_RUNNER="--config target.'cfg(all())'.runner='group-runner'"
-          BUILD_CMD="cargo build --features=test-install $TEST_THIRD_PARTY_FULL $SERDE_FORMAT $SELF_TY_IN_MOD_NAME --all-targets"
-          TEST_CMD="cargo test --features=test-install $TEST_THIRD_PARTY_FULL $SERDE_FORMAT $SELF_TY_IN_MOD_NAME $CONFIG_GROUP_RUNNER -- --nocapture $SHUFFLE"
+          BUILD_CMD="cargo build $MAYBE_THIRD_PARTY $SERDE_FORMAT $SELF_TY_IN_MOD_NAME --all-targets"
+          TEST_CMD="cargo test   $MAYBE_THIRD_PARTY $SERDE_FORMAT $SELF_TY_IN_MOD_NAME $CONFIG_GROUP_RUNNER -- --nocapture $SHUFFLE"
           echo "BUILD_CMD=$BUILD_CMD" >> "$GITHUB_ENV"
           echo "TEST_CMD=$TEST_CMD" >> "$GITHUB_ENV"
 
