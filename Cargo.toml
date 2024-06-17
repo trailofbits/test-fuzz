@@ -1,4 +1,6 @@
 [workspace]
+# smoelius: If a package that depends on `test-fuzz` is added to the workspace, then
+# cargo-test-fuzz/tests/install.rs will need to be updated.
 members = [
     "cargo-test-fuzz",
     "examples",
@@ -7,6 +9,7 @@ members = [
     "runtime",
     "test-fuzz",
     "testing",
+    "third-party",
 ]
 resolver = "2"
 

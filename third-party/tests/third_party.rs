@@ -146,7 +146,15 @@ fn run_test(test: &Test, no_run: bool) {
         .current_dir(&subdir)
         .env_remove("RUSTUP_TOOLCHAIN")
         .env("TEST_FUZZ_WRITE", "1")
-        .args(["test", "--package", &test.package, "--", "--nocapture"])
+        .args([
+            "test",
+            "--package",
+            &test.package,
+            "--features",
+            &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
+            "--",
+            "--nocapture"
+        ])
         .status()
         .unwrap()
         .success());
@@ -186,11 +194,24 @@ where
     I: IntoIterator<Item = S>,
     S: AsRef<OsStr>,
 {
-    let assert = Command::cargo_bin("cargo-test-fuzz")
-        .unwrap()
+    Command::new("cargo")
+        .args(["build", "--package=cargo-test-fuzz"])
+        .logged_assert()
+        .success();
+
+    let metadata = MetadataCommand::new().no_deps().exec().unwrap();
+
+    let assert = Command::new(metadata.target_directory.join("debug/cargo-test-fuzz"))
         .current_dir(subdir)
         .env("RUST_LOG", "debug")
-        .args(["test-fuzz", "--package", package, target])
+        .args([
+            "test-fuzz",
+            "--package",
+            package,
+            "--features",
+            &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
+            target,
+        ])
         .args(args)
         .logged_assert()
         .success();
