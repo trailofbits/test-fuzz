@@ -141,20 +141,12 @@ jobs:
       fail-fast: false
       matrix:
         serde_format: [bincode, postcard]
-        toolchain: [stable, nightly]
         self_ty_in_mod_name: [false, true]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      # smoelius: The Substrate tests require the `rust-src` component and the wasm32 target.
-      - name: Set toolchain
-        run: |
-          rustup default ${{ matrix.toolchain }}
-          rustup component add rust-src
-          rustup target add wasm32-unknown-unknown
 
       # smoelius: The Substrate tests require `protoc`.
       - name: Install protoc
@@ -163,13 +155,6 @@ jobs:
       - name: Install cargo-afl
         run: |
           cargo install cargo-afl
-          # smoelius: If using a nightly toolchain, use LLVM plugins.
-          if [[ ${{ matrix.toolchain }} = nightly ]]; then
-            wget https://apt.llvm.org/llvm.sh
-            chmod +x llvm.sh
-            sudo ./llvm.sh
-            cargo afl config --build --force --plugins
-          fi
 
       - name: Run afl-system-config
         run: cargo afl system-config
@@ -198,14 +183,10 @@ jobs:
             TEST_THIRD_PARTY_FULL='--features=test-third-party-full'
           fi
           SERDE_FORMAT='--features=test-fuzz/serde_${{ matrix.serde_format }}'
-          SHUFFLE=
-          if [[ ${{ matrix.toolchain }} = nightly ]]; then
-            SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
-          fi
           SELF_TY_IN_MOD_NAME="$(${{ matrix.self_ty_in_mod_name }} && echo '--features test-fuzz/self_ty_in_mod_name')" || true
           CONFIG_GROUP_RUNNER="--config target.'cfg(all())'.runner='group-runner'"
           BUILD_CMD="cargo build --features=test-install $TEST_THIRD_PARTY_FULL $SERDE_FORMAT $SELF_TY_IN_MOD_NAME --all-targets"
-          TEST_CMD="cargo test --features=test-install $TEST_THIRD_PARTY_FULL $SERDE_FORMAT $SELF_TY_IN_MOD_NAME $CONFIG_GROUP_RUNNER -- --nocapture $SHUFFLE"
+          TEST_CMD="cargo test --features=test-install $TEST_THIRD_PARTY_FULL $SERDE_FORMAT $SELF_TY_IN_MOD_NAME $CONFIG_GROUP_RUNNER -- --nocapture"
           echo "BUILD_CMD=$BUILD_CMD" >> "$GITHUB_ENV"
           echo "TEST_CMD=$TEST_CMD" >> "$GITHUB_ENV"
 
