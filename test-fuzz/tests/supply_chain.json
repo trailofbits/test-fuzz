@@ -274,32 +274,11 @@
     ],
     "cargo-platform": [
       {
-        "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
-      {
-        "avatar": "https://avatars1.githubusercontent.com/u/5430905?v=4",
-        "id": 70,
-        "kind": "team",
-        "login": "github:rust-lang:core",
-        "name": "core"
-      },
-      {
         "avatar": "https://avatars.githubusercontent.com/u/5430905?v=4",
         "id": 4282,
         "kind": "team",
         "login": "github:rust-lang:release-publishers",
         "name": "release-publishers"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/43198?v=4",
-        "id": 6202,
-        "kind": "user",
-        "login": "ehuss",
-        "name": "Eric Huss"
       },
       {
         "avatar": "https://avatars.githubusercontent.com/u/53090244?v=4",
