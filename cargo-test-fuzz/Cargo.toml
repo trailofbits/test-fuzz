@@ -22,7 +22,7 @@ required-features = ["test-install"]
 
 [dependencies]
 anyhow = { version = "1.0", features = ["backtrace"] }
-bitflags = "2.5"
+bitflags = "2.6"
 cargo_metadata = "0.18"
 clap = { version = "4.5", features = ["cargo", "derive", "wrap_help"] }
 env_logger = "0.11"
