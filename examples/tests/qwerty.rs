@@ -1,14 +1,30 @@
 #[test_fuzz::test_fuzz]
 fn target(data: &str) {
-    assert!(
-        !(data.len() == 6
-            && data.as_bytes()[0] == b'q'
-            && data.as_bytes()[1] == b'w'
-            && data.as_bytes()[2] == b'e'
-            && data.as_bytes()[3] == b'r'
-            && data.as_bytes()[4] == b't'
-            && data.as_bytes()[5] == b'y')
-    );
+    let data = data.as_bytes();
+
+    if data.len() != 6 {
+        return;
+    }
+    if data[0] != b'q' {
+        return;
+    }
+    if data[1] != b'w' {
+        return;
+    }
+    if data[2] != b'e' {
+        return;
+    }
+    if data[3] != b'r' {
+        return;
+    }
+    if data[4] != b't' {
+        return;
+    }
+    if data[5] != b'y' {
+        return;
+    }
+
+    panic!("BOOM");
 }
 
 #[test]
