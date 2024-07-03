@@ -1,19 +1,19 @@
 diff --git a/substrate/client/transaction-pool/Cargo.toml b/substrate/client/transaction-pool/Cargo.toml
-index 3516502..13eed4f 100644
+index 95b391f..fe352c5 100644
 --- a/substrate/client/transaction-pool/Cargo.toml
 +++ b/substrate/client/transaction-pool/Cargo.toml
-@@ -23,6 +23,6 @@ futures-timer = "3.0.2"
- linked-hash-map = "0.5.4"
+@@ -23,6 +23,6 @@ futures-timer = { workspace = true }
+ linked-hash-map = { workspace = true }
  log = { workspace = true, default-features = true }
--parking_lot = "0.12.1"
+-parking_lot = { workspace = true, default-features = true }
 -serde = { features = ["derive"], workspace = true, default-features = true }
-+parking_lot = { version = "0.12.1", features = ["serde"] }
++parking_lot = { workspace = true, features = ["serde"] }
 +serde = { features = ["derive", "rc"], workspace = true, default-features = true }
  thiserror = { workspace = true }
- prometheus-endpoint = { package = "substrate-prometheus-endpoint", path = "../../utils/prometheus" }
-@@ -37,4 +37,5 @@ sp-runtime = { path = "../../primitives/runtime" }
- sp-tracing = { path = "../../primitives/tracing" }
- sp-transaction-pool = { path = "../../primitives/transaction-pool" }
+ prometheus-endpoint = { workspace = true, default-features = true }
+@@ -37,4 +37,5 @@ sp-runtime = { workspace = true, default-features = true }
+ sp-tracing = { workspace = true, default-features = true }
+ sp-transaction-pool = { workspace = true, default-features = true }
 +test-fuzz = { path = "../../../../../test-fuzz" }
  
  [dev-dependencies]

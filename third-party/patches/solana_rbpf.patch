@@ -1,8 +1,8 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 60774f6..c7469e8 100644
+index f865f90..29314e7 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -32,4 +32,7 @@ scroll = "0.11"
+@@ -33,4 +33,7 @@ shuttle = { version = "0.7.1", optional = true }
  thiserror = "1.0.26"
  
 +serde = "1.0"
@@ -10,7 +10,7 @@ index 60774f6..c7469e8 100644
 +
  [target.'cfg(windows)'.dependencies]
  winapi = { version = "0.3", features = ["memoryapi", "sysinfoapi", "winnt", "errhandlingapi"], optional = true }
-@@ -48,2 +51,4 @@ elf = "0.0.10"
+@@ -50,2 +53,4 @@ elf = "0.0.10"
  json = "0.12"
  test_utils = { path = "test_utils/" }
 +
@@ -502,17 +502,17 @@ index c597d9b..1996c56 100644
      ) -> Result<u64, Box<dyn std::error::Error>> {
          println!(
 diff --git a/src/vm.rs b/src/vm.rs
-index ffe478f..6fc90c9 100644
+index 3393a38..e7d322f 100644
 --- a/src/vm.rs
 +++ b/src/vm.rs
-@@ -38,5 +38,5 @@ pub fn get_runtime_environment_key() -> i32 {
+@@ -49,5 +49,5 @@ pub fn get_runtime_environment_key() -> i32 {
  
  /// VM configuration settings
 -#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 +#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
  pub struct Config {
      /// Maximum call depth
-@@ -140,5 +140,5 @@ pub trait ContextObject {
+@@ -151,5 +151,5 @@ pub trait ContextObject {
  
  /// Simple instruction meter for testing
 -#[derive(Debug, Clone, Default)]
