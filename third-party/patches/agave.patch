@@ -10,10 +10,10 @@ index 211aa93..5a8fbcd 100644
  [build-dependencies]
  rustc_version = { workspace = true }
 diff --git a/compute-budget/src/compute_budget.rs b/compute-budget/src/compute_budget.rs
-index e24f4b9..a240728 100644
+index 24eeb46..992285d 100644
 --- a/compute-budget/src/compute_budget.rs
 +++ b/compute-budget/src/compute_budget.rs
-@@ -24,5 +24,5 @@ pub const MAX_CALL_DEPTH: usize = 64;
+@@ -19,5 +19,5 @@ pub const MAX_CALL_DEPTH: usize = 64;
  pub const STACK_FRAME_SIZE: usize = 4096;
  
 -#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -168,7 +168,7 @@ index 1a27048..8ef5cd1 100644
  pub struct SysvarCache {
      // full account data as provided by bank, including any trailing zero bytes
 diff --git a/program-runtime/src/timings.rs b/program-runtime/src/timings.rs
-index 9a831de..5603f3e 100644
+index 9ffc470..c6c374f 100644
 --- a/program-runtime/src/timings.rs
 +++ b/program-runtime/src/timings.rs
 @@ -9,5 +9,5 @@ use {
@@ -178,7 +178,7 @@ index 9a831de..5603f3e 100644
 +#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
  pub struct ProgramTiming {
      pub accumulated_us: u64,
-@@ -371,5 +371,5 @@ impl ExecuteAccessoryTimings {
+@@ -365,5 +365,5 @@ impl ExecuteAccessoryTimings {
  }
  
 -#[derive(Default, Debug, PartialEq, Eq)]
@@ -212,12 +212,12 @@ index 2c2b162..ee2159a 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index be8560a..07a5234 100644
+index 71a8d24..b1a865b 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -73,5 +73,5 @@ rand = { workspace = true, optional = true }
+@@ -72,5 +72,5 @@ qualifier_attr = { workspace = true, optional = true }
+ rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
- rustversion = { workspace = true }
 -serde = { workspace = true }
 +serde = { version = "1.0", features = ["rc"] }
  serde_bytes = { workspace = true }
@@ -230,10 +230,10 @@ index be8560a..07a5234 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index e4970cf..d2e111c 100644
+index a2732f3..a239f72 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -1070,5 +1070,5 @@ lazy_static! {
+@@ -1081,5 +1081,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
