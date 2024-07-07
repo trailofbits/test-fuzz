@@ -49,6 +49,8 @@ xshell = "0.2"
 testing = { path = "../testing", package = "test-fuzz-testing" }
 
 [features]
+default = ["sha1-filenames"]
+sha1-filenames = []
 test-install = []
 
 [lints]
