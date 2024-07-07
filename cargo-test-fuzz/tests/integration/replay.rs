@@ -39,6 +39,8 @@ fn replay_crashes() {
 #[allow(clippy::trivial_regex)]
 #[test]
 fn replay_hangs() {
+    let _lock = crate::PARSE_DURATION_MUTEX.lock();
+
     replay(
         "parse_duration",
         "parse",
