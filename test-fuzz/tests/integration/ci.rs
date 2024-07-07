@@ -2,19 +2,13 @@ use assert_cmd::{assert::OutputAssertExt, cargo::CommandCargoExt};
 use regex::Regex;
 use similar_asserts::SimpleDiff;
 use std::{
-    env::{set_current_dir, set_var, var},
+    env::var,
     fs::{read_to_string, write},
     path::Path,
     process::Command,
     str::FromStr,
 };
 use testing::CommandExt;
-
-#[ctor::ctor]
-fn initialize() {
-    set_current_dir("..").unwrap();
-    set_var("CARGO_TERM_COLOR", "never");
-}
 
 #[test]
 fn clippy() {
@@ -31,6 +25,7 @@ fn license() {
     for line in std::str::from_utf8(
         &Command::new("cargo")
             .arg("license")
+            .current_dir("..")
             .assert()
             .success()
             .get_output()
@@ -51,7 +46,7 @@ fn license() {
 
 #[test]
 fn readme_contains_usage() {
-    let readme = read_to_string("README.md").unwrap();
+    let readme = read_to_string("../README.md").unwrap();
 
     let assert = Command::cargo_bin("cargo-test-fuzz")
         .unwrap()
@@ -74,7 +69,7 @@ fn readme_contains_usage() {
 
 #[test]
 fn readme_does_not_use_inline_links() {
-    let readme = read_to_string("README.md").unwrap();
+    let readme = read_to_string("../README.md").unwrap();
     assert!(
         !Regex::new(r"\[[^\]]*\]\(").unwrap().is_match(&readme),
         "readme uses inline links",
@@ -84,7 +79,7 @@ fn readme_does_not_use_inline_links() {
 #[test]
 fn readme_reference_links_are_sorted() {
     let re = Regex::new(r"^\[[^\]]*\]:").unwrap();
-    let readme = read_to_string("README.md").unwrap();
+    let readme = read_to_string("../README.md").unwrap();
     let links = readme
         .lines()
         .filter(|line| re.is_match(line))
@@ -112,7 +107,7 @@ fn supply_chain() {
     let value = serde_json::Value::from_str(stdout_actual).unwrap();
     let stdout_normalized = serde_json::to_string_pretty(&value).unwrap() + "\n";
 
-    let path = Path::new("test-fuzz/tests/supply_chain.json");
+    let path = Path::new("tests/supply_chain.json");
 
     let stdout_expected = read_to_string(path).unwrap();
 
