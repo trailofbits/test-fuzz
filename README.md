@@ -1,5 +1,9 @@
 # test-fuzz
 
+**News:** `cargo-test-fuzz` 5.3.0 enables [`AFL_SHA1_FILENAMES`] by default. If this causes you problems, please [open an issue], and reinstall `cargo-test-fuzz` with `--no-default-features`.
+
+---
+
 `test-fuzz` is a Cargo subcommand and a collection of Rust macros to automate certain tasks related to fuzzing with [`afl.rs`], including:
 
 - generating a fuzzing corpus
@@ -512,6 +516,7 @@ These options are incompatible in the following sense. If a fuzz target's argume
 [Substrate externalities]: https://substrate.dev/docs/en/knowledgebase/runtime/tests#mock-runtime-storage
 [The Cargo Book]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#choosing-features
 [Tips and tricks]: #tips-and-tricks
+[`AFL_SHA1_FILENAMES`]: https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/env_variables.md
 [`Clone`]: https://doc.rust-lang.org/std/clone/trait.Clone.html
 [`Path`]: https://doc.rust-lang.org/std/path/struct.Path.html
 [`TEST_FUZZ_MANIFEST_PATH`]: #test_fuzz_manifest_path
@@ -549,5 +554,6 @@ These options are incompatible in the following sense. If a fuzz target's argume
 [conversion.rs]: https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/conversion.rs#L5
 [deriving them]: https://serde.rs/derive.html
 [is not enabled]: https://github.com/rust-lang/rust/issues/45599#issuecomment-460488107
+[open an issue]: https://github.com/trailofbits/test-fuzz/issues
 [patch]: https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html
 [won't allow you to]: https://doc.rust-lang.org/book/ch19-03-advanced-traits.html#using-the-newtype-pattern-to-implement-external-traits-on-external-types
