@@ -238,6 +238,7 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
 
 fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     let metadata = metadata(opts)?;
+    let silence_stderr = quiet && !opts.verbose;
 
     let mut args = vec![];
     if !opts.no_instrumentation {
@@ -280,7 +281,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
                 .collect::<Vec<_>>(),
         )
         .stdout(Redirection::Pipe);
-    if quiet && !opts.verbose {
+    if silence_stderr {
         exec = exec.stderr(NullFile);
     }
     debug!("{:?}", exec);
@@ -306,18 +307,20 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         .wait()
         .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
 
-    // smoelius: If the command failed, re-execute it without --message-format=json. This is easier
-    // than trying to capture and colorize `CompilerMessage`s like Cargo does.
     if !status.success() {
-        let mut popen = Exec::cmd("cargo").args(&args).popen()?;
-        let status = popen
-            .wait()
-            .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
-        ensure!(
-            !status.success(),
-            "Command succeeded unexpectedly: {:?}",
-            exec,
-        );
+        // smoelius: If stderr was silenced, re-execute the command without --message-format=json.
+        // This is easier than trying to capture and colorize `CompilerMessage`s like Cargo does.
+        if silence_stderr {
+            let mut popen = Exec::cmd("cargo").args(&args).popen()?;
+            let status = popen
+                .wait()
+                .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
+            ensure!(
+                !status.success(),
+                "Command succeeded unexpectedly: {:?}",
+                exec,
+            );
+        }
         bail!("Command failed: {:?}", exec);
     }
 
