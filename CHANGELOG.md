@@ -1,5 +1,12 @@
 # Changelog
 
+## 5.2.1
+
+- Eliminate unnecessary dependence on `paste` ([#398](https://github.com/trailofbits/test-fuzz/pull/398))
+- Update `itertools` to version `0.13` ([#400](https://github.com/trailofbits/test-fuzz/pull/400))
+- Update `mio` to version `1.0` ([#406](https://github.com/trailofbits/test-fuzz/pull/406))
+- Eliminate duplicate "AFL LLVM runtime was not built..." messages ([#415](https://github.com/trailofbits/test-fuzz/pull/415))
+
 ## 5.2.0
 
 - Fix a bug causing incorrect exit codes to be produced ([3ab762f](https://github.com/trailofbits/test-fuzz/commit/3ab762f28ec73ae5692bce43267c539f56107545))
