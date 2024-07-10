@@ -1,6 +1,6 @@
 [package]
 name = "third-party"
-version = "5.2.0"
+version = "5.2.1"
 edition = "2021"
 publish = false
 
@@ -21,7 +21,7 @@ tempfile = "3.10"
 
 # smoelius: `test-fuzz` serves as a convenient mechanism for ci.yml to specify the serde format.
 # Beyond that, it is not really needed by the `third-party` package.
-test-fuzz = { path = "../test-fuzz", version = "=5.2.0" }
+test-fuzz = { path = "../test-fuzz", version = "=5.2.1" }
 testing = { path = "../testing", package = "test-fuzz-testing" }
 
 [features]
