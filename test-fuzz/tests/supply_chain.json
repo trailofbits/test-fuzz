@@ -1408,6 +1408,15 @@
         "name": "Artyom Pavlov"
       }
     ],
+    "strip-ansi-escapes": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/286001?v=4",
+        "id": 2774,
+        "kind": "user",
+        "login": "luser",
+        "name": "Ted Mielczarek"
+      }
+    ],
     "strsim": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/2763135?v=4",
@@ -1542,6 +1551,45 @@
         "kind": "user",
         "login": "SergioBenitez",
         "name": "Sergio Benitez"
+      }
+    ],
+    "vte": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/4285147?v=4",
+        "id": 1317,
+        "kind": "user",
+        "login": "jwilm",
+        "name": "Joe Wilm"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/29714349?v=4",
+        "id": 1911,
+        "kind": "team",
+        "login": "github:alacritty:publishers",
+        "name": "Publishers"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/8886672?v=4",
+        "id": 8732,
+        "kind": "user",
+        "login": "chrisduerr",
+        "name": "Christian Duerr"
+      }
+    ],
+    "vte_generate_state_changes": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/29714349?v=4",
+        "id": 1911,
+        "kind": "team",
+        "login": "github:alacritty:publishers",
+        "name": "Publishers"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/8886672?v=4",
+        "id": 8732,
+        "kind": "user",
+        "login": "chrisduerr",
+        "name": "Christian Duerr"
       }
     ],
     "wait-timeout": [
