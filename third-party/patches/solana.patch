@@ -144,13 +144,13 @@ index 8eeb9c5..d95800a 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 48d771b..1d1d527 100644
+index 48d771b..e89765b 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -23,4 +23,7 @@ solana_rbpf = { workspace = true }
  thiserror = { workspace = true }
  
-+serde = "1.0"
++serde = { workspace = true }
 +test-fuzz = { path = "../../../../test-fuzz" }
 +
  [dev-dependencies]
@@ -170,14 +170,14 @@ index 2cae8b5..a607290 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 57bf073..f28e99f 100644
+index 57bf073..c3be7db 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -69,5 +69,5 @@ rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
  rustversion = { workspace = true }
 -serde = { workspace = true }
-+serde = { version = "1.0", features = ["rc"] }
++serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
 @@ -86,4 +86,6 @@ uriparse = { workspace = true }
