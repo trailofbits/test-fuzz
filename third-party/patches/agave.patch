@@ -1,11 +1,11 @@
 diff --git a/compute-budget/Cargo.toml b/compute-budget/Cargo.toml
-index 211aa93..5a8fbcd 100644
+index 211aa93..bab4a9c 100644
 --- a/compute-budget/Cargo.toml
 +++ b/compute-budget/Cargo.toml
 @@ -14,4 +14,6 @@ solana-frozen-abi = { workspace = true, optional = true }
  solana-sdk = { workspace = true }
  
-+serde = "1.0"
++serde = { workspace = true }
 +
  [build-dependencies]
  rustc_version = { workspace = true }
@@ -20,6 +20,27 @@ index 24eeb46..992285d 100644
 +#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
+diff --git a/log-collector/Cargo.toml b/log-collector/Cargo.toml
+index e22c14c..4d5f335 100644
+--- a/log-collector/Cargo.toml
++++ b/log-collector/Cargo.toml
+@@ -13,4 +13,6 @@ edition = { workspace = true }
+ log = { workspace = true }
+ 
++serde = { workspace = true }
++
+ [package.metadata.docs.rs]
+ targets = ["x86_64-unknown-linux-gnu"]
+diff --git a/log-collector/src/lib.rs b/log-collector/src/lib.rs
+index 612300f..fbc8225 100644
+--- a/log-collector/src/lib.rs
++++ b/log-collector/src/lib.rs
+@@ -4,4 +4,5 @@ use std::{cell::RefCell, rc::Rc};
+ const LOG_MESSAGES_BYTES_LIMIT: usize = 10 * 1000;
+ 
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+ pub struct LogCollector {
+     pub messages: Vec<String>,
 diff --git a/measure/src/measure.rs b/measure/src/measure.rs
 index 1e96d68..7902b47 100644
 --- a/measure/src/measure.rs
@@ -32,10 +53,10 @@ index 1e96d68..7902b47 100644
  pub struct Measure {
      name: &'static str,
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index c714945..24c8596 100644
+index 1740ec8..a214604 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
-@@ -34,4 +34,6 @@ solana_rbpf = { workspace = true }
+@@ -35,4 +35,6 @@ solana_rbpf = { workspace = true }
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -43,16 +64,16 @@ index c714945..24c8596 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 05404aa..7f409aa 100644
+index 0012422..9afea89 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -118,4 +118,5 @@ impl fmt::Display for AllocErr {
+@@ -117,4 +117,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -146,10 +147,16 @@ impl BpfAllocator {
+@@ -145,10 +146,16 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
@@ -69,13 +90,13 @@ index 05404aa..7f409aa 100644
 +    )]
      sysvar_cache: &'a SysvarCache,
  }
-@@ -174,4 +181,5 @@ impl<'a> EnvironmentConfig<'a> {
+@@ -173,4 +180,5 @@ impl<'a> EnvironmentConfig<'a> {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -180,5 +188,11 @@ pub struct SyscallContext {
+@@ -179,5 +187,11 @@ pub struct SyscallContext {
  }
  
 -#[derive(Debug, Clone)]
@@ -88,7 +109,7 @@ index 05404aa..7f409aa 100644
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub struct SerializedAccountMetadata {
      pub original_data_len: usize,
-@@ -189,9 +203,27 @@ pub struct SerializedAccountMetadata {
+@@ -188,9 +202,27 @@ pub struct SerializedAccountMetadata {
  }
  
 +fn default_program_cache_for_tx_batch<'de, D>(
@@ -116,13 +137,13 @@ index 05404aa..7f409aa 100644
 +    )]
      pub program_cache_for_tx_batch: &'a mut ProgramCacheForTxBatch,
      /// Runtime configurations used to provision the invocation environment.
-@@ -204,4 +236,5 @@ pub struct InvokeContext<'a> {
+@@ -203,4 +235,5 @@ pub struct InvokeContext<'a> {
      log_collector: Option<Rc<RefCell<LogCollector>>>,
      /// Latest measurement not yet accumulated in [ExecuteDetailsTimings::execute_us]
 +    #[serde(skip)]
      pub execute_time: Option<Measure>,
      pub timings: ExecuteDetailsTimings,
-@@ -210,4 +243,23 @@ pub struct InvokeContext<'a> {
+@@ -209,4 +242,23 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -146,16 +167,6 @@ index 05404aa..7f409aa 100644
 +
  impl<'a> InvokeContext<'a> {
      #[allow(clippy::too_many_arguments)]
-diff --git a/program-runtime/src/log_collector.rs b/program-runtime/src/log_collector.rs
-index 0a06bd1..6378df3 100644
---- a/program-runtime/src/log_collector.rs
-+++ b/program-runtime/src/log_collector.rs
-@@ -4,4 +4,5 @@ use std::{cell::RefCell, rc::Rc};
- const LOG_MESSAGES_BYTES_LIMIT: usize = 10 * 1000;
- 
-+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
- pub struct LogCollector {
-     pub messages: Vec<String>,
 diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
 index 1a27048..8ef5cd1 100644
 --- a/program-runtime/src/sysvar_cache.rs
@@ -186,22 +197,22 @@ index 9ffc470..c6c374f 100644
  pub struct ExecuteDetailsTimings {
      pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 148c0c9..298aa36 100644
+index 4455e31..cceb520 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -26,4 +26,7 @@ solana_rbpf = { workspace = true }
+@@ -27,4 +27,7 @@ solana_rbpf = { workspace = true }
  thiserror = { workspace = true }
  
-+serde = "1.0"
++serde = { workspace = true }
 +test-fuzz = { path = "../../../../test-fuzz" }
 +
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 2c2b162..ee2159a 100644
+index 494477e..7fc6461 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -396,6 +396,7 @@ declare_builtin_function!(
+@@ -395,6 +395,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(
@@ -212,14 +223,14 @@ index 2c2b162..ee2159a 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 71a8d24..b1a865b 100644
+index 71a8d24..3c69819 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -72,5 +72,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
 -serde = { workspace = true }
-+serde = { version = "1.0", features = ["rc"] }
++serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
 @@ -88,4 +88,6 @@ thiserror = { workspace = true }
@@ -230,10 +241,10 @@ index 71a8d24..b1a865b 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index a2732f3..a239f72 100644
+index 4e5100d..945af9b 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -1081,5 +1081,5 @@ lazy_static! {
+@@ -1086,5 +1086,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
