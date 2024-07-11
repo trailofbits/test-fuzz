@@ -6,6 +6,7 @@ use testing::{examples, retry, CommandExt};
 const CPUS: &str = "2";
 const TIME_SLICE: &str = "30";
 
+#[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn fuzz_parallel() {
     for i in 0..6 {

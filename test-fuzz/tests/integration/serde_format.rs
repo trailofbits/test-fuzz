@@ -5,6 +5,7 @@ use std::{
 };
 use testing::{examples, CommandExt};
 
+#[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn serde_format() {
     let corpus = corpus_directory_from_target("serde", "unit_variant::target");
