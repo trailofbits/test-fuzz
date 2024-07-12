@@ -76,35 +76,35 @@ impl<T: FooBarTrait + Clone + Debug + Serialize> Trait<T> for Struct {
     fn target_only_generic_args<U>(&self, _: &T, _: &U) {}
 }
 
-static FOO: Lazy<Foo> = Lazy::new(|| Foo::A("qwerty".to_owned()));
-static BAR: Lazy<Bar> = Lazy::new(|| Bar::B("asdfgh".to_owned()));
+static FOO_QWERTY: Lazy<Foo> = Lazy::new(|| Foo::A("qwerty".to_owned()));
+static BAR_ASDFGH: Lazy<Bar> = Lazy::new(|| Bar::B("asdfgh".to_owned()));
 
 #[test]
 fn test_foo_qwerty() {
-    Struct.target(&*FOO);
+    Struct.target(&*FOO_QWERTY);
 }
 
 #[test]
 fn test_bar_asdfgh() {
-    Struct.target(&*BAR);
+    Struct.target(&*BAR_ASDFGH);
 }
 
 #[test]
 fn test_bound() {
-    Struct.target_bound(&*FOO, &Baz(FOO.clone()));
-    Struct.target_bound(&*BAR, &Baz(BAR.clone()));
+    Struct.target_bound(&*FOO_QWERTY, &Baz(FOO_QWERTY.clone()));
+    Struct.target_bound(&*BAR_ASDFGH, &Baz(BAR_ASDFGH.clone()));
 }
 
 #[test]
 fn test_where_clause() {
-    Struct.target_where_clause(&*FOO, &Baz(FOO.clone()));
-    Struct.target_where_clause(&*BAR, &Baz(BAR.clone()));
+    Struct.target_where_clause(&*FOO_QWERTY, &Baz(FOO_QWERTY.clone()));
+    Struct.target_where_clause(&*BAR_ASDFGH, &Baz(BAR_ASDFGH.clone()));
 }
 
 #[test]
 fn test_only_generic_args() {
-    Struct.target_only_generic_args(&*FOO, &Baz(FOO.clone()));
-    Struct.target_only_generic_args(&*BAR, &Baz(BAR.clone()));
+    Struct.target_only_generic_args(&*FOO_QWERTY, &Baz(FOO_QWERTY.clone()));
+    Struct.target_only_generic_args(&*BAR_ASDFGH, &Baz(BAR_ASDFGH.clone()));
 }
 
 mod receiverless_trait_function {
