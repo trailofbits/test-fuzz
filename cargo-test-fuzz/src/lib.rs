@@ -583,13 +583,16 @@ fn cargo_afl_version() -> Result<Version> {
         .output()
         .with_context(|| format!("Could not get output of `{command:?}`"))?;
     let stdout = String::from_utf8_lossy(&output.stdout);
-    let version = stdout.strip_prefix("cargo-afl ").ok_or_else(|| {
-        anyhow!(
-            "Could not determine `cargo-afl` version. Is it installed? Try `cargo install \
-             cargo-afl`."
-        )
-    })?;
-    Version::parse(version.trim_end()).map_err(Into::into)
+    let version = stdout
+        .strip_prefix("cargo-afl ")
+        .and_then(|s| s.split_ascii_whitespace().next())
+        .ok_or_else(|| {
+            anyhow!(
+                "Could not determine `cargo-afl` version. Is it installed? Try `cargo install \
+                 cargo-afl`."
+            )
+        })?;
+    Version::parse(version).map_err(Into::into)
 }
 
 fn check_dependency_version(
