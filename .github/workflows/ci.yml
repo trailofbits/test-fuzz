@@ -140,9 +140,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        package: [third-party, other]
         serde_format: [bincode, postcard]
         toolchain: [stable, nightly]
-        package: [third-party, other]
         self_ty_in_mod_name: [false, true]
 
     steps:
