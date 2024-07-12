@@ -1,5 +1,9 @@
 # Changelog
 
+## 5.2.2
+
+- Account for changes to `cargo afl --version` ([#422](https://github.com/trailofbits/test-fuzz/pull/422))
+
 ## 5.2.1
 
 - Eliminate unnecessary dependence on `paste` ([#398](https://github.com/trailofbits/test-fuzz/pull/398))

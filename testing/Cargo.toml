@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-testing"
-version = "5.2.1"
+version = "5.2.2"
 edition = "2021"
 publish = false
 
@@ -17,7 +17,7 @@ retry = "2.0"
 strip-ansi-escapes = "0.2"
 subprocess = "0.2"
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=5.2.1" }
+internal = { path = "../internal", package = "test-fuzz-internal", version = "=5.2.2" }
 
 [lints]
 workspace = true
