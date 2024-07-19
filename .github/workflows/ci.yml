@@ -214,6 +214,7 @@ jobs:
         run: |
           $TEST_CMD
         env:
+          AFL_NO_AFFINITY: 1
           RUST_BACKTRACE: 1
           RUST_LOG: warn
 
