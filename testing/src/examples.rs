@@ -1,11 +1,11 @@
 use anyhow::{bail, ensure, Context, Result};
-use assert_cmd::Command;
+use assert_cmd::cargo::CommandCargoExt;
 use cargo_metadata::{Artifact, ArtifactProfile, Message};
 use if_chain::if_chain;
 use internal::serde_format;
 use log::debug;
 use once_cell::sync::Lazy;
-use std::path::Path;
+use std::{path::Path, process::Command};
 use subprocess::{Exec, Redirection};
 
 pub static MANIFEST_PATH: Lazy<String> = Lazy::new(|| {

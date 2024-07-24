@@ -1,4 +1,4 @@
-use assert_cmd::assert::OutputAssertExt;
+use assert_cmd::{assert::OutputAssertExt, cargo::CommandCargoExt};
 use regex::Regex;
 use similar_asserts::SimpleDiff;
 use std::{
@@ -28,7 +28,7 @@ fn clippy() {
 fn readme_contains_usage() {
     let readme = read_to_string("README.md").unwrap();
 
-    let assert = assert_cmd::Command::cargo_bin("cargo-test-fuzz")
+    let assert = Command::cargo_bin("cargo-test-fuzz")
         .unwrap()
         .args(["test-fuzz", "--help"])
         .logged_assert();
