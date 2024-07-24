@@ -1,5 +1,5 @@
-use assert_cmd::Command;
 use predicates::prelude::*;
+use std::process::Command;
 use testing::{examples::MANIFEST_PATH, CommandExt};
 
 // smoelius: This test will fail if run twice because the target will have already been built.

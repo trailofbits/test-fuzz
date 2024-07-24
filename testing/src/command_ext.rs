@@ -1,6 +1,6 @@
-use assert_cmd::{assert::Assert, Command};
+use assert_cmd::assert::Assert;
 use log::debug;
-use std::process::Output;
+use std::process::{Command, Output};
 
 pub trait CommandExt {
     fn logged_assert(&mut self) -> Assert;

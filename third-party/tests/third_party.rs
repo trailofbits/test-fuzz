@@ -1,4 +1,4 @@
-use assert_cmd::{assert::Assert, Command};
+use assert_cmd::assert::Assert;
 use cargo_metadata::MetadataCommand;
 use once_cell::sync::Lazy;
 use option_set::option_set;
@@ -10,6 +10,7 @@ use std::{
     fs::read_to_string,
     io::{stderr, stdout, Write},
     path::Path,
+    process::Command,
 };
 use tempfile::tempdir_in;
 use testing::CommandExt;
@@ -142,7 +143,7 @@ fn run_test(test: &Test, no_run: bool) {
 
     // smoelius: Use `std::process::Command` so that we can see the output of the command as it
     // runs. `assert_cmd::Command` would capture the output.
-    assert!(std::process::Command::new("cargo")
+    assert!(Command::new("cargo")
         .current_dir(&subdir)
         .env_remove("RUSTUP_TOOLCHAIN")
         .env("TEST_FUZZ_WRITE", "1")
@@ -242,20 +243,26 @@ fn patches_are_current() {
             .join(&test.patch);
         let patch = read_to_string(patch_path).unwrap();
 
-        Command::new("git")
+        // smoelius: To use `std::process::Command` here, the `write_stdin` would have to be
+        // removed.
+        #[allow(clippy::disallowed_methods)]
+        assert_cmd::Command::new("git")
             .current_dir(&tempdir)
             .args(["apply"])
             .write_stdin(patch.as_bytes())
-            .logged_assert()
+            .assert()
             .success();
 
         // smoelius: The following checks are *not* redundant. They can fail even if the patch
         // applies.
 
-        let assert = Command::new("git")
+        // smoelius: Don't use `logged_assert` here. It now calls `strip_ansi_escapes::strip` which
+        // escapes certain whitespace characters and mess up the diff.
+        #[allow(clippy::disallowed_methods)]
+        let assert = assert_cmd::Command::new("git")
             .current_dir(&tempdir)
             .args(["diff", &format!("--unified={LINES_OF_CONTEXT}")])
-            .logged_assert()
+            .assert()
             .success();
 
         let diff = std::str::from_utf8(&assert.get_output().stdout).unwrap();

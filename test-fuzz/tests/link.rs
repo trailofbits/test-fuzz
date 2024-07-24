@@ -1,6 +1,6 @@
-use assert_cmd::Command;
 use internal::dirs::target_directory;
 use predicates::prelude::*;
+use std::process::Command;
 use testing::{examples::MANIFEST_PATH, CommandExt};
 
 const SERDE_DEFAULT: &str = "bincode";
