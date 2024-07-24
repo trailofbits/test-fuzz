@@ -17,6 +17,14 @@ fn initialize() {
 }
 
 #[test]
+fn clippy() {
+    Command::new("cargo")
+        .args(["clippy", "--all-targets", "--", "--deny=warnings"])
+        .assert()
+        .success();
+}
+
+#[test]
 fn readme_contains_usage() {
     let readme = read_to_string("README.md").unwrap();
 

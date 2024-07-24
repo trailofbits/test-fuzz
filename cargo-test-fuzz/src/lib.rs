@@ -176,12 +176,12 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
 
     let replay = opts.replay.is_some();
 
-    let executables = build(&opts, display || replay)?;
+    let executables = build(opts, display || replay)?;
 
     let mut executable_targets = executable_targets(&executables)?;
 
     if let Some(pat) = &opts.ztarget {
-        executable_targets = filter_executable_targets(&opts, pat, &executable_targets);
+        executable_targets = filter_executable_targets(opts, pat, &executable_targets);
     }
 
     check_test_fuzz_and_afl_versions(&executable_targets)?;
@@ -197,19 +197,19 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
 
     if opts.consolidate_all || opts.reset_all {
         if opts.consolidate_all {
-            consolidate(&opts, &executable_targets)?;
+            consolidate(opts, &executable_targets)?;
         }
-        return reset(&opts, &executable_targets);
+        return reset(opts, &executable_targets);
     }
 
     if opts.consolidate || opts.reset || display || replay {
-        let (executable, target) = executable_target(&opts, &executable_targets)?;
+        let (executable, target) = executable_target(opts, &executable_targets)?;
 
         if opts.consolidate || opts.reset {
             if opts.consolidate {
-                consolidate(&opts, &executable_targets)?;
+                consolidate(opts, &executable_targets)?;
             }
-            return reset(&opts, &executable_targets);
+            return reset(opts, &executable_targets);
         }
 
         let (flags, dir) = None
@@ -223,7 +223,7 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
             })
             .unwrap_or((Flags::empty(), PathBuf::default()));
 
-        return for_each_entry(&opts, &executable, &target, display, replay, flags, &dir);
+        return for_each_entry(opts, &executable, &target, display, replay, flags, &dir);
     }
 
     if opts.no_instrumentation {
@@ -231,11 +231,12 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
         return Ok(());
     }
 
-    let executable_targets = flatten_executable_targets(&opts, executable_targets)?;
+    let executable_targets = flatten_executable_targets(opts, executable_targets)?;
 
-    fuzz(&opts, &executable_targets)
+    fuzz(opts, &executable_targets)
 }
 
+#[allow(clippy::too_many_lines)]
 fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     let metadata = metadata(opts)?;
     let silence_stderr = quiet && !opts.verbose;
