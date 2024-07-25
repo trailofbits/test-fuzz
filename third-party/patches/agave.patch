@@ -53,7 +53,7 @@ index 1e96d68..7902b47 100644
  pub struct Measure {
      name: &'static str,
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 1740ec8..a214604 100644
+index 88abb26..58efe1a 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -35,4 +35,6 @@ solana_rbpf = { workspace = true }
@@ -64,7 +64,7 @@ index 1740ec8..a214604 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 0012422..9afea89 100644
+index 61b827d..91f9109 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -117,4 +117,5 @@ impl fmt::Display for AllocErr {
@@ -168,7 +168,7 @@ index 0012422..9afea89 100644
  impl<'a> InvokeContext<'a> {
      #[allow(clippy::too_many_arguments)]
 diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
-index 1a27048..8ef5cd1 100644
+index 79124bd..acdaa87 100644
 --- a/program-runtime/src/sysvar_cache.rs
 +++ b/program-runtime/src/sysvar_cache.rs
 @@ -25,5 +25,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for SysvarCache {
@@ -178,29 +178,11 @@ index 1a27048..8ef5cd1 100644
 +#[derive(Default, Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct SysvarCache {
      // full account data as provided by bank, including any trailing zero bytes
-diff --git a/program-runtime/src/timings.rs b/program-runtime/src/timings.rs
-index 9ffc470..c6c374f 100644
---- a/program-runtime/src/timings.rs
-+++ b/program-runtime/src/timings.rs
-@@ -9,5 +9,5 @@ use {
- };
- 
--#[derive(Default, Debug, PartialEq, Eq)]
-+#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
- pub struct ProgramTiming {
-     pub accumulated_us: u64,
-@@ -365,5 +365,5 @@ impl ExecuteAccessoryTimings {
- }
- 
--#[derive(Default, Debug, PartialEq, Eq)]
-+#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
- pub struct ExecuteDetailsTimings {
-     pub serialize_us: u64,
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 4455e31..cceb520 100644
+index 3c82021..7afb9db 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -27,4 +27,7 @@ solana_rbpf = { workspace = true }
+@@ -30,4 +30,7 @@ solana_rbpf = { workspace = true }
  thiserror = { workspace = true }
  
 +serde = { workspace = true }
@@ -209,7 +191,7 @@ index 4455e31..cceb520 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 494477e..7fc6461 100644
+index 58ef907..ee3c3db 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -395,6 +395,7 @@ declare_builtin_function!(
@@ -223,17 +205,17 @@ index 494477e..7fc6461 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 71a8d24..3c69819 100644
+index 7db5d78..18a616f 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -72,5 +72,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -74,5 +74,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -88,4 +88,6 @@ thiserror = { workspace = true }
+@@ -95,4 +95,6 @@ thiserror = { workspace = true }
  uriparse = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -241,10 +223,10 @@ index 71a8d24..3c69819 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 4e5100d..945af9b 100644
+index 3ff450a..9692011 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -1086,5 +1086,5 @@ lazy_static! {
+@@ -1091,5 +1091,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
@@ -320,3 +302,32 @@ index 0bb2f0e..72c11c2 100644
 +#[derive(Debug, Clone, Default, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct InstructionContext {
      nesting_level: usize,
+diff --git a/timings/Cargo.toml b/timings/Cargo.toml
+index e36975b..84ce3a0 100644
+--- a/timings/Cargo.toml
++++ b/timings/Cargo.toml
+@@ -15,4 +15,6 @@ enum-iterator = { workspace = true }
+ solana-sdk = { workspace = true }
+ 
++serde = { workspace = true }
++
+ [package.metadata.docs.rs]
+ targets = ["x86_64-unknown-linux-gnu"]
+diff --git a/timings/src/lib.rs b/timings/src/lib.rs
+index efc918c..284a9ae 100644
+--- a/timings/src/lib.rs
++++ b/timings/src/lib.rs
+@@ -11,5 +11,5 @@ use {
+ };
+ 
+-#[derive(Default, Debug, PartialEq, Eq)]
++#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
+ pub struct ProgramTiming {
+     pub accumulated_us: u64,
+@@ -367,5 +367,5 @@ impl ExecuteAccessoryTimings {
+ }
+ 
+-#[derive(Default, Debug, PartialEq, Eq)]
++#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
+ pub struct ExecuteDetailsTimings {
+     pub serialize_us: u64,
