@@ -171,11 +171,12 @@ jobs:
         run: cargo afl system-config
 
       # smoelius: I expect this list to grow.
+      # smoelius: `cargo install cargo-unmaintained --locked` is a temporary workaround for Rust 1.80 issues.
       - name: Install tools
         run: |
           rustup +nightly component add clippy
           cargo install cargo-supply-chain || true
-          cargo install cargo-unmaintained || true
+          cargo install cargo-unmaintained --locked || true
           cargo install group-runner       || true
 
       - name: Free up space
