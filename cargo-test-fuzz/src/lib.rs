@@ -451,19 +451,17 @@ fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec
 fn targets(executable: &Path) -> Result<Vec<String>> {
     let exec = Exec::cmd(executable)
         .env_extend(&[("AFL_QUIET", "1")])
-        .args(&["--list"])
+        .args(&["--list", "--format=terse"])
         .stderr(NullFile);
     debug!("{:?}", exec);
     let stream = exec.clone().stream_stdout()?;
 
     // smoelius: A test executable's --list output ends with an empty line followed by
     // "M tests, N benchmarks." Stop at the empty line.
+    // smoelius: Searching for the empty line is not necessary: https://stackoverflow.com/a/64913357
     let mut targets = Vec::<String>::default();
     for line in std::io::BufReader::new(stream).lines() {
         let line = line.with_context(|| format!("Could not get output of `{exec:?}`"))?;
-        if line.is_empty() {
-            break;
-        }
         let Some(line) = line.strip_suffix(": test") else {
             continue;
         };
