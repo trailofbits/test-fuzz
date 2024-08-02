@@ -25,6 +25,31 @@ fn clippy() {
 }
 
 #[test]
+fn license() {
+    let re = Regex::new(r"^[^:]*\b(Apache-2.0|BSD-2-Clause|BSD-3-Clause|ISC|MIT|N/A)\b").unwrap();
+
+    for line in std::str::from_utf8(
+        &Command::new("cargo")
+            .arg("license")
+            .assert()
+            .success()
+            .get_output()
+            .stdout,
+    )
+    .unwrap()
+    .lines()
+    {
+        if line
+            == "AGPL-3.0 WITH mif-exception (5): cargo-test-fuzz, test-fuzz, test-fuzz-internal, \
+                test-fuzz-macro, test-fuzz-runtime"
+        {
+            continue;
+        }
+        assert!(re.is_match(line), "{line:?} does not match");
+    }
+}
+
+#[test]
 fn readme_contains_usage() {
     let readme = read_to_string("README.md").unwrap();
 

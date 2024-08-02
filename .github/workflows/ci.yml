@@ -109,11 +109,6 @@ jobs:
           rustup +nightly component add rustfmt
           cargo +nightly fmt && git diff --exit-code
 
-      - name: License
-        run: |
-          cargo install cargo-license || true
-          ./scripts/check_licenses.sh
-
       - name: Dylint
         run: |
           cargo install cargo-dylint --git=https://github.com/trailofbits/dylint --no-default-features --features=cargo-cli || true
@@ -175,6 +170,7 @@ jobs:
       - name: Install tools
         run: |
           rustup +nightly component add clippy
+          cargo install cargo-license      || true
           cargo install cargo-supply-chain || true
           cargo install cargo-unmaintained || true
           cargo install group-runner       || true
