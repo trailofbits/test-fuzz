@@ -221,7 +221,7 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
                 opts.replay
                     .map(|object| flags_and_dir(object, &executable.name, &target))
             })
-            .unwrap_or((Flags::empty(), PathBuf::default()));
+            .unwrap_or_else(|| (Flags::empty(), PathBuf::default()));
 
         return for_each_entry(opts, &executable, &target, display, replay, flags, &dir);
     }
@@ -982,7 +982,10 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
         ..Default::default()
     };
 
-    let n_cpus = std::cmp::min(opts.cpus.unwrap_or(num_cpus::get() - 1), num_cpus::get());
+    let n_cpus = std::cmp::min(
+        opts.cpus.unwrap_or_else(|| num_cpus::get() - 1),
+        num_cpus::get(),
+    );
 
     ensure!(n_cpus >= 1, "Number of cpus must be greater than zero");
 
