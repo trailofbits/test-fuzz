@@ -256,6 +256,15 @@
         "name": "Andrew Gallant"
       }
     ],
+    "byteorder": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/456674?v=4",
+        "id": 189,
+        "kind": "user",
+        "login": "BurntSushi",
+        "name": "Andrew Gallant"
+      }
+    ],
     "camino": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/1617736?v=4",
@@ -1732,6 +1741,24 @@
         "kind": "user",
         "login": "kennykerr",
         "name": "Kenny Kerr"
+      }
+    ],
+    "zerocopy": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/1046063?v=4",
+        "id": 7178,
+        "kind": "user",
+        "login": "joshlf",
+        "name": "Joshua Liebow-Feeser"
+      }
+    ],
+    "zerocopy-derive": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/1046063?v=4",
+        "id": 7178,
+        "kind": "user",
+        "login": "joshlf",
+        "name": "Joshua Liebow-Feeser"
       }
     ]
   },
