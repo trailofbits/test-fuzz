@@ -161,9 +161,10 @@ jobs:
           cargo install cargo-afl
           # smoelius: If using a nightly toolchain, use LLVM plugins.
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
+            LLVM_VERSION="$(rustc --version -v | grep '^LLVM version:' | grep -o '[0-9]\+' | head -n 1)"
             wget https://apt.llvm.org/llvm.sh
             chmod +x llvm.sh
-            sudo ./llvm.sh
+            sudo ./llvm.sh "$LLVM_VERSION"
             cargo afl config --build --force --plugins
           fi
 
