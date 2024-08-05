@@ -1157,7 +1157,6 @@ fn fuzz_command(
             &input_dir,
             "-o",
             &output_dir.to_string_lossy(),
-            "-D",
             "-M",
             "default",
         ]
