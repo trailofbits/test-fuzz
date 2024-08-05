@@ -1148,11 +1148,16 @@ fn fuzz_command(
         envs.push(("AFL_BENCH_UNTIL_CRASH", "1"));
     }
 
+    // smoelius: Passing `-c-` disables the cmplog fork server. Use of cmplog with a target that
+    // spawns subprocesses (like libtest does) can leave orphan processes running. This can cause
+    // problems, e.g., if those processes hold flocks. See:
+    // https://github.com/AFLplusplus/AFLplusplus/issues/2178
     let mut args = vec![];
     args.extend(
         vec![
             "afl",
             "fuzz",
+            "-c-",
             "-i",
             &input_dir,
             "-o",
