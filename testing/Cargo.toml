@@ -5,19 +5,19 @@ edition = "2021"
 publish = false
 
 [dependencies]
-anyhow = "1.0"
-assert_cmd = "2.0"
-cargo_metadata = "0.18"
-ctor = "0.2"
-env_logger = "0.11"
-if_chain = "1.0"
-log = "0.4"
-once_cell = "1.19"
-retry = "2.0"
-strip-ansi-escapes = "0.2"
-subprocess = "0.2"
+anyhow = { workspace = true }
+assert_cmd = { workspace = true }
+cargo_metadata = { workspace = true }
+ctor = { workspace = true }
+env_logger = { workspace = true }
+if_chain = { workspace = true }
+log = { workspace = true }
+once_cell = { workspace = true }
+retry = { workspace = true }
+strip-ansi-escapes = { workspace = true }
+subprocess = { workspace = true }
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=5.2.2" }
+internal = { workspace = true }
 
 [lints]
 workspace = true

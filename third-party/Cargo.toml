@@ -7,22 +7,22 @@ publish = false
 [dependencies]
 
 [dev-dependencies]
-assert_cmd = "2.0"
-bitflags = "2.6"
-cargo_metadata = "0.18"
-once_cell = "1.19"
-option_set = "0.2"
-predicates = "3.1"
-regex = "1.10"
-rustc_version = "0.4"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tempfile = "3.10"
+assert_cmd = { workspace = true }
+bitflags = { workspace = true }
+cargo_metadata = { workspace = true }
+once_cell = { workspace = true }
+option_set = { workspace = true }
+predicates = { workspace = true }
+regex = { workspace = true }
+rustc_version = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tempfile = { workspace = true }
 
 # smoelius: `test-fuzz` serves as a convenient mechanism for ci.yml to specify the serde format.
 # Beyond that, it is not really needed by the `third-party` package.
-test-fuzz = { path = "../test-fuzz", version = "=5.2.2" }
-testing = { path = "../testing", package = "test-fuzz-testing" }
+test-fuzz = { workspace = true }
+testing = { workspace = true }
 
 [features]
 test-third-party-full = []

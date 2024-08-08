@@ -13,14 +13,14 @@ repository = "https://github.com/trailofbits/test-fuzz"
 proc-macro = true
 
 [dependencies]
-darling = "0.20"
-heck = { version = "0.5", optional = true }
-itertools = "0.13"
-once_cell = "1.19"
-prettyplease = "0.2"
-proc-macro2 = "1.0"
-quote = "1.0"
-syn = { version = "2.0", features = ["full", "parsing", "visit", "visit-mut"] }
+darling = { workspace = true }
+heck = { workspace = true, optional = true }
+itertools = { workspace = true }
+once_cell = { workspace = true }
+prettyplease = { workspace = true }
+proc-macro2 = { workspace = true }
+quote = { workspace = true }
+syn = { workspace = true }
 
 [features]
 __cast_checks = []
