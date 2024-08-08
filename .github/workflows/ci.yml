@@ -81,9 +81,6 @@ jobs:
       - name: Rustup
         run: rustup update
 
-      - name: Install llvm
-        run: sudo apt-get install llvm
-
       - name: Actionlint
         run: go install github.com/rhysd/actionlint/cmd/actionlint@latest && "$HOME"/go/bin/actionlint --shellcheck='-e SC2016'
 
@@ -152,16 +149,7 @@ jobs:
         run: sudo apt-get install protobuf-compiler
 
       - name: Install cargo-afl
-        run: |
-          cargo install cargo-afl
-          # smoelius: If using a nightly toolchain, use LLVM plugins.
-          if [[ ${{ matrix.toolchain }} = nightly ]]; then
-            LLVM_VERSION="$(rustc --version -v | grep '^LLVM version:' | grep -o '[0-9]\+' | head -n 1)"
-            wget https://apt.llvm.org/llvm.sh
-            chmod +x llvm.sh
-            sudo ./llvm.sh "$LLVM_VERSION"
-            cargo afl config --build --force --plugins
-          fi
+        run: cargo install cargo-afl
 
       - name: Run afl-system-config
         run: cargo afl system-config
