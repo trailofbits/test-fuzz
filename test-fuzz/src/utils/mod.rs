@@ -1,6 +1,12 @@
 //! **Warning:** The contents of `test_fuzz::utils` are provided for convenience and may be removed
 //! in future versions of `test-fuzz`.
 
+mod serializable_mutex;
+pub use serializable_mutex::SerializableMutex;
+
+mod serializable_rw_lock;
+pub use serializable_rw_lock::SerializableRwLock;
+
 /// Skip values of type `$ty` when serializing. Initialize values of type `$ty` with `$expr` when
 /// deserializing.
 #[macro_export]

@@ -16,7 +16,10 @@ pub use cast_checks;
 pub use internal::serde_format;
 
 mod utils;
-pub use utils::{deserialize_ref, deserialize_ref_mut, serialize_ref, serialize_ref_mut};
+pub use utils::{
+    deserialize_ref, deserialize_ref_mut, serialize_ref, serialize_ref_mut, SerializableMutex,
+    SerializableRwLock,
+};
 
 mod convert;
 pub use convert::{FromRef, Into};
