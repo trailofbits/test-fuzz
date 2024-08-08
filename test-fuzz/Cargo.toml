@@ -10,26 +10,26 @@ license = "AGPL-3.0 WITH mif-exception"
 repository = "https://github.com/trailofbits/test-fuzz"
 
 [dependencies]
-afl = { version = "0.15", optional = true }
-cast_checks = { version = "0.1", optional = true }
-serde = "1.0"
+afl = { workspace = true, optional = true }
+cast_checks = { workspace = true, optional = true }
+serde = { workspace = true }
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=5.2.2" }
-runtime = { path = "../runtime", package = "test-fuzz-runtime", version = "=5.2.2" }
-test-fuzz-macro = { path = "../macro", version = "=5.2.2" }
+internal = { workspace = true }
+runtime = { workspace = true }
+test-fuzz-macro = { workspace = true }
 
 [dev-dependencies]
-assert_cmd = "2.0"
-cargo_metadata = "0.18"
-ctor = "0.2"
-once_cell = "1.19"
-predicates = "3.1"
-regex = "1.10"
-semver = "1.0"
-serde_json = "1.0"
-similar-asserts = "1.5"
+assert_cmd = { workspace = true }
+cargo_metadata = { workspace = true }
+ctor = { workspace = true }
+once_cell = { workspace = true }
+predicates = { workspace = true }
+regex = { workspace = true }
+semver = { workspace = true }
+serde_json = { workspace = true }
+similar-asserts = { workspace = true }
 
-testing = { path = "../testing", package = "test-fuzz-testing" }
+testing = { workspace = true }
 
 # smoelius: A list of formats we might support can be found here:
 # https://github.com/djkoloski/rust_serialization_benchmark

@@ -21,32 +21,32 @@ name = "install"
 required-features = ["test-install"]
 
 [dependencies]
-anyhow = { version = "1.0", features = ["backtrace"] }
-bitflags = "2.6"
-cargo_metadata = "0.18"
-clap = { version = "4.5", features = ["cargo", "derive", "wrap_help"] }
-env_logger = "0.11"
-heck = "0.5"
-log = "0.4"
-mio = { version = "1.0", features = ["os-ext", "os-poll"] }
-num_cpus = "1.16"
-remain = "0.2"
-semver = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-strum_macros = "0.26"
-subprocess = "0.2"
+anyhow = { workspace = true }
+bitflags = { workspace = true }
+cargo_metadata = { workspace = true }
+clap = { workspace = true }
+env_logger = { workspace = true }
+heck = { workspace = true }
+log = { workspace = true }
+mio = { workspace = true }
+num_cpus = { workspace = true }
+remain = { workspace = true }
+semver = { workspace = true }
+serde = { workspace = true }
+strum_macros = { workspace = true }
+subprocess = { workspace = true }
 
-internal = { path = "../internal", package = "test-fuzz-internal", version = "=5.2.2" }
-test-fuzz = { path = "../test-fuzz", version = "=5.2.2" }
+internal = { workspace = true }
+test-fuzz = { workspace = true }
 
 [dev-dependencies]
-predicates = "3.1"
-rlimit = "0.10"
-tempfile = "3.10"
-walkdir = "2.5"
-xshell = "0.2"
+predicates = { workspace = true }
+rlimit = { workspace = true }
+tempfile = { workspace = true }
+walkdir = { workspace = true }
+xshell = { workspace = true }
 
-testing = { path = "../testing", package = "test-fuzz-testing" }
+testing = { workspace = true }
 
 [features]
 test-install = []

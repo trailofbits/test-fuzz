@@ -2,14 +2,17 @@
 
 set -euo pipefail
 
-if [[ $# -ne 0 ]]; then
-    echo "$0: expect no arguments" >&2
+if [[ $# -ne 1 ]]; then
+    echo "$0: expect one argument: version" >&2
     exit 1
 fi
 
 set -x
 
-VERSION="$(grep -m 1 '^version = "[^"]*"$' test-fuzz/Cargo.toml)"
+SCRIPTS="$(dirname "$(realpath "$0")")"
+WORKSPACE="$(realpath "$SCRIPTS"/..)"
+
+cd "$WORKSPACE"
 
 find . -name Cargo.toml -exec sed -i "{
 s/^version = \"[^\"]*\"$/$VERSION/
@@ -17,10 +20,10 @@ s/^version = \"[^\"]*\"$/$VERSION/
 
 REQ="${VERSION/\"/\"=}"
 
-find . -name Cargo.toml -exec sed -i "/^test-fuzz/{
+sed -i "/^test-fuzz/{
 s/^\(.*\)\<version = \"[^\"]*\"\(.*\)$/\1$REQ\2/
-}" {} \;
+}" Cargo.toml
 
-find . -name Cargo.toml -exec sed -i "/\<package = \"test-fuzz/{
+sed -i "/\<package = \"test-fuzz/{
 s/^\(.*\)\<version = \"[^\"]*\"\(.*\)$/\1$REQ\2/
-}" {} \;
+}" Cargo.toml
