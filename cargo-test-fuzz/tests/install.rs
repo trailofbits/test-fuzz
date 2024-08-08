@@ -76,7 +76,7 @@ fn newer_afl() -> Result<()> {
         Some("0.13.2"),
         &[(
             r#"s/^\(afl = {.*\<version = "\)[^"]*\(".*}\)$/\1=0.13.3\2/"#,
-            &["test-fuzz/Cargo.toml"],
+            &["Cargo.toml"],
         )],
         &[
             "^`[^`]*` depends on `afl [^`]*`, which is newer than `cargo-afl [^`]*`.",
@@ -113,11 +113,7 @@ fn incompatible_test_fuzz() -> Result<()> {
             ),
             (
                 r#"s/^\(test-fuzz = {.*\<version = "=\)[^.]*\.[^.]*\.\([^"]*".*}\)$/\10.0.\2/"#,
-                &[
-                    "cargo-test-fuzz/Cargo.toml",
-                    "examples/Cargo.toml",
-                    "third-party/Cargo.toml",
-                ],
+                &["Cargo.toml"],
             ),
         ],
         &[
@@ -157,11 +153,7 @@ fn newer_test_fuzz() -> Result<()> {
             ),
             (
                 r#"s/^\(test-fuzz = {.*\<version = "=[^.]*\.[^.]*\)\.[^"]*\(".*}\)$/\1.255\2/"#,
-                &[
-                    "cargo-test-fuzz/Cargo.toml",
-                    "examples/Cargo.toml",
-                    "third-party/Cargo.toml",
-                ],
+                &["Cargo.toml"],
             ),
             (
                 r#"s/^\(version = "[^-]*\)-[^"]*\("\)$/\1\2/"#,
