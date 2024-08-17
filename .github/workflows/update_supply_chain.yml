@@ -31,7 +31,7 @@ jobs:
         run: cargo install cargo-supply-chain || true
 
       - name: Update supply_chain.json
-        run: cargo test -p test-fuzz --test ci supply_chain
+        run: cargo test -p test-fuzz --test integration supply_chain
         env:
           BLESS: 1
 
