@@ -1,6 +1,7 @@
 use std::sync::Mutex;
 
 mod auto_generate;
+mod breadcrumbs;
 mod build;
 mod consolidate;
 mod display;

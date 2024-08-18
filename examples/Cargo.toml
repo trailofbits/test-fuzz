@@ -22,5 +22,13 @@ __bar_fuzz = []
 __inapplicable_conversion = []
 __self_ty_conflict = []
 
+# smoelius: Features used by the `qwerty_stepped` test.
+__qwerty_q = []
+__qwerty_w = []
+__qwerty_e = []
+__qwerty_r = []
+__qwerty_t = []
+__qwerty_y = []
+
 [lints]
 workspace = true
