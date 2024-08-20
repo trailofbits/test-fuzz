@@ -14,7 +14,7 @@ proc-macro = true
 
 [dependencies]
 darling = { workspace = true }
-heck = { workspace = true, optional = true }
+heck = { workspace = true }
 itertools = { workspace = true }
 once_cell = { workspace = true }
 prettyplease = { workspace = true }
@@ -25,7 +25,6 @@ syn = { workspace = true }
 [features]
 __cast_checks = []
 __persistent = []
-__self_ty_in_mod_name = ["heck"]
 
 [lints]
 workspace = true

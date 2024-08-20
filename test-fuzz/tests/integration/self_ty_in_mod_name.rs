@@ -10,16 +10,12 @@ fn success() {
     command.assert().success();
 }
 
-#[cfg_attr(not(feature = "self_ty_in_mod_name"), ignore)]
 #[test]
 fn self_ty_conflict() {
     let mut command = test();
 
     command
-        .args([
-            "--features=test-fuzz/self_ty_in_mod_name",
-            "--features=__self_ty_conflict",
-        ])
+        .args(["--features=__self_ty_conflict"])
         .assert()
         .failure()
         .stderr(predicate::str::contains(

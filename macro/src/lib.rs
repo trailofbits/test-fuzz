@@ -1070,7 +1070,6 @@ fn mod_ident(opts: &TestFuzzOpts, self_ty_base: Option<&Ident>, target_ident: &I
     if let Some(name) = &opts.rename {
         s.push_str(&name.to_string());
     } else {
-        #[cfg(feature = "__self_ty_in_mod_name")]
         if let Some(ident) = self_ty_base {
             s.push_str(&<str as heck::ToSnakeCase>::to_snake_case(
                 &ident.to_string(),

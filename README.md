@@ -180,7 +180,12 @@ Note, however, that just because a target was called with certain parameters dur
 
 ##### `rename = "name"`
 
-Treat the target as though its name is `name` when adding a module to the enclosing scope. Expansion of the `test_fuzz` macro adds a module definition to the enclosing scope. Currently, the module is named `target_fuzz`, where `target` is the name of the target. Use of this option causes the module to instead be be named `name_fuzz`. Example:
+Treat the target as though its name is `name` when adding a module to the enclosing scope. Expansion of the `test_fuzz` macro adds a module definition to the enclosing scope. By default, the module is named as follows:
+
+- If the target does not appear in an `impl` block, the module is named `target_fuzz`, where `target` is the name of the target.
+- If the target appears in an `impl` block, the module is named `path_target_fuzz`, where `path` is the path of the `impl`'s `Self` type converted to snake case and joined with `_`.
+
+However, use of this option causes the module to instead be named `name_fuzz`. Example:
 
 ```rust
 #[test_fuzz(rename = "bar")]
@@ -329,7 +334,7 @@ impl<'de> serde::Deserialize<'de> for $ty {
 }
 ```
 
-If `$ty` is a unit struct, then `$expr` can be be omitted. That is, `dont_care!($ty)` is equivalent to `dont_care!($ty, $ty)`.
+If `$ty` is a unit struct, then `$expr` can be omitted. That is, `dont_care!($ty)` is equivalent to `dont_care!($ty, $ty)`.
 
 #### `leak!`
 
@@ -397,10 +402,10 @@ where
 
 ## `test-fuzz` package features
 
-The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book]. For example, to enable the `self_ty_in_mod_name` feature, use:
+The features in this section apply to the `test-fuzz` package as a whole. Enable them in `test-fuzz`'s dependency specification as described in the [The Cargo Book]. For example, to enable the `cast_checks` feature, use:
 
 ```toml
-test-fuzz = { version = "*", features = ["self_ty_in_mod_name"] }
+test-fuzz = { version = "*", features = ["cast_checks"] }
 ```
 
 The `test-fuzz` package currently supports the following features:
@@ -408,12 +413,6 @@ The `test-fuzz` package currently supports the following features:
 ### `cast_checks`
 
 Use [`cast_checks`] to automatically check target functions for invalid casts.
-
-### `self_ty_in_mod_name`
-
-Incorporate an `impl`'s `Self` type into the names of modules generated for the `impl`. Expansion of the `test_fuzz` macro adds a module definition to the enclosing scope. By default, the module is named `target_fuzz`, where `target` is the name of the target. If the target appears in an `impl` block, then use of this feature causes the module to instead be named `path_target_fuzz`, where `path` is the path of the `impl`'s `Self` type converted to snake case and joined with `_`. (See also [`rename`] above.)
-
-In a future version of `test-fuzz`, this behavior will be the default.
 
 ### Serde formats
 

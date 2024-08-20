@@ -36,7 +36,6 @@ testing = { workspace = true }
 
 [features]
 cast_checks = ["dep:cast_checks", "test-fuzz-macro/__cast_checks"]
-self_ty_in_mod_name = ["test-fuzz-macro/__self_ty_in_mod_name"]
 serde_bincode = ["internal/__serde_bincode"]
 serde_postcard = ["internal/__serde_postcard"]
 __persistent = ["afl", "test-fuzz-macro/__persistent"]

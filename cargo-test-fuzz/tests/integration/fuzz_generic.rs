@@ -24,19 +24,21 @@ static MUTEX: Mutex<()> = Mutex::new(());
 fn fuzz(test: &str, code: i32) {
     let _lock = MUTEX.lock().unwrap();
 
-    let corpus = corpus_directory_from_target("generic", "target");
+    let corpus = corpus_directory_from_target("generic", "struct_target");
 
     // smoelius: This call to `remove_dir_all` is protected by the mutex above.
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
-    remove_dir_all(corpus).unwrap_or_default();
+    remove_dir_all(&corpus).unwrap_or_default();
 
     examples::test("generic", test)
         .unwrap()
         .logged_assert()
         .success();
 
+    assert!(corpus.exists());
+
     retry(3, || {
-        examples::test_fuzz("generic", "target")
+        examples::test_fuzz("generic", "struct_target")
             .unwrap()
             .args([
                 "--exit-code",
