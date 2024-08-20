@@ -158,12 +158,6 @@ fn map_impl_item_fn(
 struct TestFuzzOpts {
     #[darling(default)]
     bounds: Option<String>,
-    #[darling(default)]
-    #[deprecated]
-    concretize: Option<String>,
-    #[darling(default)]
-    #[deprecated]
-    concretize_impl: Option<String>,
     #[darling(multiple)]
     convert: Vec<String>,
     #[darling(default)]
@@ -177,9 +171,6 @@ struct TestFuzzOpts {
     #[darling(default)]
     no_auto_generate: bool,
     #[darling(default)]
-    #[deprecated]
-    only_concretizations: bool,
-    #[darling(default)]
     only_generic_args: bool,
     #[darling(default)]
     rename: Option<Ident>,
@@ -189,27 +180,7 @@ struct TestFuzzOpts {
 pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
     let attr_args =
         NestedMeta::parse_meta_list(args.into()).expect("Could not parse attribute args");
-    let opts = {
-        let mut opts =
-            TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options");
-        if let Some(concretization) = opts.concretize.take() {
-            eprintln!("`concretize` is deprecated. Use `generic_args`.");
-            if opts.generic_args.is_none() {
-                opts.generic_args = Some(concretization);
-            }
-        }
-        if let Some(impl_concretization) = opts.concretize_impl.take() {
-            eprintln!("`concretize_impl` is deprecated. Use `impl_generic_args`.");
-            if opts.impl_generic_args.is_none() {
-                opts.impl_generic_args = Some(impl_concretization);
-            }
-        }
-        if opts.only_concretizations {
-            eprintln!("`only_concretizations` is deprecated. Use `only_generic_args`.");
-            opts.only_generic_args = true;
-        }
-        opts
-    };
+    let opts = TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options");
 
     let item = parse_macro_input!(item as ItemFn);
     let ItemFn {
