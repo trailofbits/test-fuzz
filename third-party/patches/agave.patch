@@ -1,5 +1,5 @@
 diff --git a/compute-budget/Cargo.toml b/compute-budget/Cargo.toml
-index 211aa93..bab4a9c 100644
+index bbcaa27..a34b9bf 100644
 --- a/compute-budget/Cargo.toml
 +++ b/compute-budget/Cargo.toml
 @@ -14,4 +14,6 @@ solana-frozen-abi = { workspace = true, optional = true }
@@ -8,7 +8,7 @@ index 211aa93..bab4a9c 100644
 +serde = { workspace = true }
 +
  [build-dependencies]
- rustc_version = { workspace = true }
+ rustc_version = { workspace = true, optional = true }
 diff --git a/compute-budget/src/compute_budget.rs b/compute-budget/src/compute_budget.rs
 index da04296..77be32c 100644
 --- a/compute-budget/src/compute_budget.rs
@@ -42,10 +42,10 @@ index 612300f..fbc8225 100644
  pub struct LogCollector {
      pub messages: Vec<String>,
 diff --git a/measure/src/measure.rs b/measure/src/measure.rs
-index 1e96d68..7902b47 100644
+index 190abb3..c157072 100644
 --- a/measure/src/measure.rs
 +++ b/measure/src/measure.rs
-@@ -7,5 +7,5 @@ use {
+@@ -4,5 +4,5 @@ use std::{
  };
  
 -#[derive(Debug)]
@@ -53,7 +53,7 @@ index 1e96d68..7902b47 100644
  pub struct Measure {
      name: &'static str,
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index 0f9a22f..46b0319 100644
+index 413f7b7..007bd73 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -35,4 +35,6 @@ solana_rbpf = { workspace = true }
@@ -205,17 +205,17 @@ index 58ef907..ee3c3db 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 7db5d78..18a616f 100644
+index faf3867..52c2aac 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -74,5 +74,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -75,5 +75,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -95,4 +95,6 @@ thiserror = { workspace = true }
+@@ -96,4 +96,6 @@ thiserror = { workspace = true }
  uriparse = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -223,10 +223,10 @@ index 7db5d78..18a616f 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 4626240..4272c9a 100644
+index 7322fdb..78a6ca1 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -1091,5 +1091,5 @@ lazy_static! {
+@@ -1096,5 +1096,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
