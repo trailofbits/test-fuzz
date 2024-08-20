@@ -12,7 +12,8 @@ mod primitive {
     // https://github.com/pyfisch/cbor/pull/145
     // We might use `ciborium` as an alternative to `serde_cbor`. But `ciborium` currently has no
     // way to limit the size of an allocation: https://github.com/enarx/ciborium/issues/11
-    #[test_fuzz::test_fuzz(no_auto_generate)]
+    // smoelius: `serde_cbor` is no longer a supported format.
+    // #[test_fuzz::test_fuzz(no_auto_generate)]
     fn target(
         bool: bool,
         i8: i8,
@@ -33,7 +34,7 @@ mod primitive {
         super::consume(i8);
         super::consume(i16);
         super::consume(i32);
-        super::consume(u64);
+        super::consume(i64);
         super::consume(i128);
         super::consume(u8);
         super::consume(u16);

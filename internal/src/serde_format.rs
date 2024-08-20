@@ -18,12 +18,6 @@ pub fn as_feature() -> &'static str {
     #[cfg(any(serde_default, feature = "__serde_bincode"))]
     formats.push("serde_bincode");
 
-    #[cfg(feature = "__serde_cbor")]
-    formats.push("serde_cbor");
-
-    #[cfg(feature = "__serde_cbor4ii")]
-    formats.push("serde_cbor4ii");
-
     #[cfg(feature = "__serde_postcard")]
     formats.push("serde_postcard");
 
@@ -52,16 +46,6 @@ pub fn serialize<T: Serialize>(args: &T) -> Vec<u8> {
             .unwrap()
     };
 
-    #[cfg(feature = "__serde_cbor")]
-    return serde_cbor::to_vec(args).unwrap();
-
-    #[cfg(feature = "__serde_cbor4ii")]
-    return {
-        let mut data = Vec::new();
-        cbor4ii::serde::to_writer(&mut data, args).unwrap();
-        data
-    };
-
     #[cfg(feature = "__serde_postcard")]
     return {
         let mut data = Vec::new();
@@ -78,15 +62,6 @@ pub fn deserialize<T: DeserializeOwned, R: Read>(reader: R) -> Option<T> {
             .with_limit(BYTE_LIMIT)
             .deserialize_from(reader)
             .ok()
-    };
-
-    #[cfg(feature = "__serde_cbor")]
-    return serde_cbor::from_reader(reader).ok();
-
-    #[cfg(feature = "__serde_cbor4ii")]
-    return {
-        let reader = std::io::BufReader::new(reader);
-        cbor4ii::serde::from_reader(reader).ok()
     };
 
     #[cfg(feature = "__serde_postcard")]

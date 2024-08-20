@@ -421,10 +421,6 @@ In a future version of `test-fuzz`, this behavior will be the default.
 
 - `serde_bincode` - [Bincode] (default)
 
-- `serde_cbor` - [Serde CBOR] (deprecated)
-
-- `serde_cbor4ii` - [CBOR 0x(4+4)9 0x49] (deprecated)
-
 - `serde_postcard` - [Postcard]
 
 ## Auto-generated corpus files
@@ -505,7 +501,6 @@ These options are incompatible in the following sense. If a fuzz target's argume
 
 [Auto-generated corpus files]: #auto-generated-corpus-files
 [Bincode]: https://github.com/bincode-org/bincode
-[CBOR 0x(4+4)9 0x49]: https://github.com/quininer/cbor4ii
 [Components]: #components
 [Convenience functions and macros]: #convenience-functions-and-macros
 [Environment variables]: #environment-variables
@@ -515,7 +510,6 @@ These options are incompatible in the following sense. If a fuzz target's argume
 [Macros and Inline Functions Exception]: https://spdx.org/licenses/mif-exception.html
 [Overview]: #overview
 [Postcard]: https://github.com/jamesmunns/postcard
-[Serde CBOR]: https://github.com/pyfisch/cbor
 [Serde attributes]: https://serde.rs/attributes.html
 [Substrate externalities]: https://substrate.dev/docs/en/knowledgebase/runtime/tests#mock-runtime-storage
 [The Cargo Book]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#choosing-features
