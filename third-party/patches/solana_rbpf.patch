@@ -6,7 +6,7 @@ index 781ce87..2a667b6 100644
  thiserror = "1.0.26"
  
 +serde = "1.0"
-+test-fuzz = { path = "../../test-fuzz", features = ["self_ty_in_mod_name"] }
++test-fuzz = { path = "../../test-fuzz" }
 +
  [target.'cfg(windows)'.dependencies]
  winapi = { version = "0.3", features = ["memoryapi", "sysinfoapi", "winnt", "errhandlingapi"], optional = true }

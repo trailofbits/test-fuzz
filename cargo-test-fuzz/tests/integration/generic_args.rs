@@ -10,21 +10,21 @@ fn generic() {
     test(
         "generic",
         "test_bound",
-        "target_bound",
+        "struct_target_bound",
         &impl_expected,
         &expected,
     );
     test(
         "generic",
         "test_where_clause",
-        "target_where_clause",
+        "struct_target_where_clause",
         &impl_expected,
         &expected,
     );
     test(
         "generic",
         "test_only_generic_args",
-        "target_only_generic_args",
+        "struct_target_only_generic_args",
         &impl_expected,
         &expected,
     );

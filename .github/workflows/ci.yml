@@ -130,7 +130,6 @@ jobs:
         package: [third-party, other]
         serde_format: [bincode, postcard]
         toolchain: [stable, nightly]
-        self_ty_in_mod_name: [false, true]
 
     steps:
       - uses: actions/checkout@v4
@@ -188,10 +187,9 @@ jobs:
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
             SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
           fi
-          SELF_TY_IN_MOD_NAME="$(${{ matrix.self_ty_in_mod_name }} && echo '--features test-fuzz/self_ty_in_mod_name')" || true
           CONFIG_GROUP_RUNNER="--config target.'cfg(all())'.runner='group-runner'"
-          BUILD_CMD="cargo build $MAYBE_THIRD_PARTY $SERDE_FORMAT $SELF_TY_IN_MOD_NAME --all-targets"
-          TEST_CMD="cargo test   $MAYBE_THIRD_PARTY $SERDE_FORMAT $SELF_TY_IN_MOD_NAME $CONFIG_GROUP_RUNNER -- --nocapture $SHUFFLE"
+          BUILD_CMD="cargo build $MAYBE_THIRD_PARTY $SERDE_FORMAT --all-targets"
+          TEST_CMD="cargo test   $MAYBE_THIRD_PARTY $SERDE_FORMAT $CONFIG_GROUP_RUNNER -- --nocapture $SHUFFLE"
           echo "BUILD_CMD=$BUILD_CMD" >> "$GITHUB_ENV"
           echo "TEST_CMD=$TEST_CMD" >> "$GITHUB_ENV"
 
