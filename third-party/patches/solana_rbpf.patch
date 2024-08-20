@@ -16,7 +16,7 @@ index 781ce87..2a667b6 100644
 +
 +[workspace]
 diff --git a/src/memory_region.rs b/src/memory_region.rs
-index e864855..9922267 100644
+index e864855..a8a44e6 100644
 --- a/src/memory_region.rs
 +++ b/src/memory_region.rs
 @@ -34,5 +34,5 @@ use std::{
@@ -357,7 +357,7 @@ index e864855..9922267 100644
  struct MappingCache {
      // The cached entries.
 diff --git a/src/program.rs b/src/program.rs
-index 0ef76bc..8bc1256 100644
+index 0ef76bc..3359e31 100644
 --- a/src/program.rs
 +++ b/src/program.rs
 @@ -10,5 +10,5 @@ use {
@@ -520,17 +520,17 @@ index 969a339..a5e1a2c 100644
  pub struct TestContextObject {
      /// Contains the register state at every instruction in order of execution
 diff --git a/tests/execution.rs b/tests/execution.rs
-index 6d8f151..3e579ba 100644
+index 2043132..eafcabc 100644
 --- a/tests/execution.rs
 +++ b/tests/execution.rs
-@@ -2515,5 +2515,5 @@ declare_builtin_function!(
+@@ -2526,5 +2526,5 @@ declare_builtin_function!(
      /// For test_nested_vm_syscall()
      SyscallNestedVm,
 -    fn rust(
 +    fn rust<'a>(
          _context_object: &mut TestContextObject,
          depth: u64,
-@@ -2522,5 +2522,5 @@ declare_builtin_function!(
+@@ -2533,5 +2533,5 @@ declare_builtin_function!(
          _arg4: u64,
          _arg5: u64,
 -        _memory_mapping: &mut MemoryMapping,
