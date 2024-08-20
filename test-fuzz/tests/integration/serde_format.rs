@@ -25,6 +25,8 @@ fn serde_format() {
         file.read_to_end(&mut buf).unwrap();
         // smoelius: CBOR stores the variant name. Hence, this test will fail if CBOR is used as the
         // serialization format.
+        // smoelius: CBOR is no longer a supported format. Still, I see no reason to remove this
+        // test or the next check.
         assert!(!buf.iter().any(u8::is_ascii_uppercase));
     }
 }
