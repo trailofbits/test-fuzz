@@ -45,9 +45,9 @@ struct TestFuzzWithDeprecations {
         value_name = "OBJECT",
         hide_possible_values = true,
         help = "Display corpus, crashes, generic args, `impl` generic args, hangs, or work queue. \
-                By default, corpus uses an uninstrumented fuzz target; the others use an \
-                instrumented fuzz target. To display the corpus with instrumentation, use \
-                --display corpus-instrumented."
+                By default, an uninstrumented fuzz target is used. To display with \
+                instrumentation, append `-instrumented` to <OBJECT>, e.g., --display \
+                corpus-instrumented."
     )]
     display: Option<Object>,
     #[arg(long, help = "Target name is an exact name rather than a substring")]
@@ -77,10 +77,7 @@ struct TestFuzzWithDeprecations {
     max_total_time: Option<u64>,
     #[arg(long, help = "Do not activate the `default` feature")]
     no_default_features: bool,
-    #[arg(
-        long,
-        help = "Compile without instrumentation (for testing build process)"
-    )]
+    #[arg(long, hide = true)]
     no_instrumentation: bool,
     #[arg(long, help = "Compile, but don't fuzz")]
     no_run: bool,
@@ -100,9 +97,9 @@ struct TestFuzzWithDeprecations {
         long,
         value_name = "OBJECT",
         hide_possible_values = true,
-        help = "Replay corpus, crashes, hangs, or work queue. By default, corpus uses an \
-                uninstrumented fuzz target; the others use an instrumented fuzz target. To replay \
-                the corpus with instrumentation, use --replay corpus-instrumented."
+        help = "Replay corpus, crashes, hangs, or work queue. By default, an uninstrumented fuzz \
+                target is used. To replay with instrumentation append `-instrumented` to \
+                <OBJECT>, e.g., --replay corpus-instrumented."
     )]
     replay: Option<Object>,
     #[arg(
@@ -181,6 +178,12 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             ztarget,
             zzargs,
         } = opts;
+        if no_instrumentation {
+            eprintln!(
+                "--no-instrumentation is now the default. This option will be removed in a future \
+                 version of test-fuzz.",
+            );
+        }
         Self {
             backtrace,
             consolidate,
@@ -194,7 +197,6 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             manifest_path,
             max_total_time,
             no_default_features,
-            no_instrumentation,
             no_run,
             no_ui,
             package,

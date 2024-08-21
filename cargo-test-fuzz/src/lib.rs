@@ -56,10 +56,13 @@ pub enum Object {
     Corpus,
     CorpusInstrumented,
     Crashes,
+    CrashesInstrumented,
     GenericArgs,
     Hangs,
+    HangsInstrumented,
     ImplGenericArgs,
     Queue,
+    QueueInstrumented,
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -78,7 +81,6 @@ pub struct TestFuzz {
     pub manifest_path: Option<String>,
     pub max_total_time: Option<u64>,
     pub no_default_features: bool,
-    pub no_instrumentation: bool,
     pub no_run: bool,
     pub no_ui: bool,
     pub package: Option<String>,
@@ -133,19 +135,27 @@ pub fn run(opts: TestFuzz) -> Result<()> {
         if opts.exit_code {
             opts.no_ui = true;
         }
-        if opts.list
-            || matches!(
-                opts.display,
-                Some(Object::Corpus | Object::ImplGenericArgs | Object::GenericArgs)
-            )
-            || opts.replay == Some(Object::Corpus)
-        {
-            opts.no_instrumentation = true;
-        }
         opts
     };
 
-    run_without_exit_code(&opts).map_err(|error| {
+    let no_instrumentation = opts.list
+        || matches!(
+            opts.display,
+            Some(
+                Object::Corpus
+                    | Object::Crashes
+                    | Object::Hangs
+                    | Object::ImplGenericArgs
+                    | Object::GenericArgs
+                    | Object::Queue
+            )
+        )
+        || matches!(
+            opts.replay,
+            Some(Object::Corpus | Object::Crashes | Object::Hangs | Object::Queue)
+        );
+
+    run_without_exit_code(&opts, !no_instrumentation).map_err(|error| {
         if opts.exit_code {
             eprintln!("{error:?}");
             exit(2);
@@ -154,7 +164,7 @@ pub fn run(opts: TestFuzz) -> Result<()> {
     })
 }
 
-pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
+pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Result<()> {
     if let Some(object) = opts.replay {
         ensure!(
             !matches!(object, Object::ImplGenericArgs | Object::GenericArgs),
@@ -170,7 +180,7 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
 
     let replay = opts.replay.is_some();
 
-    let executables = build(opts, display || replay)?;
+    let executables = build(opts, use_instrumentation, display || replay)?;
 
     let mut executable_targets = executable_targets(&executables)?;
 
@@ -220,8 +230,7 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
         return for_each_entry(opts, &executable, &target, display, replay, flags, &dir);
     }
 
-    if opts.no_instrumentation {
-        eprintln!("Stopping before fuzzing since --no-instrumentation was specified.");
+    if !use_instrumentation {
         return Ok(());
     }
 
@@ -231,12 +240,12 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
 }
 
 #[allow(clippy::too_many_lines)]
-fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
+fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<Executable>> {
     let metadata = metadata(opts)?;
     let silence_stderr = quiet && !opts.verbose;
 
     let mut args = vec![];
-    if !opts.no_instrumentation {
+    if use_instrumentation {
         args.extend_from_slice(&["afl"]);
     }
     args.extend_from_slice(&["test", "--frozen", "--offline", "--no-run"]);
@@ -248,7 +257,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     }
     let target_dir = target_directory(true);
     let target_dir_str = target_dir.to_string_lossy();
-    if !opts.no_instrumentation {
+    if use_instrumentation {
         args.extend_from_slice(&["--target-dir", &target_dir_str]);
     }
     if let Some(path) = &opts.manifest_path {
@@ -700,9 +709,15 @@ fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) 
             Flags::REQUIRES_CARGO_TEST,
             corpus_directory_from_target(krate, target),
         ),
-        Object::Crashes => (Flags::empty(), crashes_directory_from_target(krate, target)),
-        Object::Hangs => (Flags::empty(), hangs_directory_from_target(krate, target)),
-        Object::Queue => (Flags::empty(), queue_directory_from_target(krate, target)),
+        Object::Crashes | Object::CrashesInstrumented => {
+            (Flags::empty(), crashes_directory_from_target(krate, target))
+        }
+        Object::Hangs | Object::HangsInstrumented => {
+            (Flags::empty(), hangs_directory_from_target(krate, target))
+        }
+        Object::Queue | Object::QueueInstrumented => {
+            (Flags::empty(), queue_directory_from_target(krate, target))
+        }
         Object::ImplGenericArgs => (
             Flags::REQUIRES_CARGO_TEST | Flags::RAW,
             impl_generic_args_directory_from_target(krate, target),
