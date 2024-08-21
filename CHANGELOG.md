@@ -1,5 +1,16 @@
 # Changelog
 
+## 6.0.0
+
+- BREAKING CHANGE: No longer pass `-D` to `cargo afl fuzz`. This is a breaking change for users of `cargo-afl` version [0.15.4](https://github.com/rust-fuzz/afl.rs/blob/master/CHANGES.md#0154) (or earlier), which relies on AFL++ version [4.10.c](https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/Changelog.md#version-410c-release) (or earlier). As of version [4.20.c](https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/Changelog.md#version-420c-release), AFL++ ignores `-D`. ([#434](https://github.com/trailofbits/test-fuzz/pull/434))
+- Pass `-c-` to `cargo afl fuzz` ([6e6c955](https://github.com/trailofbits/test-fuzz/pull/414/commits/6e6c9554628a7e65f6c33800b7826e03050f47bf))
+- Update `option_set` to version `0.3` ([#439](https://github.com/trailofbits/test-fuzz/pull/439))
+- BREAKING CHANGE: Remove deprecated options `--concretize`, `--concretize-impl`, and `--only-concretizations` ([#443](https://github.com/trailofbits/test-fuzz/pull/443) and [#449](https://github.com/trailofbits/test-fuzz/pull/449))
+- BREAKING CHANGE: Remove deprecated CBOR formats ([#445](https://github.com/trailofbits/test-fuzz/pull/445))
+- BREAKING CHANGE: Make `self_ty_in_mod_name` the default ([#444](https://github.com/trailofbits/test-fuzz/pull/444))
+- Shorten `--pretty-print` to `--pretty`, but keep the former as an alias ([#448](https://github.com/trailofbits/test-fuzz/pull/448))
+- BREAKING CHANGE: Make `--no-instrumentation` the default. The option remains for now, but is ignored. ([#447](https://github.com/trailofbits/test-fuzz/pull/447))
+
 ## 5.2.2
 
 - Account for changes to `cargo afl --version` ([#422](https://github.com/trailofbits/test-fuzz/pull/422))
