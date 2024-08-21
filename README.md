@@ -262,9 +262,9 @@ Options:
                                   consolidate all targets, use --consolidate-all
       --cpus <N>                  Fuzz using at most <N> cpus; default is all but one
       --display <OBJECT>          Display corpus, crashes, generic args, `impl` generic args, hangs,
-                                  or work queue. By default, corpus uses an uninstrumented fuzz
-                                  target; the others use an instrumented fuzz target. To display the
-                                  corpus with instrumentation, use --display corpus-instrumented.
+                                  or work queue. By default, an uninstrumented fuzz target is used.
+                                  To display with instrumentation, append `-instrumented` to
+                                  <OBJECT>, e.g., --display corpus-instrumented.
       --exact                     Target name is an exact name rather than a substring
       --exit-code                 Exit with 0 if the time limit was reached, 1 for other
                                   programmatic aborts, and 2 if an error occurred; implies --no-ui,
@@ -274,16 +274,15 @@ Options:
       --manifest-path <PATH>      Path to Cargo.toml
       --max-total-time <SECONDS>  Fuzz at most <SECONDS> of time (equivalent to -- -V <SECONDS>)
       --no-default-features       Do not activate the `default` feature
-      --no-instrumentation        Compile without instrumentation (for testing build process)
       --no-run                    Compile, but don't fuzz
       --no-ui                     Disable user interface
   -p, --package <PACKAGE>         Package containing fuzz target
       --persistent                Enable persistent mode fuzzing
       --pretty                    Pretty-print debug output when displaying/replaying
-      --replay <OBJECT>           Replay corpus, crashes, hangs, or work queue. By default, corpus
-                                  uses an uninstrumented fuzz target; the others use an instrumented
-                                  fuzz target. To replay the corpus with instrumentation, use
-                                  --replay corpus-instrumented.
+      --replay <OBJECT>           Replay corpus, crashes, hangs, or work queue. By default, an
+                                  uninstrumented fuzz target is used. To replay with instrumentation
+                                  append `-instrumented` to <OBJECT>, e.g., --replay
+                                  corpus-instrumented.
       --reset                     Clear fuzzing data for one target, but leave corpus intact; to
                                   reset all targets, use --reset-all
       --resume                    Resume target's last fuzzing session

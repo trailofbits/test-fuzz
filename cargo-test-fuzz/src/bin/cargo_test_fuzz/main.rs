@@ -20,13 +20,12 @@ mod tests {
 
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     #[test]
-    fn build_no_instrumentation_with_target() {
+    fn build_with_target() {
         #[allow(clippy::unwrap_used)]
         cargo_test_fuzz(&[
             "--features",
             &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
             "--no-run",
-            "--no-instrumentation",
             "target",
         ])
         .unwrap();
