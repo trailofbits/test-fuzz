@@ -14,6 +14,8 @@ WORKSPACE="$(realpath "$SCRIPTS"/..)"
 
 cd "$WORKSPACE"
 
+VERSION="version = \"$1\""
+
 find . -name Cargo.toml -exec sed -i "{
 s/^version = \"[^\"]*\"$/$VERSION/
 }" {} \;
