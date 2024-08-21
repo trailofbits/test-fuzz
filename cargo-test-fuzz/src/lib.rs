@@ -1,5 +1,3 @@
-#![cfg_attr(dylint_lib = "general", allow(crate_wide_allow))]
-#![allow(deprecated)]
 #![deny(clippy::expect_used)]
 #![deny(clippy::unwrap_used)]
 #![warn(clippy::panic)]

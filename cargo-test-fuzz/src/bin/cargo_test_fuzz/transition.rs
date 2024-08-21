@@ -230,7 +230,6 @@ macro_rules! process_deprecated_action_object {
     };
 }
 
-#[allow(deprecated)]
 pub(crate) fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
     let SubCommand::TestFuzz(opts) = Opts::parse_from(args).subcmd;
 
