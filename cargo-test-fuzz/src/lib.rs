@@ -89,7 +89,7 @@ pub struct TestFuzz {
     pub no_ui: bool,
     pub package: Option<String>,
     pub persistent: bool,
-    pub pretty_print: bool,
+    pub pretty: bool,
     pub replay: Option<Object>,
     pub reset: bool,
     pub reset_all: bool,
@@ -755,7 +755,7 @@ fn for_each_entry(
     if opts.backtrace {
         envs.push(("RUST_BACKTRACE", "1"));
     }
-    if opts.pretty_print {
+    if opts.pretty {
         envs.push(("TEST_FUZZ_PRETTY_PRINT", "1"));
     }
 

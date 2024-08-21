@@ -279,7 +279,7 @@ Options:
       --no-ui                     Disable user interface
   -p, --package <PACKAGE>         Package containing fuzz target
       --persistent                Enable persistent mode fuzzing
-      --pretty-print              Pretty-print debug output when displaying/replaying
+      --pretty                    Pretty-print debug output when displaying/replaying
       --replay <OBJECT>           Replay corpus, crashes, hangs, or work queue. By default, corpus
                                   uses an uninstrumented fuzz target; the others use an instrumented
                                   fuzz target. To replay the corpus with instrumentation, use

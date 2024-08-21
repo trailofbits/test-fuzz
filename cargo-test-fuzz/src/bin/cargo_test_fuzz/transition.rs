@@ -90,8 +90,12 @@ struct TestFuzzWithDeprecations {
     package: Option<String>,
     #[arg(long, help = "Enable persistent mode fuzzing")]
     persistent: bool,
-    #[arg(long, help = "Pretty-print debug output when displaying/replaying")]
-    pretty_print: bool,
+    #[arg(
+        long,
+        help = "Pretty-print debug output when displaying/replaying",
+        alias = "pretty-print"
+    )]
+    pretty: bool,
     #[arg(
         long,
         value_name = "OBJECT",
@@ -164,7 +168,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             no_ui,
             package,
             persistent,
-            pretty_print,
+            pretty,
             replay,
             reset,
             reset_all,
@@ -195,7 +199,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             no_ui,
             package,
             persistent,
-            pretty_print,
+            pretty,
             replay,
             reset,
             reset_all,
