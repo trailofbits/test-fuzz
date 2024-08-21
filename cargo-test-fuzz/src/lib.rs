@@ -55,15 +55,11 @@ bitflags! {
 #[derive(Clone, Copy, Debug, Display, Deserialize, PartialEq, Eq, Serialize, ValueEnum)]
 #[remain::sorted]
 pub enum Object {
-    #[deprecated]
-    Concretizations,
     Corpus,
     CorpusInstrumented,
     Crashes,
     GenericArgs,
     Hangs,
-    #[deprecated]
-    ImplConcretizations,
     ImplGenericArgs,
     Queue,
 }
@@ -702,9 +698,6 @@ fn reset(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> R
 #[allow(clippy::panic)]
 fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) {
     match object {
-        Object::Concretizations | Object::ImplConcretizations => {
-            panic!("`{object}` should have been filter out")
-        }
         Object::Corpus | Object::CorpusInstrumented => (
             Flags::REQUIRES_CARGO_TEST,
             corpus_directory_from_target(krate, target),

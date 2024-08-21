@@ -211,6 +211,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
     }
 }
 
+#[allow(unused_macros)]
 macro_rules! process_deprecated_action_object {
     ($opts:ident, $action:ident, $object_old:ident, $object_new:ident) => {
         if $opts.$action == Some(Object::$object_old) {
@@ -227,10 +228,7 @@ macro_rules! process_deprecated_action_object {
 
 #[allow(deprecated)]
 pub(crate) fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
-    let SubCommand::TestFuzz(mut opts) = Opts::parse_from(args).subcmd;
-
-    process_deprecated_action_object!(opts, display, Concretizations, GenericArgs);
-    process_deprecated_action_object!(opts, display, ImplConcretizations, ImplGenericArgs);
+    let SubCommand::TestFuzz(opts) = Opts::parse_from(args).subcmd;
 
     super::run(super::TestFuzz::from(opts))
 }
