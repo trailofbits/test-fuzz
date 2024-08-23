@@ -8,6 +8,7 @@ description = "cargo-test-fuzz"
 authors = ["Samuel E. Moelius III <sam@moeli.us>"]
 license = "AGPL-3.0 WITH mif-exception"
 repository = "https://github.com/trailofbits/test-fuzz"
+default-run = "cargo-test-fuzz"
 
 [[bin]]
 name = "cargo-test-fuzz"
