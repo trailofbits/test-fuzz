@@ -52,14 +52,5 @@
     "subdir": ".",
     "package": "solana-bpf-loader-program",
     "targets": ["process_instruction"]
-  },
-  {
-    "flags": [],
-    "url": "https://github.com/substrate-developer-hub/substrate-node-template",
-    "rev": "40f1f70640b8388222137df82d301a085e2d0229",
-    "patch": "substrate_node_template.patch",
-    "subdir": ".",
-    "package": "pallet-template",
-    "targets": ["do_something"]
   }
 ]
