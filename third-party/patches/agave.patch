@@ -10,7 +10,7 @@ index bbcaa27..a34b9bf 100644
  [build-dependencies]
  rustc_version = { workspace = true, optional = true }
 diff --git a/compute-budget/src/compute_budget.rs b/compute-budget/src/compute_budget.rs
-index da04296..77be32c 100644
+index 5539e81..931a38b 100644
 --- a/compute-budget/src/compute_budget.rs
 +++ b/compute-budget/src/compute_budget.rs
 @@ -19,5 +19,5 @@ pub const MAX_CALL_DEPTH: usize = 64;
@@ -64,16 +64,16 @@ index 413f7b7..007bd73 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 96079b9..d708725 100644
+index 97d8200..90b9806 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -117,4 +117,5 @@ impl fmt::Display for AllocErr {
+@@ -118,4 +118,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -145,10 +146,16 @@ impl BpfAllocator {
+@@ -146,10 +147,16 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
@@ -90,13 +90,13 @@ index 96079b9..d708725 100644
 +    )]
      sysvar_cache: &'a SysvarCache,
  }
-@@ -173,4 +180,5 @@ impl<'a> EnvironmentConfig<'a> {
+@@ -174,4 +181,5 @@ impl<'a> EnvironmentConfig<'a> {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -179,5 +187,11 @@ pub struct SyscallContext {
+@@ -180,5 +188,11 @@ pub struct SyscallContext {
  }
  
 -#[derive(Debug, Clone)]
@@ -109,7 +109,7 @@ index 96079b9..d708725 100644
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub struct SerializedAccountMetadata {
      pub original_data_len: usize,
-@@ -188,9 +202,27 @@ pub struct SerializedAccountMetadata {
+@@ -189,9 +203,27 @@ pub struct SerializedAccountMetadata {
  }
  
 +fn default_program_cache_for_tx_batch<'de, D>(
@@ -137,13 +137,13 @@ index 96079b9..d708725 100644
 +    )]
      pub program_cache_for_tx_batch: &'a mut ProgramCacheForTxBatch,
      /// Runtime configurations used to provision the invocation environment.
-@@ -203,4 +235,5 @@ pub struct InvokeContext<'a> {
+@@ -204,4 +236,5 @@ pub struct InvokeContext<'a> {
      log_collector: Option<Rc<RefCell<LogCollector>>>,
      /// Latest measurement not yet accumulated in [ExecuteDetailsTimings::execute_us]
 +    #[serde(skip)]
      pub execute_time: Option<Measure>,
      pub timings: ExecuteDetailsTimings,
-@@ -209,4 +242,23 @@ pub struct InvokeContext<'a> {
+@@ -210,4 +243,23 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -179,7 +179,7 @@ index 79124bd..acdaa87 100644
  pub struct SysvarCache {
      // full account data as provided by bank, including any trailing zero bytes
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index ace6f2e..e8b9d0b 100644
+index 4c08566..a26efe0 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -30,4 +30,7 @@ solana_rbpf = { workspace = true }
@@ -191,7 +191,7 @@ index ace6f2e..e8b9d0b 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 58ef907..ee3c3db 100644
+index 400806b..30850db 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -395,6 +395,7 @@ declare_builtin_function!(
@@ -205,17 +205,17 @@ index 58ef907..ee3c3db 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index faf3867..52c2aac 100644
+index 2e81706..e9c6abe 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -75,5 +75,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -77,5 +77,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -96,4 +96,6 @@ thiserror = { workspace = true }
+@@ -98,4 +98,6 @@ thiserror = { workspace = true }
  uriparse = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -223,10 +223,10 @@ index faf3867..52c2aac 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 diff --git a/sdk/src/feature_set.rs b/sdk/src/feature_set.rs
-index 7322fdb..78a6ca1 100644
+index 02cc259..fa1152e 100644
 --- a/sdk/src/feature_set.rs
 +++ b/sdk/src/feature_set.rs
-@@ -1096,5 +1096,5 @@ lazy_static! {
+@@ -1111,5 +1111,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
