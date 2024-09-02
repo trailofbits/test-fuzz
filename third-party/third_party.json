@@ -2,7 +2,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/anza-xyz/agave",
-    "rev": "e4b3b79a6c4ea4c3d6289b6af7b3b7e168534bf6",
+    "rev": "eb37b21d4d5ed29d1bf40c9ca7c64509681a2a09",
     "patch": "agave.patch",
     "subdir": ".",
     "package": "solana-bpf-loader-program",
@@ -11,7 +11,7 @@
   {
     "flags": ["SKIP_NIGHTLY"],
     "url": "https://github.com/CosmWasm/cw-plus",
-    "rev": "48bec694521655d5b3e688c51e4185f740ea4640",
+    "rev": "17b1ac4d518ee9b546b82706a70b77cfff1b0ee3",
     "patch": "cw-plus.patch",
     "subdir": ".",
     "package": "cw20-base",
@@ -20,7 +20,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/paritytech/polkadot-sdk",
-    "rev": "946afaabd8244f1256f3aecff75e23c02937bd38",
+    "rev": "5291412e159d3b99c64d5f7f969dbde39d715769",
     "patch": "substrate_client_transaction_pool.patch",
     "subdir": ".",
     "package": "sc-transaction-pool",
