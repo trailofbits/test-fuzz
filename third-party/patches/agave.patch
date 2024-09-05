@@ -205,7 +205,7 @@ index 400806b..30850db 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 2e81706..e9c6abe 100644
+index 5427e5d..6b55b3c 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -77,5 +77,5 @@ qualifier_attr = { workspace = true, optional = true }
@@ -215,7 +215,7 @@ index 2e81706..e9c6abe 100644
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -98,4 +98,6 @@ thiserror = { workspace = true }
+@@ -99,4 +99,6 @@ thiserror = { workspace = true }
  uriparse = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
