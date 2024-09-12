@@ -16,13 +16,13 @@
         "name": "Philip Craig"
       }
     ],
-    "adler": [
+    "adler2": [
       {
-        "avatar": "https://avatars.githubusercontent.com/u/1786438?v=4",
-        "id": 701,
+        "avatar": "https://avatars1.githubusercontent.com/u/8319210?v=4",
+        "id": 4968,
         "kind": "user",
-        "login": "jonas-schievink",
-        "name": "Jonas Schievink"
+        "login": "oyvindln",
+        "name": null
       }
     ],
     "aho-corasick": [
@@ -304,22 +304,6 @@
         "kind": "user",
         "login": "oli-obk",
         "name": "Oli Scherer"
-      }
-    ],
-    "cc": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/5430905?v=4",
-        "id": 11,
-        "kind": "team",
-        "login": "github:rust-lang:libs",
-        "name": "libs"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/53090244?v=4",
-        "id": 55123,
-        "kind": "user",
-        "login": "rust-lang-owner",
-        "name": null
       }
     ],
     "cfg-if": [
@@ -1415,22 +1399,6 @@
         "kind": "user",
         "login": "newpavlov",
         "name": "Artyom Pavlov"
-      }
-    ],
-    "shlex": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/47517?v=4",
-        "id": 972,
-        "kind": "user",
-        "login": "comex",
-        "name": null
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/641386?v=4",
-        "id": 1214,
-        "kind": "user",
-        "login": "fenhl",
-        "name": "Fenhl"
       }
     ],
     "strip-ansi-escapes": [
