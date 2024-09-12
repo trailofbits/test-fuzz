@@ -2,7 +2,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/anza-xyz/agave",
-    "rev": "e207c6e0eaf8e1657fbfaff07da05ca6a7928349",
+    "rev": "fc4069a8ae55e2d3ba7b345c53f15279e7ba5923",
     "patch": "agave.patch",
     "subdir": ".",
     "package": "solana-bpf-loader-program",
@@ -20,7 +20,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/paritytech/polkadot-sdk",
-    "rev": "5e0ec3e0231b43392f569cc4c685b91cb481a3ec",
+    "rev": "a34cc8dff09dc3840a304befc2415343244b5fd0",
     "patch": "substrate_client_transaction_pool.patch",
     "subdir": ".",
     "package": "sc-transaction-pool",
@@ -38,7 +38,7 @@
   {
     "flags": [],
     "url": "https://github.com/solana-labs/rbpf",
-    "rev": "2d38c9501d2682d238bc969d8d8b128655cd3265",
+    "rev": "9f8d7cb694c8afd28f6e42d38826036c77ea7b52",
     "patch": "solana_rbpf.patch",
     "subdir": ".",
     "package": "solana_rbpf",

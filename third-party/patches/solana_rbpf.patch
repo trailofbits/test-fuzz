@@ -414,7 +414,7 @@ index 0ef76bc..3359e31 100644
                      vm.context_object_pointer, $arg_a, $arg_b, $arg_c, $arg_d, $arg_e, &mut vm.memory_mapping,
                  ).map_err(|err| $crate::error::EbpfError::SyscallError(err)).into();
 diff --git a/src/syscalls.rs b/src/syscalls.rs
-index c597d9b..1996c56 100644
+index a8d398d..98f35a4 100644
 --- a/src/syscalls.rs
 +++ b/src/syscalls.rs
 @@ -34,5 +34,5 @@ declare_builtin_function!(
@@ -445,56 +445,56 @@ index c597d9b..1996c56 100644
 +        _memory_mapping: &mut MemoryMapping<'a>,
      ) -> Result<u64, Box<dyn std::error::Error>> {
          Ok(arg1.wrapping_shl(32)
-@@ -84,5 +84,5 @@ declare_builtin_function!(
+@@ -86,5 +86,5 @@ declare_builtin_function!(
      /// cases. Arguments 3 to 5 are unused.
      SyscallMemFrob,
 -    fn rust(
 +    fn rust<'a>(
          _context_object: &mut TestContextObject,
          vm_addr: u64,
-@@ -91,5 +91,5 @@ declare_builtin_function!(
+@@ -93,5 +93,5 @@ declare_builtin_function!(
          _arg4: u64,
          _arg5: u64,
 -        memory_mapping: &mut MemoryMapping,
 +        memory_mapping: &mut MemoryMapping<'a>,
      ) -> Result<u64, Box<dyn std::error::Error>> {
          let host_addr: Result<u64, EbpfError> =
-@@ -109,5 +109,5 @@ declare_builtin_function!(
+@@ -111,5 +111,5 @@ declare_builtin_function!(
      /// C-like `strcmp`, return 0 if the strings are equal, and a non-null value otherwise.
      SyscallStrCmp,
 -    fn rust(
 +    fn rust<'a>(
          _context_object: &mut TestContextObject,
          arg1: u64,
-@@ -116,5 +116,5 @@ declare_builtin_function!(
+@@ -118,5 +118,5 @@ declare_builtin_function!(
          _arg4: u64,
          _arg5: u64,
 -        memory_mapping: &mut MemoryMapping,
 +        memory_mapping: &mut MemoryMapping<'a>,
      ) -> Result<u64, Box<dyn std::error::Error>> {
          // C-like strcmp, maybe shorter than converting the bytes to string and comparing?
-@@ -147,5 +147,5 @@ declare_builtin_function!(
+@@ -149,5 +149,5 @@ declare_builtin_function!(
      /// Prints a NULL-terminated UTF-8 string.
      SyscallString,
 -    fn rust(
 +    fn rust<'a>(
          _context_object: &mut TestContextObject,
          vm_addr: u64,
-@@ -154,5 +154,5 @@ declare_builtin_function!(
+@@ -156,5 +156,5 @@ declare_builtin_function!(
          _arg4: u64,
          _arg5: u64,
 -        memory_mapping: &mut MemoryMapping,
 +        memory_mapping: &mut MemoryMapping<'a>,
      ) -> Result<u64, Box<dyn std::error::Error>> {
          let host_addr: Result<u64, EbpfError> =
-@@ -172,5 +172,5 @@ declare_builtin_function!(
+@@ -174,5 +174,5 @@ declare_builtin_function!(
      /// Prints the five arguments formated as u64 in decimal.
      SyscallU64,
 -    fn rust(
 +    fn rust<'a>(
          _context_object: &mut TestContextObject,
          arg1: u64,
-@@ -179,5 +179,5 @@ declare_builtin_function!(
+@@ -181,5 +181,5 @@ declare_builtin_function!(
          arg4: u64,
          arg5: u64,
 -        memory_mapping: &mut MemoryMapping,
@@ -520,17 +520,17 @@ index 969a339..a5e1a2c 100644
  pub struct TestContextObject {
      /// Contains the register state at every instruction in order of execution
 diff --git a/tests/execution.rs b/tests/execution.rs
-index 2043132..eafcabc 100644
+index e7f77ce..f6c1a93 100644
 --- a/tests/execution.rs
 +++ b/tests/execution.rs
-@@ -2526,5 +2526,5 @@ declare_builtin_function!(
+@@ -2534,5 +2534,5 @@ declare_builtin_function!(
      /// For test_nested_vm_syscall()
      SyscallNestedVm,
 -    fn rust(
 +    fn rust<'a>(
          _context_object: &mut TestContextObject,
          depth: u64,
-@@ -2533,5 +2533,5 @@ declare_builtin_function!(
+@@ -2541,5 +2541,5 @@ declare_builtin_function!(
          _arg4: u64,
          _arg5: u64,
 -        _memory_mapping: &mut MemoryMapping,
