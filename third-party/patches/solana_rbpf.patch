@@ -520,7 +520,7 @@ index 969a339..a5e1a2c 100644
  pub struct TestContextObject {
      /// Contains the register state at every instruction in order of execution
 diff --git a/tests/execution.rs b/tests/execution.rs
-index e7f77ce..f6c1a93 100644
+index fae306d..07a48ff 100644
 --- a/tests/execution.rs
 +++ b/tests/execution.rs
 @@ -2534,5 +2534,5 @@ declare_builtin_function!(

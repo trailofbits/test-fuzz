@@ -1,16 +1,16 @@
 diff --git a/compute-budget/Cargo.toml b/compute-budget/Cargo.toml
-index bbcaa27..a34b9bf 100644
+index 07ba01c..c68aab1 100644
 --- a/compute-budget/Cargo.toml
 +++ b/compute-budget/Cargo.toml
-@@ -14,4 +14,6 @@ solana-frozen-abi = { workspace = true, optional = true }
+@@ -16,4 +16,6 @@ solana-frozen-abi = { workspace = true, optional = true, features = [
  solana-sdk = { workspace = true }
  
 +serde = { workspace = true }
 +
- [build-dependencies]
- rustc_version = { workspace = true, optional = true }
+ [features]
+ frozen-abi = [
 diff --git a/compute-budget/src/compute_budget.rs b/compute-budget/src/compute_budget.rs
-index 5539e81..931a38b 100644
+index 577a000..255809a 100644
 --- a/compute-budget/src/compute_budget.rs
 +++ b/compute-budget/src/compute_budget.rs
 @@ -19,5 +19,5 @@ pub const MAX_CALL_DEPTH: usize = 64;
@@ -53,10 +53,10 @@ index 190abb3..c157072 100644
  pub struct Measure {
      name: &'static str,
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index af276bc..f402996 100644
+index 4e764de..93cfd6c 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
-@@ -36,4 +36,6 @@ solana_rbpf = { workspace = true }
+@@ -40,4 +40,6 @@ solana_rbpf = { workspace = true }
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -168,7 +168,7 @@ index c96da3e..3abc16c 100644
  impl<'a> InvokeContext<'a> {
      #[allow(clippy::too_many_arguments)]
 diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
-index 79124bd..acdaa87 100644
+index 8b4bc61..d8c791c 100644
 --- a/program-runtime/src/sysvar_cache.rs
 +++ b/program-runtime/src/sysvar_cache.rs
 @@ -25,5 +25,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for SysvarCache {
@@ -205,17 +205,17 @@ index 5e81062..821afe7 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index a14c58d..8dc16f9 100644
+index 8793f1e..a9dc134 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -77,5 +77,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -76,5 +76,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -101,4 +101,6 @@ solana-signature = { workspace = true, features = ["rand", "serde", "verify"], o
+@@ -109,4 +109,6 @@ solana-signature = { workspace = true, features = [
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -223,18 +223,18 @@ index a14c58d..8dc16f9 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 diff --git a/sdk/feature-set/Cargo.toml b/sdk/feature-set/Cargo.toml
-index 02da9d0..a6a1cda 100644
+index d6f2824..cd164aa 100644
 --- a/sdk/feature-set/Cargo.toml
 +++ b/sdk/feature-set/Cargo.toml
-@@ -16,4 +16,6 @@ solana-frozen-abi-macro = { workspace = true, optional = true }
+@@ -20,4 +20,6 @@ solana-frozen-abi-macro = { workspace = true, optional = true, features = [
  solana-program = { workspace = true }
  
 +serde = { workspace = true }
 +
- [build-dependencies]
- rustc_version = { workspace = true, optional = true }
+ [features]
+ frozen-abi = [
 diff --git a/sdk/feature-set/src/lib.rs b/sdk/feature-set/src/lib.rs
-index f2b094e..689477b 100644
+index 6567404..e35c427 100644
 --- a/sdk/feature-set/src/lib.rs
 +++ b/sdk/feature-set/src/lib.rs
 @@ -1123,5 +1123,5 @@ lazy_static! {
