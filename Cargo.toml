@@ -85,4 +85,4 @@ option-if-let-else = "allow"
 redundant-pub-crate = "allow"
 
 [workspace.metadata.unmaintained]
-ignore = ["num_cpus", "option_set", "parse_duration"]
+ignore = ["parse_duration", "strip-ansi-escapes"]
