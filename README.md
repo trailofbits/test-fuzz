@@ -413,6 +413,8 @@ The `test-fuzz` package currently supports the following features:
 
 Use [`cast_checks`] to automatically check target functions for invalid casts.
 
+Note that this feature enables `cast_checks` only for functions annotated with the [`test_fuzz` macro], not for the functions they call.
+
 ### Serde formats
 
 `test-fuzz` can serialize target arguments in multiple Serde formats. The following are the features used to select a format.
