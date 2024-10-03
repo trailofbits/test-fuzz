@@ -357,7 +357,7 @@ index e864855..a8a44e6 100644
  struct MappingCache {
      // The cached entries.
 diff --git a/src/program.rs b/src/program.rs
-index 0ef76bc..3359e31 100644
+index cc80ec2..6f052ad 100644
 --- a/src/program.rs
 +++ b/src/program.rs
 @@ -10,5 +10,5 @@ use {
@@ -367,14 +367,14 @@ index 0ef76bc..3359e31 100644
 +#[derive(Debug, PartialEq, PartialOrd, Eq, Clone, Copy, serde::Deserialize, serde::Serialize)]
  pub enum SBPFVersion {
      /// The legacy format
-@@ -289,5 +289,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
+@@ -287,5 +287,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
  #[macro_export]
  macro_rules! declare_builtin_function {
 -    ($(#[$attr:meta])* $name:ident $(<$($generic_ident:tt : $generic_type:tt),+>)?, fn rust(
 +    ($(#[$attr:meta])* $name:ident, fn rust $(<$($lifetime:tt),+>)? (
          $vm:ident : &mut $ContextObject:ty,
          $arg_a:ident : u64,
-@@ -300,7 +300,9 @@ macro_rules! declare_builtin_function {
+@@ -298,7 +298,9 @@ macro_rules! declare_builtin_function {
          $(#[$attr])*
          pub struct $name {}
 +        #[test_fuzz::test_fuzz_impl]
@@ -385,7 +385,7 @@ index 0ef76bc..3359e31 100644
 +            pub fn rust $(<$($lifetime),+>)? (
                  $vm: &mut $ContextObject,
                  $arg_a: u64,
-@@ -311,9 +313,12 @@ macro_rules! declare_builtin_function {
+@@ -309,9 +311,12 @@ macro_rules! declare_builtin_function {
                  $memory_mapping: &mut $MemoryMapping,
              ) -> $Result {
 +                if matches!($memory_mapping, MemoryMapping::Identity) {
@@ -399,14 +399,14 @@ index 0ef76bc..3359e31 100644
 +            pub fn vm $(<$($lifetime),+>)? (
                  $vm: *mut $crate::vm::EbpfVm<$ContextObject>,
                  $arg_a: u64,
-@@ -325,5 +330,5 @@ macro_rules! declare_builtin_function {
+@@ -323,5 +328,5 @@ macro_rules! declare_builtin_function {
                  use $crate::vm::ContextObject;
                  let vm = unsafe {
 -                    &mut *($vm.cast::<u64>().offset(-($crate::vm::get_runtime_environment_key() as isize)).cast::<$crate::vm::EbpfVm<$ContextObject>>())
 +                    &mut *(($vm as *mut u64).offset(-($crate::vm::get_runtime_environment_key() as isize)) as *mut $crate::vm::EbpfVm<$ContextObject>)
                  };
                  let config = vm.loader.get_config();
-@@ -331,5 +336,5 @@ macro_rules! declare_builtin_function {
+@@ -329,5 +334,5 @@ macro_rules! declare_builtin_function {
                      vm.context_object_pointer.consume(vm.previous_instruction_meter - vm.due_insn_count);
                  }
 -                let converted_result: $crate::error::ProgramResult = Self::rust $(::<$($generic_ident),+>)?(
@@ -502,7 +502,7 @@ index a8d398d..98f35a4 100644
      ) -> Result<u64, Box<dyn std::error::Error>> {
          println!(
 diff --git a/src/vm.rs b/src/vm.rs
-index 969a339..a5e1a2c 100644
+index f4a9a15..01ded61 100644
 --- a/src/vm.rs
 +++ b/src/vm.rs
 @@ -49,5 +49,5 @@ pub fn get_runtime_environment_key() -> i32 {
@@ -512,7 +512,7 @@ index 969a339..a5e1a2c 100644
 +#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
  pub struct Config {
      /// Maximum call depth
-@@ -145,5 +145,5 @@ pub trait ContextObject {
+@@ -139,5 +139,5 @@ pub trait ContextObject {
  
  /// Simple instruction meter for testing
 -#[derive(Debug, Clone, Default)]
