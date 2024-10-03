@@ -139,7 +139,7 @@ index b4a5d9e..f43a43d 100644
  		ready: &mut ReadyTransactions<H, Ex>,
  		tx: Transaction<H, Ex>,
 diff --git a/substrate/client/transaction-pool/src/graph/tracked_map.rs b/substrate/client/transaction-pool/src/graph/tracked_map.rs
-index 47ad226..41b184e 100644
+index 44c2c73..b616365 100644
 --- a/substrate/client/transaction-pool/src/graph/tracked_map.rs
 +++ b/substrate/client/transaction-pool/src/graph/tracked_map.rs
 @@ -34,6 +34,9 @@ pub trait Size {
