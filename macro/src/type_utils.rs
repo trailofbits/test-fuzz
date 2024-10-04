@@ -26,7 +26,7 @@ struct GenericParamVisitor<'a> {
     map: &'a BTreeMap<&'a Ident, &'a GenericArgument>,
 }
 
-impl<'a> VisitMut for GenericParamVisitor<'a> {
+impl VisitMut for GenericParamVisitor<'_> {
     fn visit_type_mut(&mut self, ty: &mut Type) {
         if let Type::Path(TypePath { qself: None, path }) = ty {
             if let Some(ident) = path.get_ident() {
@@ -64,7 +64,7 @@ struct TurbofishVisitor {
     tokens: Vec<TokenTree>,
 }
 
-impl<'a> Visit<'a> for TurbofishVisitor {
+impl Visit<'_> for TurbofishVisitor {
     fn visit_path_arguments(&mut self, path_args: &PathArguments) {
         if !path_args.is_none() {
             let mut visitor_token_strings = token_strings(&self.tokens);
@@ -99,7 +99,7 @@ fn token_strings(tokens: &[TokenTree]) -> Vec<String> {
     tokens.iter().map(ToString::to_string).collect::<Vec<_>>()
 }
 
-pub fn expand_self(trait_path: &Option<Path>, self_ty: &Type, ty: &Type) -> Type {
+pub fn expand_self(trait_path: Option<&Path>, self_ty: &Type, ty: &Type) -> Type {
     let mut ty = ty.clone();
     let mut visitor = ExpandSelfVisitor {
         trait_path,
@@ -110,11 +110,11 @@ pub fn expand_self(trait_path: &Option<Path>, self_ty: &Type, ty: &Type) -> Type
 }
 
 struct ExpandSelfVisitor<'a> {
-    trait_path: &'a Option<Path>,
+    trait_path: Option<&'a Path>,
     self_ty: &'a Type,
 }
 
-impl<'a> VisitMut for ExpandSelfVisitor<'a> {
+impl VisitMut for ExpandSelfVisitor<'_> {
     fn visit_type_mut(&mut self, ty: &mut Type) {
         // smoelius: Rewrite this using if-let-guards once the feature is stable.
         // https://rust-lang.github.io/rfcs/2294-if-let-guard.html

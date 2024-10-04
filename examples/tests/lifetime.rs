@@ -6,7 +6,7 @@ struct Foo;
 #[derive(Clone)]
 struct Bar<'a>(&'a Foo);
 
-impl<'a> Serialize for Bar<'a> {
+impl Serialize for Bar<'_> {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: Serializer,
@@ -15,7 +15,7 @@ impl<'a> Serialize for Bar<'a> {
     }
 }
 
-impl<'de, 'a> Deserialize<'de> for Bar<'a> {
+impl<'de> Deserialize<'de> for Bar<'_> {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'de>,

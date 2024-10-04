@@ -128,6 +128,7 @@ mod byte_array {
 }
 
 mod option {
+    #[allow(clippy::ref_option)]
     #[test_fuzz::test_fuzz]
     fn target(option: Option<u8>, ref_option: &Option<u8>, ref_mut_option: &mut Option<u8>) {
         super::consume(option);
