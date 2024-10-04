@@ -63,7 +63,7 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
         (Some(path.clone()), Some(quote! { #bang #path #for_ }))
     });
 
-    let (impl_items, modules) = map_impl_items(&generics, &trait_path, &self_ty, &items);
+    let (impl_items, modules) = map_impl_items(&generics, trait_path.as_ref(), &self_ty, &items);
 
     let result = quote! {
         #(#attrs)* #defaultness #unsafety #impl_token #generics #trait_ #self_ty #where_clause {
@@ -78,7 +78,7 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
 
 fn map_impl_items(
     generics: &Generics,
-    trait_path: &Option<Path>,
+    trait_path: Option<&Path>,
     self_ty: &Type,
     items: &[ImplItem],
 ) -> (Vec<ImplItem>, Vec<ItemMod>) {
@@ -93,17 +93,16 @@ fn map_impl_items(
     (impl_items, modules)
 }
 
-fn map_impl_item(
-    generics: &Generics,
-    trait_path: &Option<Path>,
-    self_ty: &Type,
-) -> impl Fn(&ImplItem) -> (ImplItem, Option<ItemMod>) {
+fn map_impl_item<'a>(
+    generics: &'a Generics,
+    trait_path: Option<&'a Path>,
+    self_ty: &'a Type,
+) -> impl Fn(&ImplItem) -> (ImplItem, Option<ItemMod>) + 'a {
     let generics = generics.clone();
-    let trait_path = trait_path.clone();
     let self_ty = self_ty.clone();
     move |impl_item| {
         if let ImplItem::Fn(impl_item_fn) = &impl_item {
-            map_impl_item_fn(&generics, &trait_path, &self_ty, impl_item_fn)
+            map_impl_item_fn(&generics, trait_path, &self_ty, impl_item_fn)
         } else {
             (impl_item.clone(), None)
         }
@@ -116,7 +115,7 @@ fn map_impl_item(
 // https://github.com/dtolnay/syn/releases/tag/2.0.0
 fn map_impl_item_fn(
     generics: &Generics,
-    trait_path: &Option<Path>,
+    trait_path: Option<&Path>,
     self_ty: &Type,
     impl_item_fn: &ImplItemFn,
 ) -> (ImplItem, Option<ItemMod>) {
@@ -142,7 +141,7 @@ fn map_impl_item_fn(
                 &opts,
                 &attrs,
                 vis,
-                defaultness,
+                defaultness.as_ref(),
                 sig,
                 block,
             );
@@ -189,12 +188,12 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
     } = &item;
     let (item, module) = map_method_or_fn(
         &Generics::default(),
-        &None,
+        None,
         None,
         &opts,
         attrs,
         vis,
-        &None,
+        None,
         sig,
         block,
     );
@@ -215,12 +214,12 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
 #[cfg_attr(dylint_lib = "supplementary", allow(commented_code))]
 fn map_method_or_fn(
     generics: &Generics,
-    trait_path: &Option<Path>,
+    trait_path: Option<&Path>,
     self_ty: Option<&Type>,
     opts: &TestFuzzOpts,
     attrs: &Vec<Attribute>,
     vis: &Visibility,
-    defaultness: &Option<token::Default>,
+    defaultness: Option<&token::Default>,
     sig: &Signature,
     block: &Block,
 ) -> (TokenStream2, ItemMod) {
@@ -766,7 +765,7 @@ fn generic_params_map<'a, 'b>(
 fn map_args<'a, I>(
     conversions: &mut Conversions,
     candidates: &mut BTreeSet<OrdType>,
-    trait_path: &Option<Path>,
+    trait_path: Option<&Path>,
     self_ty: Option<&Type>,
     inputs: I,
 ) -> (Vec<Type>, Vec<Stmt>, Vec<Expr>, Vec<Expr>)
@@ -784,7 +783,7 @@ where
 fn map_arg<'a>(
     conversions: &'a mut Conversions,
     candidates: &'a mut BTreeSet<OrdType>,
-    trait_path: &'a Option<Path>,
+    trait_path: Option<&'a Path>,
     self_ty: Option<&'a Type>,
 ) -> impl FnMut((usize, &FnArg)) -> (Type, Stmt, Expr, Expr) + 'a {
     move |(i, arg)| {

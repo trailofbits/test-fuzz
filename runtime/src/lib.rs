@@ -51,7 +51,7 @@ impl<T> TryDebugFallback for T {
 
 pub struct TryDebug<'a, T>(pub &'a T);
 
-impl<'a, T: Debug> TryDebug<'a, T> {
+impl<T: Debug> TryDebug<'_, T> {
     pub fn apply<U>(&self, f: &mut dyn FnMut(&dyn Debug) -> U) -> U {
         f(self.0)
     }

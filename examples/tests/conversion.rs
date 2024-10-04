@@ -75,7 +75,7 @@ mod lifetime {
     #[derive(Clone, Deserialize, Serialize)]
     struct Y(bool);
 
-    impl<'a> From<X<'a>> for Y {
+    impl From<X<'_>> for Y {
         fn from(x: X) -> Self {
             Self(*x.0)
         }
