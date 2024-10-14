@@ -1031,15 +1031,6 @@
         "name": "Michal 'vorner' Vaner"
       }
     ],
-    "portable-atomic": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/43724913?v=4",
-        "id": 33035,
-        "kind": "user",
-        "login": "taiki-e",
-        "name": "Taiki Endo"
-      }
-    ],
     "ppv-lite86": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/1047859?v=4",
@@ -1737,6 +1728,13 @@
       }
     ],
     "zerocopy": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/3820879?v=4",
+        "id": 1442,
+        "kind": "user",
+        "login": "jswrenn",
+        "name": "Jack Wrenn"
+      },
       {
         "avatar": "https://avatars.githubusercontent.com/u/1046063?v=4",
         "id": 7178,
