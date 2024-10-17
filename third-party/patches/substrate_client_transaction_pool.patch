@@ -1,8 +1,8 @@
 diff --git a/substrate/client/transaction-pool/Cargo.toml b/substrate/client/transaction-pool/Cargo.toml
-index 98994cc..1b029b4 100644
+index d346add..d270d0f 100644
 --- a/substrate/client/transaction-pool/Cargo.toml
 +++ b/substrate/client/transaction-pool/Cargo.toml
-@@ -23,6 +23,6 @@ futures-timer = { workspace = true }
+@@ -25,6 +25,6 @@ itertools = { workspace = true }
  linked-hash-map = { workspace = true }
  log = { workspace = true, default-features = true }
 -parking_lot = { workspace = true, default-features = true }
@@ -11,14 +11,15 @@ index 98994cc..1b029b4 100644
 +serde = { features = ["derive", "rc"], workspace = true, default-features = true }
  thiserror = { workspace = true }
  prometheus-endpoint = { workspace = true, default-features = true }
-@@ -37,4 +37,5 @@ sp-runtime = { workspace = true, default-features = true }
- sp-tracing = { workspace = true, default-features = true }
- sp-transaction-pool = { workspace = true, default-features = true }
-+test-fuzz = { path = "../../../../../test-fuzz" }
+@@ -42,4 +42,6 @@ tokio-stream = { workspace = true }
+ tokio = { workspace = true, default-features = true, features = ["macros", "time"] }
  
++test-fuzz = { path = "../../../../../test-fuzz" }
++
  [dev-dependencies]
+ array-bytes = { workspace = true, default-features = true }
 diff --git a/substrate/client/transaction-pool/src/graph/base_pool.rs b/substrate/client/transaction-pool/src/graph/base_pool.rs
-index 3288562..0ba77bc 100644
+index e4c3a6c..dd840aa 100644
 --- a/substrate/client/transaction-pool/src/graph/base_pool.rs
 +++ b/substrate/client/transaction-pool/src/graph/base_pool.rs
 @@ -85,5 +85,5 @@ pub struct PruneStatus<Hash, Ex> {
@@ -47,23 +48,23 @@ index 3288562..0ba77bc 100644
  	/// Create new pool given reject_future_transactions flag.
  	pub fn new(reject_future_transactions: bool) -> Self {
 diff --git a/substrate/client/transaction-pool/src/graph/future.rs b/substrate/client/transaction-pool/src/graph/future.rs
-index bad4663..b10e15c 100644
+index 2c1e64c..ca41c4f 100644
 --- a/substrate/client/transaction-pool/src/graph/future.rs
 +++ b/substrate/client/transaction-pool/src/graph/future.rs
-@@ -29,4 +29,5 @@ use std::time::Instant;
- use super::base_pool::Transaction;
+@@ -30,4 +30,5 @@ use super::base_pool::Transaction;
+ use crate::{common::log_xt::log_xt_trace, LOG_TARGET};
  
 +#[derive(serde::Deserialize, serde::Serialize)]
  /// Transaction with partially satisfied dependencies.
  pub struct WaitingTransaction<Hash, Ex> {
-@@ -36,4 +37,5 @@ pub struct WaitingTransaction<Hash, Ex> {
+@@ -37,4 +38,5 @@ pub struct WaitingTransaction<Hash, Ex> {
  	pub missing_tags: HashSet<Tag>,
  	/// Time of import to the Future Queue.
 +	#[serde(skip, default = "Instant::now")]
  	pub imported_at: Instant,
  }
 diff --git a/substrate/client/transaction-pool/src/graph/ready.rs b/substrate/client/transaction-pool/src/graph/ready.rs
-index b4a5d9e..f43a43d 100644
+index 860bcff..85a3b95 100644
 --- a/substrate/client/transaction-pool/src/graph/ready.rs
 +++ b/substrate/client/transaction-pool/src/graph/ready.rs
 @@ -39,5 +39,5 @@ use super::{
@@ -83,7 +84,7 @@ index b4a5d9e..f43a43d 100644
 @@ -107,5 +107,5 @@ qed
  
  /// Validated transactions that are block ready with all their dependencies met.
--#[derive(Debug)]
+-#[derive(Clone, Debug)]
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct ReadyTransactions<Hash: hash::Hash + Eq, Ex> {
  	/// Next free insertion id (used to indicate when a transaction was inserted into the pool).
@@ -139,7 +140,7 @@ index b4a5d9e..f43a43d 100644
  		ready: &mut ReadyTransactions<H, Ex>,
  		tx: Transaction<H, Ex>,
 diff --git a/substrate/client/transaction-pool/src/graph/tracked_map.rs b/substrate/client/transaction-pool/src/graph/tracked_map.rs
-index 44c2c73..b616365 100644
+index 9e92dff..9c849f6 100644
 --- a/substrate/client/transaction-pool/src/graph/tracked_map.rs
 +++ b/substrate/client/transaction-pool/src/graph/tracked_map.rs
 @@ -34,6 +34,9 @@ pub trait Size {
@@ -154,30 +155,24 @@ index 44c2c73..b616365 100644
 +{
  	index: Arc<RwLock<HashMap<K, V>>>,
  	bytes: AtomicIsize,
-@@ -41,5 +44,21 @@ pub struct TrackedMap<K, V> {
+@@ -41,5 +44,8 @@ pub struct TrackedMap<K, V> {
  }
  
 -impl<K, V> Default for TrackedMap<K, V> {
-+impl<K: Clone, V: Clone> Clone for TrackedMap<K, V>
-+where
-+	K: Eq + std::hash::Hash,
-+{
-+	fn clone(&self) -> Self {
-+		Self {
-+			index: Arc::new(self.clone_map().into()),
-+			bytes: self.bytes.load(AtomicOrdering::Relaxed).into(),
-+			length: self.length.load(AtomicOrdering::Relaxed).into(),
-+		}
-+	}
-+}
-+
 +impl<K, V> Default for TrackedMap<K, V>
 +where
 +	K: Eq + std::hash::Hash,
 +{
  	fn default() -> Self {
  		Self { index: Arc::new(HashMap::default().into()), bytes: 0.into(), length: 0.into() }
-@@ -47,5 +66,8 @@ impl<K, V> Default for TrackedMap<K, V> {
+@@ -49,5 +55,5 @@ impl<K, V> Default for TrackedMap<K, V> {
+ impl<K, V> Clone for TrackedMap<K, V>
+ where
+-	K: Clone,
++	K: Clone + Eq + std::hash::Hash,
+ 	V: Clone,
+ {
+@@ -61,5 +67,8 @@ where
  }
  
 -impl<K, V> TrackedMap<K, V> {
@@ -187,7 +182,7 @@ index 44c2c73..b616365 100644
 +{
  	/// Current tracked length of the content.
  	pub fn len(&self) -> usize {
-@@ -73,5 +95,8 @@ impl<K, V> TrackedMap<K, V> {
+@@ -87,5 +96,8 @@ impl<K, V> TrackedMap<K, V> {
  }
  
 -impl<K: Clone, V: Clone> TrackedMap<K, V> {
@@ -198,12 +193,12 @@ index 44c2c73..b616365 100644
  	/// Clone the inner map.
  	pub fn clone_map(&self) -> HashMap<K, V> {
 diff --git a/substrate/primitives/runtime/src/transaction_validity.rs b/substrate/primitives/runtime/src/transaction_validity.rs
-index ffff94e..ea15881 100644
+index 2d800e2..a17a7ee 100644
 --- a/substrate/primitives/runtime/src/transaction_validity.rs
 +++ b/substrate/primitives/runtime/src/transaction_validity.rs
 @@ -228,4 +228,5 @@ impl From<UnknownTransaction> for TransactionValidity {
  /// by our local node (for instance off-chain workers).
- #[derive(Copy, Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo)]
+ #[derive(Copy, Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, Hash)]
 +#[cfg_attr(feature = "std", derive(serde::Deserialize, serde::Serialize))]
  pub enum TransactionSource {
  	/// Transaction is already included in block.
