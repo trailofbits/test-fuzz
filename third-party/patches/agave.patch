@@ -168,7 +168,7 @@ index c96da3e..3abc16c 100644
  impl<'a> InvokeContext<'a> {
      #[allow(clippy::too_many_arguments)]
 diff --git a/program-runtime/src/sysvar_cache.rs b/program-runtime/src/sysvar_cache.rs
-index 8b4bc61..d8c791c 100644
+index 76496ce..811e4fc 100644
 --- a/program-runtime/src/sysvar_cache.rs
 +++ b/program-runtime/src/sysvar_cache.rs
 @@ -25,5 +25,5 @@ impl ::solana_frozen_abi::abi_example::AbiExample for SysvarCache {
@@ -205,17 +205,17 @@ index 5e81062..821afe7 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 8793f1e..a9dc134 100644
+index 4872798..ea622b2 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -76,5 +76,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -79,5 +79,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -109,4 +109,6 @@ solana-signature = { workspace = true, features = [
+@@ -117,4 +117,6 @@ solana-signature = { workspace = true, features = [
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -223,21 +223,21 @@ index 8793f1e..a9dc134 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 diff --git a/sdk/feature-set/Cargo.toml b/sdk/feature-set/Cargo.toml
-index d6f2824..cd164aa 100644
+index 7352ff3..d7e4da2 100644
 --- a/sdk/feature-set/Cargo.toml
 +++ b/sdk/feature-set/Cargo.toml
-@@ -20,4 +20,6 @@ solana-frozen-abi-macro = { workspace = true, optional = true, features = [
- solana-program = { workspace = true }
+@@ -24,4 +24,6 @@ solana-pubkey = { workspace = true }
+ solana-sha256-hasher = { workspace = true }
  
 +serde = { workspace = true }
 +
  [features]
  frozen-abi = [
 diff --git a/sdk/feature-set/src/lib.rs b/sdk/feature-set/src/lib.rs
-index 6567404..e35c427 100644
+index 83d5974..4c29279 100644
 --- a/sdk/feature-set/src/lib.rs
 +++ b/sdk/feature-set/src/lib.rs
-@@ -1123,5 +1123,5 @@ lazy_static! {
+@@ -1121,5 +1121,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
@@ -245,24 +245,24 @@ index 6567404..e35c427 100644
  pub struct FeatureSet {
      pub active: HashMap<Pubkey, Slot>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 0bb2f0e..72c11c2 100644
+index 95f65c3..94a5c8e 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
-@@ -36,5 +36,5 @@ pub type IndexOfAccount = u16;
+@@ -33,5 +33,5 @@ pub type IndexOfAccount = u16;
  ///
  /// It also contains indices to other structures for faster lookup.
 -#[derive(Clone, Debug, Eq, PartialEq)]
 +#[derive(Clone, Debug, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct InstructionAccount {
      /// Points to the account and its key in the `TransactionContext`
-@@ -57,5 +57,5 @@ pub struct InstructionAccount {
+@@ -54,5 +54,5 @@ pub struct InstructionAccount {
  pub type TransactionAccount = (Pubkey, AccountSharedData);
  
 -#[derive(Clone, Debug, PartialEq)]
 +#[derive(Clone, Debug, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct TransactionAccounts {
      accounts: Vec<RefCell<AccountSharedData>>,
-@@ -130,9 +130,31 @@ impl TransactionAccounts {
+@@ -127,9 +127,31 @@ impl TransactionAccounts {
  }
  
 +fn serialize_account_keys<'a, S>(
@@ -295,7 +295,7 @@ index 0bb2f0e..72c11c2 100644
 +    )]
      account_keys: Pin<Box<[Pubkey]>>,
      accounts: Rc<TransactionAccounts>,
-@@ -185,7 +207,7 @@ impl TransactionContext {
+@@ -182,7 +204,7 @@ impl TransactionContext {
          }
  
 -        Ok(Rc::try_unwrap(self.accounts)
@@ -306,7 +306,7 @@ index 0bb2f0e..72c11c2 100644
 +        Ok((*self.accounts).clone().into_accounts())
      }
  
-@@ -450,5 +472,5 @@ pub struct TransactionReturnData {
+@@ -447,5 +469,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone, Default, Eq, PartialEq)]

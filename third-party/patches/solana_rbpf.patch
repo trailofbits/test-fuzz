@@ -16,7 +16,7 @@ index 781ce87..a999428 100644
 +
 +[workspace]
 diff --git a/src/memory_region.rs b/src/memory_region.rs
-index e864855..a8a44e6 100644
+index e555bf6..9da7e4e 100644
 --- a/src/memory_region.rs
 +++ b/src/memory_region.rs
 @@ -34,5 +34,5 @@ use std::{
@@ -138,7 +138,7 @@ index e864855..a8a44e6 100644
      cow_cb: Option<MemoryCowCallback>,
  }
  
--impl<'a> fmt::Debug for UnalignedMemoryMapping<'a> {
+-impl fmt::Debug for UnalignedMemoryMapping<'_> {
 +#[derive(serde::Deserialize, serde::Serialize)]
 +struct SerializableUnalignedMemoryMapping {
 +    regions: Box<[MemoryRegion]>,
@@ -223,7 +223,7 @@ index e864855..a8a44e6 100644
 +impl fmt::Debug for UnalignedMemoryMapping {
      fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
          f.debug_struct("UnalignedMemoryMapping")
-@@ -215,5 +377,5 @@ impl<'a> fmt::Debug for UnalignedMemoryMapping<'a> {
+@@ -215,5 +377,5 @@ impl fmt::Debug for UnalignedMemoryMapping<'_> {
  }
  
 -impl<'a> UnalignedMemoryMapping<'a> {
@@ -322,7 +322,7 @@ index e864855..a8a44e6 100644
      cow_cb: Option<MemoryCowCallback>,
  }
  
-+impl<'a> Clone for AlignedMemoryMapping<'a> {
++impl Clone for AlignedMemoryMapping<'_> {
 +    fn clone(&self) -> Self {
 +        Self {
 +            regions: self.regions.clone(),
@@ -333,7 +333,7 @@ index e864855..a8a44e6 100644
 +    }
 +}
 +
- impl<'a> fmt::Debug for AlignedMemoryMapping<'a> {
+ impl fmt::Debug for AlignedMemoryMapping<'_> {
      fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 @@ -728,5 +911,5 @@ impl<'a> AlignedMemoryMapping<'a> {
  
@@ -357,24 +357,24 @@ index e864855..a8a44e6 100644
  struct MappingCache {
      // The cached entries.
 diff --git a/src/program.rs b/src/program.rs
-index cc80ec2..6f052ad 100644
+index 3c84431..e9e5de0 100644
 --- a/src/program.rs
 +++ b/src/program.rs
 @@ -10,5 +10,5 @@ use {
  
  /// Defines a set of sbpf_version of an executable
--#[derive(Debug, PartialEq, PartialOrd, Eq, Clone)]
+-#[derive(Debug, PartialEq, PartialOrd, Eq, Clone, Copy)]
 +#[derive(Debug, PartialEq, PartialOrd, Eq, Clone, Copy, serde::Deserialize, serde::Serialize)]
  pub enum SBPFVersion {
      /// The legacy format
-@@ -287,5 +287,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
+@@ -301,5 +301,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
  #[macro_export]
  macro_rules! declare_builtin_function {
 -    ($(#[$attr:meta])* $name:ident $(<$($generic_ident:tt : $generic_type:tt),+>)?, fn rust(
 +    ($(#[$attr:meta])* $name:ident, fn rust $(<$($lifetime:tt),+>)? (
          $vm:ident : &mut $ContextObject:ty,
          $arg_a:ident : u64,
-@@ -298,7 +298,9 @@ macro_rules! declare_builtin_function {
+@@ -312,7 +312,9 @@ macro_rules! declare_builtin_function {
          $(#[$attr])*
          pub struct $name {}
 +        #[test_fuzz::test_fuzz_impl]
@@ -385,7 +385,7 @@ index cc80ec2..6f052ad 100644
 +            pub fn rust $(<$($lifetime),+>)? (
                  $vm: &mut $ContextObject,
                  $arg_a: u64,
-@@ -309,9 +311,12 @@ macro_rules! declare_builtin_function {
+@@ -323,9 +325,12 @@ macro_rules! declare_builtin_function {
                  $memory_mapping: &mut $MemoryMapping,
              ) -> $Result {
 +                if matches!($memory_mapping, MemoryMapping::Identity) {
@@ -399,14 +399,14 @@ index cc80ec2..6f052ad 100644
 +            pub fn vm $(<$($lifetime),+>)? (
                  $vm: *mut $crate::vm::EbpfVm<$ContextObject>,
                  $arg_a: u64,
-@@ -323,5 +328,5 @@ macro_rules! declare_builtin_function {
+@@ -337,5 +342,5 @@ macro_rules! declare_builtin_function {
                  use $crate::vm::ContextObject;
                  let vm = unsafe {
 -                    &mut *($vm.cast::<u64>().offset(-($crate::vm::get_runtime_environment_key() as isize)).cast::<$crate::vm::EbpfVm<$ContextObject>>())
 +                    &mut *(($vm as *mut u64).offset(-($crate::vm::get_runtime_environment_key() as isize)) as *mut $crate::vm::EbpfVm<$ContextObject>)
                  };
                  let config = vm.loader.get_config();
-@@ -329,5 +334,5 @@ macro_rules! declare_builtin_function {
+@@ -343,5 +348,5 @@ macro_rules! declare_builtin_function {
                      vm.context_object_pointer.consume(vm.previous_instruction_meter - vm.due_insn_count);
                  }
 -                let converted_result: $crate::error::ProgramResult = Self::rust $(::<$($generic_ident),+>)?(
@@ -502,7 +502,7 @@ index a8d398d..98f35a4 100644
      ) -> Result<u64, Box<dyn std::error::Error>> {
          println!(
 diff --git a/src/vm.rs b/src/vm.rs
-index f4a9a15..01ded61 100644
+index 7bff55c..c06b82e 100644
 --- a/src/vm.rs
 +++ b/src/vm.rs
 @@ -49,5 +49,5 @@ pub fn get_runtime_environment_key() -> i32 {
@@ -520,17 +520,17 @@ index f4a9a15..01ded61 100644
  pub struct TestContextObject {
      /// Contains the register state at every instruction in order of execution
 diff --git a/tests/execution.rs b/tests/execution.rs
-index fae306d..07a48ff 100644
+index 760078d..7d6566b 100644
 --- a/tests/execution.rs
 +++ b/tests/execution.rs
-@@ -2534,5 +2534,5 @@ declare_builtin_function!(
+@@ -2658,5 +2658,5 @@ declare_builtin_function!(
      /// For test_nested_vm_syscall()
      SyscallNestedVm,
 -    fn rust(
 +    fn rust<'a>(
          _context_object: &mut TestContextObject,
          depth: u64,
-@@ -2541,5 +2541,5 @@ declare_builtin_function!(
+@@ -2665,5 +2665,5 @@ declare_builtin_function!(
          _arg4: u64,
          _arg5: u64,
 -        _memory_mapping: &mut MemoryMapping,
