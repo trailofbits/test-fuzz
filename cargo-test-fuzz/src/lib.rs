@@ -1153,6 +1153,9 @@ fn fuzz_command(
     if opts.run_until_crash {
         envs.push(("AFL_BENCH_UNTIL_CRASH", "1"));
     }
+    if cfg!(feature = "sha1-filenames") {
+        envs.push(("AFL_SHA1_FILENAMES", "1"));
+    }
 
     // smoelius: Passing `-c-` disables the cmplog fork server. Use of cmplog with a target that
     // spawns subprocesses (like libtest does) can leave orphan processes running. This can cause
