@@ -193,10 +193,10 @@ index 9e92dff..9c849f6 100644
  	/// Clone the inner map.
  	pub fn clone_map(&self) -> HashMap<K, V> {
 diff --git a/substrate/primitives/runtime/src/transaction_validity.rs b/substrate/primitives/runtime/src/transaction_validity.rs
-index 2d800e2..a17a7ee 100644
+index a48c8ee..e1a3bfe 100644
 --- a/substrate/primitives/runtime/src/transaction_validity.rs
 +++ b/substrate/primitives/runtime/src/transaction_validity.rs
-@@ -228,4 +228,5 @@ impl From<UnknownTransaction> for TransactionValidity {
+@@ -236,4 +236,5 @@ impl From<UnknownTransaction> for TransactionValidity {
  /// by our local node (for instance off-chain workers).
  #[derive(Copy, Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, Hash)]
 +#[cfg_attr(feature = "std", derive(serde::Deserialize, serde::Serialize))]
