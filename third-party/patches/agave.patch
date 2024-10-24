@@ -205,17 +205,17 @@ index 5e81062..821afe7 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 4872798..ea622b2 100644
+index 0c8352f..0b0ff72 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -79,5 +79,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -81,5 +81,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { package = "rand", version = "0.7", optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -117,4 +117,6 @@ solana-signature = { workspace = true, features = [
+@@ -120,4 +120,6 @@ solana-transaction-error = { workspace = true, features = ["serde"], optional =
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -314,7 +314,7 @@ index 95f65c3..94a5c8e 100644
  pub struct InstructionContext {
      nesting_level: usize,
 diff --git a/timings/Cargo.toml b/timings/Cargo.toml
-index e36975b..84ce3a0 100644
+index c52b46a..5458d4c 100644
 --- a/timings/Cargo.toml
 +++ b/timings/Cargo.toml
 @@ -15,4 +15,6 @@ enum-iterator = { workspace = true }
