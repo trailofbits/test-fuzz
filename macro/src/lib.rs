@@ -1031,6 +1031,9 @@ fn args_as_turbofish(args: &Punctuated<GenericArgument, token::Comma>) -> TokenS
 
 // smoelius: The current strategy for combining auto-generated values is a kind of "round robin."
 // The strategy ensures that each auto-generated value gets into at least one `Args` value.
+// smoelius: One problem with the current approach is that it increments `Args` fields in lockstep.
+// So for any two fields with the same number of values, if value x appears alongside value y, then
+// whenever x appears, it appears alongside y (and vice versa).
 fn args_from_autos(autos: &[Expr]) -> Expr {
     let lens: Vec<Expr> = (0..autos.len())
         .map(|i| {
