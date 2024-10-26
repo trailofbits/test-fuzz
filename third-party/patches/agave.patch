@@ -64,7 +64,7 @@ index 4e764de..93cfd6c 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index c96da3e..3abc16c 100644
+index c96da3e..73ff629 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -118,4 +118,5 @@ impl fmt::Display for AllocErr {
@@ -76,7 +76,7 @@ index c96da3e..3abc16c 100644
 @@ -146,10 +147,16 @@ impl BpfAllocator {
  }
  
-+#[derive(Clone, serde::Deserialize, serde::Serialize)]
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct EnvironmentConfig<'a> {
      pub blockhash: Hash,
      epoch_total_stake: Option<u64>,
@@ -122,7 +122,7 @@ index c96da3e..3abc16c 100644
 +}
 +
  /// Main pipeline from runtime to program execution.
-+#[derive(serde::Deserialize, serde::Serialize)]
++#[derive(Debug, serde::Deserialize, serde::Serialize)]
  pub struct InvokeContext<'a> {
      /// Information about the currently executing transaction.
 +    #[serde(

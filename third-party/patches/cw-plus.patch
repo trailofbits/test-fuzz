@@ -10,13 +10,13 @@ index e3cffc3..77ad75e 100644
  [dev-dependencies]
  cw-multi-test = { workspace = true }
 diff --git a/contracts/cw20-base/src/contract.rs b/contracts/cw20-base/src/contract.rs
-index c74281f..7ac51a7 100644
+index c74281f..5bc9718 100644
 --- a/contracts/cw20-base/src/contract.rs
 +++ b/contracts/cw20-base/src/contract.rs
 @@ -91,7 +91,33 @@ fn verify_logo(logo: &Logo) -> Result<(), ContractError> {
  }
  
-+#[derive(Clone, serde::Deserialize, serde::Serialize)]
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 +struct MockDepsMut;
 +
 +impl<'a> test_fuzz::FromRef<DepsMut<'a>> for MockDepsMut {
@@ -62,7 +62,7 @@ index c74281f..7ac51a7 100644
 @@ -504,6 +531,32 @@ pub fn execute_upload_logo(
  }
  
-+#[derive(Clone, serde::Deserialize, serde::Serialize)]
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 +struct MockDeps;
 +
 +impl<'a> From<Deps<'a>> for MockDeps {
@@ -106,13 +106,13 @@ index c74281f..7ac51a7 100644
      let original_version =
          ensure_from_older_version(deps.storage, CONTRACT_NAME, CONTRACT_VERSION)?;
 diff --git a/contracts/cw20-base/src/msg.rs b/contracts/cw20-base/src/msg.rs
-index 2088712..81110d1 100644
+index 2088712..bf9e251 100644
 --- a/contracts/cw20-base/src/msg.rs
 +++ b/contracts/cw20-base/src/msg.rs
 @@ -123,5 +123,5 @@ pub enum QueryMsg {
  }
  
 -#[derive(Serialize, Deserialize, JsonSchema)]
-+#[derive(Clone, Serialize, Deserialize, JsonSchema)]
++#[derive(Clone, Debug, Serialize, Deserialize, JsonSchema)]
  pub struct MigrateMsg {}
  
