@@ -36,7 +36,7 @@ index dbd876f..ee28197 100644
 @@ -67,4 +67,85 @@ pub struct MemoryRegion {
  }
  
-+#[derive(Debug, serde::Deserialize, serde::Serialize)]
++#[derive(serde::Deserialize, serde::Serialize)]
 +struct SerializableMemoryRegion {
 +    pub host_mem_seed: Option<u64>,
 +    pub vm_addr: u64,
