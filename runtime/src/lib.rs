@@ -27,6 +27,8 @@ pub mod traits;
 struct DebugUnimplemented<T>(PhantomData<T>);
 
 impl<T> Debug for DebugUnimplemented<T> {
+    // smoelius: The third party-tests check for the absence of "unknown of type..." messages. So if
+    // the messages change, the third-party tests must be updated.
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         const PAT: &str = "TryDebug<";
         let type_name = type_name::<T>();
