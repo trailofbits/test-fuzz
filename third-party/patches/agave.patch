@@ -38,7 +38,7 @@ index 612300f..fbc8225 100644
 @@ -4,4 +4,5 @@ use std::{cell::RefCell, rc::Rc};
  const LOG_MESSAGES_BYTES_LIMIT: usize = 10 * 1000;
  
-+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct LogCollector {
      pub messages: Vec<String>,
 diff --git a/measure/src/measure.rs b/measure/src/measure.rs

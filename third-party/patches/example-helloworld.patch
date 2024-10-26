@@ -24,7 +24,7 @@ index 88714a8..026b733 100644
 @@ -19,8 +19,108 @@ pub struct GreetingAccount {
  entrypoint!(process_instruction);
  
-+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
 +struct AccountInfoElem {
 +    key: Pubkey,
 +    is_signer: bool,
@@ -93,7 +93,7 @@ index 88714a8..026b733 100644
 +    }
 +}
 +
-+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
 +struct AccountInfoVec(Vec<AccountInfoElem>);
 +
 +impl<'a> From<&[AccountInfo<'a>]> for AccountInfoVec {
