@@ -162,7 +162,8 @@ fn run_test(test: &Test, no_run: bool) {
 
     for target in &test.targets {
         test_fuzz(&subdir, &test.package, target, ["--display=corpus"])
-            .stdout(predicate::str::is_match(r"(?m)^[[:xdigit:]]{40}:").unwrap());
+            .stdout(predicate::str::is_match(r"(?m)^[[:xdigit:]]{40}:").unwrap())
+            .stdout(predicate::str::contains("unknown of type").not());
 
         test_fuzz(&subdir, &test.package, target, ["--replay=corpus"]).stdout(
             predicate::str::is_match(r"(?m)^[[:xdigit:]]{40}: Ret\((Ok|Err)\(.*\)\)$").unwrap(),
