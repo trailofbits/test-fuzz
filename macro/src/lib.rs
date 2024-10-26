@@ -1030,7 +1030,7 @@ fn args_as_turbofish(args: &Punctuated<GenericArgument, token::Comma>) -> TokenS
 }
 
 // smoelius: The current strategy for combining auto-generated values is a kind of "round robin."
-// The strategy ensures that each auto-generated value gets into at least one `Arg` value.
+// The strategy ensures that each auto-generated value gets into at least one `Args` value.
 fn args_from_autos(autos: &[Expr]) -> Expr {
     let lens: Vec<Expr> = (0..autos.len())
         .map(|i| {
