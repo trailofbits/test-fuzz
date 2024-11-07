@@ -1,16 +1,16 @@
 diff --git a/compute-budget/Cargo.toml b/compute-budget/Cargo.toml
-index 07ba01c..c68aab1 100644
+index 961ec9f..ee85710 100644
 --- a/compute-budget/Cargo.toml
 +++ b/compute-budget/Cargo.toml
-@@ -16,4 +16,6 @@ solana-frozen-abi = { workspace = true, optional = true, features = [
- solana-sdk = { workspace = true }
+@@ -17,4 +17,6 @@ solana-frozen-abi = { workspace = true, optional = true, features = [
+ solana-program-entrypoint = { workspace = true }
  
 +serde = { workspace = true }
 +
  [features]
- frozen-abi = [
+ frozen-abi = ["dep:solana-frozen-abi", "solana-fee-structure/frozen-abi"]
 diff --git a/compute-budget/src/compute_budget.rs b/compute-budget/src/compute_budget.rs
-index 577a000..255809a 100644
+index 9d1a351..22691a6 100644
 --- a/compute-budget/src/compute_budget.rs
 +++ b/compute-budget/src/compute_budget.rs
 @@ -19,5 +19,5 @@ pub const MAX_CALL_DEPTH: usize = 64;
@@ -64,16 +64,16 @@ index 4e764de..93cfd6c 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index c96da3e..73ff629 100644
+index 1beda1c..b6bb470 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
-@@ -118,4 +118,5 @@ impl fmt::Display for AllocErr {
+@@ -121,4 +121,5 @@ impl fmt::Display for AllocErr {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -146,10 +147,16 @@ impl BpfAllocator {
+@@ -149,10 +150,16 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
@@ -90,13 +90,13 @@ index c96da3e..73ff629 100644
 +    )]
      sysvar_cache: &'a SysvarCache,
  }
-@@ -174,4 +181,5 @@ impl<'a> EnvironmentConfig<'a> {
+@@ -177,4 +184,5 @@ impl<'a> EnvironmentConfig<'a> {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -180,5 +188,11 @@ pub struct SyscallContext {
+@@ -183,5 +191,11 @@ pub struct SyscallContext {
  }
  
 -#[derive(Debug, Clone)]
@@ -109,7 +109,7 @@ index c96da3e..73ff629 100644
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub struct SerializedAccountMetadata {
      pub original_data_len: usize,
-@@ -189,9 +203,27 @@ pub struct SerializedAccountMetadata {
+@@ -192,9 +206,27 @@ pub struct SerializedAccountMetadata {
  }
  
 +fn default_program_cache_for_tx_batch<'de, D>(
@@ -137,13 +137,13 @@ index c96da3e..73ff629 100644
 +    )]
      pub program_cache_for_tx_batch: &'a mut ProgramCacheForTxBatch,
      /// Runtime configurations used to provision the invocation environment.
-@@ -204,4 +236,5 @@ pub struct InvokeContext<'a> {
+@@ -207,4 +239,5 @@ pub struct InvokeContext<'a> {
      log_collector: Option<Rc<RefCell<LogCollector>>>,
      /// Latest measurement not yet accumulated in [ExecuteDetailsTimings::execute_us]
 +    #[serde(skip)]
      pub execute_time: Option<Measure>,
      pub timings: ExecuteDetailsTimings,
-@@ -210,4 +243,23 @@ pub struct InvokeContext<'a> {
+@@ -213,4 +246,23 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
@@ -191,10 +191,10 @@ index 8fb86df..4b48f84 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 5e81062..821afe7 100644
+index 883f0d2..05c9344 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -395,6 +395,7 @@ declare_builtin_function!(
+@@ -396,6 +396,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(
@@ -205,17 +205,17 @@ index 5e81062..821afe7 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 0c8352f..0b0ff72 100644
+index cfef796..f3ae967 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -81,5 +81,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -86,5 +86,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
- rand0-7 = { package = "rand", version = "0.7", optional = true }
+ rand0-7 = { workspace = true, optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -120,4 +120,6 @@ solana-transaction-error = { workspace = true, features = ["serde"], optional =
+@@ -138,4 +138,6 @@ solana-transaction-error = { workspace = true, features = ["serde"], optional =
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -223,10 +223,10 @@ index 0c8352f..0b0ff72 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 diff --git a/sdk/feature-set/Cargo.toml b/sdk/feature-set/Cargo.toml
-index 7352ff3..d7e4da2 100644
+index 19b9075..ab7ed50 100644
 --- a/sdk/feature-set/Cargo.toml
 +++ b/sdk/feature-set/Cargo.toml
-@@ -24,4 +24,6 @@ solana-pubkey = { workspace = true }
+@@ -23,4 +23,6 @@ solana-pubkey = { workspace = true }
  solana-sha256-hasher = { workspace = true }
  
 +serde = { workspace = true }
@@ -234,18 +234,18 @@ index 7352ff3..d7e4da2 100644
  [features]
  frozen-abi = [
 diff --git a/sdk/feature-set/src/lib.rs b/sdk/feature-set/src/lib.rs
-index 83d5974..4c29279 100644
+index 83b556f..b414464 100644
 --- a/sdk/feature-set/src/lib.rs
 +++ b/sdk/feature-set/src/lib.rs
-@@ -1121,5 +1121,5 @@ lazy_static! {
+@@ -1130,5 +1130,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
 +#[derive(Debug, Clone, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct FeatureSet {
-     pub active: HashMap<Pubkey, Slot>,
+     pub active: HashMap<Pubkey, u64>,
 diff --git a/sdk/src/transaction_context.rs b/sdk/src/transaction_context.rs
-index 95f65c3..94a5c8e 100644
+index 6cb9513..3363645 100644
 --- a/sdk/src/transaction_context.rs
 +++ b/sdk/src/transaction_context.rs
 @@ -33,5 +33,5 @@ pub type IndexOfAccount = u16;
@@ -295,7 +295,7 @@ index 95f65c3..94a5c8e 100644
 +    )]
      account_keys: Pin<Box<[Pubkey]>>,
      accounts: Rc<TransactionAccounts>,
-@@ -182,7 +204,7 @@ impl TransactionContext {
+@@ -190,7 +212,7 @@ impl TransactionContext {
          }
  
 -        Ok(Rc::try_unwrap(self.accounts)
@@ -306,7 +306,7 @@ index 95f65c3..94a5c8e 100644
 +        Ok((*self.accounts).clone().into_accounts())
      }
  
-@@ -447,5 +469,5 @@ pub struct TransactionReturnData {
+@@ -455,5 +477,5 @@ pub struct TransactionReturnData {
  ///
  /// This context is valid for the entire duration of a (possibly cross program) instruction being processed.
 -#[derive(Debug, Clone, Default, Eq, PartialEq)]
@@ -325,7 +325,7 @@ index c52b46a..5458d4c 100644
  [package.metadata.docs.rs]
  targets = ["x86_64-unknown-linux-gnu"]
 diff --git a/timings/src/lib.rs b/timings/src/lib.rs
-index 4687855..2013968 100644
+index 2cd7a49..388a027 100644
 --- a/timings/src/lib.rs
 +++ b/timings/src/lib.rs
 @@ -11,5 +11,5 @@ use {
@@ -335,7 +335,7 @@ index 4687855..2013968 100644
 +#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
  pub struct ProgramTiming {
      pub accumulated_us: u64,
-@@ -366,5 +366,5 @@ impl ExecuteAccessoryTimings {
+@@ -374,5 +374,5 @@ impl ExecuteAccessoryTimings {
  }
  
 -#[derive(Default, Debug, PartialEq, Eq)]
