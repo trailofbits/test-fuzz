@@ -143,22 +143,24 @@ fn run_test(test: &Test, no_run: bool) {
 
     // smoelius: Use `std::process::Command` so that we can see the output of the command as it
     // runs. `assert_cmd::Command` would capture the output.
-    assert!(Command::new("cargo")
-        .current_dir(&subdir)
-        .env_remove("RUSTUP_TOOLCHAIN")
-        .env("TEST_FUZZ_WRITE", "1")
-        .args([
-            "test",
-            "--package",
-            &test.package,
-            "--features",
-            &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
-            "--",
-            "--nocapture"
-        ])
-        .status()
-        .unwrap()
-        .success());
+    for flags in [&["--no-run", "--quiet"], &[]] as [&[&str]; 2] {
+        assert!(Command::new("cargo")
+            .current_dir(&subdir)
+            .env_remove("RUSTUP_TOOLCHAIN")
+            .env("TEST_FUZZ_WRITE", "1")
+            .args([
+                "test",
+                "--package",
+                &test.package,
+                "--features",
+                &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
+            ])
+            .args(flags)
+            .args(["--", "--nocapture"])
+            .status()
+            .unwrap()
+            .success());
+    }
 
     for target in &test.targets {
         test_fuzz(&subdir, &test.package, target, ["--display=corpus"])
