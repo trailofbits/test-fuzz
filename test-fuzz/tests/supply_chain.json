@@ -815,13 +815,6 @@
     ],
     "libc": [
       {
-        "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
-      {
         "avatar": "https://avatars1.githubusercontent.com/u/1203825?v=4",
         "id": 3,
         "kind": "user",
