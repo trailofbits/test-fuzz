@@ -10,13 +10,14 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     env::var,
     str::FromStr,
+    sync::atomic::{AtomicU32, Ordering},
 };
 use syn::{
     parse::Parser, parse2, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated,
-    token, Attribute, Block, Expr, File, FnArg, GenericArgument, GenericParam, Generics, Ident,
-    ImplItem, ImplItemFn, ItemFn, ItemImpl, ItemMod, LifetimeParam, PatType, Path, PathArguments,
-    PathSegment, Receiver, ReturnType, Signature, Stmt, Type, TypeParam, TypePath, TypeReference,
-    TypeSlice, Visibility, WhereClause, WherePredicate,
+    token, Attribute, Block, Expr, Field, FieldValue, File, FnArg, GenericArgument, GenericParam,
+    Generics, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, ItemMod, LifetimeParam, PatType, Path,
+    PathArguments, PathSegment, Receiver, ReturnType, Signature, Stmt, Type, TypeParam, TypePath,
+    TypeReference, TypeSlice, Visibility, WhereClause, WherePredicate,
 };
 
 mod ord_type;
@@ -309,11 +310,14 @@ fn map_method_or_fn(
     // here: https://users.rust-lang.org/t/error-parameter-t-is-never-used-e0392-but-i-use-it/5673
     // So, for each type parameter `T`, add a `PhantomData<T>` member to `Args` to ensure that `T`
     // is used. See also: https://github.com/rust-lang/rust/issues/23246
-    let phantom_tys = type_generic_phantom_types(&combined_generics);
-    let phantoms: Vec<Expr> = phantom_tys
+    let (phantom_idents, phantom_tys): (Vec<_>, Vec<_>) =
+        type_generic_phantom_idents_and_types(&combined_generics)
+            .into_iter()
+            .unzip();
+    let phantoms: Vec<FieldValue> = phantom_idents
         .iter()
-        .map(|_| {
-            parse_quote! { std::marker::PhantomData }
+        .map(|ident| {
+            parse_quote! { #ident: std::marker::PhantomData }
         })
         .collect();
 
@@ -350,7 +354,7 @@ fn map_method_or_fn(
 
     let self_ty_base = self_ty.and_then(type_utils::type_base);
 
-    let (mut arg_tys, fmt_args, mut ser_args, de_args) = {
+    let (mut arg_idents, mut arg_tys, fmt_args, mut ser_args, de_args) = {
         let mut candidates = BTreeSet::new();
         let result = map_args(
             &mut conversions,
@@ -370,15 +374,17 @@ fn map_method_or_fn(
         }
         result
     };
+    arg_idents.extend_from_slice(&phantom_idents);
     arg_tys.extend_from_slice(&phantom_tys);
     ser_args.extend_from_slice(&phantoms);
-    let pub_arg_tys: Vec<TokenStream2> = arg_tys.iter().map(|ty| quote! { pub #ty }).collect();
-    let args_is: Vec<Expr> = arg_tys
+    assert_eq!(arg_idents.len(), arg_tys.len());
+    let pub_arg_ident_tys: Vec<Field> = arg_idents
         .iter()
-        .enumerate()
-        .map(|(i, _)| {
-            let i = Literal::usize_unsuffixed(i);
-            parse_quote! { args . #i }
+        .zip(arg_tys.iter())
+        .map(|(ident, ty)| {
+            parse_quote! {
+                pub #ident: #ty
+            }
         })
         .collect();
     let autos: Vec<Expr> = arg_tys
@@ -389,7 +395,7 @@ fn map_method_or_fn(
             }
         })
         .collect();
-    let args_from_autos = args_from_autos(&autos);
+    let args_from_autos = args_from_autos(&arg_idents, &autos);
     let ret_ty = match &sig.output {
         ReturnType::Type(_, ty) => self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
             type_utils::expand_self(trait_path, self_ty, ty)
@@ -421,9 +427,9 @@ fn map_method_or_fn(
         (
             ty_generics.as_turbofish(),
             quote! {
-                pub(super) struct Args #ty_generics (
-                    #(#pub_arg_tys),*
-                ) #args_where_clause;
+                pub(super) struct Args #ty_generics #args_where_clause {
+                    #(#pub_arg_ident_tys),*
+                }
             },
         )
     };
@@ -442,9 +448,9 @@ fn map_method_or_fn(
         quote! {}
     } else {
         quote! {
-            #mod_ident :: write_args::< #(#combined_type_idents),* >(#mod_ident :: Args(
+            #mod_ident :: write_args::< #(#combined_type_idents),* >(#mod_ident :: Args {
                 #(#ser_args),*
-            ));
+            });
         }
     };
     let write_generic_args_and_args = quote! {
@@ -598,14 +604,14 @@ fn map_method_or_fn(
             // smoelius: It is tempting to want to put all of these functions under `impl Args`.
             // But `write_args` and `read args` impose different bounds on their arguments. So
             // I don't think that idea would work.
-            pub(super) fn write_args #impl_generics (args: Args #ty_generics_as_turbofish) #where_clause {
+            pub(super) fn write_args #impl_generics (Args { #(#arg_idents),* }: Args #ty_generics_as_turbofish) #where_clause {
                 #[derive(serde::Serialize)]
-                struct Args #ty_generics (
-                    #(#pub_arg_tys),*
-                ) #args_where_clause;
-                let args = Args(
-                    #(#args_is),*
-                );
+                struct Args #ty_generics #args_where_clause {
+                    #(#pub_arg_ident_tys),*
+                }
+                let args = Args {
+                    #(#arg_idents),*
+                };
                 test_fuzz::runtime::write_args(&args);
             }
 
@@ -614,13 +620,13 @@ fn map_method_or_fn(
             impl<R: std::io::Read> UsingReader<R> {
                 pub fn read_args #impl_generics_deserializable (reader: R) -> Option<Args #ty_generics_as_turbofish> #where_clause {
                     #[derive(serde::Deserialize)]
-                    struct Args #ty_generics (
-                        #(#pub_arg_tys),*
-                    ) #args_where_clause;
+                    struct Args #ty_generics #args_where_clause {
+                        #(#pub_arg_ident_tys),*
+                    }
                     let args = test_fuzz::runtime::read_args::<Args #ty_generics_as_turbofish, _>(reader);
-                    args.map(|args| #mod_ident :: Args(
-                        #(#args_is),*
-                    ))
+                    args.map(|Args { #(#arg_idents),* }| #mod_ident :: Args {
+                        #(#arg_idents),*
+                    })
                 }
             }
 
@@ -762,22 +768,22 @@ fn generic_params_map<'a, 'b>(
         .collect()
 }
 
+#[allow(clippy::type_complexity)]
 fn map_args<'a, I>(
     conversions: &mut Conversions,
     candidates: &mut BTreeSet<OrdType>,
     trait_path: Option<&Path>,
     self_ty: Option<&Type>,
     inputs: I,
-) -> (Vec<Type>, Vec<Stmt>, Vec<Expr>, Vec<Expr>)
+) -> (Vec<Ident>, Vec<Type>, Vec<Stmt>, Vec<FieldValue>, Vec<Expr>)
 where
     I: Iterator<Item = &'a FnArg>,
 {
-    let (ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
-        .enumerate()
+    let (ident, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
         .map(map_arg(conversions, candidates, trait_path, self_ty))
         .multiunzip();
 
-    (ty, fmt, ser, de)
+    (ident, ty, fmt, ser, de)
 }
 
 fn map_arg<'a>(
@@ -785,30 +791,30 @@ fn map_arg<'a>(
     candidates: &'a mut BTreeSet<OrdType>,
     trait_path: Option<&'a Path>,
     self_ty: Option<&'a Type>,
-) -> impl FnMut((usize, &FnArg)) -> (Type, Stmt, Expr, Expr) + 'a {
-    move |(i, arg)| {
-        let i = Literal::usize_unsuffixed(i);
-        let (expr, ty, fmt) = match arg {
+) -> impl FnMut(&FnArg) -> (Ident, Type, Stmt, FieldValue, Expr) + 'a {
+    move |arg| {
+        let (ident, expr, ty, fmt) = match arg {
             FnArg::Receiver(Receiver {
                 reference,
                 mutability,
                 ..
             }) => {
+                let ident = anonymous_ident();
                 let expr = parse_quote! { self };
                 let reference = reference
                     .as_ref()
                     .map(|(and, lifetime)| quote! { #and #lifetime });
                 let ty = parse_quote! { #reference #mutability #self_ty };
                 let fmt = parse_quote! {
-                    test_fuzz::runtime::TryDebug(&self.#i).apply(&mut |value| {
+                    test_fuzz::runtime::TryDebug(&self.#ident).apply(&mut |value| {
                         debug_struct.field("self", value);
                     });
                 };
-                (expr, ty, fmt)
+                (ident, expr, ty, fmt)
             }
             FnArg::Typed(PatType { pat, ty, .. }) => {
                 let ident = match *pat_utils::pat_idents(pat).as_slice() {
-                    [] => Ident::new("_", Span::call_site()),
+                    [] => anonymous_ident(),
                     [ident] => ident.clone(),
                     _ => panic!("Unexpected pattern: {}", pat.to_token_stream()),
                 };
@@ -818,41 +824,41 @@ fn map_arg<'a>(
                 });
                 let name = ident.to_string();
                 let fmt = parse_quote! {
-                    test_fuzz::runtime::TryDebug(&self.#i).apply(&mut |value| {
+                    test_fuzz::runtime::TryDebug(&self.#ident).apply(&mut |value| {
                         debug_struct.field(#name, value);
                     });
                 };
-                (expr, ty, fmt)
+                (ident, expr, ty, fmt)
             }
         };
-        let (ty, ser, de) = map_typed_arg(conversions, candidates, &i, &expr, &ty);
-        (ty, fmt, ser, de)
+        let (ty, ser, de) = map_typed_arg(conversions, candidates, &ident, &expr, &ty);
+        (ident, ty, fmt, ser, de)
     }
 }
 
 fn map_typed_arg(
     conversions: &mut Conversions,
     candidates: &mut BTreeSet<OrdType>,
-    i: &Literal,
+    ident: &Ident,
     expr: &Expr,
     ty: &Type,
-) -> (Type, Expr, Expr) {
+) -> (Type, FieldValue, Expr) {
     candidates.insert(OrdType(ty.clone()));
     if let Some((arg_ty, used)) = conversions.get_mut(&OrdType(ty.clone())) {
         *used = true;
         return (
             parse_quote! { #arg_ty },
-            parse_quote! { <#arg_ty as test_fuzz::FromRef::<#ty>>::from_ref( & #expr ) },
-            parse_quote! { <_ as test_fuzz::Into::<_>>::into(args.#i) },
+            parse_quote! { #ident: <#arg_ty as test_fuzz::FromRef::<#ty>>::from_ref( & #expr ) },
+            parse_quote! { <_ as test_fuzz::Into::<_>>::into(args.#ident) },
         );
     }
     match &ty {
-        Type::Path(path) => map_path_arg(conversions, candidates, i, expr, path),
-        Type::Reference(ty) => map_ref_arg(conversions, candidates, i, expr, ty),
+        Type::Path(path) => map_path_arg(conversions, candidates, ident, expr, path),
+        Type::Reference(ty) => map_ref_arg(conversions, candidates, ident, expr, ty),
         _ => (
             parse_quote! { #ty },
-            parse_quote! { #expr.clone() },
-            parse_quote! { args.#i },
+            parse_quote! { #ident: #expr.clone() },
+            parse_quote! { args.#ident },
         ),
     }
 }
@@ -860,24 +866,24 @@ fn map_typed_arg(
 fn map_path_arg(
     _conversions: &mut Conversions,
     _candidates: &mut BTreeSet<OrdType>,
-    i: &Literal,
+    ident: &Ident,
     expr: &Expr,
     path: &TypePath,
-) -> (Type, Expr, Expr) {
+) -> (Type, FieldValue, Expr) {
     (
         parse_quote! { #path },
-        parse_quote! { #expr.clone() },
-        parse_quote! { args.#i },
+        parse_quote! { #ident: #expr.clone() },
+        parse_quote! { args.#ident },
     )
 }
 
 fn map_ref_arg(
     conversions: &mut Conversions,
     candidates: &mut BTreeSet<OrdType>,
-    i: &Literal,
+    ident: &Ident,
     expr: &Expr,
     ty: &TypeReference,
-) -> (Type, Expr, Expr) {
+) -> (Type, FieldValue, Expr) {
     let (maybe_mut, mutability) = if ty.mutability.is_some() {
         ("mut_", quote! { mut })
     } else {
@@ -890,12 +896,12 @@ fn map_ref_arg(
                 let as_maybe_mut_str = Ident::new(&format!("as_{maybe_mut}str"), Span::call_site());
                 (
                     parse_quote! { String },
-                    parse_quote! { #expr.to_owned() },
-                    parse_quote! { args.#i.#as_maybe_mut_str() },
+                    parse_quote! { #ident: #expr.to_owned() },
+                    parse_quote! { args.#ident.#as_maybe_mut_str() },
                 )
             } else {
                 let expr = parse_quote! { (*#expr) };
-                let (ty, ser, de) = map_path_arg(conversions, candidates, i, &expr, path);
+                let (ty, ser, de) = map_path_arg(conversions, candidates, ident, &expr, path);
                 (ty, ser, parse_quote! { & #mutability #de })
             }
         }
@@ -903,13 +909,13 @@ fn map_ref_arg(
             let as_maybe_mut_slice = Ident::new(&format!("as_{maybe_mut}slice"), Span::call_site());
             (
                 parse_quote! { Vec<#elem> },
-                parse_quote! { #expr.to_vec() },
-                parse_quote! { args.#i.#as_maybe_mut_slice() },
+                parse_quote! { #ident: #expr.to_vec() },
+                parse_quote! { args.#ident.#as_maybe_mut_slice() },
             )
         }
         _ => {
             let expr = parse_quote! { (*#expr) };
-            let (ty, ser, de) = map_typed_arg(conversions, candidates, i, &expr, ty);
+            let (ty, ser, de) = map_typed_arg(conversions, candidates, ident, &expr, ty);
             (ty, ser, parse_quote! { & #mutability #de })
         }
     }
@@ -1007,17 +1013,19 @@ fn restrict_to_deserialize(generics: &Generics) -> Generics {
     generics
 }
 
-fn type_generic_phantom_types(generics: &Generics) -> Vec<Type> {
+fn type_generic_phantom_idents_and_types(generics: &Generics) -> Vec<(Ident, Type)> {
     generics
         .params
         .iter()
         .filter_map(|param| match param {
-            GenericParam::Type(TypeParam { ident, .. }) => {
-                Some(parse_quote! { std::marker::PhantomData< #ident > })
-            }
-            GenericParam::Lifetime(LifetimeParam { lifetime, .. }) => {
-                Some(parse_quote! { std::marker::PhantomData< & #lifetime () > })
-            }
+            GenericParam::Type(TypeParam { ident, .. }) => Some((
+                anonymous_ident(),
+                parse_quote! { std::marker::PhantomData< #ident > },
+            )),
+            GenericParam::Lifetime(LifetimeParam { lifetime, .. }) => Some((
+                anonymous_ident(),
+                parse_quote! { std::marker::PhantomData< & #lifetime () > },
+            )),
             GenericParam::Const(_) => None,
         })
         .collect()
@@ -1034,7 +1042,8 @@ fn args_as_turbofish(args: &Punctuated<GenericArgument, token::Comma>) -> TokenS
 // smoelius: One problem with the current approach is that it increments `Args` fields in lockstep.
 // So for any two fields with the same number of values, if value x appears alongside value y, then
 // whenever x appears, it appears alongside y (and vice versa).
-fn args_from_autos(autos: &[Expr]) -> Expr {
+fn args_from_autos(idents: &[Ident], autos: &[Expr]) -> Expr {
+    assert_eq!(idents.len(), autos.len());
     let lens: Vec<Expr> = (0..autos.len())
         .map(|i| {
             let i = Literal::usize_unsuffixed(i);
@@ -1043,11 +1052,12 @@ fn args_from_autos(autos: &[Expr]) -> Expr {
             }
         })
         .collect();
-    let args: Vec<Expr> = (0..autos.len())
+    let args: Vec<FieldValue> = (0..autos.len())
         .map(|i| {
+            let ident = &idents[i];
             let i = Literal::usize_unsuffixed(i);
             parse_quote! {
-                autos.#i[(i + #i) % lens[#i]].clone()
+                #ident: autos.#i[(i + #i) % lens[#i]].clone()
             }
         })
         .collect();
@@ -1059,7 +1069,7 @@ fn args_from_autos(autos: &[Expr]) -> Expr {
             0
         };
         (0..max).map(move |i|
-            Args( #(#args),* )
+            Args { #(#args),* }
         )
     }}
 }
@@ -1080,6 +1090,13 @@ fn mod_ident(opts: &TestFuzzOpts, self_ty_base: Option<&Ident>, target_ident: &I
     }
     s.push_str("_fuzz");
     Ident::new(&s, Span::call_site())
+}
+
+static INDEX: AtomicU32 = AtomicU32::new(0);
+
+fn anonymous_ident() -> Ident {
+    let index = INDEX.fetch_add(1, Ordering::SeqCst);
+    Ident::new(&format!("_{index}"), Span::call_site())
 }
 
 fn log(tokens: &TokenStream2) {
