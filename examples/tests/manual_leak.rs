@@ -2,10 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct WrappedKey<'key> {
-    #[serde(
-        serialize_with = "test_fuzz::serialize_ref",
-        deserialize_with = "test_fuzz::deserialize_ref"
-    )]
+    #[serde(with = "test_fuzz::serde_ref")]
     key: &'key [u8; 32],
 }
 

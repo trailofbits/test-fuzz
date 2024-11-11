@@ -51,6 +51,11 @@ macro_rules! leak {
     };
 }
 
+pub mod serde_ref {
+    pub use super::deserialize_ref as deserialize;
+    pub use super::serialize_ref as serialize;
+}
+
 /// `serialize_ref` functions similar to `leak!`, but it is meant to be used with Serde's
 /// [`serialize_with`](https://serde.rs/field-attrs.html#serialize_with) field attribute.
 #[inline]
@@ -72,6 +77,11 @@ where
 {
     let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
     Ok(Box::leak(Box::new(x)))
+}
+
+pub mod serde_ref_mut {
+    pub use super::deserialize_ref_mut as deserialize;
+    pub use super::serialize_ref_mut as serialize;
 }
 
 /// `serialize_ref_mut` is similar to `serialize_ref`, except it operates on a mutable reference
