@@ -21,7 +21,8 @@
 6. [Environment variables]
 7. [Limitations]
 8. [Tips and tricks]
-9. [License]
+9. [Semantic versioning policy]
+10. [License]
 
 ## Installation
 
@@ -494,6 +495,10 @@ These options are incompatible in the following sense. If a fuzz target's argume
 - Rust [won't allow you to] implement `serde::Serialize` for other repositories' types. But you may be able to [patch] other repositories to make their types serializable. Also, [`cargo-clone`] can be useful for grabbing dependencies' repositories.
 
 - [Serde attributes] can be helpful in implementing `serde::Serialize`/`serde::Deserialize` for difficult types.
+
+## Semantic versioning policy
+
+We reserve the right to change the format of corpora, crashes, hangs, and work queues, and to consider such changes non-breaking.
 
 ## License
 
