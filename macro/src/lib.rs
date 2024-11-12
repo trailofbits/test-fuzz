@@ -27,6 +27,8 @@ mod pat_utils;
 
 mod type_utils;
 
+type Attrs = Vec<Attribute>;
+
 type Conversions = BTreeMap<OrdType, (Type, bool)>;
 
 static CARGO_CRATE_NAME: Lazy<String> =
@@ -224,6 +226,7 @@ fn map_method_or_fn(
     sig: &Signature,
     block: &Block,
 ) -> (TokenStream2, ItemMod) {
+    let mut sig = sig.clone();
     let stmts = &block.stmts;
 
     let mut conversions = Conversions::new();
@@ -354,14 +357,14 @@ fn map_method_or_fn(
 
     let self_ty_base = self_ty.and_then(type_utils::type_base);
 
-    let (mut arg_idents, mut arg_tys, fmt_args, mut ser_args, de_args) = {
+    let (mut arg_attrs, mut arg_idents, mut arg_tys, fmt_args, mut ser_args, de_args) = {
         let mut candidates = BTreeSet::new();
         let result = map_args(
             &mut conversions,
             &mut candidates,
             trait_path,
             self_ty,
-            sig.inputs.iter(),
+            sig.inputs.iter_mut(),
         );
         for (from, (to, used)) in conversions {
             assert!(
@@ -374,10 +377,23 @@ fn map_method_or_fn(
         }
         result
     };
+    arg_attrs.extend(phantom_idents.iter().map(|_| Attrs::new()));
     arg_idents.extend_from_slice(&phantom_idents);
     arg_tys.extend_from_slice(&phantom_tys);
     ser_args.extend_from_slice(&phantoms);
-    assert_eq!(arg_idents.len(), arg_tys.len());
+    assert_eq!(arg_attrs.len(), arg_idents.len());
+    assert_eq!(arg_attrs.len(), arg_tys.len());
+    let attr_pub_arg_ident_tys: Vec<Field> = arg_attrs
+        .iter()
+        .zip(arg_idents.iter())
+        .zip(arg_tys.iter())
+        .map(|((attrs, ident), ty)| {
+            parse_quote! {
+                #(#attrs)*
+                pub #ident: #ty
+            }
+        })
+        .collect();
     let pub_arg_ident_tys: Vec<Field> = arg_idents
         .iter()
         .zip(arg_tys.iter())
@@ -607,7 +623,7 @@ fn map_method_or_fn(
             pub(super) fn write_args #impl_generics (Args { #(#arg_idents),* }: Args #ty_generics_as_turbofish) #where_clause {
                 #[derive(serde::Serialize)]
                 struct Args #ty_generics #args_where_clause {
-                    #(#pub_arg_ident_tys),*
+                    #(#attr_pub_arg_ident_tys),*
                 }
                 let args = Args {
                     #(#arg_idents),*
@@ -621,7 +637,7 @@ fn map_method_or_fn(
                 pub fn read_args #impl_generics_deserializable (reader: R) -> Option<Args #ty_generics_as_turbofish> #where_clause {
                     #[derive(serde::Deserialize)]
                     struct Args #ty_generics #args_where_clause {
-                        #(#pub_arg_ident_tys),*
+                        #(#attr_pub_arg_ident_tys),*
                     }
                     let args = test_fuzz::runtime::read_args::<Args #ty_generics_as_turbofish, _>(reader);
                     args.map(|Args { #(#arg_idents),* }| #mod_ident :: Args {
@@ -775,15 +791,22 @@ fn map_args<'a, I>(
     trait_path: Option<&Path>,
     self_ty: Option<&Type>,
     inputs: I,
-) -> (Vec<Ident>, Vec<Type>, Vec<Stmt>, Vec<FieldValue>, Vec<Expr>)
+) -> (
+    Vec<Attrs>,
+    Vec<Ident>,
+    Vec<Type>,
+    Vec<Stmt>,
+    Vec<FieldValue>,
+    Vec<Expr>,
+)
 where
-    I: Iterator<Item = &'a FnArg>,
+    I: Iterator<Item = &'a mut FnArg>,
 {
-    let (ident, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
+    let (attrs, ident, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
         .map(map_arg(conversions, candidates, trait_path, self_ty))
         .multiunzip();
 
-    (ident, ty, fmt, ser, de)
+    (attrs, ident, ty, fmt, ser, de)
 }
 
 fn map_arg<'a>(
@@ -791,10 +814,11 @@ fn map_arg<'a>(
     candidates: &'a mut BTreeSet<OrdType>,
     trait_path: Option<&'a Path>,
     self_ty: Option<&'a Type>,
-) -> impl FnMut(&FnArg) -> (Ident, Type, Stmt, FieldValue, Expr) + 'a {
+) -> impl FnMut(&mut FnArg) -> (Attrs, Ident, Type, Stmt, FieldValue, Expr) + 'a {
     move |arg| {
-        let (ident, expr, ty, fmt) = match arg {
+        let (fn_arg_attrs, ident, expr, ty, fmt) = match arg {
             FnArg::Receiver(Receiver {
+                attrs,
                 reference,
                 mutability,
                 ..
@@ -810,9 +834,9 @@ fn map_arg<'a>(
                         debug_struct.field("self", value);
                     });
                 };
-                (ident, expr, ty, fmt)
+                (attrs, ident, expr, ty, fmt)
             }
-            FnArg::Typed(PatType { pat, ty, .. }) => {
+            FnArg::Typed(PatType { attrs, pat, ty, .. }) => {
                 let ident = match *pat_utils::pat_idents(pat).as_slice() {
                     [] => anonymous_ident(),
                     [ident] => ident.clone(),
@@ -828,11 +852,20 @@ fn map_arg<'a>(
                         debug_struct.field(#name, value);
                     });
                 };
-                (ident, expr, ty, fmt)
+                (attrs, ident, expr, ty, fmt)
             }
         };
-        let (ty, ser, de) = map_typed_arg(conversions, candidates, &ident, &expr, &ty);
-        (ident, ty, fmt, ser, de)
+        let attrs = std::mem::take(fn_arg_attrs);
+        let (ty, ser, de) = if attrs.is_empty() {
+            map_typed_arg(conversions, candidates, &ident, &expr, &ty)
+        } else {
+            (
+                parse_quote! { #ty },
+                parse_quote! { #ident: <#ty as std::clone::Clone>::clone( & #expr ) },
+                parse_quote! { args.#ident },
+            )
+        };
+        (attrs, ident, ty, fmt, ser, de)
     }
 }
 
