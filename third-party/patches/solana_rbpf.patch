@@ -16,7 +16,7 @@ index 781ce87..a999428 100644
 +
 +[workspace]
 diff --git a/src/memory_region.rs b/src/memory_region.rs
-index e0ebfe6..a724fd4 100644
+index e0ebfe6..64f1fa0 100644
 --- a/src/memory_region.rs
 +++ b/src/memory_region.rs
 @@ -34,5 +34,5 @@ use std::{
@@ -314,21 +314,21 @@ index e0ebfe6..a724fd4 100644
 +
  impl fmt::Debug for AlignedMemoryMapping<'_> {
      fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-@@ -728,5 +907,5 @@ impl<'a> AlignedMemoryMapping<'a> {
+@@ -728,5 +904,5 @@ impl<'a> AlignedMemoryMapping<'a> {
  
  /// Maps virtual memory to host memory.
 -#[derive(Debug)]
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub enum MemoryMapping<'a> {
      /// Used when address translation is disabled
-@@ -736,5 +915,5 @@ pub enum MemoryMapping<'a> {
+@@ -736,5 +912,5 @@ pub enum MemoryMapping<'a> {
      Aligned(AlignedMemoryMapping<'a>),
      /// Memory mapping that allows mapping unaligned memory regions.
 -    Unaligned(UnalignedMemoryMapping<'a>),
 +    Unaligned(UnalignedMemoryMapping),
  }
  
-@@ -906,5 +1085,5 @@ fn generate_access_violation(
+@@ -906,5 +1082,5 @@ fn generate_access_violation(
  
  /// Fast, small linear cache used to speed up unaligned memory mapping.
 -#[derive(Debug)]
