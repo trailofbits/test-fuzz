@@ -191,10 +191,10 @@ index 8fb86df..4b48f84 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 883f0d2..05c9344 100644
+index 9f62c4f..ffbf6b8 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -396,6 +396,7 @@ declare_builtin_function!(
+@@ -398,6 +398,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(
@@ -205,7 +205,7 @@ index 883f0d2..05c9344 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 1b79c86..a02ef5d 100644
+index fb69474..7c400c6 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
 @@ -90,5 +90,5 @@ qualifier_attr = { workspace = true, optional = true }
