@@ -64,7 +64,7 @@ index 4e764de..93cfd6c 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 1beda1c..b6bb470 100644
+index a54e083..4681ab6 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -121,4 +121,5 @@ impl fmt::Display for AllocErr {
@@ -79,11 +79,11 @@ index 1beda1c..b6bb470 100644
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct EnvironmentConfig<'a> {
      pub blockhash: Hash,
+     pub blockhash_lamports_per_signature: u64,
      epoch_total_stake: Option<u64>,
 +    #[serde(skip)]
      epoch_vote_accounts: Option<&'a VoteAccountsHashMap>,
      pub feature_set: Arc<FeatureSet>,
-     pub lamports_per_signature: u64,
 +    #[serde(
 +        serialize_with = "test_fuzz::serialize_ref",
 +        deserialize_with = "test_fuzz::deserialize_ref"
@@ -205,17 +205,17 @@ index 883f0d2..05c9344 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index cfef796..f3ae967 100644
+index 1b79c86..a02ef5d 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -86,5 +86,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -90,5 +90,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { workspace = true, optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -138,4 +138,6 @@ solana-transaction-error = { workspace = true, features = ["serde"], optional =
+@@ -148,4 +148,6 @@ solana-transaction-error = { workspace = true, features = ["serde"], optional =
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -234,10 +234,10 @@ index 19b9075..ab7ed50 100644
  [features]
  frozen-abi = [
 diff --git a/sdk/feature-set/src/lib.rs b/sdk/feature-set/src/lib.rs
-index 83b556f..b414464 100644
+index a66da8b..81bc72b 100644
 --- a/sdk/feature-set/src/lib.rs
 +++ b/sdk/feature-set/src/lib.rs
-@@ -1130,5 +1130,5 @@ lazy_static! {
+@@ -1140,5 +1140,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
