@@ -64,7 +64,7 @@ index 4e764de..93cfd6c 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index a54e083..4681ab6 100644
+index a54e083..05b63f8 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -121,4 +121,5 @@ impl fmt::Display for AllocErr {
@@ -87,13 +87,13 @@ index a54e083..4681ab6 100644
 +    #[serde(with = "test_fuzz::serde_ref")]
      sysvar_cache: &'a SysvarCache,
  }
-@@ -177,4 +184,5 @@ impl<'a> EnvironmentConfig<'a> {
+@@ -177,4 +181,5 @@ impl<'a> EnvironmentConfig<'a> {
  }
  
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct SyscallContext {
      pub allocator: BpfAllocator,
-@@ -183,5 +191,11 @@ pub struct SyscallContext {
+@@ -183,5 +188,11 @@ pub struct SyscallContext {
  }
  
 -#[derive(Debug, Clone)]
@@ -106,7 +106,7 @@ index a54e083..4681ab6 100644
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub struct SerializedAccountMetadata {
      pub original_data_len: usize,
-@@ -192,9 +206,24 @@ pub struct SerializedAccountMetadata {
+@@ -192,9 +203,24 @@ pub struct SerializedAccountMetadata {
  }
  
 +fn default_program_cache_for_tx_batch<'de, D>(
@@ -131,13 +131,13 @@ index a54e083..4681ab6 100644
 +    )]
      pub program_cache_for_tx_batch: &'a mut ProgramCacheForTxBatch,
      /// Runtime configurations used to provision the invocation environment.
-@@ -207,4 +239,5 @@ pub struct InvokeContext<'a> {
+@@ -207,4 +233,5 @@ pub struct InvokeContext<'a> {
      log_collector: Option<Rc<RefCell<LogCollector>>>,
      /// Latest measurement not yet accumulated in [ExecuteDetailsTimings::execute_us]
 +    #[serde(skip)]
      pub execute_time: Option<Measure>,
      pub timings: ExecuteDetailsTimings,
-@@ -213,4 +246,23 @@ pub struct InvokeContext<'a> {
+@@ -213,4 +240,23 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {

@@ -21,7 +21,7 @@ index 0657df5..f1bd04f 100644
  pub struct ComputeBudget {
      /// Number of compute units that a transaction or individual instruction is
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 5b2d417..1ff0e77 100644
+index 5b2d417..97c388f 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -111,4 +111,5 @@ impl fmt::Display for AllocErr {
@@ -66,7 +66,7 @@ index 5b2d417..1ff0e77 100644
 +    #[serde(with = "test_fuzz::serde_ref")]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
-@@ -161,5 +185,7 @@ pub struct InvokeContext<'a> {
+@@ -161,5 +179,7 @@ pub struct InvokeContext<'a> {
      current_compute_budget: ComputeBudget,
      compute_meter: RefCell<u64>,
 +    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
@@ -74,7 +74,7 @@ index 5b2d417..1ff0e77 100644
 +    #[serde(skip_serializing, deserialize_with = "default_loaded_programs")]
      pub programs_modified_by_tx: &'a mut LoadedProgramsForTxBatch,
      pub feature_set: Arc<FeatureSet>,
-@@ -171,4 +197,23 @@ pub struct InvokeContext<'a> {
+@@ -171,4 +191,23 @@ pub struct InvokeContext<'a> {
  }
  
 +impl<'a> Clone for InvokeContext<'a> {
