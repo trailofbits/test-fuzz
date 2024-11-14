@@ -284,7 +284,7 @@ index e0ebfe6..a724fd4 100644
 +            generate_access_violation(&self.config, self.sbpf_version, access_type, vm_addr, 0)
                  .unwrap_err(),
          )
-@@ -549,15 +711,32 @@ impl<'a> UnalignedMemoryMapping<'a> {
+@@ -549,15 +711,29 @@ impl<'a> UnalignedMemoryMapping<'a> {
  /// Memory mapping that uses the upper half of an address to identify the
  /// underlying memory region.
 +#[derive(serde::Deserialize, serde::Serialize)]
@@ -292,10 +292,7 @@ index e0ebfe6..a724fd4 100644
      /// Mapped memory regions
      regions: Box<[MemoryRegion]>,
      /// VM configuration
-+    #[serde(
-+        serialize_with = "test_fuzz::serialize_ref",
-+        deserialize_with = "test_fuzz::deserialize_ref"
-+    )]
++    #[serde(with = "test_fuzz::serde_ref")]
      config: &'a Config,
      /// Executable sbpf_version
      sbpf_version: SBPFVersion,

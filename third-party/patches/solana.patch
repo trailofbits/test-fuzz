@@ -49,7 +49,7 @@ index 5b2d417..1ff0e77 100644
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub struct SerializedAccountMetadata {
      pub original_data_len: usize,
-@@ -154,6 +162,22 @@ pub struct SerializedAccountMetadata {
+@@ -154,6 +162,16 @@ pub struct SerializedAccountMetadata {
  }
  
 +fn default_loaded_programs<'de, D>(_: D) -> Result<&'static mut LoadedProgramsForTxBatch, D::Error>
@@ -61,15 +61,9 @@ index 5b2d417..1ff0e77 100644
 +
 +#[derive(Debug, serde::Deserialize, serde::Serialize)]
  pub struct InvokeContext<'a> {
-+    #[serde(
-+        serialize_with = "test_fuzz::serialize_ref_mut",
-+        deserialize_with = "test_fuzz::deserialize_ref_mut"
-+    )]
++    #[serde(with = "test_fuzz::serde_ref_mut")]
      pub transaction_context: &'a mut TransactionContext,
-+    #[serde(
-+        serialize_with = "test_fuzz::serialize_ref",
-+        deserialize_with = "test_fuzz::deserialize_ref"
-+    )]
++    #[serde(with = "test_fuzz::serde_ref")]
      sysvar_cache: &'a SysvarCache,
      log_collector: Option<Rc<RefCell<LogCollector>>>,
 @@ -161,5 +185,7 @@ pub struct InvokeContext<'a> {

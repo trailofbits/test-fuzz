@@ -73,7 +73,7 @@ index a54e083..4681ab6 100644
 +#[derive(Clone, serde::Deserialize, serde::Serialize)]
  pub struct BpfAllocator {
      len: u64,
-@@ -149,10 +150,16 @@ impl BpfAllocator {
+@@ -149,10 +150,13 @@ impl BpfAllocator {
  }
  
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
@@ -84,10 +84,7 @@ index a54e083..4681ab6 100644
 +    #[serde(skip)]
      epoch_vote_accounts: Option<&'a VoteAccountsHashMap>,
      pub feature_set: Arc<FeatureSet>,
-+    #[serde(
-+        serialize_with = "test_fuzz::serialize_ref",
-+        deserialize_with = "test_fuzz::deserialize_ref"
-+    )]
++    #[serde(with = "test_fuzz::serde_ref")]
      sysvar_cache: &'a SysvarCache,
  }
 @@ -177,4 +184,5 @@ impl<'a> EnvironmentConfig<'a> {
@@ -109,7 +106,7 @@ index a54e083..4681ab6 100644
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub struct SerializedAccountMetadata {
      pub original_data_len: usize,
-@@ -192,9 +206,27 @@ pub struct SerializedAccountMetadata {
+@@ -192,9 +206,24 @@ pub struct SerializedAccountMetadata {
  }
  
 +fn default_program_cache_for_tx_batch<'de, D>(
@@ -125,10 +122,7 @@ index a54e083..4681ab6 100644
 +#[derive(Debug, serde::Deserialize, serde::Serialize)]
  pub struct InvokeContext<'a> {
      /// Information about the currently executing transaction.
-+    #[serde(
-+        serialize_with = "test_fuzz::serialize_ref_mut",
-+        deserialize_with = "test_fuzz::deserialize_ref_mut"
-+    )]
++    #[serde(with = "test_fuzz::serde_ref_mut")]
      pub transaction_context: &'a mut TransactionContext,
      /// The local program cache for the transaction batch.
 +    #[serde(
