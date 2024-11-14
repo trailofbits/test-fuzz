@@ -2,7 +2,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/anza-xyz/agave",
-    "rev": "938bd86722dc9dc8c6cb89e03df3445fc2cba170",
+    "rev": "8bf688fe71fb01ba74af9cfd975bfcc6f9d04641",
     "patch": "agave.patch",
     "subdir": ".",
     "package": "solana-bpf-loader-program",
