@@ -1,5 +1,11 @@
 # Changelog
 
+## 7.0.0
+
+- Improve documentation ([#461](https://github.com/trailofbits/test-fuzz/pull/461))
+- BREAKING CHANGE: Store corpora, crashes, hangs, and work queue as structs rather than tuples. This change could cause users' existing corpora, etc. to no longer work. Hence, we are considering this a breaking change. However, future similar format changes may not be considered breaking. This change is to facilitate [PR #476](https://github.com/trailofbits/test-fuzz/pull/476). ([#480](https://github.com/trailofbits/test-fuzz/pull/480))
+- Support [Serde field attributes](https://serde.rs/field-attrs.html) on function arguments ([#476](https://github.com/trailofbits/test-fuzz/pull/476) and [#485](https://github.com/trailofbits/test-fuzz/pull/485))
+
 ## 6.0.0
 
 - BREAKING CHANGE: No longer pass `-D` to `cargo afl fuzz`. This is a breaking change for users of `cargo-afl` version [0.15.4](https://github.com/rust-fuzz/afl.rs/blob/master/CHANGES.md#0154) (or earlier), which relies on AFL++ version [4.10.c](https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/Changelog.md#version-410c-release) (or earlier). As of version [4.20.c](https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/Changelog.md#version-420c-release), AFL++ ignores `-D`. ([#434](https://github.com/trailofbits/test-fuzz/pull/434))
