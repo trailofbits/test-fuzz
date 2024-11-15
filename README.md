@@ -196,6 +196,38 @@ fn foo() {}
 mod foo_fuzz {}
 ```
 
+#### Serde field attributes on function arguments
+
+The `test_fuzz` macro allows [Serde field attributes] to be applied to function arguments. This provides another tool for dealing with difficult types.
+
+The following is an example. Traits `serde::Serialize` and `serde::Deserialize` cannot be derived for `Context` because it contains a `Mutex`. However, `Context` implements `Default`. So applying `#[serde(skip)]` to the `Context` argument causes it to be skipped when serializing, and to take its default value when deserializing.
+
+```rust
+use std::sync::Mutex;
+
+// Traits `serde::Serialize` and `serde::Deserialize` cannot be derived for `Context` because it
+// contains a `Mutex`.
+#[derive(Default)]
+struct Context {
+    lock: Mutex<()>,
+}
+
+impl Clone for Context {
+    fn clone(&self) -> Self {
+        Self {
+            lock: Mutex::new(()),
+        }
+    }
+}
+
+#[test_fuzz::test_fuzz]
+fn target(#[serde(skip)] context: Context, x: i32) {
+    assert!(x >= 0);
+}
+```
+
+Note that when Serde field attributes are applied to an argument, the `test_fuzz` macro performs no other [conversions] on the argument.
+
 ### `test_fuzz_impl` macro
 
 Whenever the [`test_fuzz`] macro is used in an `impl` block,
@@ -516,6 +548,7 @@ We reserve the right to change the format of corpora, crashes, hangs, and work q
 [Overview]: #overview
 [Postcard]: https://github.com/jamesmunns/postcard
 [Serde attributes]: https://serde.rs/attributes.html
+[Serde field attributes]: https://serde.rs/field-attrs.html
 [Substrate externalities]: https://substrate.dev/docs/en/knowledgebase/runtime/tests#mock-runtime-storage
 [The Cargo Book]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#choosing-features
 [Tips and tricks]: #tips-and-tricks
@@ -554,6 +587,7 @@ We reserve the right to change the format of corpora, crashes, hangs, and work q
 [associated_type.rs]: https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/associated_type.rs#L26
 [auto-generate corpus files]: #auto-generated-corpus-files
 [conversion.rs]: https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/conversion.rs#L5
+[conversions]: #serializable--deserializable-arguments
 [deriving them]: https://serde.rs/derive.html
 [is not enabled]: https://github.com/rust-lang/rust/issues/45599#issuecomment-460488107
 [patch]: https://doc.rust-lang.org/edition-guide/rust-2018/cargo-and-crates-io/replacing-dependencies-with-patch.html
