@@ -58,10 +58,10 @@ walkdir = "2.5"
 xshell = "0.2"
 
 # smoelius: Internal packages
-internal = { path = "internal", package = "test-fuzz-internal", version = "=6.0.0" }
-runtime = { path = "runtime", package = "test-fuzz-runtime", version = "=6.0.0" }
-test-fuzz = { path = "test-fuzz", version = "=6.0.0" }
-test-fuzz-macro = { path = "macro", version = "=6.0.0" }
+internal = { path = "internal", package = "test-fuzz-internal", version = "=7.0.0" }
+runtime = { path = "runtime", package = "test-fuzz-runtime", version = "=7.0.0" }
+test-fuzz = { path = "test-fuzz", version = "=7.0.0" }
+test-fuzz-macro = { path = "macro", version = "=7.0.0" }
 testing = { path = "testing", package = "test-fuzz-testing" }
 
 [workspace.lints.rust.unexpected_cfgs]
