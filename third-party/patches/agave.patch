@@ -224,17 +224,17 @@ index 9f62c4f..ffbf6b8 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 485a8d3..a15c3ff 100644
+index 1cc7507..0cf0eb6 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -94,5 +94,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -101,5 +101,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { workspace = true, optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -158,4 +158,6 @@ solana-transaction-error = { workspace = true, features = ["serde"], optional =
+@@ -168,4 +168,6 @@ solana-transaction-error = { workspace = true, features = ["serde"], optional =
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
