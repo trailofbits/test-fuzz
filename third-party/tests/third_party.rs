@@ -107,11 +107,15 @@ fn run_test(test: &Test, no_run: bool) {
     // However, rather than try to upgrade everything and then downgrade just `x25519-dalek`
     // (similar to how I did for `libp2p-swarm-derive`), I am instead trying to upgrade just the
     // packages that need it.
+    // smoelius: `cw20-base` relies on `serde_json` 1.0.114, which is before `serde_json::Value`
+    // started deriving `Hash`:
+    // https://github.com/serde-rs/json/blob/e1b3a6d8a161ff5ec4865b487d148c17d0188e3e/src/value/mod.rs#L115
     for package in [
         "ahash@0.7.6",
         "ahash@0.7.7",
         "libc",
         "num-bigint@0.4.0",
+        "serde_json",
         "tempfile",
     ] {
         #[allow(clippy::let_unit_value)]
