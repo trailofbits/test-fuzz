@@ -144,7 +144,7 @@ pub fn write_enabled() -> bool {
 #[must_use]
 fn enabled(opt: &str) -> bool {
     let key = "TEST_FUZZ".to_owned() + if opt.is_empty() { "" } else { "_" } + opt;
-    env::var(key).map_or(false, |value| value != "0")
+    env::var(key).is_ok_and(|value| value != "0")
 }
 
 pub fn write_impl_generic_args<T>(args: &[&str]) {
