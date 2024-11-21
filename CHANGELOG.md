@@ -1,5 +1,9 @@
 # Changelog
 
+## 7.0.1
+
+- Update `cargo_metadata` to version `0.19` ([#487](https://github.com/trailofbits/test-fuzz/pull/487))
+
 ## 7.0.0
 
 - Improve documentation ([#461](https://github.com/trailofbits/test-fuzz/pull/461))
