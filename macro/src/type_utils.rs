@@ -127,7 +127,7 @@ impl VisitMut for ExpandSelfVisitor<'_> {
                     .path
                     .segments
                     .first()
-                    .map_or(false, |segment| segment.ident == "Self")
+                    .is_some_and(|segment| segment.ident == "Self")
             {
                 let segments = path.path.segments.iter().skip(1).collect::<Vec<_>>();
                 let self_ty = self.self_ty;
