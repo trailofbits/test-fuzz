@@ -1096,13 +1096,6 @@
     ],
     "rand": [
       {
-        "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
-      {
         "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
         "id": 51,
         "kind": "team",
@@ -1141,13 +1134,6 @@
       }
     ],
     "rand_core": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
       {
         "avatar": "https://avatars.githubusercontent.com/u/42028081?v=4",
         "id": 563,
