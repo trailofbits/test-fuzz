@@ -210,7 +210,7 @@ index 3c62ccc..34b67a6 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 9f62c4f..ffbf6b8 100644
+index da9ca78..7093666 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -398,6 +398,7 @@ declare_builtin_function!(
@@ -224,17 +224,17 @@ index 9f62c4f..ffbf6b8 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 1cc7507..0cf0eb6 100644
+index 4dabd2c..efe4646 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -101,5 +101,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -109,5 +109,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { workspace = true, optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -168,4 +168,6 @@ solana-transaction-error = { workspace = true, features = ["serde"], optional =
+@@ -195,4 +195,6 @@ solana-transaction-error = { workspace = true, features = [
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -242,29 +242,47 @@ index 1cc7507..0cf0eb6 100644
  [target.'cfg(target_arch = "wasm32")'.dependencies]
  getrandom = { version = "0.1", features = ["wasm-bindgen"] }
 diff --git a/sdk/feature-set/Cargo.toml b/sdk/feature-set/Cargo.toml
-index 19b9075..ab7ed50 100644
+index e0104fd..783a67c 100644
 --- a/sdk/feature-set/Cargo.toml
 +++ b/sdk/feature-set/Cargo.toml
-@@ -23,4 +23,6 @@ solana-pubkey = { workspace = true }
+@@ -11,5 +11,5 @@ edition = { workspace = true }
+ 
+ [dependencies]
+-ahash = { workspace = true }
++ahash = { workspace = true, features = ["serde"] }
+ lazy_static = { workspace = true }
+ solana-epoch-schedule = { workspace = true }
+@@ -24,4 +24,6 @@ solana-pubkey = { workspace = true }
  solana-sha256-hasher = { workspace = true }
  
-+serde = { workspace = true }
++serde = { workspace = true, features = ["serde_derive"] }
 +
  [features]
- frozen-abi = [
+ frozen-abi = ["dep:solana-frozen-abi", "dep:solana-frozen-abi-macro"]
 diff --git a/sdk/feature-set/src/lib.rs b/sdk/feature-set/src/lib.rs
-index c465fd1..ab914b2 100644
+index 04fe40e..89c3ce9 100644
 --- a/sdk/feature-set/src/lib.rs
 +++ b/sdk/feature-set/src/lib.rs
-@@ -1149,5 +1149,5 @@ lazy_static! {
+@@ -1155,5 +1155,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
 +#[derive(Debug, Clone, Eq, PartialEq, serde::Deserialize, serde::Serialize)]
  pub struct FeatureSet {
-     pub active: HashMap<Pubkey, u64>,
+     pub active: AHashMap<Pubkey, u64>,
+diff --git a/sdk/pubkey/Cargo.toml b/sdk/pubkey/Cargo.toml
+index 1648f3a..dffc85d 100644
+--- a/sdk/pubkey/Cargo.toml
++++ b/sdk/pubkey/Cargo.toml
+@@ -65,5 +65,5 @@ borsh = ["dep:borsh", "dep:borsh0-10", "std"]
+ bytemuck = ["dep:bytemuck", "dep:bytemuck_derive"]
+ curve25519 = ["dep:curve25519-dalek", "sha2"]
+-default = ["std"]
++default = ["std", "serde"]
+ dev-context-only-utils = ["dep:arbitrary", "rand"]
+ frozen-abi = [
 diff --git a/sdk/transaction-context/src/lib.rs b/sdk/transaction-context/src/lib.rs
-index 33bd6bc..1fc2e93 100644
+index 1cd0854..326b077 100644
 --- a/sdk/transaction-context/src/lib.rs
 +++ b/sdk/transaction-context/src/lib.rs
 @@ -57,5 +57,5 @@ pub type IndexOfAccount = u16;
@@ -344,7 +362,7 @@ index c52b46a..5458d4c 100644
  [package.metadata.docs.rs]
  targets = ["x86_64-unknown-linux-gnu"]
 diff --git a/timings/src/lib.rs b/timings/src/lib.rs
-index 2cd7a49..388a027 100644
+index 3564559..058cd63 100644
 --- a/timings/src/lib.rs
 +++ b/timings/src/lib.rs
 @@ -11,5 +11,5 @@ use {
@@ -354,7 +372,7 @@ index 2cd7a49..388a027 100644
 +#[derive(Default, Debug, PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
  pub struct ProgramTiming {
      pub accumulated_us: u64,
-@@ -374,5 +374,5 @@ impl ExecuteAccessoryTimings {
+@@ -373,5 +373,5 @@ impl ExecuteAccessoryTimings {
  }
  
 -#[derive(Default, Debug, PartialEq, Eq)]

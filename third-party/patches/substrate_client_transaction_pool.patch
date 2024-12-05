@@ -19,17 +19,30 @@ index d346add..d270d0f 100644
  [dev-dependencies]
  array-bytes = { workspace = true, default-features = true }
 diff --git a/substrate/client/transaction-pool/src/graph/base_pool.rs b/substrate/client/transaction-pool/src/graph/base_pool.rs
-index e4c3a6c..dd840aa 100644
+index 04eaa99..72cd43a 100644
 --- a/substrate/client/transaction-pool/src/graph/base_pool.rs
 +++ b/substrate/client/transaction-pool/src/graph/base_pool.rs
 @@ -85,5 +85,5 @@ pub struct PruneStatus<Hash, Ex> {
+ 
+ /// A transaction source that includes a timestamp indicating when the transaction was submitted.
+-#[derive(Debug, Clone, PartialEq, Eq)]
++#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+ pub struct TimedTransactionSource {
+ 	/// The original source of the transaction.
+@@ -91,4 +91,5 @@ pub struct TimedTransactionSource {
+ 
+ 	/// The time at which the transaction was submitted.
++	#[serde(skip)]
+ 	pub timestamp: Option<Instant>,
+ }
+@@ -123,5 +124,5 @@ impl TimedTransactionSource {
  
  /// Immutable transaction
 -#[derive(PartialEq, Eq, Clone)]
 +#[derive(PartialEq, Eq, Clone, serde::Deserialize, serde::Serialize)]
  pub struct Transaction<Hash, Extrinsic> {
  	/// Raw extrinsic representing that transaction.
-@@ -221,5 +221,7 @@ pub struct BasePool<Hash: hash::Hash + Eq, Ex> {
+@@ -259,5 +260,7 @@ pub struct BasePool<Hash: hash::Hash + Eq, Ex> {
  }
  
 -impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> Default for BasePool<Hash, Ex> {
@@ -38,7 +51,7 @@ index e4c3a6c..dd840aa 100644
 +{
  	fn default() -> Self {
  		Self::new(false)
-@@ -227,5 +229,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> Default for Bas
+@@ -265,5 +268,7 @@ impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> Default for Bas
  }
  
 -impl<Hash: hash::Hash + Member + Serialize, Ex: std::fmt::Debug> BasePool<Hash, Ex> {
@@ -64,7 +77,7 @@ index 2c1e64c..ca41c4f 100644
  	pub imported_at: Instant,
  }
 diff --git a/substrate/client/transaction-pool/src/graph/ready.rs b/substrate/client/transaction-pool/src/graph/ready.rs
-index 860bcff..85a3b95 100644
+index 9061d0e..2d9e31d 100644
 --- a/substrate/client/transaction-pool/src/graph/ready.rs
 +++ b/substrate/client/transaction-pool/src/graph/ready.rs
 @@ -39,5 +39,5 @@ use super::{
@@ -129,7 +142,7 @@ index 860bcff..85a3b95 100644
 +				}
  				let tx = ready.get_mut(other).expect(HASH_READY);
  				tx.unlocks.push(hash.clone());
-@@ -606,5 +621,8 @@ mod tests {
+@@ -605,5 +620,8 @@ mod tests {
  	}
  
 -	fn import<H: hash::Hash + Eq + Member + Serialize, Ex>(
