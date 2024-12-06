@@ -43,14 +43,5 @@
     "subdir": ".",
     "package": "solana_rbpf",
     "targets": ["syscall_str_cmp_rust"]
-  },
-  {
-    "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
-    "url": "https://github.com/solana-labs/solana",
-    "rev": "27eff8408b7223bb3c4ab70523f8a8dca3ca6645",
-    "patch": "solana.patch",
-    "subdir": ".",
-    "package": "solana-bpf-loader-program",
-    "targets": ["process_instruction"]
   }
 ]
