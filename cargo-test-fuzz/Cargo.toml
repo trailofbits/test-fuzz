@@ -50,6 +50,8 @@ xshell = { workspace = true }
 testing = { workspace = true }
 
 [features]
+default = ["sha1-filenames"]
+sha1-filenames = []
 test-install = []
 
 [lints]

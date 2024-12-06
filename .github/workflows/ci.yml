@@ -148,7 +148,13 @@ jobs:
         run: sudo apt-get install protobuf-compiler
 
       - name: Install cargo-afl
-        run: cargo install cargo-afl
+        run: |
+          git clone https://github.com/smoelius/afl.rs
+          cd afl.rs
+          git checkout permissive_create-in-mark_as_variable
+          git submodule update --init
+          cargo install cargo-afl --path cargo-afl
+          cargo afl config --build
 
       - name: Run afl-system-config
         run: cargo afl system-config
