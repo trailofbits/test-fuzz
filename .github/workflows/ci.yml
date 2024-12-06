@@ -130,6 +130,7 @@ jobs:
         package: [third-party, other]
         serde_format: [bincode, postcard]
         toolchain: [stable, nightly]
+        sha1_filenames: [false, true]
 
     steps:
       - uses: actions/checkout@v4
@@ -192,6 +193,9 @@ jobs:
           TEST_CMD="cargo test   $MAYBE_THIRD_PARTY $SERDE_FORMAT $CONFIG_GROUP_RUNNER -- --nocapture $SHUFFLE"
           echo "BUILD_CMD=$BUILD_CMD" >> "$GITHUB_ENV"
           echo "TEST_CMD=$TEST_CMD" >> "$GITHUB_ENV"
+          if ${{ matrix.sha1_filenames }}; then
+            echo 'AFL_SHA1_FILENAMES=1' >> "$GITHUB_ENV"
+          fi
 
       - name: Build
         run: $BUILD_CMD
