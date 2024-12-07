@@ -208,6 +208,13 @@ jobs:
           RUST_BACKTRACE: 1
           RUST_LOG: warn
 
+      - name: Check for non-SHA1 filenames
+        if: ${{ matrix.sha1_filenames }}
+        run: |
+          if find target -name 'id:*' | grep .; then
+            exit 1
+          fi
+
   all-checks:
     needs:
       - lint
