@@ -1,8 +1,8 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 781ce87..a999428 100644
+index f5537db..2196853 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -32,4 +32,7 @@ shuttle = { version = "0.7.1", optional = true }
+@@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
  thiserror = "1.0.26"
  
 +serde = "1.0"
@@ -10,7 +10,7 @@ index 781ce87..a999428 100644
 +
  [target.'cfg(windows)'.dependencies]
  winapi = { version = "0.3", features = ["memoryapi", "sysinfoapi", "winnt", "errhandlingapi"], optional = true }
-@@ -49,2 +52,4 @@ elf = "0.0.10"
+@@ -48,2 +51,4 @@ elf = "0.0.10"
  json = "0.12"
  test_utils = { path = "test_utils/" }
 +
@@ -499,17 +499,17 @@ index 3afa01b..06a58d9 100644
  pub struct TestContextObject {
      /// Contains the register state at every instruction in order of execution
 diff --git a/tests/execution.rs b/tests/execution.rs
-index 9573c91..79c1a2d 100644
+index 22439ff..bc1a6d5 100644
 --- a/tests/execution.rs
 +++ b/tests/execution.rs
-@@ -2681,5 +2681,5 @@ declare_builtin_function!(
+@@ -2705,5 +2705,5 @@ declare_builtin_function!(
      /// For test_nested_vm_syscall()
      SyscallNestedVm,
 -    fn rust(
 +    fn rust<'a>(
          _context_object: &mut TestContextObject,
          depth: u64,
-@@ -2688,5 +2688,5 @@ declare_builtin_function!(
+@@ -2712,5 +2712,5 @@ declare_builtin_function!(
          _arg4: u64,
          _arg5: u64,
 -        _memory_mapping: &mut MemoryMapping,
