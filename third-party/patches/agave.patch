@@ -53,10 +53,10 @@ index 190abb3..c157072 100644
  pub struct Measure {
      name: &'static str,
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index a29ab0c..f2b30fb 100644
+index ca32351..38e4389 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
-@@ -53,4 +53,6 @@ solana_rbpf = { workspace = true }
+@@ -53,4 +53,6 @@ solana-type-overrides = { workspace = true }
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -64,7 +64,7 @@ index a29ab0c..f2b30fb 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index db6486a..e3e6b7c 100644
+index 6f11dd0..0d32507 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
@@ -198,10 +198,10 @@ index da87460..4689e69 100644
  pub struct SysvarCache {
      // full account data as provided by bank, including any trailing zero bytes
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index 3c62ccc..34b67a6 100644
+index fc99553..4d1776c 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -31,4 +31,7 @@ solana_rbpf = { workspace = true }
+@@ -31,4 +31,7 @@ solana-type-overrides = { workspace = true }
  thiserror = { workspace = true }
  
 +serde = { workspace = true }
@@ -210,7 +210,7 @@ index 3c62ccc..34b67a6 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 38240e4..f6ecdf8 100644
+index 5b65d61..a32962f 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
 @@ -397,6 +397,7 @@ declare_builtin_function!(
@@ -224,17 +224,17 @@ index 38240e4..f6ecdf8 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index aa17bba..9f1a4bc 100644
+index 84d662e..96d95f7 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -111,5 +111,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -112,5 +112,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { workspace = true, optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -202,4 +202,6 @@ solana-transaction-error = { workspace = true, features = [
+@@ -205,4 +205,6 @@ solana-validator-exit = { workspace = true }
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -260,10 +260,10 @@ index e0104fd..783a67c 100644
  [features]
  frozen-abi = ["dep:solana-frozen-abi", "dep:solana-frozen-abi-macro"]
 diff --git a/sdk/feature-set/src/lib.rs b/sdk/feature-set/src/lib.rs
-index 4eefad3..db44e10 100644
+index 5239edc..670b8eb 100644
 --- a/sdk/feature-set/src/lib.rs
 +++ b/sdk/feature-set/src/lib.rs
-@@ -1165,5 +1165,5 @@ lazy_static! {
+@@ -1180,5 +1180,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
