@@ -1,18 +1,22 @@
 diff --git a/substrate/client/transaction-pool/Cargo.toml b/substrate/client/transaction-pool/Cargo.toml
-index d346add..d270d0f 100644
+index 72586b9..8d94fbd 100644
 --- a/substrate/client/transaction-pool/Cargo.toml
 +++ b/substrate/client/transaction-pool/Cargo.toml
-@@ -25,6 +25,6 @@ itertools = { workspace = true }
+@@ -25,10 +25,10 @@ itertools = { workspace = true }
  linked-hash-map = { workspace = true }
  log = { workspace = true, default-features = true }
 -parking_lot = { workspace = true, default-features = true }
--serde = { features = ["derive"], workspace = true, default-features = true }
 +parking_lot = { workspace = true, features = ["serde"] }
-+serde = { features = ["derive", "rc"], workspace = true, default-features = true }
- thiserror = { workspace = true }
  prometheus-endpoint = { workspace = true, default-features = true }
-@@ -42,4 +42,6 @@ tokio-stream = { workspace = true }
- tokio = { workspace = true, default-features = true, features = ["macros", "time"] }
+ sc-client-api = { workspace = true, default-features = true }
+ sc-transaction-pool-api = { workspace = true, default-features = true }
+ sc-utils = { workspace = true, default-features = true }
+-serde = { features = ["derive"], workspace = true, default-features = true }
++serde = { features = ["derive", "rc"], workspace = true, default-features = true }
+ sp-api = { workspace = true, default-features = true }
+ sp-blockchain = { workspace = true, default-features = true }
+@@ -42,4 +42,6 @@ tokio = { workspace = true, default-features = true, features = ["macros", "time
+ tokio-stream = { workspace = true }
  
 +test-fuzz = { path = "../../../../../test-fuzz" }
 +
