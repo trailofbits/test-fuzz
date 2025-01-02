@@ -23,7 +23,6 @@ pub fn as_feature() -> &'static str {
 
     assert!(
         formats.len() <= 1,
-        "{}",
         "Multiple serde formats selected: {formats:?}"
     );
 
