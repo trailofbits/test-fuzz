@@ -112,11 +112,6 @@ jobs:
           cargo install dylint-link || true
           ./scripts/dylint.sh
 
-      - name: Udeps
-        run: |
-          cargo install cargo-udeps || true
-          cargo clean && cargo +nightly udeps --features=test-install --all-targets
-
   test:
     needs: [maybe-expedite]
 
@@ -158,10 +153,11 @@ jobs:
       - name: Install tools
         run: |
           rustup +nightly component add clippy
-          cargo install cargo-license      || true
-          cargo install cargo-supply-chain || true
-          cargo install cargo-unmaintained || true
-          cargo install group-runner       || true
+          cargo install cargo-license        || true
+          cargo install cargo-supply-chain   || true
+          cargo install cargo-udeps --locked || true
+          cargo install cargo-unmaintained   || true
+          cargo install group-runner         || true
 
       - name: Free up space
         run: |

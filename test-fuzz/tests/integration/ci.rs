@@ -123,6 +123,20 @@ fn supply_chain() {
 }
 
 #[test]
+fn udeps() {
+    Command::new("cargo")
+        .args([
+            "+nightly",
+            "udeps",
+            "--features=test-install",
+            "--all-targets",
+        ])
+        .current_dir("..")
+        .assert()
+        .success();
+}
+
+#[test]
 fn unmaintained() {
     Command::new("cargo")
         .args(["unmaintained", "--color=never", "--fail-fast"])
