@@ -196,13 +196,6 @@
     ],
     "bitflags": [
       {
-        "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
-      {
         "avatar": "https://avatars1.githubusercontent.com/u/1203825?v=4",
         "id": 3,
         "kind": "user",
@@ -875,13 +868,6 @@
     ],
     "log": [
       {
-        "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
-      {
         "avatar": "https://avatars1.githubusercontent.com/u/1203825?v=4",
         "id": 3,
         "kind": "user",
@@ -1533,22 +1519,6 @@
         "login": "jwilm",
         "name": "Joe Wilm"
       },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/29714349?v=4",
-        "id": 1911,
-        "kind": "team",
-        "login": "github:alacritty:publishers",
-        "name": "Publishers"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/8886672?v=4",
-        "id": 8732,
-        "kind": "user",
-        "login": "chrisduerr",
-        "name": "Christian Duerr"
-      }
-    ],
-    "vte_generate_state_changes": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/29714349?v=4",
         "id": 1911,
