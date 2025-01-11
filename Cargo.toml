@@ -85,4 +85,8 @@ option-if-let-else = "allow"
 redundant-pub-crate = "allow"
 
 [workspace.metadata.unmaintained]
-ignore = ["parse_duration", "strip-ansi-escapes"]
+ignore = [
+    "parse_duration",
+    # https://github.com/alacritty/vte/pull/122#issuecomment-2579278540
+    "utf8parse"
+]
