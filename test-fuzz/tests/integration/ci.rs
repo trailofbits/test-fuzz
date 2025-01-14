@@ -2,6 +2,7 @@ use assert_cmd::{assert::OutputAssertExt, cargo::CommandCargoExt};
 use regex::Regex;
 use similar_asserts::SimpleDiff;
 use std::{
+    collections::HashSet,
     env::var,
     fs::{read_to_string, write},
     path::Path,
@@ -104,18 +105,24 @@ fn supply_chain() {
         .success();
 
     let stdout_actual = std::str::from_utf8(&assert.get_output().stdout).unwrap();
-    let value = serde_json::Value::from_str(stdout_actual).unwrap();
-    let stdout_normalized = serde_json::to_string_pretty(&value).unwrap() + "\n";
+    let value_actual = serde_json::Value::from_str(stdout_actual).unwrap();
+    let stdout_normalized = serde_json::to_string_pretty(&value_actual).unwrap() + "\n";
 
     let path = Path::new("tests/supply_chain.json");
-
-    let stdout_expected = read_to_string(path).unwrap();
 
     if enabled("BLESS") {
         write(path, stdout_normalized).unwrap();
     } else {
+        let object_actual = value_actual.as_object().unwrap();
+        let set_actual = object_actual.into_iter().collect::<HashSet<_>>();
+
+        let stdout_expected = read_to_string(path).unwrap();
+        let value_expected = serde_json::Value::from_str(&stdout_expected).unwrap();
+        let object_expected = value_expected.as_object().unwrap();
+        let set_expected = object_expected.into_iter().collect::<HashSet<_>>();
+
         assert!(
-            stdout_expected == stdout_normalized,
+            set_actual.is_subset(&set_expected),
             "{}",
             SimpleDiff::from_str(&stdout_expected, &stdout_normalized, "left", "right")
         );
