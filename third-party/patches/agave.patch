@@ -1,19 +1,19 @@
 diff --git a/compute-budget/Cargo.toml b/compute-budget/Cargo.toml
-index 961ec9f..ee85710 100644
+index 78d4761..8a835c8 100644
 --- a/compute-budget/Cargo.toml
 +++ b/compute-budget/Cargo.toml
-@@ -17,4 +17,6 @@ solana-frozen-abi = { workspace = true, optional = true, features = [
+@@ -18,4 +18,6 @@ solana-frozen-abi = { workspace = true, optional = true, features = [
  solana-program-entrypoint = { workspace = true }
  
 +serde = { workspace = true }
 +
  [features]
- frozen-abi = ["dep:solana-frozen-abi", "solana-fee-structure/frozen-abi"]
+ dev-context-only-utils = ["dep:qualifier_attr"]
 diff --git a/compute-budget/src/compute_budget.rs b/compute-budget/src/compute_budget.rs
-index 9d1a351..22691a6 100644
+index 3924706..710bc9f 100644
 --- a/compute-budget/src/compute_budget.rs
 +++ b/compute-budget/src/compute_budget.rs
-@@ -19,5 +19,5 @@ pub const MAX_CALL_DEPTH: usize = 64;
+@@ -21,5 +21,5 @@ pub const MAX_CALL_DEPTH: usize = 64;
  pub const STACK_FRAME_SIZE: usize = 4096;
  
 -#[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -53,7 +53,7 @@ index 190abb3..c157072 100644
  pub struct Measure {
      name: &'static str,
 diff --git a/program-runtime/Cargo.toml b/program-runtime/Cargo.toml
-index ca32351..38e4389 100644
+index 484921a..47a66f9 100644
 --- a/program-runtime/Cargo.toml
 +++ b/program-runtime/Cargo.toml
 @@ -53,4 +53,6 @@ solana-type-overrides = { workspace = true }
@@ -64,7 +64,7 @@ index ca32351..38e4389 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 6f11dd0..0d32507 100644
+index 9b61473..ca050ef 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
@@ -198,10 +198,10 @@ index da87460..4689e69 100644
  pub struct SysvarCache {
      // full account data as provided by bank, including any trailing zero bytes
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index fc99553..4d1776c 100644
+index f6875d7..51d5c16 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
-@@ -31,4 +31,7 @@ solana-type-overrides = { workspace = true }
+@@ -51,4 +51,7 @@ solana-type-overrides = { workspace = true }
  thiserror = { workspace = true }
  
 +serde = { workspace = true }
@@ -210,10 +210,10 @@ index fc99553..4d1776c 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 5b65d61..a32962f 100644
+index 395b058..ae9f6c7 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -397,6 +397,7 @@ declare_builtin_function!(
+@@ -398,6 +398,7 @@ declare_builtin_function!(
  );
  
 -pub fn process_instruction_inner(
@@ -224,17 +224,17 @@ index 5b65d61..a32962f 100644
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index 84d662e..96d95f7 100644
+index f7132e4..ae811cf 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -112,5 +112,5 @@ qualifier_attr = { workspace = true, optional = true }
+@@ -110,5 +110,5 @@ qualifier_attr = { workspace = true, optional = true }
  rand = { workspace = true, optional = true }
  rand0-7 = { workspace = true, optional = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
  serde_bytes = { workspace = true }
  serde_derive = { workspace = true }
-@@ -205,4 +205,6 @@ solana-validator-exit = { workspace = true }
+@@ -207,4 +207,6 @@ solana-validator-exit = { workspace = true }
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
@@ -260,10 +260,10 @@ index e0104fd..783a67c 100644
  [features]
  frozen-abi = ["dep:solana-frozen-abi", "dep:solana-frozen-abi-macro"]
 diff --git a/sdk/feature-set/src/lib.rs b/sdk/feature-set/src/lib.rs
-index 5239edc..670b8eb 100644
+index 8fc7fb5..67c5249 100644
 --- a/sdk/feature-set/src/lib.rs
 +++ b/sdk/feature-set/src/lib.rs
-@@ -1180,5 +1180,5 @@ lazy_static! {
+@@ -1185,5 +1185,5 @@ lazy_static! {
  /// `FeatureSet` holds the set of currently active/inactive runtime features
  #[cfg_attr(feature = "frozen-abi", derive(solana_frozen_abi_macro::AbiExample))]
 -#[derive(Debug, Clone, Eq, PartialEq)]
@@ -281,8 +281,19 @@ index 1648f3a..dffc85d 100644
 +default = ["std", "serde"]
  dev-context-only-utils = ["dep:arbitrary", "rand"]
  frozen-abi = [
+diff --git a/sdk/transaction-context/Cargo.toml b/sdk/transaction-context/Cargo.toml
+index 64ffc63..11e2ddb 100644
+--- a/sdk/transaction-context/Cargo.toml
++++ b/sdk/transaction-context/Cargo.toml
+@@ -25,5 +25,5 @@ rustdoc-args = ["--cfg=docsrs"]
+ bincode = { workspace = true, optional = true }
+ solana-rent = { workspace = true }
+-solana-signature = { workspace = true, optional = true }
++solana-signature = { workspace = true, optional = true, features = ["serde"] }
+ 
+ [dev-dependencies]
 diff --git a/sdk/transaction-context/src/lib.rs b/sdk/transaction-context/src/lib.rs
-index 1cd0854..326b077 100644
+index 1ba52fd..15e68fc 100644
 --- a/sdk/transaction-context/src/lib.rs
 +++ b/sdk/transaction-context/src/lib.rs
 @@ -57,5 +57,5 @@ pub type IndexOfAccount = u16;
