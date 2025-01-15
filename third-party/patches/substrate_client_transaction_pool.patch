@@ -23,7 +23,7 @@ index 72586b9..8d94fbd 100644
  [dev-dependencies]
  array-bytes = { workspace = true, default-features = true }
 diff --git a/substrate/client/transaction-pool/src/graph/base_pool.rs b/substrate/client/transaction-pool/src/graph/base_pool.rs
-index 04eaa99..72cd43a 100644
+index 3b4afc8..42cd548 100644
 --- a/substrate/client/transaction-pool/src/graph/base_pool.rs
 +++ b/substrate/client/transaction-pool/src/graph/base_pool.rs
 @@ -85,5 +85,5 @@ pub struct PruneStatus<Hash, Ex> {
@@ -81,7 +81,7 @@ index 2c1e64c..ca41c4f 100644
  	pub imported_at: Instant,
  }
 diff --git a/substrate/client/transaction-pool/src/graph/ready.rs b/substrate/client/transaction-pool/src/graph/ready.rs
-index 9061d0e..2d9e31d 100644
+index b8aef99..379bc5b 100644
 --- a/substrate/client/transaction-pool/src/graph/ready.rs
 +++ b/substrate/client/transaction-pool/src/graph/ready.rs
 @@ -39,5 +39,5 @@ use super::{
@@ -146,7 +146,7 @@ index 9061d0e..2d9e31d 100644
 +				}
  				let tx = ready.get_mut(other).expect(HASH_READY);
  				tx.unlocks.push(hash.clone());
-@@ -605,5 +620,8 @@ mod tests {
+@@ -603,5 +618,8 @@ mod tests {
  	}
  
 -	fn import<H: hash::Hash + Eq + Member + Serialize, Ex>(
@@ -157,7 +157,7 @@ index 9061d0e..2d9e31d 100644
  		ready: &mut ReadyTransactions<H, Ex>,
  		tx: Transaction<H, Ex>,
 diff --git a/substrate/client/transaction-pool/src/graph/tracked_map.rs b/substrate/client/transaction-pool/src/graph/tracked_map.rs
-index 6c3bbbf..825f05c 100644
+index fe15c6e..adc2a2f 100644
 --- a/substrate/client/transaction-pool/src/graph/tracked_map.rs
 +++ b/substrate/client/transaction-pool/src/graph/tracked_map.rs
 @@ -34,6 +34,9 @@ pub trait Size {
