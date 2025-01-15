@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-runtime"
-version = "7.0.1"
+version = "7.0.2"
 edition = "2021"
 
 description = "test-fuzz-runtime"

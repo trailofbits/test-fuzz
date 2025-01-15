@@ -1,5 +1,10 @@
 # Changelog
 
+## 7.0.2
+
+- Fix error message that is printed when multiple Serde formats are selected ([#498](https://github.com/trailofbits/test-fuzz/pull/498))
+- Update `itertools` to version `0.14` ([#497](https://github.com/trailofbits/test-fuzz/pull/497))
+
 ## 7.0.1
 
 - Update `cargo_metadata` to version `0.19` ([#487](https://github.com/trailofbits/test-fuzz/pull/487))
