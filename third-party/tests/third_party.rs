@@ -1,5 +1,6 @@
 use assert_cmd::assert::Assert;
 use cargo_metadata::MetadataCommand;
+use log::debug;
 use once_cell::sync::Lazy;
 use option_set::option_set;
 use predicates::prelude::*;
@@ -148,7 +149,8 @@ fn run_test(test: &Test, no_run: bool) {
     // smoelius: Use `std::process::Command` so that we can see the output of the command as it
     // runs. `assert_cmd::Command` would capture the output.
     for flags in [&["--no-run", "--quiet"], &[]] as [&[&str]; 2] {
-        assert!(Command::new("cargo")
+        let mut command = Command::new("cargo");
+        command
             .current_dir(&subdir)
             .env_remove("RUSTUP_TOOLCHAIN")
             .env("TEST_FUZZ_WRITE", "1")
@@ -160,10 +162,9 @@ fn run_test(test: &Test, no_run: bool) {
                 &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
             ])
             .args(flags)
-            .args(["--", "--nocapture"])
-            .status()
-            .unwrap()
-            .success());
+            .args(["--", "--nocapture"]);
+        debug!("{:?}", command);
+        assert!(command.status().unwrap().success());
     }
 
     for target in &test.targets {

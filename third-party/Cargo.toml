@@ -10,6 +10,7 @@ publish = false
 assert_cmd = { workspace = true }
 bitflags = { workspace = true }
 cargo_metadata = { workspace = true }
+log = { workspace = true }
 once_cell = { workspace = true }
 option_set = { workspace = true }
 predicates = { workspace = true }
