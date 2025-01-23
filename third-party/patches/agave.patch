@@ -64,7 +64,7 @@ index 484921a..47a66f9 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/program-runtime/src/invoke_context.rs b/program-runtime/src/invoke_context.rs
-index 9b61473..ca050ef 100644
+index 31dce36..cc8d49c 100644
 --- a/program-runtime/src/invoke_context.rs
 +++ b/program-runtime/src/invoke_context.rs
 @@ -115,4 +115,5 @@ impl fmt::Display for AllocErr {
@@ -198,7 +198,7 @@ index da87460..4689e69 100644
  pub struct SysvarCache {
      // full account data as provided by bank, including any trailing zero bytes
 diff --git a/programs/bpf_loader/Cargo.toml b/programs/bpf_loader/Cargo.toml
-index f6875d7..51d5c16 100644
+index 87807f2..5ef6f5e 100644
 --- a/programs/bpf_loader/Cargo.toml
 +++ b/programs/bpf_loader/Cargo.toml
 @@ -51,4 +51,7 @@ solana-type-overrides = { workspace = true }
@@ -210,31 +210,31 @@ index f6875d7..51d5c16 100644
  [dev-dependencies]
  assert_matches = { workspace = true }
 diff --git a/programs/bpf_loader/src/lib.rs b/programs/bpf_loader/src/lib.rs
-index 395b058..ae9f6c7 100644
+index 5395416..eaae26a 100644
 --- a/programs/bpf_loader/src/lib.rs
 +++ b/programs/bpf_loader/src/lib.rs
-@@ -398,6 +398,7 @@ declare_builtin_function!(
- );
+@@ -396,6 +396,7 @@ declare_builtin_function!(
  
--pub fn process_instruction_inner(
+ #[cfg_attr(feature = "svm-internal", qualifiers(pub))]
+-pub(crate) fn process_instruction_inner(
 -    invoke_context: &mut InvokeContext,
 +#[test_fuzz::test_fuzz]
-+pub fn process_instruction_inner<'a>(
++pub(crate) fn process_instruction_inner<'a>(
 +    invoke_context: &mut InvokeContext<'a>,
  ) -> Result<u64, Box<dyn std::error::Error>> {
      let log_collector = invoke_context.get_log_collector();
 diff --git a/sdk/Cargo.toml b/sdk/Cargo.toml
-index f7132e4..ae811cf 100644
+index dee0c40..b2314f6 100644
 --- a/sdk/Cargo.toml
 +++ b/sdk/Cargo.toml
-@@ -110,5 +110,5 @@ qualifier_attr = { workspace = true, optional = true }
- rand = { workspace = true, optional = true }
- rand0-7 = { workspace = true, optional = true }
+@@ -84,5 +84,5 @@ openssl-vendored = ["solana-precompiles/openssl-vendored"]
+ bincode = { workspace = true }
+ bs58 = { workspace = true }
 -serde = { workspace = true }
 +serde = { workspace = true, features = ["rc"] }
- serde_bytes = { workspace = true }
- serde_derive = { workspace = true }
-@@ -207,4 +207,6 @@ solana-validator-exit = { workspace = true }
+ serde_json = { workspace = true, optional = true }
+ solana-account = { workspace = true, features = ["bincode"] }
+@@ -173,4 +173,6 @@ solana-validator-exit = { workspace = true }
  thiserror = { workspace = true }
  
 +test-fuzz = { path = "../../../test-fuzz" }
