@@ -1706,6 +1706,7 @@
     "foreign_crates": [],
     "local_crates": [
       "cargo-test-fuzz",
+      "serde_combinators",
       "test-fuzz",
       "test-fuzz-examples",
       "test-fuzz-internal",

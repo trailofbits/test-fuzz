@@ -59,12 +59,14 @@ pub mod serde_ref {
 /// `serialize_ref` functions similar to `leak!`, but it is meant to be used with Serde's
 /// [`serialize_with`](https://serde.rs/field-attrs.html#serialize_with) field attribute.
 #[inline]
-pub fn serialize_ref<S, T>(x: &&T, serializer: S) -> Result<S::Ok, S::Error>
+pub fn serialize_ref<'a, S, T>(x: &&'a T, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
     T: serde::Serialize,
 {
-    <T as serde::Serialize>::serialize(*x, serializer)
+    use serde_combinators::{RefF, SerializeWith, Type};
+
+    <RefF<'a, Type<T>> as SerializeWith>::serialize(x, serializer)
 }
 
 /// `deserialize_ref` functions similar to `leak!`, but it is meant to be used with Serde's
@@ -75,8 +77,9 @@ where
     D: serde::Deserializer<'de>,
     T: serde::de::DeserializeOwned + std::fmt::Debug,
 {
-    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
-    Ok(Box::leak(Box::new(x)))
+    use serde_combinators::{DeserializeWith, RefF, Type};
+
+    <RefF<'static, Type<T>> as DeserializeWith>::deserialize(deserializer)
 }
 
 pub mod serde_ref_mut {
@@ -86,12 +89,14 @@ pub mod serde_ref_mut {
 
 /// `serialize_ref_mut` is similar to `serialize_ref`, except it operates on a mutable reference
 /// instead of an immutable one.
-pub fn serialize_ref_mut<S, T>(x: &&mut T, serializer: S) -> Result<S::Ok, S::Error>
+pub fn serialize_ref_mut<'a, S, T>(x: &&'a mut T, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: serde::Serializer,
     T: serde::Serialize,
 {
-    <T as serde::Serialize>::serialize(*x, serializer)
+    use serde_combinators::{RefMutF, SerializeWith, Type};
+
+    <RefMutF<'a, Type<T>> as SerializeWith>::serialize(x, serializer)
 }
 
 /// `deserialize_ref_mut` is similar to `deserialize_ref`, except it operates on a mutable reference
@@ -101,6 +106,7 @@ where
     D: serde::Deserializer<'de>,
     T: serde::de::DeserializeOwned + std::fmt::Debug,
 {
-    let x = <T as serde::de::Deserialize>::deserialize(deserializer)?;
-    Ok(Box::leak(Box::new(x)))
+    use serde_combinators::{DeserializeWith, RefMutF, Type};
+
+    <RefMutF<'static, Type<T>> as DeserializeWith>::deserialize(deserializer)
 }
