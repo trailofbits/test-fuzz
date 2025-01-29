@@ -118,6 +118,7 @@ fn run_test(test: &Test, no_run: bool) {
         "num-bigint@0.4.0",
         "serde_json",
         "tempfile",
+        "wasm-bindgen",
     ] {
         #[allow(clippy::let_unit_value)]
         let () = Command::new("cargo")
