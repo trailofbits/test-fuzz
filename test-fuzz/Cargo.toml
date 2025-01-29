@@ -16,6 +16,7 @@ serde = { workspace = true }
 
 internal = { workspace = true }
 runtime = { workspace = true }
+serde_combinators = { workspace = true }
 test-fuzz-macro = { workspace = true }
 
 [dev-dependencies]

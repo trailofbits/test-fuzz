@@ -7,6 +7,7 @@ members = [
     "internal",
     "macro",
     "runtime",
+    "serde_combinators",
     "test-fuzz",
     "testing",
     "third-party",
@@ -45,6 +46,7 @@ retry = "2.0"
 rlimit = "0.10"
 rustc_version = "0.4"
 semver = "1.0"
+serde_assert = "0.8"
 serde_json = "1.0"
 serde = { version = "1.0", features = ["derive", "rc"] }
 sha1 = "0.10"
@@ -63,6 +65,9 @@ runtime = { path = "runtime", package = "test-fuzz-runtime", version = "=7.0.2" 
 test-fuzz = { path = "test-fuzz", version = "=7.0.2" }
 test-fuzz-macro = { path = "macro", version = "=7.0.2" }
 testing = { path = "testing", package = "test-fuzz-testing" }
+
+# `serde_combinators` does not sync with `test-fuzz`'s version.
+serde_combinators = { path = "serde_combinators", version = "0.1.0" }
 
 [workspace.lints.rust.unexpected_cfgs]
 level = "deny"

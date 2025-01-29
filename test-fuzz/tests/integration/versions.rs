@@ -7,6 +7,9 @@ static METADATA: Lazy<Metadata> = Lazy::new(|| MetadataCommand::new().no_deps().
 #[test]
 fn versions_are_equal() {
     for package in &METADATA.packages {
+        if package.name == "serde_combinators" {
+            continue;
+        }
         assert_eq!(
             env!("CARGO_PKG_VERSION"),
             package.version.to_string(),

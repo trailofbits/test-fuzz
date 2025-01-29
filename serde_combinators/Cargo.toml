@@ -1,0 +1,19 @@
+[package]
+name = "serde_combinators"
+version = "0.1.0"
+edition = "2021"
+
+description = "Combinators for producing Serde serialize and deserialize functions"
+
+authors = ["Samuel E. Moelius III <sam@moeli.us>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/trailofbits/test-fuzz"
+
+[dependencies]
+serde = { workspace = true }
+
+[dev-dependencies]
+serde_assert = { workspace = true }
+
+[lints]
+workspace = true
