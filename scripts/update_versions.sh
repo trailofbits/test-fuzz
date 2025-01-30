@@ -16,9 +16,11 @@ cd "$WORKSPACE"
 
 VERSION="version = \"$1\""
 
-find . -name Cargo.toml -exec sed -i "{
+find . -name Cargo.toml |
+grep -v 'serde_combinators/Cargo.toml' |
+xargs -n 1 sed -i "{
 s/^version = \"[^\"]*\"$/$VERSION/
-}" {} \;
+}"
 
 REQ="${VERSION/\"/\"=}"
 
