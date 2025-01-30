@@ -1,5 +1,9 @@
 # Changelog
 
+## 7.0.3
+
+- Eliminate reliance on `once_cell` ([61bba16](https://github.com/trailofbits/test-fuzz/pull/414/commits/61bba16933507b114240bafa3e6cc966fc9df270))
+
 ## 7.0.2
 
 - Fix error message that is printed when multiple Serde formats are selected ([#498](https://github.com/trailofbits/test-fuzz/pull/498))
