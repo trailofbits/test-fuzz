@@ -2,7 +2,6 @@
 
 use darling::{ast::NestedMeta, FromMeta};
 use itertools::MultiUnzip;
-use once_cell::sync::Lazy;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
 use quote::{quote, ToTokens};
@@ -10,7 +9,10 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     env::var,
     str::FromStr,
-    sync::atomic::{AtomicU32, Ordering},
+    sync::{
+        atomic::{AtomicU32, Ordering},
+        LazyLock,
+    },
 };
 use syn::{
     parse::Parser, parse2, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated,
@@ -31,8 +33,8 @@ type Attrs = Vec<Attribute>;
 
 type Conversions = BTreeMap<OrdType, (Type, bool)>;
 
-static CARGO_CRATE_NAME: Lazy<String> =
-    Lazy::new(|| var("CARGO_CRATE_NAME").expect("Could not get `CARGO_CRATE_NAME`"));
+static CARGO_CRATE_NAME: LazyLock<String> =
+    LazyLock::new(|| var("CARGO_CRATE_NAME").expect("Could not get `CARGO_CRATE_NAME`"));
 
 #[derive(FromMeta)]
 struct TestFuzzImplOpts {}

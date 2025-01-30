@@ -1,12 +1,11 @@
 use assert_cmd::prelude::*;
 use internal::dirs::corpus_directory_from_target;
-use once_cell::sync::Lazy;
 use std::{
     env,
     fs::{read_dir, remove_dir_all},
     path::Path,
     process::Command,
-    sync::Mutex,
+    sync::{LazyLock, Mutex},
 };
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
@@ -22,7 +21,7 @@ fn write() {
 }
 
 #[cfg(test)]
-static MANIFEST_PATH: Lazy<String> = Lazy::new(|| {
+static MANIFEST_PATH: LazyLock<String> = LazyLock::new(|| {
     #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("Cargo.toml")

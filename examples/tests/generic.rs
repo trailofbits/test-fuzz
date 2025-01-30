@@ -1,9 +1,8 @@
 #![cfg_attr(dylint_lib = "general", allow(crate_wide_allow))]
 #![allow(clippy::disallowed_names)]
 
-use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
-use std::fmt::Debug;
+use std::{fmt::Debug, sync::LazyLock};
 
 trait FooBarTrait {}
 
@@ -76,8 +75,8 @@ impl<T: FooBarTrait + Clone + Debug + Serialize> Trait<T> for Struct {
     fn target_only_generic_args<U>(&self, _: &T, _: &U) {}
 }
 
-static FOO_QWERTY: Lazy<Foo> = Lazy::new(|| Foo::A("qwerty".to_owned()));
-static BAR_ASDFGH: Lazy<Bar> = Lazy::new(|| Bar::B("asdfgh".to_owned()));
+static FOO_QWERTY: LazyLock<Foo> = LazyLock::new(|| Foo::A("qwerty".to_owned()));
+static BAR_ASDFGH: LazyLock<Bar> = LazyLock::new(|| Bar::B("asdfgh".to_owned()));
 
 #[test]
 fn test_foo_qwerty() {

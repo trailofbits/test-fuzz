@@ -13,7 +13,6 @@ serde = { workspace = true }
 test-fuzz = { workspace = true }
 
 [dev-dependencies]
-once_cell = { workspace = true }
 parse_duration = { workspace = true }
 serde_json = { workspace = true }
 

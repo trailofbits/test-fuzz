@@ -4,11 +4,10 @@ use cargo_metadata::{Artifact, ArtifactProfile, Message};
 use if_chain::if_chain;
 use internal::serde_format;
 use log::debug;
-use once_cell::sync::Lazy;
-use std::{path::Path, process::Command};
+use std::{path::Path, process::Command, sync::LazyLock};
 use subprocess::{Exec, Redirection};
 
-pub static MANIFEST_PATH: Lazy<String> = Lazy::new(|| {
+pub static MANIFEST_PATH: LazyLock<String> = LazyLock::new(|| {
     #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../examples/Cargo.toml")
