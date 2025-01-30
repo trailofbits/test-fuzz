@@ -264,7 +264,7 @@ index 1648f3a..dffc85d 100644
  dev-context-only-utils = ["dep:arbitrary", "rand"]
  frozen-abi = [
 diff --git a/sdk/sdk/Cargo.toml b/sdk/sdk/Cargo.toml
-index dee0c40..b2314f6 100644
+index dee0c40..58c33f6 100644
 --- a/sdk/sdk/Cargo.toml
 +++ b/sdk/sdk/Cargo.toml
 @@ -84,5 +84,5 @@ openssl-vendored = ["solana-precompiles/openssl-vendored"]

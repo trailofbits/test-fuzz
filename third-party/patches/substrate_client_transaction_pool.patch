@@ -1,5 +1,5 @@
 diff --git a/substrate/client/transaction-pool/Cargo.toml b/substrate/client/transaction-pool/Cargo.toml
-index 72586b9..8d94fbd 100644
+index 26bbf58..8aa65da 100644
 --- a/substrate/client/transaction-pool/Cargo.toml
 +++ b/substrate/client/transaction-pool/Cargo.toml
 @@ -25,10 +25,10 @@ itertools = { workspace = true }
@@ -15,8 +15,8 @@ index 72586b9..8d94fbd 100644
 +serde = { features = ["derive", "rc"], workspace = true, default-features = true }
  sp-api = { workspace = true, default-features = true }
  sp-blockchain = { workspace = true, default-features = true }
-@@ -42,4 +42,6 @@ tokio = { workspace = true, default-features = true, features = ["macros", "time
- tokio-stream = { workspace = true }
+@@ -43,4 +43,6 @@ tokio-stream = { workspace = true }
+ tracing = { workspace = true, default-features = true }
  
 +test-fuzz = { path = "../../../../../test-fuzz" }
 +
@@ -65,11 +65,11 @@ index 3b4afc8..42cd548 100644
  	/// Create new pool given reject_future_transactions flag.
  	pub fn new(reject_future_transactions: bool) -> Self {
 diff --git a/substrate/client/transaction-pool/src/graph/future.rs b/substrate/client/transaction-pool/src/graph/future.rs
-index 2c1e64c..ca41c4f 100644
+index 848893b..8742168 100644
 --- a/substrate/client/transaction-pool/src/graph/future.rs
 +++ b/substrate/client/transaction-pool/src/graph/future.rs
 @@ -30,4 +30,5 @@ use super::base_pool::Transaction;
- use crate::{common::log_xt::log_xt_trace, LOG_TARGET};
+ use crate::{common::tracing_log_xt::log_xt_trace, LOG_TARGET};
  
 +#[derive(serde::Deserialize, serde::Serialize)]
  /// Transaction with partially satisfied dependencies.
