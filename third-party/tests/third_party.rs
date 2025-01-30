@@ -1,7 +1,6 @@
 use assert_cmd::assert::Assert;
 use cargo_metadata::MetadataCommand;
 use log::debug;
-use once_cell::sync::Lazy;
 use option_set::option_set;
 use predicates::prelude::*;
 use rustc_version::{version_meta, Channel};
@@ -12,6 +11,7 @@ use std::{
     io::{stderr, stdout, Write},
     path::Path,
     process::Command,
+    sync::LazyLock,
 };
 use tempfile::tempdir_in;
 use testing::CommandExt;
@@ -35,7 +35,7 @@ struct Test {
     targets: Vec<String>,
 }
 
-static TESTS: Lazy<Vec<Test>> = Lazy::new(|| {
+static TESTS: LazyLock<Vec<Test>> = LazyLock::new(|| {
     #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     let content =
         read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("third_party.json")).unwrap();

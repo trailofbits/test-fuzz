@@ -1,8 +1,9 @@
 use cargo_metadata::{Dependency, DependencyKind, Metadata, MetadataCommand};
-use once_cell::sync::Lazy;
 use semver::Version;
+use std::sync::LazyLock;
 
-static METADATA: Lazy<Metadata> = Lazy::new(|| MetadataCommand::new().no_deps().exec().unwrap());
+static METADATA: LazyLock<Metadata> =
+    LazyLock::new(|| MetadataCommand::new().no_deps().exec().unwrap());
 
 #[test]
 fn versions_are_equal() {

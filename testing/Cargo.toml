@@ -12,7 +12,6 @@ ctor = { workspace = true }
 env_logger = { workspace = true }
 if_chain = { workspace = true }
 log = { workspace = true }
-once_cell = { workspace = true }
 retry = { workspace = true }
 strip-ansi-escapes = { workspace = true }
 subprocess = { workspace = true }
