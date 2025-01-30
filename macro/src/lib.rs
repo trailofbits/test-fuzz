@@ -353,7 +353,7 @@ fn map_method_or_fn(
             usize::try_from(n_lifetime_params as isize - n_lifetime_args as isize)
                 .expect("n_lifetime_params < n_lifetime_args");
         let dummy_lifetime = GenericArgument::Lifetime(parse_quote! { 'static });
-        args.extend(std::iter::repeat(dummy_lifetime).take(n_missing_lifetime_args));
+        args.extend(std::iter::repeat_n(dummy_lifetime, n_missing_lifetime_args));
         args_as_turbofish(&args)
     };
 
