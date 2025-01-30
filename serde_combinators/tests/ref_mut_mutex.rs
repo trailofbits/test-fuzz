@@ -11,12 +11,13 @@ struct Struct<'a> {
 
 impl Struct<'_> {
     fn swap(&mut self, other: &mut Self) {
-        let mut x = self.ref_mut_mutex.lock().unwrap();
-        let mut y = other.ref_mut_mutex.lock().unwrap();
-        std::mem::swap::<i32>(&mut x, &mut y)
+        let x = self.ref_mut_mutex.get_mut().unwrap();
+        let y = other.ref_mut_mutex.get_mut().unwrap();
+        std::mem::swap::<i32>(x, y);
     }
 }
 
+#[allow(clippy::mut_mutex_lock)]
 impl PartialEq for Struct<'_> {
     fn eq(&self, other: &Self) -> bool {
         let x = self.ref_mut_mutex.lock().unwrap();
@@ -25,6 +26,7 @@ impl PartialEq for Struct<'_> {
     }
 }
 
+#[allow(clippy::mutex_integer)]
 #[test]
 fn swap() {
     let mut mutex_a = Mutex::new(0);
@@ -44,6 +46,7 @@ fn swap() {
     dylint_lib = "assert_eq_arg_misordering",
     allow(assert_eq_arg_misordering)
 )]
+#[allow(clippy::mutex_integer)]
 #[test]
 fn serde() {
     let mut mutex = Mutex::new(0);
