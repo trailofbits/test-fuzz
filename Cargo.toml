@@ -77,8 +77,8 @@ check-cfg = [
 ]
 
 [workspace.lints.clippy]
-pedantic = { level = "warn", priority = -1 }
 nursery = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
 cognitive-complexity = "allow"
 collection-is-never-read = "allow"
 manual-unwrap-or-default = "allow"
