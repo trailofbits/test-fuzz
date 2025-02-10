@@ -28,11 +28,11 @@
   },
   {
     "flags": [],
-    "url": "https://github.com/solana-labs/rbpf",
-    "rev": "c7fffe4506ec5107b5ade455746afafffe65f40f",
-    "patch": "solana_rbpf.patch",
+    "url": "https://github.com/anza-xyz/sbpf",
+    "rev": "75d5bc80c24db60e3d1e535be45adae9e82bac9d",
+    "patch": "solana-sbpf.patch",
     "subdir": ".",
-    "package": "solana_rbpf",
+    "package": "solana-sbpf",
     "targets": ["syscall_str_cmp_rust"]
   }
 ]
