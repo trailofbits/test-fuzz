@@ -1,14 +1,5 @@
 [
   {
-    "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
-    "url": "https://github.com/anza-xyz/agave",
-    "rev": "8376290e5c2dedc660a3260462c49ed1c3e57dba",
-    "patch": "agave.patch",
-    "subdir": ".",
-    "package": "solana-bpf-loader-program",
-    "targets": ["process_instruction"]
-  },
-  {
     "flags": ["SKIP_NIGHTLY"],
     "url": "https://github.com/CosmWasm/cw-plus",
     "rev": "17b1ac4d518ee9b546b82706a70b77cfff1b0ee3",
