@@ -31,7 +31,8 @@ struct Test {
     rev: String,
     patch: String,
     subdir: String,
-    package: String,
+    test_package: String,
+    fuzz_package: String,
     targets: Vec<String>,
 }
 
@@ -141,7 +142,8 @@ fn run_test(test: &Test, no_run: bool) {
         }
     }
 
-    check_test_fuzz_dependency(&subdir, &test.package);
+    check_test_fuzz_dependency(&subdir, &test.test_package);
+    check_test_fuzz_dependency(&subdir, &test.fuzz_package);
 
     if no_run {
         return;
@@ -158,7 +160,7 @@ fn run_test(test: &Test, no_run: bool) {
             .args([
                 "test",
                 "--package",
-                &test.package,
+                &test.test_package,
                 "--features",
                 &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
             ])
@@ -169,17 +171,17 @@ fn run_test(test: &Test, no_run: bool) {
     }
 
     for target in &test.targets {
-        test_fuzz(&subdir, &test.package, target, ["--display=corpus"])
+        test_fuzz(&subdir, &test.fuzz_package, target, ["--display=corpus"])
             .stdout(predicate::str::is_match(r"(?m)^[[:xdigit:]]{40}:").unwrap())
             .stdout(predicate::str::contains("unknown of type").not());
 
-        test_fuzz(&subdir, &test.package, target, ["--replay=corpus"]).stdout(
+        test_fuzz(&subdir, &test.fuzz_package, target, ["--replay=corpus"]).stdout(
             predicate::str::is_match(r"(?m)^[[:xdigit:]]{40}: Ret\((Ok|Err)\(.*\)\)$").unwrap(),
         );
     }
 }
 
-fn check_test_fuzz_dependency(subdir: &Path, test_package: &str) {
+fn check_test_fuzz_dependency(subdir: &Path, package_name: &str) {
     let metadata = MetadataCommand::new()
         .current_dir(subdir)
         .no_deps()
@@ -188,8 +190,8 @@ fn check_test_fuzz_dependency(subdir: &Path, test_package: &str) {
     let package = metadata
         .packages
         .iter()
-        .find(|package| package.name == test_package)
-        .unwrap_or_else(|| panic!("Could not find package `{test_package}`"));
+        .find(|package| package.name == package_name)
+        .unwrap_or_else(|| panic!("Could not find package `{package_name}`"));
     let dep = package
         .dependencies
         .iter()

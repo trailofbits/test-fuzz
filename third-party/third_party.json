@@ -5,7 +5,8 @@
     "rev": "17b1ac4d518ee9b546b82706a70b77cfff1b0ee3",
     "patch": "cw-plus.patch",
     "subdir": ".",
-    "package": "cw20-base",
+    "test_package": "cw20-base",
+    "fuzz_package": "cw20-base",
     "targets": ["instantiate", "execute", "query", "migrate"]
   },
   {
@@ -14,7 +15,8 @@
     "rev": "2970ab151402a94c146800c769953cf6fdb6ef1d",
     "patch": "substrate_client_transaction_pool.patch",
     "subdir": ".",
-    "package": "sc-transaction-pool",
+    "test_package": "sc-transaction-pool",
+    "fuzz_package": "sc-transaction-pool",
     "targets": ["import"]
   },
   {
@@ -23,16 +25,18 @@
     "rev": "354e890721068fa5d38e16f380bf994e1c678eb7",
     "patch": "example-helloworld.patch",
     "subdir": "src/program-rust",
-    "package": "solana-bpf-helloworld",
+    "test_package": "solana-bpf-helloworld",
+    "fuzz_package": "solana-bpf-helloworld",
     "targets": ["process_instruction"]
   },
   {
     "flags": [],
     "url": "https://github.com/anza-xyz/sbpf",
-    "rev": "75d5bc80c24db60e3d1e535be45adae9e82bac9d",
+    "rev": "9b59556b10134ea6a191623de9e0b1c046e326bb",
     "patch": "solana-sbpf.patch",
     "subdir": ".",
-    "package": "solana-sbpf",
+    "test_package": "solana-sbpf",
+    "fuzz_package": "test_utils",
     "targets": ["syscall_str_cmp_rust"]
   }
 ]

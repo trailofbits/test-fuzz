@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index f5537db..2196853 100644
+index 36002b0..b4df904 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
@@ -336,7 +336,7 @@ index de5ffe5..eeca621 100644
  struct MappingCache {
      // The cached entries.
 diff --git a/src/program.rs b/src/program.rs
-index fe019dd..d82f8e3 100644
+index ce3b2ea..eff912c 100644
 --- a/src/program.rs
 +++ b/src/program.rs
 @@ -10,5 +10,5 @@ use {
@@ -346,14 +346,14 @@ index fe019dd..d82f8e3 100644
 +#[derive(Debug, PartialEq, PartialOrd, Eq, Clone, Copy, serde::Deserialize, serde::Serialize)]
  pub enum SBPFVersion {
      /// The legacy format
-@@ -363,5 +363,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
+@@ -318,5 +318,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
  #[macro_export]
  macro_rules! declare_builtin_function {
 -    ($(#[$attr:meta])* $name:ident $(<$($generic_ident:tt : $generic_type:tt),+>)?, fn rust(
 +    ($(#[$attr:meta])* $name:ident, fn rust $(<$($lifetime:tt),+>)? (
          $vm:ident : &mut $ContextObject:ty,
          $arg_a:ident : u64,
-@@ -374,7 +374,9 @@ macro_rules! declare_builtin_function {
+@@ -329,7 +329,9 @@ macro_rules! declare_builtin_function {
          $(#[$attr])*
          pub struct $name {}
 +        #[test_fuzz::test_fuzz_impl]
@@ -364,7 +364,7 @@ index fe019dd..d82f8e3 100644
 +            pub fn rust $(<$($lifetime),+>)? (
                  $vm: &mut $ContextObject,
                  $arg_a: u64,
-@@ -385,9 +387,12 @@ macro_rules! declare_builtin_function {
+@@ -340,9 +342,12 @@ macro_rules! declare_builtin_function {
                  $memory_mapping: &mut $MemoryMapping,
              ) -> $Result {
 +                if matches!($memory_mapping, MemoryMapping::Identity) {
@@ -378,24 +378,56 @@ index fe019dd..d82f8e3 100644
 +            pub fn vm $(<$($lifetime),+>)? (
                  $vm: *mut $crate::vm::EbpfVm<$ContextObject>,
                  $arg_a: u64,
-@@ -399,5 +404,5 @@ macro_rules! declare_builtin_function {
+@@ -354,5 +359,5 @@ macro_rules! declare_builtin_function {
                  use $crate::vm::ContextObject;
                  let vm = unsafe {
 -                    &mut *($vm.cast::<u64>().offset(-($crate::vm::get_runtime_environment_key() as isize)).cast::<$crate::vm::EbpfVm<$ContextObject>>())
 +                    &mut *(($vm as *mut u64).offset(-($crate::vm::get_runtime_environment_key() as isize)) as *mut $crate::vm::EbpfVm<$ContextObject>)
                  };
                  let config = vm.loader.get_config();
-@@ -405,5 +410,5 @@ macro_rules! declare_builtin_function {
+@@ -360,5 +365,5 @@ macro_rules! declare_builtin_function {
                      vm.context_object_pointer.consume(vm.previous_instruction_meter - vm.due_insn_count);
                  }
 -                let converted_result: $crate::error::ProgramResult = Self::rust $(::<$($generic_ident),+>)?(
 +                let converted_result: $crate::error::ProgramResult = Self::rust(
                      vm.context_object_pointer, $arg_a, $arg_b, $arg_c, $arg_d, $arg_e, &mut vm.memory_mapping,
                  ).map_err(|err| $crate::error::EbpfError::SyscallError(err)).into();
-diff --git a/src/syscalls.rs b/src/syscalls.rs
-index a8d398d..98f35a4 100644
---- a/src/syscalls.rs
-+++ b/src/syscalls.rs
+diff --git a/src/vm.rs b/src/vm.rs
+index 98cedab..adef73f 100644
+--- a/src/vm.rs
++++ b/src/vm.rs
+@@ -49,5 +49,5 @@ pub fn get_runtime_environment_key() -> i32 {
+ 
+ /// VM configuration settings
+-#[derive(Debug, Clone, PartialEq, Eq)]
++#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
+ pub struct Config {
+     /// Maximum call depth
+diff --git a/test_utils/Cargo.toml b/test_utils/Cargo.toml
+index 50b7429..98ea054 100644
+--- a/test_utils/Cargo.toml
++++ b/test_utils/Cargo.toml
+@@ -9,2 +9,5 @@ publish = false
+ libc = "0.2"
+ solana-sbpf = { path = "../" }
++
++serde = "1.0"
++test-fuzz = { path = "../../../test-fuzz" }
+diff --git a/test_utils/src/lib.rs b/test_utils/src/lib.rs
+index c8ed12c..8b75d03 100644
+--- a/test_utils/src/lib.rs
++++ b/test_utils/src/lib.rs
+@@ -22,5 +22,5 @@ pub mod syscalls;
+ 
+ /// Simple instruction meter for testing
+-#[derive(Debug, Clone, Default)]
++#[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize)]
+ pub struct TestContextObject {
+     /// Contains the register state at every instruction in order of execution
+diff --git a/test_utils/src/syscalls.rs b/test_utils/src/syscalls.rs
+index 48c3a20..3ac7fe5 100644
+--- a/test_utils/src/syscalls.rs
++++ b/test_utils/src/syscalls.rs
 @@ -34,5 +34,5 @@ declare_builtin_function!(
      /// **unused**. Returns the number of bytes written.
      SyscallTracePrintf,
@@ -480,36 +512,18 @@ index a8d398d..98f35a4 100644
 +        memory_mapping: &mut MemoryMapping<'a>,
      ) -> Result<u64, Box<dyn std::error::Error>> {
          println!(
-diff --git a/src/vm.rs b/src/vm.rs
-index 3afa01b..06a58d9 100644
---- a/src/vm.rs
-+++ b/src/vm.rs
-@@ -49,5 +49,5 @@ pub fn get_runtime_environment_key() -> i32 {
- 
- /// VM configuration settings
--#[derive(Debug, Clone, PartialEq, Eq)]
-+#[derive(Debug, Clone, PartialEq, Eq, serde::Deserialize, serde::Serialize)]
- pub struct Config {
-     /// Maximum call depth
-@@ -139,5 +139,5 @@ pub trait ContextObject {
- 
- /// Simple instruction meter for testing
--#[derive(Debug, Clone, Default)]
-+#[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize)]
- pub struct TestContextObject {
-     /// Contains the register state at every instruction in order of execution
 diff --git a/tests/execution.rs b/tests/execution.rs
-index 22439ff..bc1a6d5 100644
+index 7b69c1e..1e2c681 100644
 --- a/tests/execution.rs
 +++ b/tests/execution.rs
-@@ -2705,5 +2705,5 @@ declare_builtin_function!(
+@@ -2537,5 +2537,5 @@ declare_builtin_function!(
      /// For test_nested_vm_syscall()
      SyscallNestedVm,
 -    fn rust(
 +    fn rust<'a>(
          _context_object: &mut TestContextObject,
          depth: u64,
-@@ -2712,5 +2712,5 @@ declare_builtin_function!(
+@@ -2544,5 +2544,5 @@ declare_builtin_function!(
          _arg4: u64,
          _arg5: u64,
 -        _memory_mapping: &mut MemoryMapping,
