@@ -86,6 +86,7 @@ pub struct TestFuzz {
     pub package: Option<String>,
     pub persistent: bool,
     pub pretty: bool,
+    pub release: bool,
     pub replay: Option<Object>,
     pub reset: bool,
     pub reset_all: bool,
@@ -248,6 +249,9 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
     if use_instrumentation {
         args.extend_from_slice(&["afl"]);
     }
+    if opts.release{
+        args.extend_from_slice(&["--release"]);
+    }
     args.extend_from_slice(&["test", "--frozen", "--offline", "--no-run"]);
     if opts.no_default_features {
         args.extend_from_slice(&["--no-default-features"]);
@@ -272,7 +276,6 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
     if let Some(name) = &opts.test {
         args.extend_from_slice(&["--test", name]);
     }
-
     // smoelius: Suppress "Warning: AFL++ tools will need to set AFL_MAP_SIZE..." Setting
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to /dev/null.
     // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when

@@ -93,6 +93,11 @@ struct TestFuzzWithDeprecations {
         alias = "pretty-print"
     )]
     pretty: bool,
+    #[arg (
+        long,
+        help = "Build artifacts in release mode, with optimizations"
+    )]
+    release: bool,
     #[arg(
         long,
         value_name = "OBJECT",
@@ -167,6 +172,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             persistent,
             pretty,
             replay,
+            release,
             reset,
             reset_all,
             resume,
@@ -203,6 +209,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             persistent,
             pretty,
             replay,
+            release,
             reset,
             reset_all,
             resume,
