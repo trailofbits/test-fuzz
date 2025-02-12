@@ -93,10 +93,7 @@ struct TestFuzzWithDeprecations {
         alias = "pretty-print"
     )]
     pretty: bool,
-    #[arg (
-        long,
-        help = "Build artifacts in release mode, with optimizations"
-    )]
+    #[arg(long, help = "Build artifacts in release mode, with optimizations")]
     release: bool,
     #[arg(
         long,
