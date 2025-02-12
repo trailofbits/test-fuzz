@@ -276,7 +276,7 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
     if let Some(name) = &opts.test {
         args.extend_from_slice(&["--test", name]);
     }
-    
+
     // smoelius: Suppress "Warning: AFL++ tools will need to set AFL_MAP_SIZE..." Setting
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to /dev/null.
     // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when
