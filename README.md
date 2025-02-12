@@ -312,7 +312,7 @@ Options:
   -p, --package <PACKAGE>         Package containing fuzz target
       --persistent                Enable persistent mode fuzzing
       --pretty                    Pretty-print debug output when displaying/replaying
-      --release                   Build artifacts in release mode, with optimization
+      --release                   Build in release mode
       --replay <OBJECT>           Replay corpus, crashes, hangs, or work queue. By default, an
                                   uninstrumented fuzz target is used. To replay with instrumentation
                                   append `-instrumented` to <OBJECT>, e.g., --replay
