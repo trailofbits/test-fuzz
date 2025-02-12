@@ -249,7 +249,7 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
     if use_instrumentation {
         args.extend_from_slice(&["afl"]);
     }
-    if opts.release{
+    if opts.release {
         args.extend_from_slice(&["--release"]);
     }
     args.extend_from_slice(&["test", "--frozen", "--offline", "--no-run"]);
