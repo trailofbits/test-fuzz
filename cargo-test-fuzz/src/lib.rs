@@ -931,16 +931,6 @@ struct Config {
     first_run: bool,
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            ui: true,
-            sufficient_cpus: true,
-            first_run: true,
-        }
-    }
-}
-
 struct Child {
     exec: String,
     popen: StdChild,
@@ -976,19 +966,20 @@ impl Child {
 fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<()> {
     auto_generate_corpora(executable_targets)?;
 
+    let mut config = Config {
+        ui: !opts.no_ui,
+        sufficient_cpus: true,
+        first_run: true,
+    };
+
     if let (false, [(executable, target)]) = (opts.exit_code, executable_targets) {
-        let mut command = fuzz_command(opts, &Config::default(), executable, target);
+        let mut command = fuzz_command(opts, &config, executable, target);
         let status = command
             .status()
             .with_context(|| format!("Could not get status of `{command:?}`"))?;
         ensure!(status.success(), "Command failed: {:?}", command);
         return Ok(());
     }
-
-    let mut config = Config {
-        ui: false,
-        ..Default::default()
-    };
 
     let n_cpus = std::cmp::min(
         opts.cpus.unwrap_or_else(|| num_cpus::get() - 1),
