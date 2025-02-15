@@ -21,7 +21,7 @@ fn test(name: &str, n: usize) {
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test("default", &format!("{name}::target_fuzz::auto_generate"))
+    examples::test("default", &format!("{name}::target_fuzz__::auto_generate"))
         .unwrap()
         .logged_assert()
         .success();
