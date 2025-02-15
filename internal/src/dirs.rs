@@ -119,7 +119,7 @@ pub fn target_directory(instrumented: bool) -> PathBuf {
 fn path_from_args_type<T>() -> String {
     let type_name = type_name::<T>();
     let n = type_name
-        .find("_fuzz")
+        .find("_fuzz__")
         .unwrap_or_else(|| panic!("unexpected type name: `{type_name}`"));
     type_name[..n].to_owned()
 }
