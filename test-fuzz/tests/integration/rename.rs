@@ -14,7 +14,7 @@ fn rename() {
         .assert()
         .failure()
         .stderr(predicate::str::contains(
-            "the name `bar_fuzz` is defined multiple times",
+            "the name `bar_fuzz__` is defined multiple times",
         ));
 }
 

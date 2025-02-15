@@ -18,5 +18,5 @@ fn test_fuzz_log() {
         ])
         .logged_assert()
         .success()
-        .stdout(predicate::str::is_match(r"(?m)^#\[cfg\(test\)\]\nmod parse_fuzz \{$").unwrap());
+        .stdout(predicate::str::is_match(r"(?m)^#\[cfg\(test\)\]\nmod parse_fuzz__ \{$").unwrap());
 }

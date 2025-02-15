@@ -670,7 +670,7 @@ fn map_method_or_fn(
     };
     // smoelius: The `Args`' implementation and the `auto_generate` test won't compile without
     // generic args.
-    //   Also, cargo-test-fuzz finds targets by looking for tests that end with `_fuzz::entry`. So
+    //   Also, cargo-test-fuzz finds targets by looking for tests that end with `_fuzz__::entry`. So
     // create such a test regardless. If say `only_generic_args` was specified, then give the
     // test an empty body.
     let (generic_args_dependent_mod_items, entry_stmts) = if opts.only_generic_args
@@ -1123,7 +1123,7 @@ fn mod_ident(opts: &TestFuzzOpts, self_ty_base: Option<&Ident>, target_ident: &I
         }
         s.push_str(&target_ident.to_string());
     }
-    s.push_str("_fuzz");
+    s.push_str("_fuzz__");
     Ident::new(&s, Span::call_site())
 }
 
