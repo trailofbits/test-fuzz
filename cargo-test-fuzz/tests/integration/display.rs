@@ -10,7 +10,7 @@ fn display_qwerty() {
 fn display_debug_crash() {
     display(
         "debug",
-        "crash::target_fuzz::auto_generate",
+        "crash::target_fuzz__::auto_generate",
         "crash::target",
         "",
         "Encountered a failure while not replaying. A buggy Debug implementation perhaps?",
@@ -21,7 +21,7 @@ fn display_debug_crash() {
 fn display_debug_hang() {
     display(
         "debug",
-        "hang::target_fuzz::auto_generate",
+        "hang::target_fuzz__::auto_generate",
         "hang::target",
         "",
         "Encountered a timeout while not replaying. A buggy Debug implementation perhaps?",

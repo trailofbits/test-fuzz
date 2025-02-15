@@ -23,7 +23,7 @@ fn test(name: &str, n: usize) {
 
     examples::test(
         "auto_generate",
-        &format!("{name}::target_fuzz::auto_generate"),
+        &format!("{name}::target_fuzz__::auto_generate"),
     )
     .unwrap()
     .logged_assert()

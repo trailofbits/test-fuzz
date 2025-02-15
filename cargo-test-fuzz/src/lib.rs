@@ -33,8 +33,8 @@ use std::{
 use strum_macros::Display;
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
 
-const AUTO_GENERATED_SUFFIX: &str = "_fuzz::auto_generate";
-const ENTRY_SUFFIX: &str = "_fuzz::entry";
+const AUTO_GENERATED_SUFFIX: &str = "_fuzz__::auto_generate";
+const ENTRY_SUFFIX: &str = "_fuzz__::entry";
 
 const BASE_ENVS: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
 
