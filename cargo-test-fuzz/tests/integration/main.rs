@@ -6,5 +6,6 @@ mod fuzz;
 mod fuzz_cast;
 mod fuzz_generic;
 mod fuzz_parallel;
+mod fuzz_profile;
 mod generic_args;
 mod replay;
