@@ -1163,12 +1163,13 @@ fn fuzz_command(
             &input_dir,
             "-o",
             &output_dir.to_string_lossy(),
-            "-M",
-            "default",
         ]
         .into_iter()
         .map(String::from),
     );
+    if opts.zzargs.iter().find(|&arg| arg == "-M").is_none() {
+        args.extend(["-M".to_owned(), "default".to_owned()]);
+    }
     if !config.sufficient_cpus {
         args.extend(["-V".to_owned(), opts.slice.to_string()]);
     } else if let Some(max_total_time) = opts.max_total_time {
@@ -1190,7 +1191,7 @@ fn fuzz_command(
     );
 
     let mut command = Command::new("cargo");
-    command.envs(envs).args(&args);
+    command.envs(envs).args(args);
     debug!("{:?}", command);
     command
 }

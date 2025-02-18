@@ -2,7 +2,7 @@ use anyhow::ensure;
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
-use testing::{examples, retry, CommandExt};
+use testing::{examples, retry, unique_id, CommandExt};
 
 const MAX_TOTAL_TIME: &str = "60";
 
@@ -30,8 +30,6 @@ fn auto_generate_empty() {
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn auto_generate_nonempty() {
-    let _lock = crate::ASSERT_MUTEX.lock();
-
     auto_generate("assert", "target", true, "Auto-generated", 1);
 }
 
@@ -43,6 +41,8 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
     remove_dir_all(&corpus).unwrap_or_default();
 
     retry(3, || {
+        let id = unique_id();
+
         let assert = examples::test_fuzz(krate, target)
             .unwrap()
             .args([
@@ -50,6 +50,9 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
                 "--run-until-crash",
                 "--max-total-time",
                 MAX_TOTAL_TIME,
+                "--",
+                "-M",
+                &id,
             ])
             .logged_assert();
 

@@ -1,7 +1,7 @@
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::{fs::remove_dir_all, sync::Mutex};
-use testing::{examples, retry, CommandExt};
+use testing::{examples, retry, unique_id, CommandExt};
 
 const MAX_TOTAL_TIME: &str = "60";
 
@@ -38,6 +38,8 @@ fn fuzz(test: &str, code: i32) {
     assert!(corpus.exists());
 
     retry(3, || {
+        let id = unique_id();
+
         examples::test_fuzz("generic", "struct_target")
             .unwrap()
             .args([
@@ -45,6 +47,9 @@ fn fuzz(test: &str, code: i32) {
                 "--run-until-crash",
                 "--max-total-time",
                 MAX_TOTAL_TIME,
+                "--",
+                "-M",
+                &id,
             ])
             .logged_assert()
             .try_code(predicate::eq(code))

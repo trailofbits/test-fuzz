@@ -2,7 +2,7 @@ use anyhow::ensure;
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
-use testing::{examples, retry, CommandExt};
+use testing::{examples, retry, unique_id, CommandExt};
 
 const CRASH_MAX_TOTAL_TIME: &str = "60";
 
@@ -11,8 +11,6 @@ const HANG_MAX_TOTAL_TIME: &str = "120";
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn consolidate_crashes() {
-    let _lock = crate::ASSERT_MUTEX.lock();
-
     consolidate(
         "assert",
         "target",
@@ -28,8 +26,6 @@ fn consolidate_crashes() {
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn consolidate_hangs() {
-    let _lock = crate::PARSE_DURATION_MUTEX.lock();
-
     consolidate(
         "parse_duration",
         "parse",
@@ -53,7 +49,9 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
     assert_eq!(1, read_dir(&corpus).unwrap().count());
 
     retry(3, || {
-        let mut args = vec!["--no-ui"];
+        let id = unique_id();
+
+        let mut args = vec!["--no-ui", "--", "-M", &id];
         args.extend_from_slice(fuzz_args);
 
         examples::test_fuzz(krate, target)
@@ -64,7 +62,7 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
 
         examples::test_fuzz(krate, target)
             .unwrap()
-            .args(["--consolidate"])
+            .args(["--consolidate", "--", "-M", &id])
             .logged_assert()
             .success();
 
