@@ -99,7 +99,7 @@ pub fn test_fuzz_all() -> Result<Command> {
     ];
 
     let mut command = Command::cargo_bin("cargo-test-fuzz")?;
-    command.args(&args);
+    command.args(args);
     Ok(command)
 }
 

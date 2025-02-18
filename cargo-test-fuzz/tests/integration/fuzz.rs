@@ -1,15 +1,13 @@
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::remove_dir_all;
-use testing::{examples, retry, CommandExt};
+use testing::{examples, retry, unique_id, CommandExt};
 
 const MAX_TOTAL_TIME: &str = "60";
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn fuzz_assert() {
-    let _lock = crate::ASSERT_MUTEX.lock();
-
     fuzz("assert", false);
 }
 
@@ -32,16 +30,18 @@ fn fuzz(krate: &str, persistent: bool) {
         .success();
 
     retry(3, || {
+        let id = unique_id();
+
         let mut command = examples::test_fuzz(krate, "target").unwrap();
 
         let mut args = vec!["--exit-code", "--run-until-crash"];
         if persistent {
             args.push("--persistent");
         }
-        args.extend_from_slice(&["--max-total-time", MAX_TOTAL_TIME]);
+        args.extend_from_slice(&["--max-total-time", MAX_TOTAL_TIME, "--", "-M", &id]);
 
         command
-            .args(&args)
+            .args(args)
             .logged_assert()
             .try_code(predicate::eq(1))
     })

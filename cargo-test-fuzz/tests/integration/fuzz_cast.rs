@@ -1,5 +1,5 @@
 use predicates::prelude::*;
-use testing::{examples, retry, CommandExt};
+use testing::{examples, retry, unique_id, CommandExt};
 
 const MAX_TOTAL_TIME: &str = "60";
 
@@ -11,6 +11,8 @@ fn fuzz_cast() {
         .success();
 
     for use_cast_checks in [false, true] {
+        let id = unique_id();
+
         let mut args = vec![
             "--exit-code",
             "--run-until-crash",
@@ -23,6 +25,7 @@ fn fuzz_cast() {
         } else {
             0
         };
+        args.extend(["--", "-M", &id]);
         retry(3, || {
             examples::test_fuzz("cast", "target")
                 .unwrap()
@@ -34,7 +37,13 @@ fn fuzz_cast() {
         if use_cast_checks {
             examples::test_fuzz("cast", "target")
                 .unwrap()
-                .args(["--replay=crashes", "--features=test-fuzz/cast_checks"])
+                .args([
+                    "--replay=crashes",
+                    "--features=test-fuzz/cast_checks",
+                    "--",
+                    "-M",
+                    &id,
+                ])
                 .logged_assert()
                 .success()
                 .stdout(predicate::str::contains("invalid cast"));

@@ -5,7 +5,7 @@ use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use rlimit::Resource;
 use std::fs::remove_dir_all;
-use testing::{examples, retry, CommandExt};
+use testing::{examples, retry, unique_id, CommandExt};
 
 // smoelius: MEMORY_LIMIT must be large enough for the build process to complete.
 const MEMORY_LIMIT: u64 = 1024 * 1024 * 1024;
@@ -39,8 +39,6 @@ fn replay_crashes() {
 #[allow(clippy::trivial_regex)]
 #[test]
 fn replay_hangs() {
-    let _lock = crate::PARSE_DURATION_MUTEX.lock();
-
     replay(
         "parse_duration",
         "parse",
@@ -51,6 +49,8 @@ fn replay_hangs() {
 }
 
 fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &str) {
+    let id = unique_id();
+
     let corpus = corpus_directory_from_target(krate, target);
 
     // smoelius: `corpus` is distinct for all tests. So there is no race here.
@@ -64,12 +64,12 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &st
 
     examples::test_fuzz(krate, target)
         .unwrap()
-        .args(["--reset"])
+        .args(["--reset", "--", "-M", &id])
         .logged_assert()
         .success();
 
     retry(3, || {
-        let mut args = vec!["--no-ui"];
+        let mut args = vec!["--no-ui", "--", "-M", &id];
         args.extend_from_slice(fuzz_args);
 
         examples::test_fuzz(krate, target)
@@ -88,6 +88,7 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &st
                 Object::Crashes => "--replay=crashes",
                 Object::Hangs => "--replay=hangs",
             }])
+            .args(["--", "-M", &id])
             .logged_assert()
             .success()
             .try_stdout(predicate::str::is_match(re).unwrap())
