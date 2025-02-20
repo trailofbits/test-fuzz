@@ -39,7 +39,7 @@ fn fuzz(krate: &str, persistent: bool) {
         args.extend_from_slice(&["--max-total-time", MAX_TOTAL_TIME]);
 
         command
-            .args(&args)
+            .args(args)
             .logged_assert()
             .try_code(predicate::eq(1))
     })
