@@ -1180,7 +1180,7 @@ fn fuzz_command(
     );
 
     let mut command = Command::new("cargo");
-    command.envs(envs).args(&args);
+    command.envs(envs).args(args);
     debug!("{:?}", command);
     command
 }
