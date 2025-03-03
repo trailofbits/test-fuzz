@@ -1,5 +1,3 @@
-use std::sync::Mutex;
-
 mod auto_generate;
 mod build;
 mod consolidate;
@@ -10,6 +8,3 @@ mod fuzz_generic;
 mod fuzz_parallel;
 mod generic_args;
 mod replay;
-
-static ASSERT_MUTEX: Mutex<()> = Mutex::new(());
-static PARSE_DURATION_MUTEX: Mutex<()> = Mutex::new(());

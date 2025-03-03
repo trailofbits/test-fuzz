@@ -30,8 +30,6 @@ fn auto_generate_empty() {
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn auto_generate_nonempty() {
-    let _lock = crate::ASSERT_MUTEX.lock();
-
     auto_generate("assert", "target", true, "Auto-generated", 1);
 }
 

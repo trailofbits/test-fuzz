@@ -1,6 +1,6 @@
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
-use std::{fs::remove_dir_all, sync::Mutex};
+use std::fs::remove_dir_all;
 use testing::{examples, retry, CommandExt};
 
 const MAX_TOTAL_TIME: &str = "60";
@@ -19,11 +19,7 @@ fn fuzz_bar_asdfgh() {
     fuzz("test_bar_asdfgh", 0);
 }
 
-static MUTEX: Mutex<()> = Mutex::new(());
-
 fn fuzz(test: &str, code: i32) {
-    let _lock = MUTEX.lock().unwrap();
-
     let corpus = corpus_directory_from_target("generic", "struct_target");
 
     // smoelius: This call to `remove_dir_all` is protected by the mutex above.
