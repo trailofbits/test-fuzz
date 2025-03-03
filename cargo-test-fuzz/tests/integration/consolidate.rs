@@ -11,8 +11,6 @@ const HANG_MAX_TOTAL_TIME: &str = "120";
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn consolidate_crashes() {
-    let _lock = crate::ASSERT_MUTEX.lock();
-
     consolidate(
         "assert",
         "target",
@@ -28,8 +26,6 @@ fn consolidate_crashes() {
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn consolidate_hangs() {
-    let _lock = crate::PARSE_DURATION_MUTEX.lock();
-
     consolidate(
         "parse_duration",
         "parse",

@@ -8,8 +8,6 @@ const MAX_TOTAL_TIME: &str = "60";
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn fuzz_assert() {
-    let _lock = crate::ASSERT_MUTEX.lock();
-
     fuzz("assert", false);
 }
 
