@@ -100,6 +100,7 @@ pub fn test_fuzz_all() -> Result<Command> {
     ];
 
     let mut command = Command::cargo_bin("cargo-test-fuzz")?;
+    command.env("AFL_NO_AFFINITY", "1");
     command.env("TEST_FUZZ_ID", id());
     command.args(&args);
     Ok(command)
