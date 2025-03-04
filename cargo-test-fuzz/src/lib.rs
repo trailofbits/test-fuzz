@@ -1110,8 +1110,15 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                     .wait()
                     .with_context(|| format!("`wait` failed for `{:?}`", child.popen))?;
 
-                if !child.testing_aborted_programmatically || !status.success() {
+                if !status.success() {
                     bail!("Command failed: {:?}", child.exec);
+                }
+
+                if !child.testing_aborted_programmatically {
+                    bail!(
+                        r#"Could not find "Testing aborted programmatically" in command output: {:?}"#,
+                        child.exec
+                    );
                 }
 
                 if opts.exit_code && !child.time_limit_was_reached {
