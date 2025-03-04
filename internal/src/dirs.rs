@@ -1,5 +1,12 @@
 use cargo_metadata::MetadataCommand;
-use std::{any::type_name, env, path::PathBuf};
+use std::{
+    any::type_name,
+    env,
+    path::PathBuf,
+    sync::atomic::{AtomicBool, Ordering},
+};
+
+pub static IN_TEST: AtomicBool = AtomicBool::new(false);
 
 #[must_use]
 pub fn impl_generic_args_directory_from_args_type<T>() -> PathBuf {
@@ -53,22 +60,46 @@ pub fn output_directory_from_target(krate: &str, target: &str) -> PathBuf {
 
 #[must_use]
 fn impl_generic_args_directory() -> PathBuf {
-    target_directory(false).join("impl_generic_args")
+    target_directory(false).join(path_segment("impl_generic_args"))
 }
 
 #[must_use]
 fn generic_args_directory() -> PathBuf {
-    target_directory(false).join("generic_args")
+    target_directory(false).join(path_segment("generic_args"))
 }
 
 #[must_use]
 fn corpus_directory() -> PathBuf {
-    target_directory(false).join("corpus")
+    target_directory(false).join(path_segment("corpus"))
 }
 
 #[must_use]
 fn output_directory() -> PathBuf {
-    target_directory(true).join("output")
+    target_directory(true).join(path_segment("output"))
+}
+
+#[must_use]
+pub fn path_segment(s: &str) -> String {
+    let maybe_id = maybe_id();
+    format!(
+        "{s}{}{}",
+        if maybe_id.is_some() { "_" } else { "" },
+        maybe_id.unwrap_or_default()
+    )
+}
+
+fn maybe_id() -> Option<String> {
+    env::var("TEST_FUZZ_ID").ok().or_else(|| {
+        if IN_TEST.load(Ordering::SeqCst) {
+            Some(thread_id())
+        } else {
+            None
+        }
+    })
+}
+
+fn thread_id() -> String {
+    format!("{:?}", std::thread::current().id()).replace(['(', ')'], "_")
 }
 
 #[must_use]
