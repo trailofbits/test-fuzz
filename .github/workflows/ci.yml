@@ -107,12 +107,6 @@ jobs:
           rustup +nightly component add rustfmt
           cargo +nightly fmt && git diff --exit-code
 
-      - name: Dylint
-        run: |
-          cargo install cargo-dylint --git=https://github.com/trailofbits/dylint --no-default-features --features=cargo-cli || true
-          cargo install dylint-link || true
-          ./scripts/dylint.sh
-
   test:
     needs: [maybe-expedite]
 
@@ -155,11 +149,12 @@ jobs:
         run: |
           rustup install nightly
           rustup +nightly component add clippy
-          cargo install cargo-license        || true
-          cargo install cargo-supply-chain   || true
-          cargo install cargo-udeps --locked || true
-          cargo install cargo-unmaintained   || true
-          cargo install group-runner         || true
+          cargo install cargo-dylint dylint-link || true
+          cargo install cargo-license            || true
+          cargo install cargo-supply-chain       || true
+          cargo install cargo-udeps --locked     || true
+          cargo install cargo-unmaintained       || true
+          cargo install group-runner             || true
 
       - name: Free up space
         run: |
