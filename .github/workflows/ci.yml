@@ -103,6 +103,7 @@ jobs:
 
       - name: Format
         run: |
+          rustup install nightly
           rustup +nightly component add rustfmt
           cargo +nightly fmt && git diff --exit-code
 
@@ -152,6 +153,7 @@ jobs:
       # smoelius: I expect this list to grow.
       - name: Install tools
         run: |
+          rustup install nightly
           rustup +nightly component add clippy
           cargo install cargo-license        || true
           cargo install cargo-supply-chain   || true
