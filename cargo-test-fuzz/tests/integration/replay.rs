@@ -3,12 +3,16 @@
 
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
-use rlimit::Resource;
 use std::fs::remove_dir_all;
 use testing::{examples, retry, CommandExt};
 
+// smoelius: The use of `Resource::DATA` affects all threads in the integration test. We should see
+// whether there is a more localized way to achieve this goal.
+use rlimit::Resource;
+
 // smoelius: MEMORY_LIMIT must be large enough for the build process to complete.
-const MEMORY_LIMIT: u64 = 1024 * 1024 * 1024;
+// smoelius: Bumping `MEMORY_LIMIT` to 8GB per the above comment re `Resource::DATA`.
+const MEMORY_LIMIT: u64 = 8 * 1024 * 1024 * 1024;
 
 const MAX_TOTAL_TIME: &str = "240";
 
