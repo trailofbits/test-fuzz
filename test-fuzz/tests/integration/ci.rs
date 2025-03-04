@@ -20,6 +20,15 @@ fn clippy() {
 }
 
 #[test]
+fn dylint() {
+    Command::new("cargo")
+        .args(["dylint", "--all", "--", "--all-targets"])
+        .env("DYLINT_RUSTFLAGS", "--deny warnings")
+        .assert()
+        .success();
+}
+
+#[test]
 fn license() {
     let re = Regex::new(r"^[^:]*\b(Apache-2.0|BSD-2-Clause|BSD-3-Clause|ISC|MIT|N/A)\b").unwrap();
 
