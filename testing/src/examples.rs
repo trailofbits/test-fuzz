@@ -81,6 +81,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
 
     if let Some(executable) = executables.into_iter().next() {
         let mut command = Command::new(executable);
+        command.env("TEST_FUZZ_ID", id());
         command.args(["--exact", test]);
         Ok(command)
     } else {
@@ -99,6 +100,7 @@ pub fn test_fuzz_all() -> Result<Command> {
     ];
 
     let mut command = Command::cargo_bin("cargo-test-fuzz")?;
+    command.env("TEST_FUZZ_ID", id());
     command.args(&args);
     Ok(command)
 }
@@ -115,4 +117,12 @@ pub fn test_fuzz_inexact(krate: &str, target: &str) -> Result<Command> {
         command.args(["--test", krate, target]);
         command
     })
+}
+
+fn id() -> String {
+    std::env::var("TEST_FUZZ_ID").unwrap_or_else(|_| thread_id())
+}
+
+fn thread_id() -> String {
+    format!("{:?}", std::thread::current().id()).replace(['(', ')'], "_")
 }
