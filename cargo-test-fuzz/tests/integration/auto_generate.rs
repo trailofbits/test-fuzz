@@ -40,7 +40,7 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(&corpus).unwrap_or_default();
 
-    retry(3, || {
+    let _: &str = retry(3, || {
         let assert = examples::test_fuzz(krate, target)
             .unwrap()
             .args([
@@ -61,7 +61,7 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
 
         ensure!(read_dir(&corpus).map(Iterator::count).unwrap_or_default() == n);
 
-        Ok(())
+        Ok("")
     })
     .unwrap();
 }
