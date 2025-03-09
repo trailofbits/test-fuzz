@@ -249,15 +249,6 @@
         "name": "Andrew Gallant"
       }
     ],
-    "byteorder": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/456674?v=4",
-        "id": 189,
-        "kind": "user",
-        "login": "BurntSushi",
-        "name": "Andrew Gallant"
-      }
-    ],
     "camino": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/1617736?v=4",
@@ -464,6 +455,15 @@
         "name": "Matt Mastracci"
       }
     ],
+    "ctor-proc-macro": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/512240?v=4",
+        "id": 34586,
+        "kind": "user",
+        "login": "mmastrac",
+        "name": "Matt Mastracci"
+      }
+    ],
     "darling": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/4805575?v=4",
@@ -566,13 +566,6 @@
     ],
     "env_logger": [
       {
-        "avatar": "https://avatars.githubusercontent.com/u/64996?v=4",
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
-      {
         "avatar": "https://avatars1.githubusercontent.com/u/1203825?v=4",
         "id": 3,
         "kind": "user",
@@ -672,22 +665,6 @@
         "name": "Nova"
       }
     ],
-    "getrandom": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/42028081?v=4",
-        "id": 563,
-        "kind": "team",
-        "login": "github:rust-random:maintainers",
-        "name": "maintainers"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/134893?v=4",
-        "id": 1234,
-        "kind": "user",
-        "login": "dhardy",
-        "name": "Diggory Hardy"
-      }
-    ],
     "gimli": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/74571?v=4",
@@ -745,15 +722,6 @@
         "name": "KokaKiwi"
       }
     ],
-    "humantime": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/321799?v=4",
-        "id": 892,
-        "kind": "user",
-        "login": "tailhook",
-        "name": "Paul Colomiets"
-      }
-    ],
     "ident_case": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/4805575?v=4",
@@ -804,6 +772,24 @@
         "kind": "user",
         "login": "dtolnay",
         "name": "David Tolnay"
+      }
+    ],
+    "jiff": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/456674?v=4",
+        "id": 189,
+        "kind": "user",
+        "login": "BurntSushi",
+        "name": "Andrew Gallant"
+      }
+    ],
+    "jiff-static": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/456674?v=4",
+        "id": 189,
+        "kind": "user",
+        "login": "BurntSushi",
+        "name": "Andrew Gallant"
       }
     ],
     "libc": [
@@ -1010,13 +996,22 @@
         "name": "Michal 'vorner' Vaner"
       }
     ],
-    "ppv-lite86": [
+    "portable-atomic": [
       {
-        "avatar": "https://avatars.githubusercontent.com/u/1047859?v=4",
-        "id": 12840,
+        "avatar": "https://avatars.githubusercontent.com/u/43724913?v=4",
+        "id": 33035,
         "kind": "user",
-        "login": "kazcw",
-        "name": "Kaz Wesley"
+        "login": "taiki-e",
+        "name": "Taiki Endo"
+      }
+    ],
+    "portable-atomic-util": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/43724913?v=4",
+        "id": 33035,
+        "kind": "user",
+        "login": "taiki-e",
+        "name": "Taiki Endo"
       }
     ],
     "predicates": [
@@ -1078,61 +1073,6 @@
         "kind": "user",
         "login": "dtolnay",
         "name": "David Tolnay"
-      }
-    ],
-    "rand": [
-      {
-        "avatar": "https://avatars1.githubusercontent.com/u/14631425?v=4",
-        "id": 51,
-        "kind": "team",
-        "login": "github:rust-lang-nursery:libs",
-        "name": "libs"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/42028081?v=4",
-        "id": 563,
-        "kind": "team",
-        "login": "github:rust-random:maintainers",
-        "name": "maintainers"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/134893?v=4",
-        "id": 1234,
-        "kind": "user",
-        "login": "dhardy",
-        "name": "Diggory Hardy"
-      }
-    ],
-    "rand_chacha": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/42028081?v=4",
-        "id": 563,
-        "kind": "team",
-        "login": "github:rust-random:maintainers",
-        "name": "maintainers"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/134893?v=4",
-        "id": 1234,
-        "kind": "user",
-        "login": "dhardy",
-        "name": "Diggory Hardy"
-      }
-    ],
-    "rand_core": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/42028081?v=4",
-        "id": 563,
-        "kind": "team",
-        "login": "github:rust-random:maintainers",
-        "name": "maintainers"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/134893?v=4",
-        "id": 1234,
-        "kind": "user",
-        "login": "dhardy",
-        "name": "Diggory Hardy"
       }
     ],
     "regex": [
@@ -1211,29 +1151,6 @@
         "kind": "user",
         "login": "dtolnay",
         "name": "David Tolnay"
-      }
-    ],
-    "retry": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/122457?v=4",
-        "id": 235,
-        "kind": "user",
-        "login": "jimmycuadra",
-        "name": null
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/2677165?v=4",
-        "id": 1546,
-        "kind": "user",
-        "login": "srijs",
-        "name": "Sam Rijs"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/499678?v=4",
-        "id": 8585,
-        "kind": "user",
-        "login": "rbtcollins",
-        "name": "Robert Collins"
       }
     ],
     "rustc-demangle": [
@@ -1674,31 +1591,6 @@
         "kind": "user",
         "login": "kennykerr",
         "name": "Kenny Kerr"
-      }
-    ],
-    "zerocopy": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/3820879?v=4",
-        "id": 1442,
-        "kind": "user",
-        "login": "jswrenn",
-        "name": "Jack Wrenn"
-      },
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/1046063?v=4",
-        "id": 7178,
-        "kind": "user",
-        "login": "joshlf",
-        "name": "Joshua Liebow-Feeser"
-      }
-    ],
-    "zerocopy-derive": [
-      {
-        "avatar": "https://avatars.githubusercontent.com/u/1046063?v=4",
-        "id": 7178,
-        "kind": "user",
-        "login": "joshlf",
-        "name": "Joshua Liebow-Feeser"
       }
     ]
   },
