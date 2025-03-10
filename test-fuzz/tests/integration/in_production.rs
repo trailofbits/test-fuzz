@@ -1,9 +1,10 @@
 use assert_cmd::prelude::*;
-use internal::dirs::corpus_directory_from_target;
+use internal::dirs::{corpus_directory_from_target, path_segment};
 use std::{
     env,
+    ffi::{OsStr, OsString},
     fs::{read_dir, remove_dir_all},
-    path::Path,
+    path::{Component, Path, PathBuf},
     process::Command,
     sync::{LazyLock, Mutex},
 };
@@ -34,7 +35,20 @@ static MUTEX: Mutex<()> = Mutex::new(());
 fn test(write: bool, n: usize) {
     let _lock = MUTEX.lock().unwrap();
 
-    let corpus = corpus_directory_from_target("hello-world", "target");
+    let thread_specific_corpus = corpus_directory_from_target("hello-world", "target");
+
+    // smoelius: HACK. `hello-world` writes to `target/corpus`, not, e.g.,
+    // `target/corpus_ThreadId_3_`. For now, just replace `corpus_ThreadId_3_` with `corpus`.
+    let corpus = thread_specific_corpus
+        .components()
+        .map(|component| {
+            if component.as_os_str() == OsString::from(path_segment("corpus")) {
+                Component::Normal(OsStr::new("corpus"))
+            } else {
+                component
+            }
+        })
+        .collect::<PathBuf>();
 
     // smoelius: This call to `remove_dir_all` is protected by the mutex above.
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
