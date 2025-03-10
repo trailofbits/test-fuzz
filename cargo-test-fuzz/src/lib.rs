@@ -294,22 +294,14 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
     }
     debug!("{:?}", exec);
     let mut popen = exec.clone().popen()?;
-    let artifacts = popen
+    let messages = popen
         .stdout
         .take()
         .map_or(Ok(vec![]), |stream| -> Result<_> {
             let reader = std::io::BufReader::new(stream);
-            let artifacts: Vec<Artifact> = Message::parse_stream(reader)
-                .filter_map(|result| match result {
-                    Ok(message) => match message {
-                        Message::CompilerArtifact(artifact) => Some(Ok(artifact)),
-                        _ => None,
-                    },
-                    Err(err) => Some(Err(err)),
-                })
+            Message::parse_stream(reader)
                 .collect::<std::result::Result<_, std::io::Error>>()
-                .with_context(|| format!("`parse_stream` failed for `{exec:?}`"))?;
-            Ok(artifacts)
+                .with_context(|| format!("`parse_stream` failed for `{exec:?}`"))
         })?;
     let status = popen
         .wait()
@@ -318,30 +310,21 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
     if !status.success() {
         // smoelius: If stderr was silenced, re-execute the command without --message-format=json.
         // This is easier than trying to capture and colorize `CompilerMessage`s like Cargo does.
-        if silence_stderr {
-            let mut popen = Exec::cmd("cargo").args(&args).popen()?;
-            let status = popen
-                .wait()
-                .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
-            ensure!(
-                !status.success(),
-                "Command succeeded unexpectedly: {:?}",
-                exec,
-            );
-        }
+        // smoelius: Rather than re-execute the command, just debug print the messages.
+        eprintln!("{messages:#?}");
         bail!("Command failed: {:?}", exec);
     }
 
-    let executables = artifacts
+    let executables = messages
         .into_iter()
-        .map(|artifact| {
-            if let Artifact {
+        .map(|message| {
+            if let Message::CompilerArtifact(Artifact {
                 package_id,
                 target: build_target,
                 profile: ArtifactProfile { test: true, .. },
                 executable: Some(executable),
                 ..
-            } = artifact
+            }) = message
             {
                 let (test_fuzz_version, afl_version) =
                     test_fuzz_and_afl_versions(&metadata, &package_id)?;
