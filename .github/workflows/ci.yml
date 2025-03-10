@@ -138,6 +138,14 @@ jobs:
       - name: Install protoc
         run: sudo apt-get install protobuf-compiler
 
+      # smoelius: Some of the `install` tests run older versions of cargo-afl that still use the
+      # gold linker. However, the gold linker does not work with the nightly toolchain. See:
+      # https://github.com/rust-fuzz/afl.rs/pull/597
+      - name: Remove gold linker
+        run: |
+          sudo rm -f /usr/bin/ld.gold
+          sudo ln -s /usr/bin/ld /usr/bin/ld.gold
+
       - name: Install cargo-afl
         run: cargo install cargo-afl
 
