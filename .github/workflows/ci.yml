@@ -152,6 +152,10 @@ jobs:
       - name: Run afl-system-config
         run: cargo afl system-config
 
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-udeps
+
       # smoelius: I expect this list to grow.
       - name: Install tools
         run: |
@@ -160,7 +164,6 @@ jobs:
           cargo install cargo-dylint dylint-link || true
           cargo install cargo-license            || true
           cargo install cargo-supply-chain       || true
-          cargo install cargo-udeps --locked     || true
           cargo install cargo-unmaintained       || true
           cargo install group-runner             || true
 
