@@ -1,5 +1,14 @@
 # Changelog
 
+## 7.1.0
+
+- FEATURE: Add `--release` flag ([#517](https://github.com/trailofbits/test-fuzz/pull/517))&mdash;thanks [@YanVictorSN](https://github.com/YanVictorSN)
+- Update `strum_macros` to version `0.27` ([#519](https://github.com/trailofbits/test-fuzz/pull/519))
+- Fix a bug causing `--no-ui` to not work ([#521](https://github.com/trailofbits/test-fuzz/pull/521))
+- Have "Could not find 'Testing aborted programmatically' in command output" generate a distinguished error message ([d150dd3](https://github.com/trailofbits/test-fuzz/commit/d150dd32d12da4e89f60de39747ac45d3133d9e4))
+- Rather than re-execute failed commands, debug print their messages ([e0917e4](https://github.com/trailofbits/test-fuzz/commit/e0917e49ed13ce4e112e8ccdb41c2e4074c5296c))
+- Fix package/module name collision bug ([#522](https://github.com/trailofbits/test-fuzz/pull/522))&mdash;thanks [@anishnaik](https://github.com/anishnaik) for the bug report
+
 ## 7.0.3
 
 - Eliminate reliance on `once_cell` ([61bba16](https://github.com/trailofbits/test-fuzz/commit/61bba16933507b114240bafa3e6cc966fc9df270))
