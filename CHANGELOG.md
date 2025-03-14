@@ -2,7 +2,7 @@
 
 ## 7.0.3
 
-- Eliminate reliance on `once_cell` ([61bba16](https://github.com/trailofbits/test-fuzz/pull/414/commits/61bba16933507b114240bafa3e6cc966fc9df270))
+- Eliminate reliance on `once_cell` ([61bba16](https://github.com/trailofbits/test-fuzz/commit/61bba16933507b114240bafa3e6cc966fc9df270))
 
 ## 7.0.2
 
@@ -22,7 +22,7 @@
 ## 6.0.0
 
 - BREAKING CHANGE: No longer pass `-D` to `cargo afl fuzz`. This is a breaking change for users of `cargo-afl` version [0.15.4](https://github.com/rust-fuzz/afl.rs/blob/master/CHANGES.md#0154) (or earlier), which relies on AFL++ version [4.10.c](https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/Changelog.md#version-410c-release) (or earlier). As of version [4.20.c](https://github.com/AFLplusplus/AFLplusplus/blob/stable/docs/Changelog.md#version-420c-release), AFL++ ignores `-D`. ([#434](https://github.com/trailofbits/test-fuzz/pull/434))
-- Pass `-c-` to `cargo afl fuzz` ([6e6c955](https://github.com/trailofbits/test-fuzz/pull/414/commits/6e6c9554628a7e65f6c33800b7826e03050f47bf))
+- Pass `-c-` to `cargo afl fuzz` ([6e6c955](https://github.com/trailofbits/test-fuzz/commit/6e6c9554628a7e65f6c33800b7826e03050f47bf))
 - Update `option_set` to version `0.3` ([#439](https://github.com/trailofbits/test-fuzz/pull/439))
 - BREAKING CHANGE: Remove deprecated options `--concretize`, `--concretize-impl`, and `--only-concretizations` ([#443](https://github.com/trailofbits/test-fuzz/pull/443) and [#449](https://github.com/trailofbits/test-fuzz/pull/449))
 - BREAKING CHANGE: Remove deprecated CBOR formats ([#445](https://github.com/trailofbits/test-fuzz/pull/445))
