@@ -1,5 +1,5 @@
 diff --git a/substrate/client/transaction-pool/Cargo.toml b/substrate/client/transaction-pool/Cargo.toml
-index 26bbf58..8aa65da 100644
+index 355b1a1..23e226b 100644
 --- a/substrate/client/transaction-pool/Cargo.toml
 +++ b/substrate/client/transaction-pool/Cargo.toml
 @@ -25,10 +25,10 @@ itertools = { workspace = true }
@@ -21,7 +21,7 @@ index 26bbf58..8aa65da 100644
 +test-fuzz = { path = "../../../../../test-fuzz" }
 +
  [dev-dependencies]
- array-bytes = { workspace = true, default-features = true }
+ anyhow = { workspace = true }
 diff --git a/substrate/client/transaction-pool/src/graph/base_pool.rs b/substrate/client/transaction-pool/src/graph/base_pool.rs
 index 3b4afc8..42cd548 100644
 --- a/substrate/client/transaction-pool/src/graph/base_pool.rs

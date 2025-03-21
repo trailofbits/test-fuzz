@@ -1,16 +1,16 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 36002b0..b4df904 100644
+index b031462..6f81314 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
- thiserror = "1.0.26"
+ thiserror = "2.0.9"
  
 +serde = "1.0"
 +test-fuzz = { path = "../../test-fuzz" }
 +
  [target.'cfg(windows)'.dependencies]
  winapi = { version = "0.3", features = ["memoryapi", "sysinfoapi", "winnt", "errhandlingapi"], optional = true }
-@@ -48,2 +51,4 @@ elf = "0.0.10"
+@@ -49,2 +52,4 @@ elf = "0.0.10"
  json = "0.12"
  test_utils = { path = "test_utils/" }
 +
