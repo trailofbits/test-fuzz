@@ -1,5 +1,9 @@
 # Changelog
 
+## 7.1.1
+
+- Upgrade `bincode` to version 2 ([#532](https://github.com/trailofbits/test-fuzz/pull/532))
+
 ## 7.1.0
 
 - FEATURE: Add `--release` flag ([#517](https://github.com/trailofbits/test-fuzz/pull/517))&mdash;thanks [@YanVictorSN](https://github.com/YanVictorSN)
