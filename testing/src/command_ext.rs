@@ -8,7 +8,7 @@ pub trait CommandExt {
 
 impl CommandExt for Command {
     fn logged_assert(&mut self) -> Assert {
-        debug!("{:?}", self);
+        debug!("{self:?}");
         let output = self.output().unwrap();
         Assert::new(output_stripped_of_ansi_escapes(output))
     }

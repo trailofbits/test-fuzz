@@ -35,7 +35,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     args.extend_from_slice(&["--no-run", "--message-format=json"]);
 
     let exec = Exec::cmd("cargo").args(&args).stdout(Redirection::Pipe);
-    debug!("{:?}", exec);
+    debug!("{exec:?}");
     let mut popen = exec.clone().popen()?;
     let messages = popen
         .stdout

@@ -86,6 +86,7 @@ missing-panics-doc = "allow"
 multiple-bound-locations = "allow"
 option-if-let-else = "allow"
 redundant-pub-crate = "allow"
+struct-field-names = "allow"
 
 [workspace.metadata.unmaintained]
 ignore = [
