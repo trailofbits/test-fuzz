@@ -13,14 +13,14 @@ where
         let result = operation();
         match &result {
             Ok(value) => {
-                info!("{}", value);
+                info!("{value}");
                 return result;
             }
             Err(error) if i < n => {
-                warn!("{}", error);
+                warn!("{error}");
             }
             Err(error) => {
-                error!("{}", error);
+                error!("{error}");
                 return result;
             }
         }

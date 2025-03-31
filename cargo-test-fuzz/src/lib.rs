@@ -292,7 +292,7 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
     if silence_stderr {
         exec = exec.stderr(NullFile);
     }
-    debug!("{:?}", exec);
+    debug!("{exec:?}");
     let mut popen = exec.clone().popen()?;
     let messages = popen
         .stdout
@@ -443,7 +443,7 @@ fn targets(executable: &Path) -> Result<Vec<String>> {
         .env_extend(&[("AFL_QUIET", "1")])
         .args(&["--list", "--format=terse"])
         .stderr(NullFile);
-    debug!("{:?}", exec);
+    debug!("{exec:?}");
     let stream = exec.clone().stream_stdout()?;
 
     // smoelius: A test executable's --list output ends with an empty line followed by
@@ -796,7 +796,7 @@ fn for_each_entry(
                 .stdin(file)
                 .stdout(NullFile)
                 .stderr(Redirection::Pipe);
-            debug!("{:?}", exec);
+            debug!("{exec:?}");
             let mut popen = exec
                 .clone()
                 .popen()
@@ -1181,7 +1181,7 @@ fn fuzz_command(
 
     let mut command = Command::new("cargo");
     command.envs(envs).args(args);
-    debug!("{:?}", command);
+    debug!("{command:?}");
     command
 }
 
@@ -1210,7 +1210,7 @@ fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<
 fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
     let mut command = Command::new(&executable.path);
     command.args(["--exact", &(target.to_owned() + AUTO_GENERATED_SUFFIX)]);
-    debug!("{:?}", command);
+    debug!("{command:?}");
     let status = command
         .status()
         .with_context(|| format!("Could not get status of `{command:?}`"))?;
