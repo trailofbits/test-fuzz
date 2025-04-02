@@ -166,7 +166,7 @@ fn run_test(test: &Test, no_run: bool) {
             ])
             .args(flags)
             .args(["--", "--nocapture"]);
-        debug!("{:?}", command);
+        debug!("{command:?}");
         assert!(command.status().unwrap().success());
     }
 

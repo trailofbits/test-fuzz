@@ -194,6 +194,22 @@
         "name": "Trangar"
       }
     ],
+    "bincode_derive": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/8010244?v=4",
+        "id": 3672,
+        "kind": "user",
+        "login": "ZoeyR",
+        "name": "Zoey Riordan"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/2743142?v=4",
+        "id": 4990,
+        "kind": "user",
+        "login": "VictorKoenders",
+        "name": "Trangar"
+      }
+    ],
     "bitflags": [
       {
         "avatar": "https://avatars1.githubusercontent.com/u/1203825?v=4",
@@ -1414,6 +1430,15 @@
         "name": "David Tolnay"
       }
     ],
+    "unty": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/2743142?v=4",
+        "id": 4990,
+        "kind": "user",
+        "login": "VictorKoenders",
+        "name": "Trangar"
+      }
+    ],
     "utf8parse": [
       {
         "avatar": "https://avatars.githubusercontent.com/u/4285147?v=4",
@@ -1444,6 +1469,22 @@
         "kind": "user",
         "login": "SergioBenitez",
         "name": "Sergio Benitez"
+      }
+    ],
+    "virtue": [
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/8010244?v=4",
+        "id": 3672,
+        "kind": "user",
+        "login": "ZoeyR",
+        "name": "Zoey Riordan"
+      },
+      {
+        "avatar": "https://avatars.githubusercontent.com/u/2743142?v=4",
+        "id": 4990,
+        "kind": "user",
+        "login": "VictorKoenders",
+        "name": "Trangar"
       }
     ],
     "vte": [

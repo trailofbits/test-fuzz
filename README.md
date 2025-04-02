@@ -37,7 +37,6 @@ cargo install cargo-test-fuzz cargo-afl
 Fuzzing with `test-fuzz` is essentially three steps:\*
 
 1. **Identify a fuzz target**:
-
    - Add the following `dependencies` to the target crate's `Cargo.toml` file:
      ```toml
      serde = "*"
@@ -50,13 +49,10 @@ Fuzzing with `test-fuzz` is essentially three steps:\*
          ...
      }
      ```
-
 2. **Generate a corpus** by running `cargo test`:
-
    ```
    cargo test
    ```
-
 3. **Fuzz your target** by running [`cargo test-fuzz`]:
    ```
    cargo test-fuzz foo
@@ -258,23 +254,17 @@ error: module is not supported in `trait`s or `impl`s
 The `cargo test-fuzz` command is used to interact with fuzz targets, and to manipulate their corpora, crashes, hangs, and work queues. Example invocations include:
 
 1. List fuzz targets
-
    ```
    cargo test-fuzz --list
    ```
-
 2. Display target `foo`'s corpus
-
    ```
    cargo test-fuzz foo --display corpus
    ```
-
 3. Fuzz target `foo`
-
    ```
    cargo test-fuzz foo
    ```
-
 4. Replay crashes found for target `foo`
    ```
    cargo test-fuzz foo --replay crashes
@@ -333,6 +323,10 @@ Options:
 
 Try `cargo afl fuzz --help` to see additional fuzzer options.
 ```
+
+When using the `--display` option, any output written to stderr by the target is shown. This includes output from `eprintln!` statements, as well as from debugging macros like `dbg!`. This can be useful for understanding what's happening in your code when processing specific inputs.
+
+The `--display` and `--replay` options can be passed together, allowing you to both view and replay corpus entries in a single command.
 
 ### Convenience functions and macros
 
