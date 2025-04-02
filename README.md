@@ -326,7 +326,11 @@ Try `cargo afl fuzz --help` to see additional fuzzer options.
 
 When using the `--display` option, any output written to stderr by the target is shown. This includes output from `eprintln!` statements, as well as from debugging macros like `dbg!`. This can be useful for understanding what's happening in your code when processing specific inputs.
 
-The `--display` and `--replay` options can be passed together, allowing you to both view and replay corpus entries in a single command.
+The `--display` and `--replay` options can be passed together, allowing you to both view and replay corpus entries in a single command, for example:
+
+```
+cargo test-fuzz foo --display corpus --replay corpus
+```
 
 ### Convenience functions and macros
 
