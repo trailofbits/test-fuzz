@@ -947,12 +947,7 @@ impl Child {
 
 #[allow(clippy::too_many_lines)]
 fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<()> {
-    let valid_targets = auto_generate_corpora(executable_targets)?;
-    
-    // If no valid targets, the function above would have already bailed
-    if valid_targets.is_empty() {
-        return Ok(());
-    }
+    auto_generate_corpora(executable_targets)?;
 
     let mut config = Config {
         ui: !opts.no_ui,
@@ -960,12 +955,15 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
         first_run: true,
     };
 
-    if let (false, [(executable, target)]) = (opts.exit_code, valid_targets.as_slice()) {
+    if let (false, [(executable, target)]) = (opts.exit_code, executable_targets) {
         let mut command = fuzz_command(opts, &config, executable, target);
         let status = command
             .status()
             .with_context(|| format!("Could not get status of `{command:?}`"))?;
-        ensure!(status.success(), "Command failed: {:?}", command);
+        if !status.success() {
+            eprintln!("Warning: Command failed: {:?}", command);
+            return Ok(());
+        }
         return Ok(());
     }
 
@@ -976,44 +974,59 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
 
     ensure!(n_cpus >= 1, "Number of cpus must be greater than zero");
 
-    config.sufficient_cpus = n_cpus >= valid_targets.len();
+    config.sufficient_cpus = n_cpus >= executable_targets.len();
 
     if !config.sufficient_cpus {
         ensure!(
             opts.max_total_time.is_none(),
             "--max-total-time cannot be used when number of cpus ({n_cpus}) is less than number \
              of fuzz targets ({})",
-            valid_targets.len()
+            executable_targets.len()
         );
 
         eprintln!(
             "Number of cpus ({n_cpus}) is less than number of fuzz targets ({}); fuzzing each for \
              {} seconds",
-            valid_targets.len(),
+            executable_targets.len(),
             opts.slice
         );
     }
 
     let mut n_children = 0;
     let mut i_task = 0;
-    let mut executable_targets_iter = valid_targets.iter().cycle();
+    let mut executable_targets_iter = executable_targets.iter().cycle();
     let mut poll = Poll::new().with_context(|| "`Poll::new` failed")?;
     let mut events = Events::with_capacity(128);
-    let mut children = vec![(); valid_targets.len()]
+    let mut children = vec![(); executable_targets.len()]
         .into_iter()
         .map(|()| None::<Child>)
         .collect::<Vec<_>>();
-    let mut i_target_prev = valid_targets.len();
-
+    let mut i_target_prev = executable_targets.len();
+    
+    // Track failed targets to detect when all targets fail
+    let mut failed_targets = std::collections::HashSet::new();
+    
     loop {
-        if n_children < n_cpus && (i_task < valid_targets.len() || !config.sufficient_cpus) {
+        if n_children < n_cpus && (i_task < executable_targets.len() || !config.sufficient_cpus) {
+            // If all targets have failed, terminate gracefully
+            if failed_targets.len() == executable_targets.len() {
+                eprintln!("All targets failed to start. Terminating fuzzing process.");
+                break;
+            }
+            
             let Some((executable, target)) = executable_targets_iter.next() else {
                 unreachable!();
             };
 
-            let i_target = i_task % valid_targets.len();
+            let i_target = i_task % executable_targets.len();
+            
+            // Skip targets that have already failed
+            if failed_targets.contains(&i_target) {
+                i_task += 1;
+                continue;
+            }
 
-            config.first_run = i_task < valid_targets.len();
+            config.first_run = i_task < executable_targets.len();
 
             // smoelius: If this is not the target's first run, then there must be insufficient
             // cpus.
@@ -1023,20 +1036,43 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
 
             let exec = format!("{command:?}");
             command.stdout(Stdio::piped());
-            let mut popen = command
-                .spawn()
-                .with_context(|| format!("Could not spawn `{exec:?}`"))?;
-            let stdout = popen
-                .stdout
-                .take()
-                .ok_or_else(|| anyhow!("Could not get output of `{exec:?}`"))?;
+            let popen_result = command.spawn();
+            
+            // Handle spawn failures gracefully
+            if let Err(e) = popen_result {
+                eprintln!("Warning: Could not spawn `{exec:?}`: {}", e);
+                failed_targets.insert(i_target);
+                i_task += 1;
+                continue;
+            }
+            
+            let mut popen = popen_result.unwrap();
+            let stdout_result = popen.stdout.take();
+            
+            if stdout_result.is_none() {
+                eprintln!("Warning: Could not get output of `{exec:?}`");
+                failed_targets.insert(i_target);
+                i_task += 1;
+                continue;
+            }
+            
+            let stdout = stdout_result.unwrap();
             let mut receiver = Receiver::from(stdout);
-            receiver
-                .set_nonblocking(true)
-                .with_context(|| "Could not make receiver non-blocking")?;
-            poll.registry()
-                .register(&mut receiver, Token(i_target), Interest::READABLE)
-                .with_context(|| "Could not register receiver")?;
+            
+            if let Err(e) = receiver.set_nonblocking(true) {
+                eprintln!("Warning: Could not make receiver non-blocking: {}", e);
+                failed_targets.insert(i_target);
+                i_task += 1;
+                continue;
+            }
+            
+            if let Err(e) = poll.registry().register(&mut receiver, Token(i_target), Interest::READABLE) {
+                eprintln!("Warning: Could not register receiver: {}", e);
+                failed_targets.insert(i_target);
+                i_task += 1;
+                continue;
+            }
+            
             children[i_target] = Some(Child {
                 exec,
                 popen,
@@ -1052,23 +1088,46 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
         }
 
         if n_children == 0 {
-            assert!(config.sufficient_cpus);
-            assert!(i_task >= valid_targets.len());
-            break;
+            // If we have no children and all targets have failed, terminate
+            if failed_targets.len() == executable_targets.len() {
+                eprintln!("All targets failed to start. Terminating fuzzing process.");
+                break;
+            }
+            
+            // If we have no children because we've cycled through all targets,
+            // but not all have failed, this is normal completion
+            if config.sufficient_cpus && i_task >= executable_targets.len() {
+                break;
+            }
+            
+            // If we have no children but still have targets that haven't failed,
+            // something went wrong. Wait a bit and try again.
+            std::thread::sleep(std::time::Duration::from_millis(100));
+            continue;
         }
 
-        poll.poll(&mut events, None)
-            .with_context(|| "`poll` failed")?;
+        let poll_result = poll.poll(&mut events, None);
+        if let Err(e) = poll_result {
+            eprintln!("Warning: Poll failed: {}", e);
+            continue;
+        }
 
         for event in &events {
             let Token(i_target) = event.token();
-            let (_, target) = &valid_targets[i_target];
+            let (_, target) = &executable_targets[i_target];
             #[allow(clippy::panic)]
             let child = children[i_target]
                 .as_mut()
                 .unwrap_or_else(|| panic!("Child for token {i_target} should exist"));
 
-            let s = child.read_lines()?;
+            let s = match child.read_lines() {
+                Ok(s) => s,
+                Err(e) => {
+                    eprintln!("Warning: Could not read lines from child process: {}", e);
+                    continue;
+                }
+            };
+            
             for line in s.lines() {
                 if line.contains("Time limit was reached") {
                     child.time_limit_was_reached = true;
@@ -1076,7 +1135,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                 if line.contains("+++ Testing aborted programmatically +++") {
                     child.testing_aborted_programmatically = true;
                 }
-                if i_target_prev < valid_targets.len() && i_target_prev != i_target {
+                if i_target_prev < executable_targets.len() && i_target_prev != i_target {
                     println!("---");
                 }
                 println!("{target}: {line}");
@@ -1088,18 +1147,26 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                 let mut child = children[i_target]
                     .take()
                     .unwrap_or_else(|| panic!("Child for token {i_target} should exist"));
-                poll.registry()
-                    .deregister(&mut child.receiver)
-                    .with_context(|| "Could not deregister receiver")?;
+                
+                if let Err(e) = poll.registry().deregister(&mut child.receiver) {
+                    eprintln!("Warning: Could not deregister receiver: {}", e);
+                }
+                
                 n_children -= 1;
 
-                let status = child
-                    .popen
-                    .wait()
-                    .with_context(|| format!("`wait` failed for `{:?}`", child.popen))?;
+                let status_result = child.popen.wait();
+                
+                if let Err(e) = status_result {
+                    eprintln!("Warning: `wait` failed for `{:?}`: {}", child.popen, e);
+                    failed_targets.insert(i_target);
+                    continue;
+                }
+                
+                let status = status_result.unwrap();
 
                 if !status.success() {
                     eprintln!("Warning: Command failed for target {}: {:?}", target, child.exec);
+                    failed_targets.insert(i_target);
                     continue;
                 }
 
@@ -1108,6 +1175,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                         r#"Warning: Could not find "Testing aborted programmatically" in command output for target {}: {:?}"#,
                         target, child.exec
                     );
+                    failed_targets.insert(i_target);
                     continue;
                 }
 
@@ -1192,9 +1260,7 @@ fn fuzz_command(
     command
 }
 
-fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<Vec<(Executable, String)>> {
-    let mut valid_targets = Vec::new();
-
+fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<()> {
     for (executable, target) in executable_targets {
         let corpus_dir = corpus_directory_from_target(&executable.name, target);
         if !corpus_dir.exists() {
@@ -1203,45 +1269,17 @@ fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<
                 corpus_dir.to_string_lossy(),
             );
             auto_generate_corpus(executable, target)?;
-            if !corpus_dir.exists() {
-                eprintln!(
-                    "Warning: Could not find or auto-generate `{}`. Skipping target `{}`. Please ensure it is tested.",
-                    corpus_dir.to_string_lossy(),
-                    target
-                );
-                continue;
-            }
-            eprintln!("Auto-generated `{}`.", corpus_dir.to_string_lossy());
-        }
-
-        // Validate that the corpus directory has at least one entry
-        if let Ok(entries) = read_dir(&corpus_dir) {
-            let entry_count = entries.count();
-            if entry_count == 0 {
-                eprintln!(
-                    "Warning: Corpus directory `{}` exists but contains no entries. Skipping target `{}`. Please ensure it is tested.",
-                    corpus_dir.to_string_lossy(),
-                    target
-                );
-                continue;
-            }
-        } else {
-            eprintln!(
-                "Warning: Could not read corpus directory `{}`. Skipping target `{}`. Please ensure it is tested.",
+            ensure!(
+                corpus_dir.exists(),
+                "Could not find or auto-generate `{}`. Please ensure `{}` is tested.",
                 corpus_dir.to_string_lossy(),
                 target
             );
-            continue;
+            eprintln!("Auto-generated `{}`.", corpus_dir.to_string_lossy());
         }
-
-        valid_targets.push((executable.clone(), target.clone()));
     }
 
-    if valid_targets.is_empty() {
-        bail!("No valid targets found with corpus entries. Please ensure at least one target is tested.");
-    }
-
-    Ok(valid_targets)
+    Ok(())
 }
 
 fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
