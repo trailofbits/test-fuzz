@@ -947,7 +947,12 @@ impl Child {
 
 #[allow(clippy::too_many_lines)]
 fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<()> {
-    auto_generate_corpora(executable_targets)?;
+    let valid_targets = auto_generate_corpora(executable_targets)?;
+    
+    // If no valid targets, the function above would have already bailed
+    if valid_targets.is_empty() {
+        return Ok(());
+    }
 
     let mut config = Config {
         ui: !opts.no_ui,
@@ -955,7 +960,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
         first_run: true,
     };
 
-    if let (false, [(executable, target)]) = (opts.exit_code, executable_targets) {
+    if let (false, [(executable, target)]) = (opts.exit_code, valid_targets.as_slice()) {
         let mut command = fuzz_command(opts, &config, executable, target);
         let status = command
             .status()
@@ -971,44 +976,44 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
 
     ensure!(n_cpus >= 1, "Number of cpus must be greater than zero");
 
-    config.sufficient_cpus = n_cpus >= executable_targets.len();
+    config.sufficient_cpus = n_cpus >= valid_targets.len();
 
     if !config.sufficient_cpus {
         ensure!(
             opts.max_total_time.is_none(),
             "--max-total-time cannot be used when number of cpus ({n_cpus}) is less than number \
              of fuzz targets ({})",
-            executable_targets.len()
+            valid_targets.len()
         );
 
         eprintln!(
             "Number of cpus ({n_cpus}) is less than number of fuzz targets ({}); fuzzing each for \
              {} seconds",
-            executable_targets.len(),
+            valid_targets.len(),
             opts.slice
         );
     }
 
     let mut n_children = 0;
     let mut i_task = 0;
-    let mut executable_targets_iter = executable_targets.iter().cycle();
+    let mut executable_targets_iter = valid_targets.iter().cycle();
     let mut poll = Poll::new().with_context(|| "`Poll::new` failed")?;
     let mut events = Events::with_capacity(128);
-    let mut children = vec![(); executable_targets.len()]
+    let mut children = vec![(); valid_targets.len()]
         .into_iter()
         .map(|()| None::<Child>)
         .collect::<Vec<_>>();
-    let mut i_target_prev = executable_targets.len();
+    let mut i_target_prev = valid_targets.len();
 
     loop {
-        if n_children < n_cpus && (i_task < executable_targets.len() || !config.sufficient_cpus) {
+        if n_children < n_cpus && (i_task < valid_targets.len() || !config.sufficient_cpus) {
             let Some((executable, target)) = executable_targets_iter.next() else {
                 unreachable!();
             };
 
-            let i_target = i_task % executable_targets.len();
+            let i_target = i_task % valid_targets.len();
 
-            config.first_run = i_task < executable_targets.len();
+            config.first_run = i_task < valid_targets.len();
 
             // smoelius: If this is not the target's first run, then there must be insufficient
             // cpus.
@@ -1048,7 +1053,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
 
         if n_children == 0 {
             assert!(config.sufficient_cpus);
-            assert!(i_task >= executable_targets.len());
+            assert!(i_task >= valid_targets.len());
             break;
         }
 
@@ -1057,7 +1062,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
 
         for event in &events {
             let Token(i_target) = event.token();
-            let (_, target) = &executable_targets[i_target];
+            let (_, target) = &valid_targets[i_target];
             #[allow(clippy::panic)]
             let child = children[i_target]
                 .as_mut()
@@ -1071,7 +1076,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                 if line.contains("+++ Testing aborted programmatically +++") {
                     child.testing_aborted_programmatically = true;
                 }
-                if i_target_prev < executable_targets.len() && i_target_prev != i_target {
+                if i_target_prev < valid_targets.len() && i_target_prev != i_target {
                     println!("---");
                 }
                 println!("{target}: {line}");
@@ -1094,14 +1099,16 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                     .with_context(|| format!("`wait` failed for `{:?}`", child.popen))?;
 
                 if !status.success() {
-                    bail!("Command failed: {:?}", child.exec);
+                    eprintln!("Warning: Command failed for target {}: {:?}", target, child.exec);
+                    continue;
                 }
 
                 if !child.testing_aborted_programmatically {
-                    bail!(
-                        r#"Could not find "Testing aborted programmatically" in command output: {:?}"#,
-                        child.exec
+                    eprintln!(
+                        r#"Warning: Could not find "Testing aborted programmatically" in command output for target {}: {:?}"#,
+                        target, child.exec
                     );
+                    continue;
                 }
 
                 if opts.exit_code && !child.time_limit_was_reached {
@@ -1185,7 +1192,9 @@ fn fuzz_command(
     command
 }
 
-fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<()> {
+fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<Vec<(Executable, String)>> {
+    let mut valid_targets = Vec::new();
+
     for (executable, target) in executable_targets {
         let corpus_dir = corpus_directory_from_target(&executable.name, target);
         if !corpus_dir.exists() {
@@ -1194,17 +1203,45 @@ fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<
                 corpus_dir.to_string_lossy(),
             );
             auto_generate_corpus(executable, target)?;
-            ensure!(
-                corpus_dir.exists(),
-                "Could not find or auto-generate `{}`. Please ensure `{}` is tested.",
+            if !corpus_dir.exists() {
+                eprintln!(
+                    "Warning: Could not find or auto-generate `{}`. Skipping target `{}`. Please ensure it is tested.",
+                    corpus_dir.to_string_lossy(),
+                    target
+                );
+                continue;
+            }
+            eprintln!("Auto-generated `{}`.", corpus_dir.to_string_lossy());
+        }
+
+        // Validate that the corpus directory has at least one entry
+        if let Ok(entries) = read_dir(&corpus_dir) {
+            let entry_count = entries.count();
+            if entry_count == 0 {
+                eprintln!(
+                    "Warning: Corpus directory `{}` exists but contains no entries. Skipping target `{}`. Please ensure it is tested.",
+                    corpus_dir.to_string_lossy(),
+                    target
+                );
+                continue;
+            }
+        } else {
+            eprintln!(
+                "Warning: Could not read corpus directory `{}`. Skipping target `{}`. Please ensure it is tested.",
                 corpus_dir.to_string_lossy(),
                 target
             );
-            eprintln!("Auto-generated `{}`.", corpus_dir.to_string_lossy());
+            continue;
         }
+
+        valid_targets.push((executable.clone(), target.clone()));
     }
 
-    Ok(())
+    if valid_targets.is_empty() {
+        bail!("No valid targets found with corpus entries. Please ensure at least one target is tested.");
+    }
+
+    Ok(valid_targets)
 }
 
 fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
