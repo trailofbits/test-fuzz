@@ -960,10 +960,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
         let status = command
             .status()
             .with_context(|| format!("Could not get status of `{command:?}`"))?;
-        if !status.success() {
-            eprintln!("Warning: Command failed: {:?}", command);
-            return Ok(());
-        }
+        ensure!(status.success(), "Command failed: {:?}", command);
         return Ok(());
     }
 
@@ -1007,13 +1004,13 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
     let mut failed_targets = std::collections::HashSet::new();
     
     loop {
-        if n_children < n_cpus && (i_task < executable_targets.len() || !config.sufficient_cpus) {
-            // If all targets have failed, terminate gracefully
-            if failed_targets.len() == executable_targets.len() {
-                eprintln!("All targets failed to start. Terminating fuzzing process.");
-                break;
-            }
+        // If all targets have failed, terminate gracefully
+        if failed_targets.len() == executable_targets.len() {
+            eprintln!("All targets failed to start. Terminating fuzzing process.");
+            break;
+        }
             
+        if n_children < n_cpus && (i_task < executable_targets.len() || !config.sufficient_cpus) {
             let Some((executable, target)) = executable_targets_iter.next() else {
                 unreachable!();
             };
@@ -1036,43 +1033,20 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
 
             let exec = format!("{command:?}");
             command.stdout(Stdio::piped());
-            let popen_result = command.spawn();
-            
-            // Handle spawn failures gracefully
-            if let Err(e) = popen_result {
-                eprintln!("Warning: Could not spawn `{exec:?}`: {}", e);
-                failed_targets.insert(i_target);
-                i_task += 1;
-                continue;
-            }
-            
-            let mut popen = popen_result.unwrap();
-            let stdout_result = popen.stdout.take();
-            
-            if stdout_result.is_none() {
-                eprintln!("Warning: Could not get output of `{exec:?}`");
-                failed_targets.insert(i_target);
-                i_task += 1;
-                continue;
-            }
-            
-            let stdout = stdout_result.unwrap();
+            let mut popen = command
+                .spawn()
+                .with_context(|| format!("Could not spawn `{exec:?}`"))?;
+            let stdout = popen
+                .stdout
+                .take()
+                .ok_or_else(|| anyhow!("Could not get output of `{exec:?}`"))?;
             let mut receiver = Receiver::from(stdout);
-            
-            if let Err(e) = receiver.set_nonblocking(true) {
-                eprintln!("Warning: Could not make receiver non-blocking: {}", e);
-                failed_targets.insert(i_target);
-                i_task += 1;
-                continue;
-            }
-            
-            if let Err(e) = poll.registry().register(&mut receiver, Token(i_target), Interest::READABLE) {
-                eprintln!("Warning: Could not register receiver: {}", e);
-                failed_targets.insert(i_target);
-                i_task += 1;
-                continue;
-            }
-            
+            receiver
+                .set_nonblocking(true)
+                .with_context(|| "Could not make receiver non-blocking")?;
+            poll.registry()
+                .register(&mut receiver, Token(i_target), Interest::READABLE)
+                .with_context(|| "Could not register receiver")?;
             children[i_target] = Some(Child {
                 exec,
                 popen,
@@ -1088,29 +1062,13 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
         }
 
         if n_children == 0 {
-            // If we have no children and all targets have failed, terminate
-            if failed_targets.len() == executable_targets.len() {
-                eprintln!("All targets failed to start. Terminating fuzzing process.");
-                break;
-            }
-            
-            // If we have no children because we've cycled through all targets,
-            // but not all have failed, this is normal completion
-            if config.sufficient_cpus && i_task >= executable_targets.len() {
-                break;
-            }
-            
-            // If we have no children but still have targets that haven't failed,
-            // something went wrong. Wait a bit and try again.
-            std::thread::sleep(std::time::Duration::from_millis(100));
-            continue;
+            assert!(config.sufficient_cpus);
+            assert!(i_task >= executable_targets.len());
+            break;
         }
 
-        let poll_result = poll.poll(&mut events, None);
-        if let Err(e) = poll_result {
-            eprintln!("Warning: Poll failed: {}", e);
-            continue;
-        }
+        poll.poll(&mut events, None)
+            .with_context(|| "`poll` failed")?;
 
         for event in &events {
             let Token(i_target) = event.token();
@@ -1120,14 +1078,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                 .as_mut()
                 .unwrap_or_else(|| panic!("Child for token {i_target} should exist"));
 
-            let s = match child.read_lines() {
-                Ok(s) => s,
-                Err(e) => {
-                    eprintln!("Warning: Could not read lines from child process: {}", e);
-                    continue;
-                }
-            };
-            
+            let s = child.read_lines()?;
             for line in s.lines() {
                 if line.contains("Time limit was reached") {
                     child.time_limit_was_reached = true;
@@ -1147,22 +1098,15 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                 let mut child = children[i_target]
                     .take()
                     .unwrap_or_else(|| panic!("Child for token {i_target} should exist"));
-                
-                if let Err(e) = poll.registry().deregister(&mut child.receiver) {
-                    eprintln!("Warning: Could not deregister receiver: {}", e);
-                }
-                
+                poll.registry()
+                    .deregister(&mut child.receiver)
+                    .with_context(|| "Could not deregister receiver")?;
                 n_children -= 1;
 
-                let status_result = child.popen.wait();
-                
-                if let Err(e) = status_result {
-                    eprintln!("Warning: `wait` failed for `{:?}`: {}", child.popen, e);
-                    failed_targets.insert(i_target);
-                    continue;
-                }
-                
-                let status = status_result.unwrap();
+                let status = child
+                    .popen
+                    .wait()
+                    .with_context(|| format!("`wait` failed for `{:?}`", child.popen))?;
 
                 if !status.success() {
                     eprintln!("Warning: Command failed for target {}: {:?}", target, child.exec);
