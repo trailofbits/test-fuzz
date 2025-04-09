@@ -2,7 +2,7 @@ use super::Object;
 use anyhow::Result;
 use clap::{crate_version, ArgAction, Parser};
 use serde::{Deserialize, Serialize};
-use std::{env, ffi::OsStr};
+use std::ffi::OsStr;
 
 #[derive(Debug, Parser)]
 #[command(bin_name = "cargo")]
