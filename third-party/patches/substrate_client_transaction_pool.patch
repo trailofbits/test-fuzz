@@ -1,8 +1,8 @@
 diff --git a/substrate/client/transaction-pool/Cargo.toml b/substrate/client/transaction-pool/Cargo.toml
-index 355b1a1..23e226b 100644
+index 14238a3..8b83519 100644
 --- a/substrate/client/transaction-pool/Cargo.toml
 +++ b/substrate/client/transaction-pool/Cargo.toml
-@@ -25,10 +25,10 @@ itertools = { workspace = true }
+@@ -29,10 +29,10 @@ itertools = { workspace = true }
  linked-hash-map = { workspace = true }
  log = { workspace = true, default-features = true }
 -parking_lot = { workspace = true, default-features = true }
@@ -15,7 +15,7 @@ index 355b1a1..23e226b 100644
 +serde = { features = ["derive", "rc"], workspace = true, default-features = true }
  sp-api = { workspace = true, default-features = true }
  sp-blockchain = { workspace = true, default-features = true }
-@@ -43,4 +43,6 @@ tokio-stream = { workspace = true }
+@@ -47,4 +47,6 @@ tokio-stream = { workspace = true }
  tracing = { workspace = true, default-features = true }
  
 +test-fuzz = { path = "../../../../../test-fuzz" }
