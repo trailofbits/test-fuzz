@@ -1,3 +1,22 @@
+//! # cargo-test-fuzz
+//!
+//! This crate provides the core functionality for the `cargo-test-fuzz` command line tool, which
+//! integrates with Rust's testing framework to automate tasks related to fuzzing with `afl.rs`.
+//!
+//! The primary features of this crate include:
+//!
+//! - Building and running fuzz tests using `afl.rs`
+//! - Managing and generating fuzzing corpora
+//! - Displaying and replaying crashes and hangs
+//! - Consolidating and resetting test output
+//!
+//! This crate provides the backend for the `cargo test-fuzz` subcommand, which allows users to:
+//! - Run fuzzing operations against test targets annotated with the `test_fuzz` macro
+//! - Manage fuzzing artifacts (corpus, crashes, hangs)
+//! - Configure fuzzing parameters (timeout, CPU usage, etc.)
+//!
+//! For more information on usage, see the README and documentation for the `test-fuzz` project.
+
 #![deny(clippy::expect_used)]
 #![deny(clippy::unwrap_used)]
 #![warn(clippy::panic)]
