@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index b031462..6f81314 100644
+index 3b1c0d6..0c735ba 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
