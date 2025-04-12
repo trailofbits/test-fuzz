@@ -179,6 +179,7 @@ pub fn run(opts: TestFuzz) -> Result<()> {
     })
 }
 
+#[doc(hidden)]
 pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Result<()> {
     if let Some(object) = opts.replay {
         ensure!(
