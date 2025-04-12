@@ -114,7 +114,8 @@ fn supply_chain() {
         .success();
 
     let stdout_actual = std::str::from_utf8(&assert.get_output().stdout).unwrap();
-    let value_actual = serde_json::Value::from_str(stdout_actual).unwrap();
+    let mut value_actual = serde_json::Value::from_str(stdout_actual).unwrap();
+    remove_avatars(&mut value_actual);
     let stdout_normalized = serde_json::to_string_pretty(&value_actual).unwrap() + "\n";
 
     let path = Path::new("tests/supply_chain.json");
@@ -130,11 +131,35 @@ fn supply_chain() {
         let object_expected = value_expected.as_object().unwrap();
         let set_expected = object_expected.into_iter().collect::<HashSet<_>>();
 
+        // smoelius: Fail only if actual is not a subset of expected.
         assert!(
             set_actual.is_subset(&set_expected),
             "{}",
             SimpleDiff::from_str(&stdout_expected, &stdout_normalized, "left", "right")
         );
+    }
+}
+
+fn remove_avatars(value: &mut serde_json::Value) {
+    match value {
+        serde_json::Value::Null
+        | serde_json::Value::Bool(_)
+        | serde_json::Value::Number(_)
+        | serde_json::Value::String(_) => {}
+        serde_json::Value::Array(array) => {
+            for value in array {
+                remove_avatars(value);
+            }
+        }
+        serde_json::Value::Object(object) => {
+            object.retain(|key, value| {
+                if key == "avatar" {
+                    return false;
+                }
+                remove_avatars(value);
+                true
+            });
+        }
     }
 }
 
