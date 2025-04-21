@@ -12,9 +12,10 @@ use std::{
     env,
     fmt::{self, Debug, Formatter},
     fs::{create_dir_all, write},
-    io::{self, Read},
+    io::{self, Read, Write},
     marker::PhantomData,
     path::Path,
+    sync::Once,
 };
 
 pub use num_traits;
@@ -114,6 +115,21 @@ macro_rules! auto {
         ];
         IntoIterator::into_iter(xss).flatten()
     }};
+}
+
+pub fn warn_if_test_fuzz_not_enabled() {
+    static ONCE: Once = Once::new();
+    ONCE.call_once(|| {
+        if !test_fuzz_enabled() {
+            #[allow(clippy::explicit_write)]
+            writeln!(
+                io::stderr(),
+                "If you are trying to run a test-fuzz-generated fuzzing harness, be sure to run \
+                 with `TEST_FUZZ=1`."
+            )
+            .unwrap();
+        }
+    });
 }
 
 #[must_use]

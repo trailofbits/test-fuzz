@@ -80,7 +80,7 @@ pub enum Object {
 }
 
 #[allow(clippy::struct_excessive_bools)]
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[remain::sorted]
 pub struct TestFuzz {
     pub backtrace: bool,
@@ -1233,4 +1233,47 @@ fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
     ensure!(status.success(), "Command failed: {:?}", command);
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    #![allow(clippy::unwrap_used)]
+
+    use super::{build, executable_targets, TestFuzz};
+    use predicates::prelude::*;
+    use std::{env::set_current_dir, process::Command};
+    use testing::CommandExt;
+
+    #[test]
+    fn warn_if_test_fuzz_not_enabled() {
+        const WARNING: &str = "If you are trying to run a test-fuzz-generated fuzzing harness, be \
+                               sure to run with `TEST_FUZZ=1`.";
+
+        set_current_dir("../examples").unwrap();
+
+        let executables = build(&TestFuzz::default(), false, false).unwrap();
+
+        let executable_targets = executable_targets(&executables).unwrap();
+
+        // smoelius: Any example executable should work _except_ the ones that use
+        // `only_generic_args`. Currently, those are `generic` and `unserde`.
+        let (executable, _) = executable_targets
+            .iter()
+            .filter(|(executable, _)| !["generic", "unserde"].contains(&executable.name.as_str()))
+            .next()
+            .unwrap();
+
+        for enable in [false, true] {
+            let mut command = Command::new(&executable.path);
+            if enable {
+                command.env("TEST_FUZZ", "1");
+            }
+            let assert = command.logged_assert().success();
+            if enable {
+                assert.stderr(predicate::str::contains(WARNING).not());
+            } else {
+                assert.stderr(predicate::str::contains(WARNING));
+            }
+        }
+    }
 }

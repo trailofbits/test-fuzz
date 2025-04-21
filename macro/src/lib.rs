@@ -694,6 +694,8 @@ fn map_method_or_fn(
                     }
 
                     fn entry() {
+                        test_fuzz::runtime::warn_if_test_fuzz_not_enabled();
+
                         // smoelius: Do not set the panic hook when replaying. Leave cargo test's
                         // panic hook in place.
                         if test_fuzz::runtime::test_fuzz_enabled() {
