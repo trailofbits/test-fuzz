@@ -8,6 +8,7 @@ use std::{
     process::Command,
     sync::{LazyLock, Mutex},
 };
+use testing::CommandExt;
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
@@ -62,7 +63,11 @@ fn test(write: bool, n: usize) {
         envs.push(("TEST_FUZZ_WRITE", "1"));
     }
 
-    command.current_dir("/tmp").envs(envs).assert().success();
+    command
+        .current_dir("/tmp")
+        .envs(envs)
+        .logged_assert()
+        .success();
 
     assert_eq!(read_dir(corpus).map(Iterator::count).unwrap_or_default(), n);
 }
