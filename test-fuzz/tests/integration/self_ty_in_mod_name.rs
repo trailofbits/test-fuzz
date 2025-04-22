@@ -1,13 +1,12 @@
-use assert_cmd::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
-use testing::examples::MANIFEST_PATH;
+use testing::{examples::MANIFEST_PATH, CommandExt};
 
 #[test]
 fn success() {
     let mut command = test();
 
-    command.assert().success();
+    command.logged_assert().success();
 }
 
 #[test]
@@ -16,7 +15,7 @@ fn self_ty_conflict() {
 
     command
         .args(["--features=__self_ty_conflict"])
-        .assert()
+        .logged_assert()
         .failure()
         .stderr(predicate::str::contains(
             "the name `struct_target_fuzz__` is defined multiple times",

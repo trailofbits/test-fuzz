@@ -1,17 +1,16 @@
-use assert_cmd::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
-use testing::examples::MANIFEST_PATH;
+use testing::{examples::MANIFEST_PATH, CommandExt};
 
 #[test]
 fn rename() {
     let mut command = test();
 
-    command.assert().success();
+    command.logged_assert().success();
 
     command
         .args(["--features", "__bar_fuzz"])
-        .assert()
+        .logged_assert()
         .failure()
         .stderr(predicate::str::contains(
             "the name `bar_fuzz__` is defined multiple times",

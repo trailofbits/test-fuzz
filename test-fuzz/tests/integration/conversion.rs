@@ -1,17 +1,16 @@
-use assert_cmd::prelude::*;
 use predicates::prelude::*;
 use std::process::Command;
-use testing::examples::MANIFEST_PATH;
+use testing::{examples::MANIFEST_PATH, CommandExt};
 
 #[test]
 fn conversion() {
     let mut command = test();
 
-    command.assert().success();
+    command.logged_assert().success();
 
     command
         .args(["--features", "__inapplicable_conversion"])
-        .assert()
+        .logged_assert()
         .failure()
         .stderr(predicate::str::is_match(r#"(?m)\bConversion "Y" -> "Z" does not apply to the following candidates: \{\s*"X",\s*}$"#).unwrap());
 }

@@ -1,4 +1,4 @@
-use assert_cmd::{assert::OutputAssertExt, cargo::CommandCargoExt};
+use assert_cmd::cargo::CommandCargoExt;
 use regex::Regex;
 use similar_asserts::SimpleDiff;
 use std::{
@@ -15,7 +15,7 @@ use testing::CommandExt;
 fn clippy() {
     Command::new("cargo")
         .args(["clippy", "--all-targets", "--", "--deny=warnings"])
-        .assert()
+        .logged_assert()
         .success();
 }
 
@@ -24,7 +24,7 @@ fn dylint() {
     Command::new("cargo")
         .args(["dylint", "--all", "--", "--all-targets"])
         .env("DYLINT_RUSTFLAGS", "--deny warnings")
-        .assert()
+        .logged_assert()
         .success();
 }
 
@@ -36,7 +36,7 @@ fn license() {
         &Command::new("cargo")
             .arg("license")
             .current_dir("..")
-            .assert()
+            .logged_assert()
             .success()
             .get_output()
             .stdout,
@@ -105,12 +105,12 @@ fn readme_reference_links_are_sorted() {
 fn supply_chain() {
     Command::new("cargo")
         .args(["supply-chain", "update"])
-        .assert()
+        .logged_assert()
         .success();
 
     let assert = Command::new("cargo")
         .args(["supply-chain", "json", "--no-dev"])
-        .assert()
+        .logged_assert()
         .success();
 
     let stdout_actual = std::str::from_utf8(&assert.get_output().stdout).unwrap();
@@ -173,7 +173,7 @@ fn udeps() {
             "--all-targets",
         ])
         .current_dir("..")
-        .assert()
+        .logged_assert()
         .success();
 }
 
@@ -181,7 +181,7 @@ fn udeps() {
 fn unmaintained() {
     Command::new("cargo")
         .args(["unmaintained", "--color=never", "--fail-fast"])
-        .assert()
+        .logged_assert()
         .success();
 }
 
