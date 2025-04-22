@@ -52,6 +52,7 @@ pub fn serialize<T: Serialize>(args: &T) -> Vec<u8> {
     };
 }
 
+#[allow(unused_mut)]
 pub fn deserialize<T: DeserializeOwned, R: Read>(mut reader: R) -> Option<T> {
     #[cfg(any(serde_default, feature = "__serde_bincode"))]
     return {
