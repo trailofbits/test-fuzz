@@ -1015,13 +1015,28 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
         .collect::<Vec<_>>();
     let mut i_target_prev = executable_targets.len();
 
+    // Track failed targets to detect when all targets fail
+    let mut failed_targets = std::collections::HashSet::new();
+
     loop {
+        // If all targets have failed, terminate gracefully
+        if failed_targets.len() == executable_targets.len() {
+            eprintln!("All targets failed to start. Terminating fuzzing process.");
+            break;
+        }
+
         if n_children < n_cpus && (i_task < executable_targets.len() || !config.sufficient_cpus) {
             let Some((executable, target)) = executable_targets_iter.next() else {
                 unreachable!();
             };
 
             let i_target = i_task % executable_targets.len();
+
+            // Skip targets that have already failed
+            if failed_targets.contains(&i_target) {
+                i_task += 1;
+                continue;
+            }
 
             config.first_run = i_task < executable_targets.len();
 
@@ -1109,14 +1124,21 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                     .with_context(|| format!("`wait` failed for `{:?}`", child.popen))?;
 
                 if !status.success() {
-                    bail!("Command failed: {:?}", child.exec);
+                    eprintln!(
+                        "Warning: Command failed for target {}: {:?}",
+                        target, child.exec
+                    );
+                    failed_targets.insert(i_target);
+                    continue;
                 }
 
                 if !child.testing_aborted_programmatically {
-                    bail!(
-                        r#"Could not find "Testing aborted programmatically" in command output: {:?}"#,
-                        child.exec
+                    eprintln!(
+                        r#"Warning: Could not find "Testing aborted programmatically" in command output for target {}: {:?}"#,
+                        target, child.exec
                     );
+                    failed_targets.insert(i_target);
+                    continue;
                 }
 
                 if opts.exit_code && !child.time_limit_was_reached {
