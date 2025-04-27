@@ -54,6 +54,7 @@ strum_macros = "0.27"
 subprocess = "0.2"
 syn = { version = "2.0", features = ["full", "parsing", "visit", "visit-mut"] }
 tempfile = "3.19"
+termsize = "0.1"
 walkdir = "2.5"
 xshell = "0.2"
 

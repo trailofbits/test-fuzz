@@ -28,14 +28,17 @@ cargo_metadata = { workspace = true }
 clap = { workspace = true }
 env_logger = { workspace = true }
 heck = { workspace = true }
+itertools = { workspace = true }
 log = { workspace = true }
 mio = { workspace = true }
 num_cpus = { workspace = true }
 remain = { workspace = true }
 semver = { workspace = true }
 serde = { workspace = true }
+strip-ansi-escapes = { workspace = true }
 strum_macros = { workspace = true }
 subprocess = { workspace = true }
+termsize = { workspace = true }
 
 internal = { workspace = true }
 test-fuzz = { workspace = true }

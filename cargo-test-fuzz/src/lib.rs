@@ -34,6 +34,7 @@ use mio::{unix::pipe::Receiver, Events, Interest, Poll, Token};
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::VecDeque,
     ffi::OsStr,
     fmt::{Debug, Formatter},
     fs::{create_dir_all, read, read_dir, remove_dir_all, File},
@@ -934,6 +935,7 @@ struct Child {
     popen: StdChild,
     receiver: Receiver,
     unprinted_data: Vec<u8>,
+    output_buffer: VecDeque<String>,
     time_limit_was_reached: bool,
     testing_aborted_programmatically: bool,
 }
@@ -958,6 +960,83 @@ impl Child {
             Ok(String::new())
         }
     }
+
+    fn print_line(&mut self, opts: &TestFuzz, line: String) {
+        if opts.no_ui {
+            println!("{line}");
+        } else {
+            self.output_buffer.push_back(line);
+        }
+    }
+
+    fn refresh(opts: &TestFuzz, n_children: usize, children: &mut [Option<Child>]) {
+        if opts.no_ui {
+            return;
+        }
+
+        cursor_to_home_position();
+
+        let termsize::Size { rows, cols } = termsize::get().unwrap();
+        let rows = rows as usize;
+        let cols = cols as usize;
+
+        // smoelius: `n_children` - 1 lines for dividers plus one line at the bottom of the
+        // terminal to hold the cursor.
+        let Some(n_available_rows) = rows.checked_sub(n_children) else {
+            return;
+        };
+
+        let children = children.iter_mut().flatten().collect::<Vec<_>>();
+
+        assert_eq!(n_children, children.len());
+
+        for (i_child, child) in children.into_iter().enumerate() {
+            if i_child != 0 {
+                println!("{:-<cols$}", "");
+            }
+            let n_child_rows = n_available_rows / n_children
+                + if i_child < n_available_rows % n_children {
+                    1
+                } else {
+                    0
+                };
+            let n_lines_to_skip = child.output_buffer.len().saturating_sub(n_child_rows);
+            child.output_buffer.drain(..n_lines_to_skip);
+            for i in 0..n_child_rows {
+                if let Some(line) = child.output_buffer.get(i) {
+                    let prefix = prefix_with_width(line, cols);
+                    print!("{prefix}");
+                }
+                clear_to_end_of_line();
+                println!();
+            }
+        }
+    }
+}
+
+fn cursor_to_home_position() {
+    print!("\x1b[H");
+}
+
+fn clear_to_end_of_line() {
+    print!("\x1b[0K");
+}
+
+fn prefix_with_width(s: &str, width: usize) -> &str {
+    let mut min = 0;
+    let mut max = s.len();
+    while min < max {
+        let mid = (min + max) / 2;
+        let prefix = strip_ansi_escapes::strip(&s[..mid]);
+        if prefix.len() < width {
+            min = mid + 1;
+        } else {
+            // width <= prefix.len()
+            max = mid;
+        }
+    }
+    assert_eq!(min, max);
+    &s[..min]
 }
 
 #[allow(clippy::too_many_lines)]
@@ -1016,12 +1095,25 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
     let mut i_target_prev = executable_targets.len();
 
     loop {
+        Child::refresh(opts, n_children, children.as_mut_slice());
+
         if n_children < n_cpus && (i_task < executable_targets.len() || !config.sufficient_cpus) {
             let Some((executable, target)) = executable_targets_iter.next() else {
                 unreachable!();
             };
 
             let i_target = i_task % executable_targets.len();
+
+            // smoelius: Here is how I think this condition could arise. Suppose there are three
+            // targets and two cpus, and that tasks 0 and 1 are currently running. Suppose then that
+            // task 1 completes and task 2 cannot be started for some reason, so cargo-test-fuzz
+            // tries to start task 3. Note that tasks 0 and 3 correspond to the same target. So if
+            // task 0 is still running, `children[i_target]` will be `Some(..)`.
+            if children[i_target].is_some() {
+                assert!(!config.sufficient_cpus);
+                i_task += 1;
+                continue;
+            }
 
             config.first_run = i_task < executable_targets.len();
 
@@ -1052,6 +1144,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                 popen,
                 receiver,
                 unprinted_data: Vec::new(),
+                output_buffer: VecDeque::new(),
                 time_limit_was_reached: false,
                 testing_aborted_programmatically: false,
             });
@@ -1086,10 +1179,13 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                 if line.contains("+++ Testing aborted programmatically +++") {
                     child.testing_aborted_programmatically = true;
                 }
-                if i_target_prev < executable_targets.len() && i_target_prev != i_target {
+                if opts.no_ui
+                    && i_target_prev < executable_targets.len()
+                    && i_target_prev != i_target
+                {
                     println!("---");
                 }
-                println!("{target}: {line}");
+                child.print_line(opts, format!("{target}: {line}"));
                 i_target_prev = i_target;
             }
 
@@ -1109,7 +1205,11 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                     .with_context(|| format!("`wait` failed for `{:?}`", child.popen))?;
 
                 if !status.success() {
-                    bail!("Command failed: {:?}", child.exec);
+                    bail!(
+                        "Command failed: {:?}\nstdout: ```\n{}\n```",
+                        child.exec,
+                        itertools::join(child.output_buffer.iter(), "\n")
+                    );
                 }
 
                 if !child.testing_aborted_programmatically {
