@@ -43,7 +43,7 @@ static TESTS: LazyLock<Vec<Test>> = LazyLock::new(|| {
     serde_json::from_str(&content).unwrap()
 });
 
-#[cfg_attr(dylint_lib = "supplementary", allow(commented_code))]
+#[cfg_attr(dylint_lib = "supplementary", allow(commented_out_code))]
 #[test]
 fn test() {
     let version_meta = version_meta().unwrap();
