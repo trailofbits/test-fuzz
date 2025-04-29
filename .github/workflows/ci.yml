@@ -163,6 +163,7 @@ jobs:
           rustup +nightly component add clippy
           cargo install cargo-dylint dylint-link || true
           cargo install cargo-license            || true
+          cargo install cargo-sort               || true
           cargo install cargo-supply-chain       || true
           cargo install cargo-unmaintained       || true
           cargo install group-runner             || true

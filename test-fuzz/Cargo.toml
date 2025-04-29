@@ -28,6 +28,7 @@ regex = { workspace = true }
 semver = { workspace = true }
 serde_json = { workspace = true }
 similar-asserts = { workspace = true }
+walkdir = { workspace = true }
 
 testing = { workspace = true }
 
