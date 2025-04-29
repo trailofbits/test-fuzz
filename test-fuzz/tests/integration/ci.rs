@@ -4,12 +4,14 @@ use similar_asserts::SimpleDiff;
 use std::{
     collections::HashSet,
     env::var,
+    ffi::OsStr,
     fs::{read_to_string, write},
     path::Path,
     process::Command,
     str::FromStr,
 };
 use testing::CommandExt;
+use walkdir::WalkDir;
 
 #[test]
 fn clippy() {
@@ -26,6 +28,22 @@ fn dylint() {
         .env("DYLINT_RUSTFLAGS", "--deny warnings")
         .logged_assert()
         .success();
+}
+
+#[test]
+fn cargo_sort() {
+    for entry in WalkDir::new("..")
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| e.file_name() == OsStr::new("Cargo.toml"))
+    {
+        let dir = entry.path().parent().unwrap();
+        Command::new("cargo")
+            .args(["sort", "--check", "--grouped", "--no-format"])
+            .current_dir(dir)
+            .logged_assert()
+            .success();
+    }
 }
 
 #[test]
