@@ -1,5 +1,12 @@
 # Changelog
 
+## 7.2.0
+
+- Expand `--display` and `--replay` documentation in README.md ([#537](https://github.com/trailofbits/test-fuzz/pull/537))&mdash;thanks [@kilnhast](https://github.com/kilnhast)
+- Expand `cargo-test-fuzz` library documentation ([#545](https://github.com/trailofbits/test-fuzz/pull/545))&mdash;thanks [@markv44](https://github.com/markv44)
+- FEATURE: Warn when a `test-fuzz`-generated fuzzing harness is run without `TEST_FUZZ=1` ([#551](https://github.com/trailofbits/test-fuzz/pull/551))
+- FEATURE: Improve parallel fuzzing UI. Each target's output is now displayed in its own panel. ([#555](https://github.com/trailofbits/test-fuzz/pull/555))
+
 ## 7.1.1
 
 - Upgrade `bincode` to version 2 ([#532](https://github.com/trailofbits/test-fuzz/pull/532))
