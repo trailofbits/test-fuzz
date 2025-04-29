@@ -1,6 +1,6 @@
 [package]
 name = "third-party"
-version = "7.1.1"
+version = "7.2.0"
 edition = "2021"
 publish = false
 
