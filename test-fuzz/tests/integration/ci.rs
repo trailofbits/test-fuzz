@@ -10,6 +10,7 @@ use std::{
     process::Command,
     str::FromStr,
 };
+use tempfile::tempdir;
 use testing::CommandExt;
 use walkdir::WalkDir;
 
@@ -179,6 +180,42 @@ fn remove_avatars(value: &mut serde_json::Value) {
             });
         }
     }
+}
+
+#[test]
+fn markdown_link_check() {
+    // Check if npm is installed before proceeding
+    if Command::new("which").arg("npm").output().is_err() {
+        println!("Skipping markdown link check: npm not found.");
+        return;
+    }
+
+    let tempdir = tempdir().expect("Failed to create temporary directory");
+
+    // Install markdown-link-check locally in the temp directory
+    Command::new("npm")
+        .args(["install", "markdown-link-check"])
+        .current_dir(&tempdir)
+        .logged_assert()
+        .success();
+
+    // Construct the path to README.md relative to the crate root
+    let readme_md = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .join("README.md");
+
+    // Run markdown-link-check using npx from the temp directory
+    Command::new("npx")
+        .args([
+            "markdown-link-check",
+            "-q",
+            "-v",
+            &readme_md.to_string_lossy(),
+        ])
+        .current_dir(&tempdir)
+        .logged_assert()
+        .success();
 }
 
 #[test]
