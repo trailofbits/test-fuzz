@@ -23,6 +23,15 @@ fn clippy() {
 }
 
 #[test]
+fn format() {
+    Command::new("cargo")
+        .args(["+nightly", "fmt", "--check"])
+        .current_dir("..")
+        .logged_assert()
+        .success();
+}
+
+#[test]
 fn dylint() {
     Command::new("cargo")
         .args(["dylint", "--all", "--", "--all-targets"])
