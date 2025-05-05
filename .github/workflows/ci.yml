@@ -156,6 +156,7 @@ jobs:
         run: |
           rustup install nightly
           rustup +nightly component add clippy
+          rustup +nightly component add rustfmt
           cargo install cargo-dylint dylint-link || true
           cargo install cargo-license            || true
           cargo install cargo-sort               || true
