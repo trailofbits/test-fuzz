@@ -5,7 +5,7 @@ use std::{
     collections::HashSet,
     env,
     ffi::OsStr,
-    fs::{read_to_string, write},
+    fs::{read_dir, read_to_string, write},
     path::Path,
     process::Command,
     str::FromStr,
@@ -30,6 +30,21 @@ fn format() {
         .logged_assert()
         .success();
 }
+
+#[test]
+fn shellcheck() {
+    for entry in read_dir("../scripts").unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        if path.is_file() {
+            Command::new("shellcheck")
+                .args(["--exclude=SC2002", &path.to_string_lossy()])
+                .logged_assert()
+                .success();
+        }
+    }
+}
+
 
 #[test]
 fn dylint() {
