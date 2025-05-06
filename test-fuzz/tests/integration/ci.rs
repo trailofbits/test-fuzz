@@ -45,7 +45,6 @@ fn shellcheck() {
     }
 }
 
-
 #[test]
 fn dylint() {
     Command::new("cargo")
