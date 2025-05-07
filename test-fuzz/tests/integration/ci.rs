@@ -256,6 +256,15 @@ fn actionlint() {
         .success();
 }
 
+#[test]
+fn prettier() {
+    Command::new("prettier")
+        .args(["--check", "**/*.json", "**/*.md", "**/*.yml"])
+        .current_dir("..")
+        .logged_assert()
+        .success();
+}
+
 #[must_use]
 pub fn enabled(key: &str) -> bool {
     env::var(key).is_ok_and(|value| value != "0")
