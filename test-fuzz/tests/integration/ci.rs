@@ -247,20 +247,20 @@ fn unmaintained() {
 }
 
 #[test]
-fn actionlint() {
-    #[allow(deprecated)]
-    let home = env::home_dir().unwrap();
-    Command::new(home.join("go/bin/actionlint"))
-        .env("SHELLCHECK_OPTS", "--exclude=SC2002")
+fn prettier() {
+    Command::new("prettier")
+        .args(["--check", "**/*.json", "**/*.md", "**/*.yml"])
+        .current_dir("..")
         .logged_assert()
         .success();
 }
 
 #[test]
-fn prettier() {
-    Command::new("prettier")
-        .args(["--check", "**/*.json", "**/*.md", "**/*.yml"])
-        .current_dir("..")
+fn actionlint() {
+    #[allow(deprecated)]
+    let home = env::home_dir().unwrap();
+    Command::new(home.join("go/bin/actionlint"))
+        .env("SHELLCHECK_OPTS", "--exclude=SC2002")
         .logged_assert()
         .success();
 }
