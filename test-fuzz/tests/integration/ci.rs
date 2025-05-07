@@ -3,7 +3,7 @@ use regex::Regex;
 use similar_asserts::SimpleDiff;
 use std::{
     collections::HashSet,
-    env::var,
+    env,
     ffi::OsStr,
     fs::{read_to_string, write},
     path::Path,
@@ -232,7 +232,17 @@ fn unmaintained() {
         .success();
 }
 
+#[test]
+fn actionlint() {
+    #[allow(deprecated)]
+    let home = env::home_dir().unwrap();
+    Command::new(home.join("go/bin/actionlint"))
+        .env("SHELLCHECK_OPTS", "--exclude=SC2002")
+        .logged_assert()
+        .success();
+}
+
 #[must_use]
 pub fn enabled(key: &str) -> bool {
-    var(key).is_ok_and(|value| value != "0")
+    env::var(key).is_ok_and(|value| value != "0")
 }
