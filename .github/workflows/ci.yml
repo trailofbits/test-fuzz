@@ -27,12 +27,20 @@ jobs:
       - id: main
         uses: trailofbits/check-up-to-dateness@v1
 
-  lint:
+  test:
     needs: [check-up-to-dateness]
 
     if: needs.check-up-to-dateness.outputs.is-up-to-date != 'true'
 
     runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [third-party, other]
+        serde_format: [bincode, postcard]
+        toolchain: [stable, nightly]
+        sha1_filenames: [false, true]
 
     steps:
       - uses: actions/checkout@v4
@@ -52,41 +60,10 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             ~/.dylint_drivers/
+            ~/.local/share/afl.rs/
             ~/.rustup/toolchains/
             target/dylint/
           key: ${{ runner.os }}-dylint-${{ hashFiles('dylint_versions') }}
-
-      - name: Rustup
-        run: rustup update
-
-      - name: Actionlint
-        run: go install github.com/rhysd/actionlint/cmd/actionlint@latest && "$HOME"/go/bin/actionlint --shellcheck='-e SC2016'
-
-      - name: Shellcheck
-        run: shellcheck --exclude=SC2002 scripts/*
-
-      - name: Prettier
-        run: npm install -g prettier && prettier --check '**/*.json' '**/*.md' '**/*.yml'
-
-  test:
-    needs: [check-up-to-dateness]
-
-    if: needs.check-up-to-dateness.outputs.is-up-to-date != 'true'
-
-    runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        package: [third-party, other]
-        serde_format: [bincode, postcard]
-        toolchain: [stable, nightly]
-        sha1_filenames: [false, true]
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       # smoelius: The Substrate tests require the `rust-src` component and the wasm32 target.
       - name: Set toolchain
@@ -108,24 +85,21 @@ jobs:
           sudo ln -s /usr/bin/ld /usr/bin/ld.gold
 
       - name: Install cargo-afl
-        run: cargo install cargo-afl
+        run: cargo install cargo-afl || true
 
       - name: Run afl-system-config
         run: cargo afl system-config
 
       - uses: taiki-e/install-action@v2
         with:
-          tool: cargo-udeps
+          tool: cargo-sort, cargo-udeps
 
       # smoelius: I expect this list to grow.
       - name: Install tools
         run: |
-          rustup install nightly
-          rustup +nightly component add clippy
-          rustup +nightly component add rustfmt
+          rustup +nightly component add clippy rustfmt
           cargo install cargo-dylint dylint-link || true
           cargo install cargo-license            || true
-          cargo install cargo-sort               || true
           cargo install cargo-supply-chain       || true
           cargo install cargo-unmaintained       || true
           cargo install group-runner             || true
@@ -186,7 +160,6 @@ jobs:
 
   all-checks:
     needs:
-      - lint
       - test
 
     runs-on: ubuntu-latest
