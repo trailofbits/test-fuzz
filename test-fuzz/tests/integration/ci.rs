@@ -15,34 +15,21 @@ use testing::CommandExt;
 use walkdir::WalkDir;
 
 #[test]
+fn actionlint() {
+    #[allow(deprecated)]
+    let home = env::home_dir().unwrap();
+    Command::new(home.join("go/bin/actionlint"))
+        .env("SHELLCHECK_OPTS", "--exclude=SC2002")
+        .logged_assert()
+        .success();
+}
+
+#[test]
 fn clippy() {
     Command::new("cargo")
         .args(["clippy", "--all-targets", "--", "--deny=warnings"])
         .logged_assert()
         .success();
-}
-
-#[test]
-fn format() {
-    Command::new("cargo")
-        .args(["+nightly", "fmt", "--check"])
-        .current_dir("..")
-        .logged_assert()
-        .success();
-}
-
-#[test]
-fn shellcheck() {
-    for entry in read_dir("../scripts").unwrap() {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        if path.is_file() {
-            Command::new("shellcheck")
-                .args(["--exclude=SC2002", &path.to_string_lossy()])
-                .logged_assert()
-                .success();
-        }
-    }
 }
 
 #[test]
@@ -55,19 +42,12 @@ fn dylint() {
 }
 
 #[test]
-fn cargo_sort() {
-    for entry in WalkDir::new("..")
-        .into_iter()
-        .filter_map(Result::ok)
-        .filter(|e| e.file_name() == OsStr::new("Cargo.toml"))
-    {
-        let dir = entry.path().parent().unwrap();
-        Command::new("cargo")
-            .args(["sort", "--check", "--grouped", "--no-format"])
-            .current_dir(dir)
-            .logged_assert()
-            .success();
-    }
+fn fmt() {
+    Command::new("cargo")
+        .args(["+nightly", "fmt", "--check"])
+        .current_dir("..")
+        .logged_assert()
+        .success();
 }
 
 #[test]
@@ -94,6 +74,34 @@ fn license() {
         }
         assert!(re.is_match(line), "{line:?} does not match");
     }
+}
+
+#[test]
+fn markdown_link_check() {
+    let tempdir = tempdir().unwrap();
+
+    Command::new("npm")
+        .args(["install", "markdown-link-check"])
+        .current_dir(&tempdir)
+        .logged_assert()
+        .success();
+
+    let readme_md = Path::new(env!("CARGO_MANIFEST_DIR")).join("../README.md");
+
+    Command::new("npx")
+        .args(["markdown-link-check", readme_md.to_str().unwrap()])
+        .current_dir(&tempdir)
+        .logged_assert()
+        .success();
+}
+
+#[test]
+fn prettier() {
+    Command::new("prettier")
+        .args(["--check", "**/*.json", "**/*.md", "**/*.yml"])
+        .current_dir("..")
+        .logged_assert()
+        .success();
 }
 
 #[test]
@@ -139,6 +147,36 @@ fn readme_reference_links_are_sorted() {
     let mut links_sorted = links.clone();
     links_sorted.sort_unstable();
     assert_eq!(links_sorted, links);
+}
+
+#[test]
+fn shellcheck() {
+    for entry in read_dir("../scripts").unwrap() {
+        let entry = entry.unwrap();
+        let path = entry.path();
+        if path.is_file() {
+            Command::new("shellcheck")
+                .args(["--exclude=SC2002", &path.to_string_lossy()])
+                .logged_assert()
+                .success();
+        }
+    }
+}
+
+#[test]
+fn sort() {
+    for entry in WalkDir::new("..")
+        .into_iter()
+        .filter_map(Result::ok)
+        .filter(|e| e.file_name() == OsStr::new("Cargo.toml"))
+    {
+        let dir = entry.path().parent().unwrap();
+        Command::new("cargo")
+            .args(["sort", "--check", "--grouped", "--no-format"])
+            .current_dir(dir)
+            .logged_assert()
+            .success();
+    }
 }
 
 // smoelius: No other test uses supply_chain.json.
@@ -206,25 +244,6 @@ fn remove_avatars(value: &mut serde_json::Value) {
 }
 
 #[test]
-fn markdown_link_check() {
-    let tempdir = tempdir().unwrap();
-
-    Command::new("npm")
-        .args(["install", "markdown-link-check"])
-        .current_dir(&tempdir)
-        .logged_assert()
-        .success();
-
-    let readme_md = Path::new(env!("CARGO_MANIFEST_DIR")).join("../README.md");
-
-    Command::new("npx")
-        .args(["markdown-link-check", readme_md.to_str().unwrap()])
-        .current_dir(&tempdir)
-        .logged_assert()
-        .success();
-}
-
-#[test]
 fn udeps() {
     Command::new("cargo")
         .args([
@@ -242,25 +261,6 @@ fn udeps() {
 fn unmaintained() {
     Command::new("cargo")
         .args(["unmaintained", "--color=never", "--fail-fast"])
-        .logged_assert()
-        .success();
-}
-
-#[test]
-fn prettier() {
-    Command::new("prettier")
-        .args(["--check", "**/*.json", "**/*.md", "**/*.yml"])
-        .current_dir("..")
-        .logged_assert()
-        .success();
-}
-
-#[test]
-fn actionlint() {
-    #[allow(deprecated)]
-    let home = env::home_dir().unwrap();
-    Command::new(home.join("go/bin/actionlint"))
-        .env("SHELLCHECK_OPTS", "--exclude=SC2002")
         .logged_assert()
         .success();
 }
