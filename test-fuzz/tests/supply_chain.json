@@ -882,18 +882,12 @@
         "name": "Philip Craig"
       }
     ],
-    "once_cell": [
+    "once_cell_polyfill": [
       {
-        "id": 2699,
+        "id": 6743,
         "kind": "user",
-        "login": "matklad",
-        "name": "Alex Kladov"
-      },
-      {
-        "id": 5906,
-        "kind": "user",
-        "login": "vorner",
-        "name": "Michal 'vorner' Vaner"
+        "login": "epage",
+        "name": "Ed Page"
       }
     ],
     "portable-atomic": [
