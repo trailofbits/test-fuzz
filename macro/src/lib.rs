@@ -804,9 +804,10 @@ fn map_args<'a, I>(
     Vec<Expr>,
 )
 where
-    I: Iterator<Item = &'a mut FnArg>,
+    I: IntoIterator<Item = &'a mut FnArg>,
 {
     let (attrs, ident, ty, fmt, ser, de): (Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>, Vec<_>) = inputs
+        .into_iter()
         .map(map_arg(conversions, candidates, trait_path, self_ty))
         .multiunzip();
 
