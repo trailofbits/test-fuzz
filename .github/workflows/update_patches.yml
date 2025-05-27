@@ -14,6 +14,9 @@ jobs:
           # https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#push-using-ssh-deploy-keys
           ssh-key: ${{ secrets.SSH_KEY }}
 
+      - name: Dylint versions
+        run: cargo search dylint | grep '^dylint' | sort | tee dylint_versions.txt
+
       # smoelius: The next use of `actions/cache` should match what is in ci.yml.
       - uses: actions/cache@v4
         with:
@@ -23,9 +26,10 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             ~/.dylint_drivers/
+            ~/.local/share/afl.rs/
             ~/.rustup/toolchains/
             target/dylint/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: stable-dylint-${{ hashFiles('dylint_versions.txt') }}
 
       - name: Update patches
         run: scripts/update_patches.sh
