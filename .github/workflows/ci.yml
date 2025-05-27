@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Dylint versions
-        run: cargo search dylint | sort | tee dylint_versions
+        run: cargo search dylint | grep '^dylint' | sort | tee dylint_versions.txt
 
       # smoelius: The `~/.cargo/` entries are from:
       # * https://github.com/actions/cache/blob/main/examples.md#rust---cargo.
@@ -63,7 +63,7 @@ jobs:
             ~/.local/share/afl.rs/
             ~/.rustup/toolchains/
             target/dylint/
-          key: ${{ runner.os }}-dylint-${{ hashFiles('dylint_versions') }}
+          key: ${{ matrix.toolchain }}-dylint-${{ hashFiles('dylint_versions.txt') }}
 
       # smoelius: The Substrate tests require the `rust-src` component and the wasm32 target.
       - name: Set toolchain
