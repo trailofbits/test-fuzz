@@ -190,7 +190,7 @@ fn check_test_fuzz_dependency(subdir: &Path, package_name: &str) {
     let package = metadata
         .packages
         .iter()
-        .find(|package| package.name == package_name)
+        .find(|package| package.name.as_str() == package_name)
         .unwrap_or_else(|| panic!("Could not find package `{package_name}`"));
     let dep = package
         .dependencies

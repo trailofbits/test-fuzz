@@ -254,6 +254,20 @@
         "name": null
       }
     ],
+    "cargo-util-schemas": [
+      {
+        "id": 4282,
+        "kind": "team",
+        "login": "github:rust-lang:release-publishers",
+        "name": "release-publishers"
+      },
+      {
+        "id": 55123,
+        "kind": "user",
+        "login": "rust-lang-owner",
+        "name": null
+      }
+    ],
     "cargo_metadata": [
       {
         "id": 1471,
@@ -460,6 +474,20 @@
         "name": "Artyom Pavlov"
       }
     ],
+    "displaydoc": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 43601,
+        "kind": "user",
+        "login": "yaahc",
+        "name": "Jane Losare-Lusby"
+      }
+    ],
     "doc-comment": [
       {
         "id": 111,
@@ -556,6 +584,22 @@
         "name": "Sebastián Magrí"
       }
     ],
+    "equivalent": [
+      {
+        "id": 539,
+        "kind": "user",
+        "login": "cuviper",
+        "name": "Josh Stone"
+      }
+    ],
+    "erased-serde": [
+      {
+        "id": 3618,
+        "kind": "user",
+        "login": "dtolnay",
+        "name": "David Tolnay"
+      }
+    ],
     "errno": [
       {
         "id": 684,
@@ -592,6 +636,26 @@
         "name": "Simon Sapin"
       }
     ],
+    "form_urlencoded": [
+      {
+        "id": 5,
+        "kind": "team",
+        "login": "github:servo:cargo-publish",
+        "name": "cargo publish"
+      },
+      {
+        "id": 7,
+        "kind": "user",
+        "login": "SimonSapin",
+        "name": "Simon Sapin"
+      },
+      {
+        "id": 1895,
+        "kind": "team",
+        "login": "github:servo:rust-url",
+        "name": "rust-url"
+      }
+    ],
     "generic-array": [
       {
         "id": 1793,
@@ -618,6 +682,20 @@
         "kind": "user",
         "login": "philipc",
         "name": "Philip Craig"
+      }
+    ],
+    "hashbrown": [
+      {
+        "id": 2915,
+        "kind": "user",
+        "login": "Amanieu",
+        "name": "Amanieu d'Antras"
+      },
+      {
+        "id": 55123,
+        "kind": "user",
+        "login": "rust-lang-owner",
+        "name": null
       }
     ],
     "heck": [
@@ -656,6 +734,116 @@
         "name": "KokaKiwi"
       }
     ],
+    "icu_collections": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      },
+      {
+        "id": 128408,
+        "kind": "user",
+        "login": "sffc",
+        "name": "Shane F. Carr"
+      }
+    ],
+    "icu_locale_core": [
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      },
+      {
+        "id": 128408,
+        "kind": "user",
+        "login": "sffc",
+        "name": "Shane F. Carr"
+      }
+    ],
+    "icu_normalizer": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      }
+    ],
+    "icu_normalizer_data": [
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      },
+      {
+        "id": 128408,
+        "kind": "user",
+        "login": "sffc",
+        "name": "Shane F. Carr"
+      }
+    ],
+    "icu_properties": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      },
+      {
+        "id": 128408,
+        "kind": "user",
+        "login": "sffc",
+        "name": "Shane F. Carr"
+      }
+    ],
+    "icu_properties_data": [
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      },
+      {
+        "id": 128408,
+        "kind": "user",
+        "login": "sffc",
+        "name": "Shane F. Carr"
+      }
+    ],
+    "icu_provider": [
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      },
+      {
+        "id": 9648,
+        "kind": "user",
+        "login": "zbraniecki",
+        "name": "Zibi Braniecki"
+      }
+    ],
     "ident_case": [
       {
         "id": 6324,
@@ -664,12 +852,66 @@
         "name": "Ted Driggs"
       }
     ],
+    "idna": [
+      {
+        "id": 5,
+        "kind": "team",
+        "login": "github:servo:cargo-publish",
+        "name": "cargo publish"
+      },
+      {
+        "id": 7,
+        "kind": "user",
+        "login": "SimonSapin",
+        "name": "Simon Sapin"
+      },
+      {
+        "id": 1895,
+        "kind": "team",
+        "login": "github:servo:rust-url",
+        "name": "rust-url"
+      }
+    ],
+    "idna_adapter": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 4484,
+        "kind": "user",
+        "login": "hsivonen",
+        "name": "Henri Sivonen"
+      },
+      {
+        "id": 72883,
+        "kind": "user",
+        "login": "valenting",
+        "name": "Valentin Gosu"
+      }
+    ],
     "if_chain": [
       {
         "id": 684,
         "kind": "user",
         "login": "lambda-fairy",
         "name": "Chris Wong"
+      }
+    ],
+    "indexmap": [
+      {
+        "id": 356,
+        "kind": "user",
+        "login": "bluss",
+        "name": "bluss"
+      },
+      {
+        "id": 539,
+        "kind": "user",
+        "login": "cuviper",
+        "name": "Josh Stone"
       }
     ],
     "is_terminal_polyfill": [
@@ -768,6 +1010,20 @@
         "kind": "user",
         "login": "sunfishcode",
         "name": "Dan Gohman"
+      }
+    ],
+    "litemap": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
       }
     ],
     "log": [
@@ -890,6 +1146,46 @@
         "name": "Ed Page"
       }
     ],
+    "ordered-float": [
+      {
+        "id": 4,
+        "kind": "user",
+        "login": "reem",
+        "name": "Jonathan Reem"
+      },
+      {
+        "id": 5,
+        "kind": "team",
+        "login": "github:servo:cargo-publish",
+        "name": "cargo publish"
+      },
+      {
+        "id": 2017,
+        "kind": "user",
+        "login": "mbrubeck",
+        "name": "Matt Brubeck"
+      }
+    ],
+    "percent-encoding": [
+      {
+        "id": 5,
+        "kind": "team",
+        "login": "github:servo:cargo-publish",
+        "name": "cargo publish"
+      },
+      {
+        "id": 7,
+        "kind": "user",
+        "login": "SimonSapin",
+        "name": "Simon Sapin"
+      },
+      {
+        "id": 1895,
+        "kind": "team",
+        "login": "github:servo:rust-url",
+        "name": "rust-url"
+      }
+    ],
     "portable-atomic": [
       {
         "id": 33035,
@@ -904,6 +1200,26 @@
         "kind": "user",
         "login": "taiki-e",
         "name": "Taiki Endo"
+      }
+    ],
+    "potential_utf": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      },
+      {
+        "id": 128408,
+        "kind": "user",
+        "login": "sffc",
+        "name": "Shane F. Carr"
       }
     ],
     "predicates": [
@@ -1094,6 +1410,22 @@
         "name": "publish"
       }
     ],
+    "serde-untagged": [
+      {
+        "id": 3618,
+        "kind": "user",
+        "login": "dtolnay",
+        "name": "David Tolnay"
+      }
+    ],
+    "serde-value": [
+      {
+        "id": 2287,
+        "kind": "user",
+        "login": "arcnmx",
+        "name": null
+      }
+    ],
     "serde_derive": [
       {
         "id": 3618,
@@ -1122,6 +1454,20 @@
         "name": "publish"
       }
     ],
+    "serde_spanned": [
+      {
+        "id": 6743,
+        "kind": "user",
+        "login": "epage",
+        "name": "Ed Page"
+      },
+      {
+        "id": 6908,
+        "kind": "team",
+        "login": "github:toml-rs:maintainers",
+        "name": "Maintainers"
+      }
+    ],
     "sha1": [
       {
         "id": 267,
@@ -1140,6 +1486,46 @@
         "kind": "user",
         "login": "newpavlov",
         "name": "Artyom Pavlov"
+      }
+    ],
+    "smallvec": [
+      {
+        "id": 5,
+        "kind": "team",
+        "login": "github:servo:cargo-publish",
+        "name": "cargo publish"
+      },
+      {
+        "id": 7,
+        "kind": "user",
+        "login": "SimonSapin",
+        "name": "Simon Sapin"
+      },
+      {
+        "id": 2155,
+        "kind": "user",
+        "login": "Ms2ger",
+        "name": null
+      }
+    ],
+    "stable_deref_trait": [
+      {
+        "id": 394,
+        "kind": "user",
+        "login": "Kimundi",
+        "name": "Marvin Löbel"
+      },
+      {
+        "id": 1574,
+        "kind": "user",
+        "login": "jpernst",
+        "name": null
+      },
+      {
+        "id": 4492,
+        "kind": "user",
+        "login": "Storyyeller",
+        "name": "Robert Grosse"
       }
     ],
     "strip-ansi-escapes": [
@@ -1188,6 +1574,14 @@
         "name": "David Tolnay"
       }
     ],
+    "synstructure": [
+      {
+        "id": 1947,
+        "kind": "user",
+        "login": "mystor",
+        "name": "Nika Layzell"
+      }
+    ],
     "terminal_size": [
       {
         "id": 933,
@@ -1234,6 +1628,108 @@
         "name": "David Tolnay"
       }
     ],
+    "tinystr": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 1968,
+        "kind": "user",
+        "login": "raphlinus",
+        "name": "Raph Levien"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      },
+      {
+        "id": 9648,
+        "kind": "user",
+        "login": "zbraniecki",
+        "name": "Zibi Braniecki"
+      }
+    ],
+    "toml": [
+      {
+        "id": 6202,
+        "kind": "user",
+        "login": "ehuss",
+        "name": "Eric Huss"
+      },
+      {
+        "id": 6743,
+        "kind": "user",
+        "login": "epage",
+        "name": "Ed Page"
+      },
+      {
+        "id": 6908,
+        "kind": "team",
+        "login": "github:toml-rs:maintainers",
+        "name": "Maintainers"
+      }
+    ],
+    "toml_datetime": [
+      {
+        "id": 6743,
+        "kind": "user",
+        "login": "epage",
+        "name": "Ed Page"
+      },
+      {
+        "id": 6908,
+        "kind": "team",
+        "login": "github:toml-rs:maintainers",
+        "name": "Maintainers"
+      }
+    ],
+    "toml_edit": [
+      {
+        "id": 6743,
+        "kind": "user",
+        "login": "epage",
+        "name": "Ed Page"
+      },
+      {
+        "id": 6908,
+        "kind": "team",
+        "login": "github:toml-rs:maintainers",
+        "name": "Maintainers"
+      },
+      {
+        "id": 7434,
+        "kind": "user",
+        "login": "ordian",
+        "name": null
+      }
+    ],
+    "toml_write": [
+      {
+        "id": 6743,
+        "kind": "user",
+        "login": "epage",
+        "name": "Ed Page"
+      },
+      {
+        "id": 6908,
+        "kind": "team",
+        "login": "github:toml-rs:maintainers",
+        "name": "Maintainers"
+      }
+    ],
+    "typeid": [
+      {
+        "id": 3618,
+        "kind": "user",
+        "login": "dtolnay",
+        "name": "David Tolnay"
+      }
+    ],
     "typenum": [
       {
         "id": 243,
@@ -1250,12 +1746,90 @@
         "name": "David Tolnay"
       }
     ],
+    "unicode-xid": [
+      {
+        "id": 1,
+        "kind": "user",
+        "login": "alexcrichton",
+        "name": "Alex Crichton"
+      },
+      {
+        "id": 3,
+        "kind": "user",
+        "login": "huonw",
+        "name": "Huon Wilson"
+      },
+      {
+        "id": 7,
+        "kind": "user",
+        "login": "SimonSapin",
+        "name": "Simon Sapin"
+      },
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 1458,
+        "kind": "user",
+        "login": "kwantam",
+        "name": "Riad S. Wahby"
+      },
+      {
+        "id": 21056,
+        "kind": "user",
+        "login": "sujayakar",
+        "name": "Sujay Jayakar"
+      }
+    ],
     "unty": [
       {
         "id": 4990,
         "kind": "user",
         "login": "VictorKoenders",
         "name": "Trangar"
+      }
+    ],
+    "url": [
+      {
+        "id": 5,
+        "kind": "team",
+        "login": "github:servo:cargo-publish",
+        "name": "cargo publish"
+      },
+      {
+        "id": 7,
+        "kind": "user",
+        "login": "SimonSapin",
+        "name": "Simon Sapin"
+      },
+      {
+        "id": 350,
+        "kind": "user",
+        "login": "Hoverbear",
+        "name": "Ana Hobden"
+      },
+      {
+        "id": 359,
+        "kind": "user",
+        "login": "seanmonstar",
+        "name": "Sean McArthur"
+      },
+      {
+        "id": 1895,
+        "kind": "team",
+        "login": "github:servo:rust-url",
+        "name": "rust-url"
+      }
+    ],
+    "utf8_iter": [
+      {
+        "id": 4484,
+        "kind": "user",
+        "login": "hsivonen",
+        "name": "Henri Sivonen"
       }
     ],
     "utf8parse": [
@@ -1444,6 +2018,126 @@
         "kind": "user",
         "login": "kennykerr",
         "name": "Kenny Kerr"
+      }
+    ],
+    "winnow": [
+      {
+        "id": 6743,
+        "kind": "user",
+        "login": "epage",
+        "name": "Ed Page"
+      }
+    ],
+    "writeable": [
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      },
+      {
+        "id": 9648,
+        "kind": "user",
+        "login": "zbraniecki",
+        "name": "Zibi Braniecki"
+      }
+    ],
+    "yoke": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      }
+    ],
+    "yoke-derive": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      }
+    ],
+    "zerofrom": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      }
+    ],
+    "zerofrom-derive": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      }
+    ],
+    "zerotrie": [
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      },
+      {
+        "id": 128408,
+        "kind": "user",
+        "login": "sffc",
+        "name": "Shane F. Carr"
+      }
+    ],
+    "zerovec": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
+      }
+    ],
+    "zerovec-derive": [
+      {
+        "id": 1139,
+        "kind": "user",
+        "login": "Manishearth",
+        "name": "Manish Goregaokar"
+      },
+      {
+        "id": 3807,
+        "kind": "team",
+        "login": "github:unicode-org:icu4x-release",
+        "name": "icu4x-release"
       }
     ]
   },

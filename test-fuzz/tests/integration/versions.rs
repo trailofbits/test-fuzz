@@ -8,7 +8,7 @@ static METADATA: LazyLock<Metadata> =
 #[test]
 fn versions_are_equal() {
     for package in &METADATA.packages {
-        if package.name == "serde_combinators" {
+        if package.name.as_str() == "serde_combinators" {
             continue;
         }
         assert_eq!(

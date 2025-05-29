@@ -424,7 +424,7 @@ fn package_dependency(
 }
 
 fn package_name(metadata: &Metadata, package_id: &PackageId) -> Result<String> {
-    package(metadata, package_id).map(|package| package.name.clone())
+    package(metadata, package_id).map(|package| package.name.to_string())
 }
 
 fn package_version(metadata: &Metadata, package_id: &PackageId) -> Result<Version> {
