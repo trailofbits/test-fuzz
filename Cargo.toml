@@ -19,7 +19,8 @@ afl = { version = "0.15" }
 anyhow = { version = "1.0", features = ["backtrace"] }
 assert_cmd = "2.0"
 bitflags = "2.9"
-cargo_metadata = "0.19"
+# smoelius: `cargo_metadata` 0.20.0 pulls in too many new dependencies.
+cargo_metadata = "=0.19"
 cast_checks = { version = "0.1" }
 clap = { version = "4.5", features = ["cargo", "derive", "wrap_help"] }
 ctor = "0.4"
