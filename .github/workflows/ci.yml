@@ -17,6 +17,7 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  GROUP_RUNNER: target.'cfg(all())'.runner='group-runner'
 
 jobs:
   check-up-to-dateness:
@@ -126,14 +127,13 @@ jobs:
           else
             MAYBE_THIRD_PARTY='--workspace --exclude third-party --features=test-install'
           fi
-          SERDE_FORMAT='--features=test-fuzz/serde_${{ matrix.serde_format }}'
-          SHUFFLE=
+          SERDE_FORMAT='test-fuzz/serde_${{ matrix.serde_format }}'
+          MAYBE_SHUFFLE=
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
-            SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
+            MAYBE_SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
           fi
-          CONFIG_GROUP_RUNNER="--config target.'cfg(all())'.runner='group-runner'"
-          BUILD_CMD="cargo build $MAYBE_THIRD_PARTY $SERDE_FORMAT --all-targets"
-          TEST_CMD="cargo test   $MAYBE_THIRD_PARTY $SERDE_FORMAT $CONFIG_GROUP_RUNNER -- --nocapture $SHUFFLE"
+          BUILD_CMD="cargo build $MAYBE_THIRD_PARTY --features $SERDE_FORMAT --all-targets"
+          TEST_CMD="cargo test   $MAYBE_THIRD_PARTY --features $SERDE_FORMAT --config $GROUP_RUNNER -- --nocapture $MAYBE_SHUFFLE"
           echo "BUILD_CMD=$BUILD_CMD" >> "$GITHUB_ENV"
           echo "TEST_CMD=$TEST_CMD" >> "$GITHUB_ENV"
           if ${{ matrix.sha1_filenames }}; then
