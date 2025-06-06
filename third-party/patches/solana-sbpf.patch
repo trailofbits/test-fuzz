@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 1ee9f1c..f045a82 100644
+index ed6beaa..5ed89e5 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
@@ -16,7 +16,7 @@ index 1ee9f1c..f045a82 100644
 +
 +[workspace]
 diff --git a/src/memory_region.rs b/src/memory_region.rs
-index 3ee949e..dc63b31 100644
+index 6d23ef2..17f4827 100644
 --- a/src/memory_region.rs
 +++ b/src/memory_region.rs
 @@ -42,5 +42,5 @@ pub fn default_memory_cow_callback(_cow_callback_payload: u32) -> Result<u64, ()
@@ -226,63 +226,63 @@ index 3ee949e..dc63b31 100644
 +impl<'a> UnalignedMemoryMapping {
      fn construct_eytzinger_order(
          &mut self,
-@@ -237,5 +404,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+@@ -241,5 +408,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
              region_addresses: vec![0; regions.len()].into_boxed_slice(),
              cache: UnsafeCell::new(MappingCache::new()),
 -            config,
 +            config: config.clone(),
              sbpf_version,
              cow_cb,
-@@ -307,5 +474,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+@@ -311,5 +478,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
              None => {
                  return generate_access_violation(
 -                    self.config,
 +                    &self.config,
                      self.sbpf_version,
                      access_type,
-@@ -322,5 +489,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+@@ -326,5 +493,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
          }
  
 -        generate_access_violation(self.config, self.sbpf_version, access_type, vm_addr, len)
 +        generate_access_violation(&self.config, self.sbpf_version, access_type, vm_addr, len)
      }
  
-@@ -352,5 +519,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+@@ -356,5 +523,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
              None => {
                  return generate_access_violation(
 -                    self.config,
 +                    &self.config,
                      self.sbpf_version,
                      AccessType::Load,
-@@ -395,5 +562,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+@@ -399,5 +566,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
  
          generate_access_violation(
 -            self.config,
 +            &self.config,
              self.sbpf_version,
              AccessType::Load,
-@@ -432,5 +599,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+@@ -436,5 +603,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
              _ => {
                  return generate_access_violation(
 -                    self.config,
 +                    &self.config,
                      self.sbpf_version,
                      AccessType::Store,
-@@ -474,5 +641,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+@@ -478,5 +645,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
  
          generate_access_violation(
 -            self.config,
 +            &self.config,
              self.sbpf_version,
              AccessType::Store,
-@@ -501,5 +668,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+@@ -505,5 +672,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
          }
          Err(
 -            generate_access_violation(self.config, self.sbpf_version, access_type, vm_addr, 0)
 +            generate_access_violation(&self.config, self.sbpf_version, access_type, vm_addr, 0)
                  .unwrap_err(),
          )
-@@ -522,17 +689,35 @@ impl<'a> UnalignedMemoryMapping<'a> {
+@@ -526,17 +693,35 @@ impl<'a> UnalignedMemoryMapping<'a> {
  }
  
 +fn default_box_memory_cow_callback() -> MemoryCowCallback {
@@ -318,21 +318,21 @@ index 3ee949e..dc63b31 100644
 +
  impl fmt::Debug for AlignedMemoryMapping<'_> {
      fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-@@ -691,5 +876,5 @@ impl<'a> AlignedMemoryMapping<'a> {
+@@ -695,5 +880,5 @@ impl<'a> AlignedMemoryMapping<'a> {
  
  /// Maps virtual memory to host memory.
 -#[derive(Debug)]
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub enum MemoryMapping<'a> {
      /// Used when address translation is disabled
-@@ -699,5 +884,5 @@ pub enum MemoryMapping<'a> {
+@@ -703,5 +888,5 @@ pub enum MemoryMapping<'a> {
      Aligned(AlignedMemoryMapping<'a>),
      /// Memory mapping that allows mapping unaligned memory regions.
 -    Unaligned(UnalignedMemoryMapping<'a>),
 +    Unaligned(UnalignedMemoryMapping),
  }
  
-@@ -870,5 +1055,5 @@ fn generate_access_violation(
+@@ -874,5 +1059,5 @@ fn generate_access_violation(
  
  /// Fast, small linear cache used to speed up unaligned memory mapping.
 -#[derive(Debug)]
@@ -340,7 +340,7 @@ index 3ee949e..dc63b31 100644
  struct MappingCache {
      // The cached entries.
 diff --git a/src/program.rs b/src/program.rs
-index ce3b2ea..eff912c 100644
+index 5fa5800..8ae85e3 100644
 --- a/src/program.rs
 +++ b/src/program.rs
 @@ -10,5 +10,5 @@ use {
@@ -350,14 +350,14 @@ index ce3b2ea..eff912c 100644
 +#[derive(Debug, PartialEq, PartialOrd, Eq, Clone, Copy, serde::Deserialize, serde::Serialize)]
  pub enum SBPFVersion {
      /// The legacy format
-@@ -318,5 +318,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
+@@ -320,5 +320,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
  #[macro_export]
  macro_rules! declare_builtin_function {
 -    ($(#[$attr:meta])* $name:ident $(<$($generic_ident:tt : $generic_type:tt),+>)?, fn rust(
 +    ($(#[$attr:meta])* $name:ident, fn rust $(<$($lifetime:tt),+>)? (
          $vm:ident : &mut $ContextObject:ty,
          $arg_a:ident : u64,
-@@ -329,7 +329,9 @@ macro_rules! declare_builtin_function {
+@@ -331,7 +331,9 @@ macro_rules! declare_builtin_function {
          $(#[$attr])*
          pub struct $name {}
 +        #[test_fuzz::test_fuzz_impl]
@@ -368,7 +368,7 @@ index ce3b2ea..eff912c 100644
 +            pub fn rust $(<$($lifetime),+>)? (
                  $vm: &mut $ContextObject,
                  $arg_a: u64,
-@@ -340,9 +342,12 @@ macro_rules! declare_builtin_function {
+@@ -342,9 +344,12 @@ macro_rules! declare_builtin_function {
                  $memory_mapping: &mut $MemoryMapping,
              ) -> $Result {
 +                if matches!($memory_mapping, MemoryMapping::Identity) {
@@ -382,14 +382,14 @@ index ce3b2ea..eff912c 100644
 +            pub fn vm $(<$($lifetime),+>)? (
                  $vm: *mut $crate::vm::EbpfVm<$ContextObject>,
                  $arg_a: u64,
-@@ -354,5 +359,5 @@ macro_rules! declare_builtin_function {
+@@ -356,5 +361,5 @@ macro_rules! declare_builtin_function {
                  use $crate::vm::ContextObject;
                  let vm = unsafe {
 -                    &mut *($vm.cast::<u64>().offset(-($crate::vm::get_runtime_environment_key() as isize)).cast::<$crate::vm::EbpfVm<$ContextObject>>())
 +                    &mut *(($vm as *mut u64).offset(-($crate::vm::get_runtime_environment_key() as isize)) as *mut $crate::vm::EbpfVm<$ContextObject>)
                  };
                  let config = vm.loader.get_config();
-@@ -360,5 +365,5 @@ macro_rules! declare_builtin_function {
+@@ -362,5 +367,5 @@ macro_rules! declare_builtin_function {
                      vm.context_object_pointer.consume(vm.previous_instruction_meter - vm.due_insn_count);
                  }
 -                let converted_result: $crate::error::ProgramResult = Self::rust $(::<$($generic_ident),+>)?(
@@ -397,7 +397,7 @@ index ce3b2ea..eff912c 100644
                      vm.context_object_pointer, $arg_a, $arg_b, $arg_c, $arg_d, $arg_e, &mut vm.memory_mapping,
                  ).map_err(|err| $crate::error::EbpfError::SyscallError(err)).into();
 diff --git a/src/vm.rs b/src/vm.rs
-index 98cedab..adef73f 100644
+index e30418b..948bb31 100644
 --- a/src/vm.rs
 +++ b/src/vm.rs
 @@ -49,5 +49,5 @@ pub fn get_runtime_environment_key() -> i32 {
@@ -408,7 +408,7 @@ index 98cedab..adef73f 100644
  pub struct Config {
      /// Maximum call depth
 diff --git a/test_utils/Cargo.toml b/test_utils/Cargo.toml
-index 8021ad4..6c85a57 100644
+index 7f06dd5..75bd845 100644
 --- a/test_utils/Cargo.toml
 +++ b/test_utils/Cargo.toml
 @@ -9,2 +9,5 @@ publish = false
@@ -517,7 +517,7 @@ index 48c3a20..3ac7fe5 100644
      ) -> Result<u64, Box<dyn std::error::Error>> {
          println!(
 diff --git a/tests/execution.rs b/tests/execution.rs
-index 7b69c1e..1e2c681 100644
+index 5d0ca92..a7f9390 100644
 --- a/tests/execution.rs
 +++ b/tests/execution.rs
 @@ -2537,5 +2537,5 @@ declare_builtin_function!(
