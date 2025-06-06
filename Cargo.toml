@@ -32,7 +32,7 @@ if_chain = "1.0"
 itertools = "0.14"
 log = "0.4"
 mio = { version = "1.0", features = ["os-ext", "os-poll"] }
-num_cpus = "1.16"
+num_cpus = "1.17"
 num-traits = "0.2"
 option_set = "0.3"
 parse_duration = "2.1"
