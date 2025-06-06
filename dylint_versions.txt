@@ -1,0 +1,8 @@
+dylint = "4.1.0"                        # A tool for running Rust lints from dynamic libraries
+dylint-link = "4.1.0"                   # A wrapper around Rust's default linker to help create Dyling libraries
+dylint_building = "0.1.0-pre.2"         # Utiltities for building Dylint libraries
+dylint_driver = "4.1.0"                 # Dylint driver library
+dylint_examples = "0.1.3"               # Example Dylint libraries
+dylint_internal = "4.1.0"               # Dylint internals
+dylint_linting = "4.1.0"                # Utilities for writing Dylint libraries
+dylint_testing = "4.1.0"                # Utilities for testing Dylint libraries
