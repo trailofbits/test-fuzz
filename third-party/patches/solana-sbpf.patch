@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index ed6beaa..5ed89e5 100644
+index 4503501..738c752 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
@@ -397,10 +397,10 @@ index 5fa5800..8ae85e3 100644
                      vm.context_object_pointer, $arg_a, $arg_b, $arg_c, $arg_d, $arg_e, &mut vm.memory_mapping,
                  ).map_err(|err| $crate::error::EbpfError::SyscallError(err)).into();
 diff --git a/src/vm.rs b/src/vm.rs
-index e30418b..948bb31 100644
+index e161f7e..be0a2e2 100644
 --- a/src/vm.rs
 +++ b/src/vm.rs
-@@ -49,5 +49,5 @@ pub fn get_runtime_environment_key() -> i32 {
+@@ -54,5 +54,5 @@ pub fn get_runtime_environment_key() -> i32 {
  
  /// VM configuration settings
 -#[derive(Debug, Clone, PartialEq, Eq)]
