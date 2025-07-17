@@ -24,7 +24,7 @@ cargo_metadata = "=0.19"
 cast_checks = { version = "0.1" }
 clap = { version = "4.5", features = ["cargo", "derive", "wrap_help"] }
 ctor = "0.4"
-darling = "0.20"
+darling = "0.21"
 env_logger = "0.11"
 heck = "0.5"
 hex = "0.4"
