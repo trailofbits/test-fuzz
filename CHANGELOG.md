@@ -1,5 +1,9 @@
 # Changelog
 
+## 7.2.1
+
+- Upgrade `darling` to version 0.21 ([#580](https://github.com/trailofbits/test-fuzz/pull/580))
+
 ## 7.2.0
 
 - Expand `--display` and `--replay` documentation in README.md ([#537](https://github.com/trailofbits/test-fuzz/pull/537))&mdash;thanks [@kilnhast](https://github.com/kilnhast)
