@@ -12,7 +12,7 @@
   {
     "flags": ["EXPENSIVE", "SKIP_NIGHTLY"],
     "url": "https://github.com/paritytech/polkadot-sdk",
-    "rev": "18cd0b4d8ff6a2eea379a3b166fe21aec180778f",
+    "rev": "e007db09171dd5248f5d8663a56be679b92fdbe7",
     "patch": "substrate_client_transaction_pool.patch",
     "subdir": ".",
     "test_package": "sc-transaction-pool",
@@ -32,7 +32,7 @@
   {
     "flags": [],
     "url": "https://github.com/anza-xyz/sbpf",
-    "rev": "8faddcc9c1eea061de732254aa75df4e5d4349fc",
+    "rev": "ade3dd1f6d373006fc10fe3eb9203496b76e7310",
     "patch": "solana-sbpf.patch",
     "subdir": ".",
     "test_package": "solana-sbpf",
