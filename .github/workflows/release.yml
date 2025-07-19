@@ -19,8 +19,8 @@ jobs:
       - name: Install llvm
         run: sudo apt-get install llvm
 
-      - name: Login
-        run: echo ${{ secrets.CRATES_IO_TOKEN }} | cargo login
+      - uses: rust-lang/crates-io-auth-action@v1
+        id: auth
 
       - name: Publish
         run: |
@@ -35,9 +35,9 @@ jobs:
               tail -n 1 |
               grep '^.*: crate [^`]* already exists on crates.io index$'
             )
-            # smoelius: Give `crates.io` a chance to update.
-            sleep 1m
           done
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
       - name: Get version
         id: get-version
