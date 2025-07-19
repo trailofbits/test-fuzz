@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 4503501..738c752 100644
+index f56084e..1fa2416 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
@@ -16,28 +16,20 @@ index 4503501..738c752 100644
 +
 +[workspace]
 diff --git a/src/memory_region.rs b/src/memory_region.rs
-index 3ee949e..dc63b31 100644
+index d71c9dc..9db1836 100644
 --- a/src/memory_region.rs
 +++ b/src/memory_region.rs
-@@ -42,5 +42,5 @@ pub fn default_memory_cow_callback(_cow_callback_payload: u32) -> Result<u64, ()
- 
- /// Memory region for bounds checking and address translation
--#[derive(Default, Eq, PartialEq)]
-+#[derive(Default, Eq, PartialEq, Clone)]
- #[repr(C, align(32))]
- pub struct MemoryRegion {
-@@ -61,4 +61,90 @@ pub struct MemoryRegion {
+@@ -58,4 +58,85 @@ pub struct MemoryRegion {
  }
  
 +#[derive(serde::Deserialize, serde::Serialize)]
 +struct SerializableMemoryRegion {
 +    host_mem_seed: Option<u64>,
 +    vm_addr: u64,
-+    vm_addr_end: u64,
 +    len: u64,
 +    vm_gap_shift: u8,
-+    writable: Cell<bool>,
-+    cow_callback_payload: u32,
++    writable: bool,
++    access_violation_handler_payload: Option<u16>,
 +}
 +
 +impl From<SerializableMemoryRegion> for MemoryRegion {
@@ -46,11 +38,10 @@ index 3ee949e..dc63b31 100644
 +        let SerializableMemoryRegion {
 +            host_mem_seed,
 +            vm_addr,
-+            vm_addr_end,
 +            len,
 +            vm_gap_shift,
 +            writable,
-+            cow_callback_payload,
++            access_violation_handler_payload,
 +        } = value;
 +        if len > 0x100000000 {
 +            std::process::exit(0);
@@ -61,13 +52,12 @@ index 3ee949e..dc63b31 100644
 +            rng.fill_bytes(&mut bytes);
 +        };
 +        Self {
-+            host_addr: Cell::new(bytes.leak().as_ptr() as u64),
++            host_addr: bytes.leak().as_ptr() as u64,
 +            vm_addr,
-+            vm_addr_end,
 +            len,
 +            vm_gap_shift,
 +            writable,
-+            cow_callback_payload,
++            access_violation_handler_payload,
 +        }
 +    }
 +}
@@ -77,20 +67,18 @@ index 3ee949e..dc63b31 100644
 +        let MemoryRegion {
 +            host_addr: _,
 +            vm_addr,
-+            vm_addr_end,
 +            len,
 +            vm_gap_shift,
 +            writable,
-+            cow_callback_payload,
++            access_violation_handler_payload,
 +        } = value;
 +        Self {
 +            host_mem_seed: None,
 +            vm_addr: *vm_addr,
-+            vm_addr_end: *vm_addr_end,
 +            len: *len,
 +            vm_gap_shift: *vm_gap_shift,
-+            writable: writable.clone(),
-+            cow_callback_payload: *cow_callback_payload,
++            writable: *writable,
++            access_violation_handler_payload: access_violation_handler_payload.clone(),
 +        }
 +    }
 +}
@@ -117,222 +105,94 @@ index 3ee949e..dc63b31 100644
 +
  impl MemoryRegion {
      fn new(slice: &[u8], vm_addr: u64, vm_gap_size: u64, writable: bool) -> Self {
-@@ -165,5 +251,5 @@ pub enum AccessType {
+@@ -173,10 +254,13 @@ pub enum AccessType {
  
- /// Memory mapping based on eytzinger search.
--pub struct UnalignedMemoryMapping<'a> {
-+pub struct UnalignedMemoryMapping {
+ /// Common parts of [UnalignedMemoryMapping] and [AlignedMemoryMapping]
++#[derive(serde::Deserialize, serde::Serialize)]
+ pub struct CommonMemoryMapping<'a> {
      /// Mapped memory regions
      regions: Box<[MemoryRegion]>,
-@@ -173,5 +259,5 @@ pub struct UnalignedMemoryMapping<'a> {
-     cache: UnsafeCell<MappingCache>,
-     /// VM configuration
--    config: &'a Config,
-+    config: Config,
-     /// Executable sbpf_version
-     sbpf_version: SBPFVersion,
-@@ -180,5 +266,86 @@ pub struct UnalignedMemoryMapping<'a> {
- }
- 
--impl fmt::Debug for UnalignedMemoryMapping<'_> {
-+#[derive(serde::Deserialize, serde::Serialize)]
-+struct SerializableUnalignedMemoryMapping {
-+    regions: Box<[MemoryRegion]>,
-+    config: Config,
-+    sbpf_version: SBPFVersion,
-+}
-+
-+impl From<SerializableUnalignedMemoryMapping> for UnalignedMemoryMapping {
-+    fn from(value: SerializableUnalignedMemoryMapping) -> Self {
-+        let SerializableUnalignedMemoryMapping {
-+            regions,
-+            config,
-+            sbpf_version,
-+        } = value;
-+        let region_addresses = regions
-+            .iter()
-+            .map(|region| region.vm_addr)
-+            .collect::<Vec<_>>()
-+            .into_boxed_slice();
-+        Self {
-+            regions,
-+            region_addresses,
-+            cache: UnsafeCell::new(MappingCache::new()),
-+            config: config.clone(),
-+            sbpf_version,
-+            cow_cb: Box::new(default_memory_cow_callback),
-+        }
-+    }
-+}
-+
-+impl<'a> From<&'a UnalignedMemoryMapping> for SerializableUnalignedMemoryMapping {
-+    fn from(value: &'a UnalignedMemoryMapping) -> Self {
-+        let UnalignedMemoryMapping {
-+            regions,
-+            region_addresses: _,
-+            cache: _,
-+            config,
-+            sbpf_version,
-+            cow_cb: _,
-+        } = value;
-+        Self {
-+            regions: regions.clone(),
-+            config: config.clone(),
-+            sbpf_version: *sbpf_version,
-+        }
-+    }
-+}
-+
-+impl<'de> serde::Deserialize<'de> for UnalignedMemoryMapping {
-+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-+    where
-+        D: serde::Deserializer<'de>,
-+    {
-+        let value = SerializableUnalignedMemoryMapping::deserialize(deserializer)?;
-+        Ok(Self::from(value))
-+    }
-+}
-+
-+impl serde::Serialize for UnalignedMemoryMapping {
-+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-+    where
-+        S: serde::Serializer,
-+    {
-+        let value = SerializableUnalignedMemoryMapping::from(self);
-+        value.serialize(serializer)
-+    }
-+}
-+
-+impl Clone for UnalignedMemoryMapping {
-+    fn clone(&self) -> Self {
-+        Self {
-+            regions: self.regions.clone(),
-+            region_addresses: self.region_addresses.clone(),
-+            cache: UnsafeCell::new(unsafe { &*self.cache.get() as &MappingCache }.clone()),
-+            config: self.config.clone(),
-+            sbpf_version: self.sbpf_version,
-+            cow_cb: Box::new(default_memory_cow_callback),
-+        }
-+    }
-+}
-+
-+impl fmt::Debug for UnalignedMemoryMapping {
-     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-         f.debug_struct("UnalignedMemoryMapping")
-@@ -191,5 +358,5 @@ impl fmt::Debug for UnalignedMemoryMapping<'_> {
- }
- 
--impl<'a> UnalignedMemoryMapping<'a> {
-+impl<'a> UnalignedMemoryMapping {
-     fn construct_eytzinger_order(
-         &mut self,
-@@ -237,5 +404,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
-             region_addresses: vec![0; regions.len()].into_boxed_slice(),
-             cache: UnsafeCell::new(MappingCache::new()),
--            config,
-+            config: config.clone(),
-             sbpf_version,
-             cow_cb,
-@@ -307,5 +474,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
-             None => {
-                 return generate_access_violation(
--                    self.config,
-+                    &self.config,
-                     self.sbpf_version,
-                     access_type,
-@@ -322,5 +489,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
-         }
- 
--        generate_access_violation(self.config, self.sbpf_version, access_type, vm_addr, len)
-+        generate_access_violation(&self.config, self.sbpf_version, access_type, vm_addr, len)
-     }
- 
-@@ -352,5 +519,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
-             None => {
-                 return generate_access_violation(
--                    self.config,
-+                    &self.config,
-                     self.sbpf_version,
-                     AccessType::Load,
-@@ -395,5 +562,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
- 
-         generate_access_violation(
--            self.config,
-+            &self.config,
-             self.sbpf_version,
-             AccessType::Load,
-@@ -432,5 +599,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
-             _ => {
-                 return generate_access_violation(
--                    self.config,
-+                    &self.config,
-                     self.sbpf_version,
-                     AccessType::Store,
-@@ -474,5 +641,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
- 
-         generate_access_violation(
--            self.config,
-+            &self.config,
-             self.sbpf_version,
-             AccessType::Store,
-@@ -501,5 +668,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
-         }
-         Err(
--            generate_access_violation(self.config, self.sbpf_version, access_type, vm_addr, 0)
-+            generate_access_violation(&self.config, self.sbpf_version, access_type, vm_addr, 0)
-                 .unwrap_err(),
-         )
-@@ -522,17 +689,35 @@ impl<'a> UnalignedMemoryMapping<'a> {
- }
- 
-+fn default_box_memory_cow_callback() -> MemoryCowCallback {
-+    Box::new(default_memory_cow_callback)
-+}
-+
- /// Memory mapping that uses the upper half of an address to identify the
- /// underlying memory region.
-+#[derive(serde::Deserialize, serde::Serialize)]
- pub struct AlignedMemoryMapping<'a> {
-     /// Mapped memory regions
-     regions: Box<[MemoryRegion]>,
+     /// Access violation handler
++    #[serde(skip, default = "boxed_default_access_violation_handler")]
+     access_violation_handler: AccessViolationHandler,
      /// VM configuration
 +    #[serde(with = "test_fuzz::serde_ref")]
      config: &'a Config,
      /// Executable sbpf_version
-     sbpf_version: SBPFVersion,
-     /// Access violation handler
-+    #[serde(skip, default = "default_box_memory_cow_callback")]
-     cow_cb: MemoryCowCallback,
+@@ -184,4 +268,19 @@ pub struct CommonMemoryMapping<'a> {
  }
  
-+impl Clone for AlignedMemoryMapping<'_> {
++impl Clone for CommonMemoryMapping<'_> {
 +    fn clone(&self) -> Self {
 +        Self {
 +            regions: self.regions.clone(),
++            access_violation_handler: boxed_default_access_violation_handler(),
 +            config: self.config,
 +            sbpf_version: self.sbpf_version,
-+            cow_cb: Box::new(default_memory_cow_callback),
 +        }
 +    }
 +}
 +
- impl fmt::Debug for AlignedMemoryMapping<'_> {
++fn boxed_default_access_violation_handler() -> AccessViolationHandler {
++    Box::new(default_access_violation_handler)
++}
++
+ impl CommonMemoryMapping<'_> {
+     fn generate_access_violation(
+@@ -234,4 +333,39 @@ pub struct UnalignedMemoryMapping<'a> {
+ }
+ 
++impl<'de> serde::Deserialize<'de> for UnalignedMemoryMapping<'_> {
++    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
++    where
++        D: serde::Deserializer<'de>,
++    {
++        let common = CommonMemoryMapping::deserialize(deserializer)?;
++        Ok(Self {
++            common,
++            region_addresses: Box::new([]),
++            region_index_lookup: Box::new([]),
++            cache: UnsafeCell::new(MappingCache::new()),
++        })
++    }
++}
++
++impl serde::Serialize for UnalignedMemoryMapping<'_> {
++    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
++    where
++        S: serde::Serializer,
++    {
++        self.common.serialize(serializer)
++    }
++}
++
++impl Clone for UnalignedMemoryMapping<'_> {
++    fn clone(&self) -> Self {
++        Self {
++            common: self.common.clone(),
++            region_addresses: self.region_addresses.clone(),
++            region_index_lookup: self.region_index_lookup.clone(),
++            cache: UnsafeCell::new(unsafe { &*self.cache.get() as &MappingCache }.clone()),
++        }
++    }
++}
++
+ impl fmt::Debug for UnalignedMemoryMapping<'_> {
      fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-@@ -691,5 +876,5 @@ impl<'a> AlignedMemoryMapping<'a> {
+@@ -340,4 +474,5 @@ impl<'a> UnalignedMemoryMapping<'a> {
+ /// Memory mapping that uses the upper half of an address to identify the
+ /// underlying memory region.
++#[derive(Clone, serde::Deserialize, serde::Serialize)]
+ pub struct AlignedMemoryMapping<'a> {
+     /// Common parts
+@@ -415,5 +550,5 @@ impl<'a> AlignedMemoryMapping<'a> {
  
  /// Maps virtual memory to host memory.
 -#[derive(Debug)]
 +#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
  pub enum MemoryMapping<'a> {
      /// Used when address translation is disabled
-@@ -699,5 +884,5 @@ pub enum MemoryMapping<'a> {
-     Aligned(AlignedMemoryMapping<'a>),
-     /// Memory mapping that allows mapping unaligned memory regions.
--    Unaligned(UnalignedMemoryMapping<'a>),
-+    Unaligned(UnalignedMemoryMapping),
- }
- 
-@@ -870,5 +1055,5 @@ fn generate_access_violation(
+@@ -599,5 +734,5 @@ impl<'a> MemoryMapping<'a> {
  
  /// Fast, small linear cache used to speed up unaligned memory mapping.
 -#[derive(Debug)]
@@ -340,7 +200,7 @@ index 3ee949e..dc63b31 100644
  struct MappingCache {
      // The cached entries.
 diff --git a/src/program.rs b/src/program.rs
-index 38ad3ae..4ec012c 100644
+index 79705c4..70ca947 100644
 --- a/src/program.rs
 +++ b/src/program.rs
 @@ -10,5 +10,5 @@ use {
@@ -350,14 +210,14 @@ index 38ad3ae..4ec012c 100644
 +#[derive(Debug, PartialEq, PartialOrd, Eq, Clone, Copy, serde::Deserialize, serde::Serialize)]
  pub enum SBPFVersion {
      /// The legacy format
-@@ -321,5 +321,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
+@@ -323,5 +323,5 @@ impl<C: ContextObject> std::fmt::Debug for BuiltinProgram<C> {
  #[macro_export]
  macro_rules! declare_builtin_function {
 -    ($(#[$attr:meta])* $name:ident $(<$($generic_ident:tt : $generic_type:tt),+>)?, fn rust(
 +    ($(#[$attr:meta])* $name:ident, fn rust $(<$($lifetime:tt),+>)? (
          $vm:ident : &mut $ContextObject:ty,
          $arg_a:ident : u64,
-@@ -332,7 +332,9 @@ macro_rules! declare_builtin_function {
+@@ -334,7 +334,9 @@ macro_rules! declare_builtin_function {
          $(#[$attr])*
          pub struct $name {}
 +        #[test_fuzz::test_fuzz_impl]
@@ -368,7 +228,7 @@ index 38ad3ae..4ec012c 100644
 +            pub fn rust $(<$($lifetime),+>)? (
                  $vm: &mut $ContextObject,
                  $arg_a: u64,
-@@ -343,9 +345,12 @@ macro_rules! declare_builtin_function {
+@@ -345,9 +347,12 @@ macro_rules! declare_builtin_function {
                  $memory_mapping: &mut $MemoryMapping,
              ) -> $Result {
 +                if matches!($memory_mapping, MemoryMapping::Identity) {
@@ -382,14 +242,14 @@ index 38ad3ae..4ec012c 100644
 +            pub fn vm $(<$($lifetime),+>)? (
                  $vm: *mut $crate::vm::EbpfVm<$ContextObject>,
                  $arg_a: u64,
-@@ -357,5 +362,5 @@ macro_rules! declare_builtin_function {
+@@ -359,5 +364,5 @@ macro_rules! declare_builtin_function {
                  use $crate::vm::ContextObject;
                  let vm = unsafe {
 -                    &mut *($vm.cast::<u64>().offset(-($crate::vm::get_runtime_environment_key() as isize)).cast::<$crate::vm::EbpfVm<$ContextObject>>())
 +                    &mut *(($vm as *mut u64).offset(-($crate::vm::get_runtime_environment_key() as isize)) as *mut $crate::vm::EbpfVm<$ContextObject>)
                  };
                  let config = vm.loader.get_config();
-@@ -363,5 +368,5 @@ macro_rules! declare_builtin_function {
+@@ -365,5 +370,5 @@ macro_rules! declare_builtin_function {
                      vm.context_object_pointer.consume(vm.previous_instruction_meter - vm.due_insn_count);
                  }
 -                let converted_result: $crate::error::ProgramResult = Self::rust $(::<$($generic_ident),+>)?(
@@ -397,7 +257,7 @@ index 38ad3ae..4ec012c 100644
                      vm.context_object_pointer, $arg_a, $arg_b, $arg_c, $arg_d, $arg_e, &mut vm.memory_mapping,
                  ).map_err(|err| $crate::error::EbpfError::SyscallError(err)).into();
 diff --git a/src/vm.rs b/src/vm.rs
-index b8c8093..6331865 100644
+index cb068ca..2832edf 100644
 --- a/src/vm.rs
 +++ b/src/vm.rs
 @@ -54,5 +54,5 @@ pub fn get_runtime_environment_key() -> i32 {
@@ -408,7 +268,7 @@ index b8c8093..6331865 100644
  pub struct Config {
      /// Maximum call depth
 diff --git a/test_utils/Cargo.toml b/test_utils/Cargo.toml
-index 7f06dd5..75bd845 100644
+index 9e361f0..9c44449 100644
 --- a/test_utils/Cargo.toml
 +++ b/test_utils/Cargo.toml
 @@ -9,2 +9,5 @@ publish = false
@@ -418,7 +278,7 @@ index 7f06dd5..75bd845 100644
 +serde = "1.0"
 +test-fuzz = { path = "../../../test-fuzz" }
 diff --git a/test_utils/src/lib.rs b/test_utils/src/lib.rs
-index 035af18..3131f5f 100644
+index 0fc06bc..fb6272c 100644
 --- a/test_utils/src/lib.rs
 +++ b/test_utils/src/lib.rs
 @@ -22,5 +22,5 @@ pub mod syscalls;
@@ -517,7 +377,7 @@ index 48c3a20..3ac7fe5 100644
      ) -> Result<u64, Box<dyn std::error::Error>> {
          println!(
 diff --git a/tests/execution.rs b/tests/execution.rs
-index 1d692e4..abef589 100644
+index 967be52..8f25cbc 100644
 --- a/tests/execution.rs
 +++ b/tests/execution.rs
 @@ -2677,5 +2677,5 @@ declare_builtin_function!(
