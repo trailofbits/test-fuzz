@@ -960,12 +960,14 @@ fn map_ref_arg(
 }
 
 fn opts_from_attr(attr: &Attribute) -> TestFuzzOpts {
-    attr.parse_args::<TokenStream2>()
-        .map_or(TestFuzzOpts::default(), |tokens| {
+    attr.parse_args::<TokenStream2>().map_or_else(
+        |_| TestFuzzOpts::default(),
+        |tokens| {
             let attr_args =
                 NestedMeta::parse_meta_list(tokens).expect("Could not parse attribute args");
             TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options")
-        })
+        },
+    )
 }
 
 fn is_test_fuzz(attr: &Attribute) -> bool {
