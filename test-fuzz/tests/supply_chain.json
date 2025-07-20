@@ -1050,14 +1050,6 @@
         "name": "Dan Gohman"
       }
     ],
-    "rustversion": [
-      {
-        "id": 3618,
-        "kind": "user",
-        "login": "dtolnay",
-        "name": "David Tolnay"
-      }
-    ],
     "ryu": [
       {
         "id": 3618,
