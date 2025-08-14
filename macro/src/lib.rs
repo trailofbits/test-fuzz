@@ -415,9 +415,10 @@ fn map_method_or_fn(
         .collect();
     let args_from_autos = args_from_autos(&arg_idents, &autos);
     let ret_ty = match &sig.output {
-        ReturnType::Type(_, ty) => self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
-            type_utils::expand_self(trait_path, self_ty, ty)
-        }),
+        ReturnType::Type(_, ty) => self_ty.as_ref().map_or_else(
+            || *ty.clone(),
+            |self_ty| type_utils::expand_self(trait_path, self_ty, ty),
+        ),
         ReturnType::Default => parse_quote! { () },
     };
 
@@ -848,9 +849,10 @@ fn map_arg<'a>(
                     _ => panic!("Unexpected pattern: {}", pat.to_token_stream()),
                 };
                 let expr = parse_quote! { #ident };
-                let ty = self_ty.as_ref().map_or(*ty.clone(), |self_ty| {
-                    type_utils::expand_self(trait_path, self_ty, ty)
-                });
+                let ty = self_ty.as_ref().map_or_else(
+                    || *ty.clone(),
+                    |self_ty| type_utils::expand_self(trait_path, self_ty, ty),
+                );
                 let name = ident.to_string();
                 let fmt = parse_quote! {
                     test_fuzz::runtime::TryDebug(&self.#ident).apply(&mut |value| {
