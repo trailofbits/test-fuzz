@@ -1,5 +1,9 @@
 # Changelog
 
+## 7.2.2
+
+- Eliminate two `clone` calls in `test_fuzz` macro ([fe57fe2](https://github.com/trailofbits/test-fuzz/commit/fe57fe2a4b534fb1ed610715d8123d0b6cbbfe2d))
+
 ## 7.2.1
 
 - Upgrade `darling` to version 0.21 ([#580](https://github.com/trailofbits/test-fuzz/pull/580))
