@@ -1,13 +1,12 @@
-use assert_cmd::cargo::CommandCargoExt;
+use assert_cmd::{assert::OutputAssertExt, cargo::CommandCargoExt};
 use regex::Regex;
 use similar_asserts::SimpleDiff;
 use std::{
-    collections::HashSet,
     env,
     ffi::OsStr,
     fs::{read_dir, read_to_string, write},
     path::Path,
-    process::Command,
+    process::{Command, ExitStatus},
     str::FromStr,
 };
 use tempfile::tempdir;
@@ -180,40 +179,32 @@ fn sort() {
 }
 
 // smoelius: No other test uses supply_chain.json.
+#[allow(clippy::disallowed_methods)]
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn supply_chain() {
-    Command::new("cargo")
-        .args(["supply-chain", "update"])
-        .logged_assert()
-        .success();
+    let mut command = Command::new("cargo");
+    command.args(["supply-chain", "update", "--cache-max-age=0s"]);
+    let _: ExitStatus = command.status().unwrap();
 
-    let assert = Command::new("cargo")
-        .args(["supply-chain", "json", "--no-dev"])
-        .logged_assert()
-        .success();
+    let mut command = Command::new("cargo");
+    command.args(["supply-chain", "json", "--no-dev"]);
+    let assert = command.assert().success();
 
     let stdout_actual = std::str::from_utf8(&assert.get_output().stdout).unwrap();
-    let mut value_actual = serde_json::Value::from_str(stdout_actual).unwrap();
-    remove_avatars(&mut value_actual);
-    let stdout_normalized = serde_json::to_string_pretty(&value_actual).unwrap() + "\n";
+    let mut value = serde_json::Value::from_str(stdout_actual).unwrap();
+    remove_avatars(&mut value);
+    let stdout_normalized = serde_json::to_string_pretty(&value).unwrap();
 
-    let path = Path::new("tests/supply_chain.json");
+    let path_buf = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/supply_chain.json");
 
     if enabled("BLESS") {
-        write(path, stdout_normalized).unwrap();
+        write(path_buf, stdout_normalized).unwrap();
     } else {
-        let object_actual = value_actual.as_object().unwrap();
-        let set_actual = object_actual.into_iter().collect::<HashSet<_>>();
+        let stdout_expected = read_to_string(&path_buf).unwrap();
 
-        let stdout_expected = read_to_string(path).unwrap();
-        let value_expected = serde_json::Value::from_str(&stdout_expected).unwrap();
-        let object_expected = value_expected.as_object().unwrap();
-        let set_expected = object_expected.into_iter().collect::<HashSet<_>>();
-
-        // smoelius: Fail only if actual is not a subset of expected.
         assert!(
-            set_actual.is_subset(&set_expected),
+            stdout_expected == stdout_normalized,
             "{}",
             SimpleDiff::from_str(&stdout_expected, &stdout_normalized, "left", "right")
         );
