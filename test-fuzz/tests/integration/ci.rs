@@ -97,7 +97,13 @@ fn markdown_link_check() {
 #[test]
 fn prettier() {
     Command::new("prettier")
-        .args(["--check", "**/*.json", "**/*.md", "**/*.yml"])
+        .args([
+            "--check",
+            "**/*.json",
+            "**/*.md",
+            "**/*.yml",
+            "!test-fuzz/tests/supply_chain.json",
+        ])
         .current_dir("..")
         .logged_assert()
         .success();
