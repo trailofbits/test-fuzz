@@ -1103,8 +1103,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
 
         // If all targets have failed, terminate gracefully
         if failed_targets.len() == executable_targets.len() {
-            eprintln!("All targets failed to start. Terminating fuzzing process.");
-            break;
+            bail!("All targets failed to start");
         }
 
         if n_children < n_cpus && (i_task < executable_targets.len() || !config.sufficient_cpus) {
