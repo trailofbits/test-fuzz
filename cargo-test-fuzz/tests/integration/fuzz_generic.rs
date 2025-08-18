@@ -22,7 +22,6 @@ fn fuzz_bar_asdfgh() {
 fn fuzz(test: &str, code: i32) {
     let corpus = corpus_directory_from_target("generic", "struct_target");
 
-    // smoelius: This call to `remove_dir_all` is protected by the mutex above.
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(&corpus).unwrap_or_default();
 
