@@ -1,4 +1,4 @@
-use internal::dirs::output_directory_from_target;
+use internal::dirs::{corpus_directory_from_target, output_directory_from_target};
 use predicates::prelude::*;
 use std::{ffi::OsStr, fs::remove_dir_all};
 use testing::{examples, retry, CommandExt};
@@ -44,4 +44,40 @@ fn fuzz_parallel() {
                 .any(|entry| entry.unwrap().path().file_name() == Some(OsStr::new(".cur_input"))));
         }
     }
+}
+
+const MAX_TOTAL_TIME: &str = "10";
+
+#[test]
+fn no_premature_termination() {
+    let corpus_calm = corpus_directory_from_target("calm_and_panicky", "calm");
+    remove_dir_all(&corpus_calm).unwrap_or_default();
+
+    let corpus_panicky = corpus_directory_from_target("calm_and_panicky", "panicky");
+    remove_dir_all(&corpus_panicky).unwrap_or_default();
+
+    examples::test("calm_and_panicky", "test")
+        .unwrap()
+        .logged_assert()
+        .success();
+
+    let assert = retry(3, || {
+        examples::test_fuzz_inexact("calm_and_panicky", "")
+            .unwrap()
+            .args([
+                "--exit-code",
+                "--run-until-crash",
+                "--cpus",
+                CPUS,
+                "--max-total-time",
+                MAX_TOTAL_TIME,
+            ])
+            .logged_assert()
+            .try_code(predicate::eq(0))
+    })
+    .unwrap();
+
+    assert.stderr(predicate::str::contains(
+        "Warning: Command failed for target panicky",
+    ));
 }
