@@ -1,5 +1,9 @@
 # Changelog
 
+## 7.2.3
+
+- Do not terminate parallel fuzzing for all targets when some targets cannot be started ([#593](https://github.com/trailofbits/test-fuzz/pull/593))&mdash;thanks [@arington-halabi](https://github.com/arington-halabi)
+
 ## 7.2.2
 
 - Eliminate two `clone` calls in `test_fuzz` macro ([fe57fe2](https://github.com/trailofbits/test-fuzz/commit/fe57fe2a4b534fb1ed610715d8123d0b6cbbfe2d))
