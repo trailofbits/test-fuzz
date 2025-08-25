@@ -2,10 +2,9 @@ use proc_macro2::{Punct, Spacing, Span, TokenStream, TokenTree};
 use quote::ToTokens;
 use std::collections::BTreeMap;
 use syn::{
-    parse_quote,
-    visit::{visit_path_arguments, Visit},
-    visit_mut::{visit_type_mut, VisitMut},
-    GenericArgument, Ident, Path, PathArguments, PathSegment, Type, TypePath,
+    GenericArgument, Ident, Path, PathArguments, PathSegment, Type, TypePath, parse_quote,
+    visit::{Visit, visit_path_arguments},
+    visit_mut::{VisitMut, visit_type_mut},
 };
 
 pub fn map_path_generic_params(map: &BTreeMap<&Ident, &GenericArgument>, path: &Path) -> Path {

@@ -1,6 +1,6 @@
 use internal::dirs::{generic_args_directory_from_target, impl_generic_args_directory_from_target};
 use std::fs::remove_dir_all;
-use testing::{examples, CommandExt};
+use testing::{CommandExt, examples};
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]

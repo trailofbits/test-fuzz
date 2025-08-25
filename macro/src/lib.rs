@@ -1,25 +1,25 @@
 #![deny(clippy::unwrap_used)]
 
-use darling::{ast::NestedMeta, FromMeta};
+use darling::{FromMeta, ast::NestedMeta};
 use itertools::MultiUnzip;
 use proc_macro::TokenStream;
 use proc_macro2::{Literal, Span, TokenStream as TokenStream2};
-use quote::{quote, ToTokens};
+use quote::{ToTokens, quote};
 use std::{
     collections::{BTreeMap, BTreeSet},
     env::var,
     str::FromStr,
     sync::{
-        atomic::{AtomicU32, Ordering},
         LazyLock,
+        atomic::{AtomicU32, Ordering},
     },
 };
 use syn::{
-    parse::Parser, parse2, parse_macro_input, parse_quote, parse_str, punctuated::Punctuated,
-    token, Attribute, Block, Expr, Field, FieldValue, File, FnArg, GenericArgument, GenericParam,
+    Attribute, Block, Expr, Field, FieldValue, File, FnArg, GenericArgument, GenericParam,
     Generics, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, ItemMod, LifetimeParam, PatType, Path,
     PathArguments, PathSegment, Receiver, ReturnType, Signature, Stmt, Type, TypeParam, TypePath,
-    TypeReference, TypeSlice, Visibility, WhereClause, WherePredicate,
+    TypeReference, TypeSlice, Visibility, WhereClause, WherePredicate, parse::Parser,
+    parse_macro_input, parse_quote, parse_str, parse2, punctuated::Punctuated, token,
 };
 
 mod ord_type;

@@ -1,7 +1,7 @@
 use internal::dirs::target_directory;
 use predicates::prelude::*;
 use std::process::Command;
-use testing::{examples::MANIFEST_PATH, CommandExt};
+use testing::{CommandExt, examples::MANIFEST_PATH};
 
 const SERDE_DEFAULT: &str = "bincode";
 

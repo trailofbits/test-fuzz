@@ -1,5 +1,5 @@
 use anyhow::Result;
-use cargo_test_fuzz::{run, Object, TestFuzz};
+use cargo_test_fuzz::{Object, TestFuzz, run};
 use std::env;
 use std::ffi::OsString;
 
