@@ -27,19 +27,18 @@ struct GenericParamVisitor<'a> {
 
 impl VisitMut for GenericParamVisitor<'_> {
     fn visit_type_mut(&mut self, ty: &mut Type) {
-        if let Type::Path(TypePath { qself: None, path }) = ty {
-            if let Some(ident) = path.get_ident() {
-                if let Some(generic_arg) = self.map.get(ident) {
-                    let GenericArgument::Type(ty_new) = generic_arg else {
-                        panic!(
-                            "Unexpected generic argument: {}",
-                            generic_arg.to_token_stream()
-                        );
-                    };
-                    *ty = ty_new.clone();
-                    return;
-                }
-            }
+        if let Type::Path(TypePath { qself: None, path }) = ty
+            && let Some(ident) = path.get_ident()
+            && let Some(generic_arg) = self.map.get(ident)
+        {
+            let GenericArgument::Type(ty_new) = generic_arg else {
+                panic!(
+                    "Unexpected generic argument: {}",
+                    generic_arg.to_token_stream()
+                );
+            };
+            *ty = ty_new.clone();
+            return;
         }
         visit_type_mut(self, ty);
     }
@@ -168,10 +167,10 @@ pub fn match_type_path(path: &TypePath, other: &[&str]) -> Option<PathArguments>
 }
 
 pub fn type_base(ty: &Type) -> Option<&Ident> {
-    if let Type::Path(path) = ty {
-        if let Some(segment) = path.path.segments.last() {
-            return Some(&segment.ident);
-        }
+    if let Type::Path(path) = ty
+        && let Some(segment) = path.path.segments.last()
+    {
+        return Some(&segment.ident);
     }
 
     None
