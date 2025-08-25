@@ -1,4 +1,4 @@
-use anyhow::{bail, ensure, Context, Result};
+use anyhow::{Context, Result, bail, ensure};
 use assert_cmd::cargo::CommandCargoExt;
 use cargo_metadata::{Artifact, ArtifactProfile, Message};
 use if_chain::if_chain;

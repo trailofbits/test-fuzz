@@ -1,7 +1,7 @@
 use internal::dirs::{corpus_directory_from_target, output_directory_from_target};
 use predicates::prelude::*;
 use std::{ffi::OsStr, fs::remove_dir_all};
-use testing::{examples, retry, CommandExt};
+use testing::{CommandExt, examples, retry};
 
 const CPUS: &str = "2";
 const TIME_SLICE: &str = "30";
@@ -39,9 +39,13 @@ fn fuzz_parallel() {
     for i in 0..6 {
         let output_dir = output_directory_from_target("parallel", &format!("target_{i}"));
         if output_dir.exists() {
-            assert!(!walkdir::WalkDir::new(output_dir)
-                .into_iter()
-                .any(|entry| entry.unwrap().path().file_name() == Some(OsStr::new(".cur_input"))));
+            assert!(
+                !walkdir::WalkDir::new(output_dir)
+                    .into_iter()
+                    .any(
+                        |entry| entry.unwrap().path().file_name() == Some(OsStr::new(".cur_input"))
+                    )
+            );
         }
     }
 }

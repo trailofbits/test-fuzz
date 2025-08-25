@@ -1,6 +1,6 @@
 use internal::dirs::corpus_directory_from_target;
 use std::fs::{read_dir, remove_dir_all};
-use testing::{examples, CommandExt};
+use testing::{CommandExt, examples};
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]

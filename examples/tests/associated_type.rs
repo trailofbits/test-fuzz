@@ -6,7 +6,7 @@
 // This example is based in part on:
 // https://docs.serde.rs/serde_json/#creating-json-by-serializing-data-structures
 
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
 trait Serializable {
     type Out: Clone + DeserializeOwned + Serialize + PartialEq + Eq;

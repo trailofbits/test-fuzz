@@ -6,7 +6,7 @@
 use anyhow::Result;
 use std::{env::join_paths, fs::write, path::Path};
 use tempfile::NamedTempFile;
-use xshell::{cmd, Shell};
+use xshell::{Shell, cmd};
 
 /*
   test-uninstalled-cargo-afl:

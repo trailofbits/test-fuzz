@@ -5,7 +5,7 @@ use internal::{
     },
     serde_format,
 };
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use sha1::{Digest, Sha1};
 use std::{
     any::type_name,

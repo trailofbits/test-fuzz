@@ -16,12 +16,12 @@
 #![deny(clippy::unwrap_used)]
 #![warn(clippy::panic)]
 
-use anyhow::{anyhow, bail, ensure, Context, Result};
+use anyhow::{Context, Result, anyhow, bail, ensure};
 use bitflags::bitflags;
 use cargo_metadata::{
     Artifact, ArtifactProfile, CargoOpt, Message, Metadata, MetadataCommand, Package, PackageId,
 };
-use clap::{crate_version, ValueEnum};
+use clap::{ValueEnum, crate_version};
 use heck::ToKebabCase;
 use internal::dirs::{
     corpus_directory_from_target, crashes_directory_from_target,
@@ -30,18 +30,18 @@ use internal::dirs::{
     queue_directory_from_target, target_directory,
 };
 use log::debug;
-use mio::{unix::pipe::Receiver, Events, Interest, Poll, Token};
+use mio::{Events, Interest, Poll, Token, unix::pipe::Receiver};
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
     ffi::OsStr,
     fmt::{Debug, Formatter},
-    fs::{create_dir_all, read, read_dir, remove_dir_all, File},
+    fs::{File, create_dir_all, read, read_dir, remove_dir_all},
     io::{BufRead, Read},
     iter,
     path::{Path, PathBuf},
-    process::{exit, Child as StdChild, Command, Stdio},
+    process::{Child as StdChild, Command, Stdio, exit},
     sync::OnceLock,
     time::Duration,
 };
@@ -1359,7 +1359,7 @@ fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
 mod tests {
     #![allow(clippy::unwrap_used)]
 
-    use super::{build, executable_targets, TestFuzz};
+    use super::{TestFuzz, build, executable_targets};
     use predicates::prelude::*;
     use std::{env::set_current_dir, process::Command};
     use testing::CommandExt;

@@ -3,12 +3,12 @@ use cargo_metadata::MetadataCommand;
 use log::debug;
 use option_set::option_set;
 use predicates::prelude::*;
-use rustc_version::{version_meta, Channel};
+use rustc_version::{Channel, version_meta};
 use serde::Deserialize;
 use std::{
     ffi::OsStr,
     fs::read_to_string,
-    io::{stderr, stdout, Write},
+    io::{Write, stderr, stdout},
     path::Path,
     process::Command,
     sync::LazyLock,

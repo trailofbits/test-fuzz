@@ -1,4 +1,4 @@
-use testing::{examples, CommandExt};
+use testing::{CommandExt, examples};
 
 #[test]
 fn build() {

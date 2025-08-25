@@ -1,5 +1,5 @@
 use super::{DeserializeWith, SerializeWith};
-use serde::{de::DeserializeOwned, Deserializer, Serialize, Serializer};
+use serde::{Deserializer, Serialize, Serializer, de::DeserializeOwned};
 use std::marker::PhantomData;
 
 pub struct Type<T>(PhantomData<T>);

@@ -1,6 +1,6 @@
 use super::Object;
 use anyhow::Result;
-use clap::{crate_version, ArgAction, Parser};
+use clap::{ArgAction, Parser, crate_version};
 use serde::{Deserialize, Serialize};
 use std::ffi::OsStr;
 

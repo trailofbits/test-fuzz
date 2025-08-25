@@ -1,4 +1,4 @@
-use super::{compose_deserialize, compose_serialize, DeserializeWith, SerializeWith};
+use super::{DeserializeWith, SerializeWith, compose_deserialize, compose_serialize};
 use serde::{Deserializer, Serializer};
 use std::{marker::PhantomData, sync::RwLock};
 

@@ -1,6 +1,6 @@
 use predicates::prelude::*;
 use std::process::Command;
-use testing::{examples::MANIFEST_PATH, CommandExt};
+use testing::{CommandExt, examples::MANIFEST_PATH};
 
 #[test]
 fn rename() {

@@ -1,5 +1,5 @@
 use predicates::prelude::*;
-use testing::{examples, retry, CommandExt};
+use testing::{CommandExt, examples, retry};
 
 const MAX_TOTAL_TIME: &str = "60";
 

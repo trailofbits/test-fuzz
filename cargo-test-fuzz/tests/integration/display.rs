@@ -1,5 +1,5 @@
 use predicates::prelude::*;
-use testing::{examples, CommandExt};
+use testing::{CommandExt, examples};
 
 #[test]
 fn display_qwerty() {

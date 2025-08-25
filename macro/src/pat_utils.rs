@@ -1,6 +1,6 @@
 use syn::{
-    visit::{visit_pat, Visit},
     Ident, Pat, PatIdent,
+    visit::{Visit, visit_pat},
 };
 
 struct PatVisitor<'a> {
