@@ -1,7 +1,6 @@
 use anyhow::{Context, Result, bail, ensure};
 use assert_cmd::cargo::CommandCargoExt;
 use cargo_metadata::{Artifact, ArtifactProfile, Message};
-use if_chain::if_chain;
 use internal::serde_format;
 use log::debug;
 use std::{path::Path, process::Command, sync::LazyLock};
@@ -56,19 +55,17 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     let executables = messages
         .into_iter()
         .filter_map(|message| {
-            if_chain! {
-                if let Message::CompilerArtifact(Artifact {
-                    profile: ArtifactProfile { test: true, .. },
-                    executable: Some(executable),
-                    ..
-                }) = message;
-                if let Some(file_name) = executable.file_name();
-                if file_name.starts_with(&(krate.to_owned() + "-"));
-                then {
-                    Some(executable)
-                } else {
-                    None
-                }
+            if let Message::CompilerArtifact(Artifact {
+                profile: ArtifactProfile { test: true, .. },
+                executable: Some(executable),
+                ..
+            }) = message
+                && let Some(file_name) = executable.file_name()
+                && file_name.starts_with(&(krate.to_owned() + "-"))
+            {
+                Some(executable)
+            } else {
+                None
             }
         })
         .collect::<Vec<_>>();
