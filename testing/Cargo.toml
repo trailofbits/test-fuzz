@@ -10,7 +10,6 @@ assert_cmd = { workspace = true }
 cargo_metadata = { workspace = true }
 ctor = { workspace = true }
 env_logger = { workspace = true }
-if_chain = { workspace = true }
 log = { workspace = true }
 strip-ansi-escapes = { workspace = true }
 subprocess = { workspace = true }
