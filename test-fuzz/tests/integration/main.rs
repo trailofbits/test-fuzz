@@ -12,5 +12,7 @@ mod versions;
 
 #[ctor::ctor]
 fn initialize() {
-    std::env::set_var("CARGO_TERM_COLOR", "never");
+    unsafe {
+        std::env::set_var("CARGO_TERM_COLOR", "never");
+    }
 }
