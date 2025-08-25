@@ -956,12 +956,6 @@
     ],
     "regex": [
       {
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
-      {
         "id": 11,
         "kind": "team",
         "login": "github:rust-lang:libs",
@@ -989,12 +983,6 @@
       }
     ],
     "regex-syntax": [
-      {
-        "id": 1,
-        "kind": "user",
-        "login": "alexcrichton",
-        "name": "Alex Crichton"
-      },
       {
         "id": 11,
         "kind": "team",
