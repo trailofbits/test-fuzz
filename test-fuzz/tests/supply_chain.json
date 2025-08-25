@@ -658,14 +658,6 @@
         "name": "Ted Driggs"
       }
     ],
-    "if_chain": [
-      {
-        "id": 684,
-        "kind": "user",
-        "login": "lambda-fairy",
-        "name": "Chris Wong"
-      }
-    ],
     "is_terminal_polyfill": [
       {
         "id": 6743,
