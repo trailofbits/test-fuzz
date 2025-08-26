@@ -59,10 +59,10 @@ walkdir = "2.5"
 xshell = "0.2"
 
 # smoelius: Internal packages
-internal = { path = "internal", package = "test-fuzz-internal", version = "=7.2.3" }
-runtime = { path = "runtime", package = "test-fuzz-runtime", version = "=7.2.3" }
-test-fuzz = { path = "test-fuzz", version = "=7.2.3" }
-test-fuzz-macro = { path = "macro", version = "=7.2.3" }
+internal = { path = "internal", package = "test-fuzz-internal", version = "=7.2.4" }
+runtime = { path = "runtime", package = "test-fuzz-runtime", version = "=7.2.4" }
+test-fuzz = { path = "test-fuzz", version = "=7.2.4" }
+test-fuzz-macro = { path = "macro", version = "=7.2.4" }
 testing = { path = "testing", package = "test-fuzz-testing" }
 
 # `serde_combinators` does not sync with `test-fuzz`'s version.
