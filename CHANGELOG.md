@@ -1,5 +1,9 @@
 # Changelog
 
+## 7.2.4
+
+- Eliminate use of `if_chain` ([#605](https://github.com/trailofbits/test-fuzz/pull/605))
+
 ## 7.2.3
 
 - Do not terminate parallel fuzzing for all targets when some targets cannot be started ([#593](https://github.com/trailofbits/test-fuzz/pull/593))&mdash;thanks [@arington-halabi](https://github.com/arington-halabi)
