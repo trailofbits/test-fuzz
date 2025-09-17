@@ -608,16 +608,19 @@ fn check_dependency_version(
     binary_version: &Version,
 ) -> Result<()> {
     if let Some(dependency_version) = dependency_version {
-        ensure!(
-            as_version_req(dependency_version).matches(binary_version)
-                || as_version_req(binary_version).matches(dependency_version),
-            "`{}` depends on `{} {}`, which is incompatible with `{} {}`.",
-            name,
-            dependency,
-            dependency_version,
-            binary,
-            binary_version
-        );
+        // smoelius: Disable dependency-binary-compatibility check when binary is a prerelease.
+        if binary_version.pre.is_empty() {
+            ensure!(
+                as_version_req(dependency_version).matches(binary_version)
+                    || as_version_req(binary_version).matches(dependency_version),
+                "`{}` depends on `{} {}`, which is incompatible with `{} {}`.",
+                name,
+                dependency,
+                dependency_version,
+                binary,
+                binary_version
+            );
+        }
         if !as_version_req(dependency_version).matches(binary_version) {
             eprintln!(
                 "`{name}` depends on `{dependency} {dependency_version}`, which is newer than \
