@@ -19,6 +19,9 @@ env:
   CARGO_TERM_COLOR: always
   GROUP_RUNNER: target.'cfg(all())'.runner='group-runner'
 
+permissions:
+  contents: read
+
 jobs:
   check-up-to-dateness:
     outputs:
