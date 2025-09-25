@@ -50,7 +50,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
         .wait()
         .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
 
-    ensure!(status.success(), "Command failed: {:?}", exec);
+    ensure!(status.success(), "Command failed: {exec:?}");
 
     let executables = messages
         .into_iter()
@@ -72,8 +72,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
 
     ensure!(
         executables.len() <= 1,
-        "Found multiple executables starting with `{}`",
-        krate
+        "Found multiple executables starting with `{krate}`"
     );
 
     if let Some(executable) = executables.into_iter().next() {
@@ -82,7 +81,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
         command.args(["--exact", test]);
         Ok(command)
     } else {
-        bail!("Found no executables starting with `{}`", krate)
+        bail!("Found no executables starting with `{krate}`")
     }
 }
 
