@@ -550,6 +550,14 @@
         "name": "Sebastián Magrí"
       }
     ],
+    "equivalent": [
+      {
+        "id": 539,
+        "kind": "user",
+        "login": "cuviper",
+        "name": "Josh Stone"
+      }
+    ],
     "errno": [
       {
         "id": 684,
@@ -614,6 +622,20 @@
         "name": "Philip Craig"
       }
     ],
+    "hashbrown": [
+      {
+        "id": 2915,
+        "kind": "user",
+        "login": "Amanieu",
+        "name": "Amanieu d'Antras"
+      },
+      {
+        "id": 55123,
+        "kind": "user",
+        "login": "rust-lang-owner",
+        "name": null
+      }
+    ],
     "heck": [
       {
         "id": 1613,
@@ -656,6 +678,20 @@
         "kind": "user",
         "login": "TedDriggs",
         "name": "Ted Driggs"
+      }
+    ],
+    "indexmap": [
+      {
+        "id": 356,
+        "kind": "user",
+        "login": "bluss",
+        "name": "bluss"
+      },
+      {
+        "id": 539,
+        "kind": "user",
+        "login": "cuviper",
+        "name": "Josh Stone"
       }
     ],
     "is_terminal_polyfill": [
