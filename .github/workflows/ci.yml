@@ -96,7 +96,7 @@ jobs:
 
       - uses: taiki-e/install-action@v2
         with:
-          tool: cargo-sort, cargo-udeps
+          tool: cargo-udeps
 
       # smoelius: I expect this list to grow.
       - name: Install tools

@@ -6,6 +6,7 @@ use std::{
     ffi::OsStr,
     fs::{read_dir, read_to_string, write},
     io::Write,
+    ops::Range,
     path::Path,
     process::{Command, ExitStatus},
     str::FromStr,
@@ -181,19 +182,83 @@ fn shellcheck() {
 }
 
 #[test]
-fn sort() {
+fn dependencies_are_sorted() {
     for entry in WalkDir::new("..")
         .into_iter()
         .filter_map(Result::ok)
         .filter(|e| e.file_name() == OsStr::new("Cargo.toml"))
     {
-        let dir = entry.path().parent().unwrap();
-        Command::new("cargo")
-            .args(["sort", "--check", "--grouped", "--no-format"])
-            .current_dir(dir)
-            .logged_assert()
-            .success();
+        let path = entry.path();
+        let contents = read_to_string(path).unwrap();
+        let document = contents.parse::<toml_edit::Document<_>>().unwrap();
+        for table_name in ["dependencies", "dev-dependencies", "build-dependencies"] {
+            let Some(span) = key_value_pair_span(&document, table_name) else {
+                continue;
+            };
+            assert!(
+                key_value_pairs_are_sorted(&document, span),
+                "`{table_name}` in `{}` are not sorted",
+                path.display()
+            );
+        }
     }
+}
+
+fn key_value_pair_span<S>(
+    document: &toml_edit::Document<S>,
+    table_name: &str,
+) -> Option<Range<usize>> {
+    // smoelius: The table might not exist.
+    let item = document.get(table_name)?;
+    let table = item.as_table().unwrap();
+    // smoelius: The table might exist but be empty.
+    let (_, last_item) = table.iter().last()?;
+    let header_span = table.span().unwrap();
+    let last_item_span = last_item.span().unwrap();
+    Some(header_span.end..last_item_span.end)
+}
+
+fn key_value_pairs_are_sorted<S: AsRef<str>>(
+    document: &toml_edit::Document<S>,
+    span: Range<usize>,
+) -> bool {
+    for group in groups(document, span) {
+        let pairs = &document.raw()[group]
+            .parse::<toml_edit::Document<_>>()
+            .unwrap();
+        if !pairs.iter().map(|(k, _)| k).is_sorted() {
+            return false;
+        }
+    }
+    true
+}
+
+fn groups<S: AsRef<str>>(
+    document: &toml_edit::Document<S>,
+    span: Range<usize>,
+) -> Vec<Range<usize>> {
+    let group_starts = group_starts(document, &span);
+    let mut groups = Vec::with_capacity(group_starts.len() + 1);
+    let mut start = span.start;
+    for partition in group_starts {
+        groups.push(start..partition);
+        start = partition;
+    }
+    groups.push(start..span.end);
+    groups
+}
+
+/// Find the offsets in `span` that are not newlines, but that are preceded by two (or more)
+/// newlines.
+fn group_starts<S: AsRef<str>>(
+    document: &toml_edit::Document<S>,
+    span: &Range<usize>,
+) -> Vec<usize> {
+    let raw = &document.raw()[span.clone()].as_bytes();
+    (2..raw.len())
+        .filter(|&i| raw[i - 2] == b'\n' && raw[i - 1] == b'\n' && raw[i] != b'\n')
+        .map(|i| span.start + i)
+        .collect()
 }
 
 // smoelius: No other test uses supply_chain.json.
