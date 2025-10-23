@@ -878,9 +878,9 @@ checksum = "a4895175b425cb1f87721b59f0f286c2092bd4af812243672510e1ac53e2e0ad"
 
 [[package]]
 name = "option_set"
-version = "0.3.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6f45dc15724e4f030fde1e2017fa675144e04aa65b7f1e5596554826afbc06e"
+checksum = "b8496e827a37aef4f7dea64d29ca40add9de3f2152664b05dcdfa54f94ec7045"
 dependencies = [
  "heck",
  "serde",
