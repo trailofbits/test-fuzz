@@ -17,7 +17,7 @@ resolver = "2"
 [workspace.dependencies]
 afl = { version = "0.16" }
 anyhow = { version = "1.0", features = ["backtrace"] }
-assert_cmd = "2.0"
+assert_cmd = "2.1"
 bitflags = "2.10"
 # smoelius: `cargo_metadata` 0.20.0 pulls in too many new dependencies.
 cargo_metadata = "=0.19"
