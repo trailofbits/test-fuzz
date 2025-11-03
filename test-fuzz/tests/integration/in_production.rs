@@ -1,12 +1,11 @@
-use assert_cmd::prelude::*;
 use internal::dirs::{corpus_directory_from_target, path_segment};
 use std::{
     env,
     ffi::{OsStr, OsString},
     fs::{read_dir, remove_dir_all},
-    path::{Component, Path, PathBuf},
+    path::{Component, PathBuf},
     process::Command,
-    sync::{LazyLock, Mutex},
+    sync::Mutex,
 };
 use testing::CommandExt;
 
@@ -21,15 +20,6 @@ fn no_write() {
 fn write() {
     test(true, 1);
 }
-
-#[cfg(test)]
-static MANIFEST_PATH: LazyLock<String> = LazyLock::new(|| {
-    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("Cargo.toml")
-        .to_string_lossy()
-        .to_string()
-});
 
 static MUTEX: Mutex<()> = Mutex::new(());
 
@@ -55,9 +45,18 @@ fn test(write: bool, n: usize) {
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(&corpus).unwrap_or_default();
 
-    let mut command = Command::cargo_bin("hello-world").unwrap();
+    let mut command = Command::new("cargo");
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
+    command.args([
+        "run",
+        "--manifest-path",
+        concat!(env!("CARGO_MANIFEST_DIR"), "/../examples/Cargo.toml"),
+        "--features",
+        &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
+    ]);
 
-    let mut envs = vec![("TEST_FUZZ_MANIFEST_PATH", MANIFEST_PATH.as_str())];
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
+    let mut envs = vec![("TEST_FUZZ_MANIFEST_PATH", env!("CARGO_MANIFEST_PATH"))];
 
     if write {
         envs.push(("TEST_FUZZ_WRITE", "1"));
