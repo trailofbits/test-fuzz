@@ -1,5 +1,4 @@
 use anyhow::{Context, Result, bail, ensure};
-use assert_cmd::cargo::CommandCargoExt;
 use cargo_metadata::{Artifact, ArtifactProfile, Message};
 use internal::serde_format;
 use log::debug;
@@ -87,7 +86,13 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
 
 pub fn test_fuzz_all() -> Result<Command> {
     let serde_format_feature = "test-fuzz/".to_owned() + serde_format::as_feature();
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     let args = vec![
+        "run",
+        "--bin=cargo-test-fuzz",
+        "--manifest-path",
+        concat!(env!("CARGO_MANIFEST_DIR"), "/../Cargo.toml"),
+        "--",
         "test-fuzz",
         "--manifest-path",
         &*MANIFEST_PATH,
@@ -95,7 +100,7 @@ pub fn test_fuzz_all() -> Result<Command> {
         &serde_format_feature,
     ];
 
-    let mut command = Command::cargo_bin("cargo-test-fuzz")?;
+    let mut command = Command::new("cargo");
     command.env("AFL_NO_AFFINITY", "1");
     command.env("TEST_FUZZ_ID", id());
     command.args(args);
