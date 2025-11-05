@@ -479,7 +479,6 @@ fn targets(executable: &Path) -> Result<Vec<String>> {
     Ok(targets)
 }
 
-#[test_fuzz::test_fuzz]
 fn filter_executable_targets(
     opts: &TestFuzz,
     pat: &str,
@@ -671,7 +670,7 @@ fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]
                     let data = read(&path).with_context(|| {
                         format!("`read` failed for `{}`", path.to_string_lossy())
                     })?;
-                    test_fuzz::runtime::write_data(&corpus_dir, &data).with_context(|| {
+                    runtime::write_data(&corpus_dir, &data).with_context(|| {
                         format!(
                             "`test_fuzz::runtime::write_data` failed for `{}`",
                             corpus_dir.to_string_lossy()
