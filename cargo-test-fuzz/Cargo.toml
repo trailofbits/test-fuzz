@@ -41,7 +41,7 @@ subprocess = { workspace = true }
 termsize = { workspace = true }
 
 internal = { workspace = true }
-test-fuzz = { workspace = true }
+runtime = { workspace = true }
 
 [dev-dependencies]
 assert_cmd = { workspace = true }

@@ -22,13 +22,7 @@ mod tests {
     #[test]
     fn build_with_target() {
         #[allow(clippy::unwrap_used)]
-        cargo_test_fuzz(&[
-            "--features",
-            &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
-            "--no-run",
-            "target",
-        ])
-        .unwrap();
+        cargo_test_fuzz(&["--no-run", "target"]).unwrap();
     }
 
     fn cargo_test_fuzz(args: &[&str]) -> Result<()> {
