@@ -15,7 +15,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-afl = { version = "0.16" }
+afl = { version = "0.17" }
 anyhow = { version = "1.0", features = ["backtrace"] }
 assert_cmd = "2.1"
 bitflags = "2.10"
