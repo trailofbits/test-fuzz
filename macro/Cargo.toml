@@ -1,6 +1,6 @@
 [package]
 name = "test-fuzz-macro"
-version = "7.2.4"
+version = "7.2.5"
 edition = "2024"
 
 description = "test-fuzz-macro"

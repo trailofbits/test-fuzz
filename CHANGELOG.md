@@ -1,5 +1,10 @@
 # Changelog
 
+## 7.2.5
+
+- Eliminate `cargo-test-fuzz`'s dependence on `test-fuzz` ([#649](https://github.com/trailofbits/test-fuzz/pull/649))
+- Upgrade `afl` to version `0.17` ([#651](https://github.com/trailofbits/test-fuzz/pull/651))
+
 ## 7.2.4
 
 - Eliminate use of `if_chain` ([#605](https://github.com/trailofbits/test-fuzz/pull/605))
