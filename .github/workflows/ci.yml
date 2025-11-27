@@ -47,7 +47,7 @@ jobs:
         sha1_filenames: [false, true]
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
 
       - name: Dylint versions
         run: cargo search dylint | grep '^dylint' | sort | tee dylint_versions.txt
