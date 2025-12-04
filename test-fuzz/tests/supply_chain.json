@@ -572,20 +572,6 @@
         "name": "Michael Dilger"
       }
     ],
-    "fnv": [
-      {
-        "id": 5,
-        "kind": "team",
-        "login": "github:servo:cargo-publish",
-        "name": "cargo publish"
-      },
-      {
-        "id": 7,
-        "kind": "user",
-        "login": "SimonSapin",
-        "name": "Simon Sapin"
-      }
-    ],
     "generic-array": [
       {
         "id": 1793,
