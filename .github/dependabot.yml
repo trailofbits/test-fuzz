@@ -1,6 +1,3 @@
-# smoelius: 'Dependabot only makes Rust security updates if "Cargo.lock" exists'
-# https://github.com/dependabot/dependabot-core/issues/2011
-
 version: 2
 updates:
   - package-ecosystem: github-actions
