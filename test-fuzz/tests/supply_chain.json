@@ -146,22 +146,10 @@
     ],
     "bincode": [
       {
-        "id": 78,
-        "kind": "user",
-        "login": "TyOverby",
-        "name": "Ty Overby"
-      },
-      {
         "id": 3672,
         "kind": "user",
         "login": "ZoeyR",
         "name": "Zoey Riordan"
-      },
-      {
-        "id": 4990,
-        "kind": "user",
-        "login": "VictorKoenders",
-        "name": "Trangar"
       }
     ],
     "bincode_derive": [
@@ -170,12 +158,6 @@
         "kind": "user",
         "login": "ZoeyR",
         "name": "Zoey Riordan"
-      },
-      {
-        "id": 4990,
-        "kind": "user",
-        "login": "VictorKoenders",
-        "name": "Trangar"
       }
     ],
     "bitflags": [
@@ -1246,10 +1228,10 @@
     ],
     "unty": [
       {
-        "id": 4990,
+        "id": 375387,
         "kind": "user",
-        "login": "VictorKoenders",
-        "name": "Trangar"
+        "login": "virtue-dummy",
+        "name": null
       }
     ],
     "utf8parse": [
@@ -1282,16 +1264,10 @@
     ],
     "virtue": [
       {
-        "id": 3672,
+        "id": 375387,
         "kind": "user",
-        "login": "ZoeyR",
-        "name": "Zoey Riordan"
-      },
-      {
-        "id": 4990,
-        "kind": "user",
-        "login": "VictorKoenders",
-        "name": "Trangar"
+        "login": "virtue-dummy",
+        "name": null
       }
     ],
     "vte": [
