@@ -1,5 +1,5 @@
 diff --git a/substrate/client/transaction-pool/Cargo.toml b/substrate/client/transaction-pool/Cargo.toml
-index 19ee3b9..750b9f3 100644
+index e29b3f8..7b878de 100644
 --- a/substrate/client/transaction-pool/Cargo.toml
 +++ b/substrate/client/transaction-pool/Cargo.toml
 @@ -28,10 +28,10 @@ indexmap = { workspace = true }
@@ -15,7 +15,7 @@ index 19ee3b9..750b9f3 100644
 +serde = { features = ["derive", "rc"], workspace = true, default-features = true }
  sp-api = { workspace = true, default-features = true }
  sp-blockchain = { workspace = true, default-features = true }
-@@ -46,4 +46,6 @@ tokio-stream = { workspace = true }
+@@ -47,4 +47,6 @@ tokio-stream = { workspace = true }
  tracing = { workspace = true, default-features = true }
  
 +test-fuzz = { path = "../../../../../test-fuzz" }
@@ -23,7 +23,7 @@ index 19ee3b9..750b9f3 100644
  [dev-dependencies]
  anyhow = { workspace = true }
 diff --git a/substrate/client/transaction-pool/src/graph/base_pool.rs b/substrate/client/transaction-pool/src/graph/base_pool.rs
-index 27d7878..7769dbe 100644
+index 72ec192..2837e3b 100644
 --- a/substrate/client/transaction-pool/src/graph/base_pool.rs
 +++ b/substrate/client/transaction-pool/src/graph/base_pool.rs
 @@ -85,5 +85,5 @@ pub struct PruneStatus<Hash, Ex> {
@@ -210,12 +210,12 @@ index 644ed04..624bf99 100644
  	/// Clone the inner map.
  	pub fn clone_map(&self) -> HashMap<K, V> {
 diff --git a/substrate/primitives/runtime/src/transaction_validity.rs b/substrate/primitives/runtime/src/transaction_validity.rs
-index 07617a8..bba56a0 100644
+index f7ef143..ea91459 100644
 --- a/substrate/primitives/runtime/src/transaction_validity.rs
 +++ b/substrate/primitives/runtime/src/transaction_validity.rs
-@@ -242,4 +242,5 @@ impl From<UnknownTransaction> for TransactionValidity {
+@@ -246,4 +246,5 @@ impl From<UnknownTransaction> for TransactionValidity {
  /// by our local node (for instance off-chain workers).
- #[derive(Copy, Clone, PartialEq, Eq, Encode, Decode, RuntimeDebug, TypeInfo, Hash)]
+ #[derive(Copy, Clone, PartialEq, Eq, Encode, Decode, Debug, TypeInfo, Hash)]
 +#[cfg_attr(feature = "std", derive(serde::Deserialize, serde::Serialize))]
  pub enum TransactionSource {
  	/// Transaction is already included in block.
