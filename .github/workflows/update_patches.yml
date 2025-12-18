@@ -21,7 +21,7 @@ jobs:
         run: cargo search dylint | grep '^dylint' | sort | tee dylint_versions.txt
 
       # smoelius: The next use of `actions/cache` should match what is in ci.yml.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/bin/
