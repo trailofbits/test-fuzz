@@ -1026,14 +1026,6 @@
         "name": "Dan Gohman"
       }
     ],
-    "ryu": [
-      {
-        "id": 3618,
-        "kind": "user",
-        "login": "dtolnay",
-        "name": "David Tolnay"
-      }
-    ],
     "semver": [
       {
         "id": 3618,
@@ -1422,6 +1414,14 @@
         "kind": "user",
         "login": "kennykerr",
         "name": "Kenny Kerr"
+      }
+    ],
+    "zmij": [
+      {
+        "id": 3618,
+        "kind": "user",
+        "login": "dtolnay",
+        "name": "David Tolnay"
       }
     ]
   },
