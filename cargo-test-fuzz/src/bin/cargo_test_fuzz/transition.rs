@@ -100,7 +100,7 @@ struct TestFuzzWithDeprecations {
         value_name = "OBJECT",
         hide_possible_values = true,
         help = "Replay corpus, crashes, hangs, or work queue. By default, an uninstrumented fuzz \
-                target is used. To replay with instrumentation append `-instrumented` to \
+                target is used. To replay with instrumentation, append `-instrumented` to \
                 <OBJECT>, e.g., --replay corpus-instrumented."
     )]
     replay: Option<Object>,

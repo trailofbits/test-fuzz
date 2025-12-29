@@ -304,9 +304,9 @@ Options:
       --pretty                    Pretty-print debug output when displaying/replaying
       --release                   Build in release mode
       --replay <OBJECT>           Replay corpus, crashes, hangs, or work queue. By default, an
-                                  uninstrumented fuzz target is used. To replay with instrumentation
-                                  append `-instrumented` to <OBJECT>, e.g., --replay
-                                  corpus-instrumented.
+                                  uninstrumented fuzz target is used. To replay with
+                                  instrumentation, append `-instrumented` to <OBJECT>, e.g.,
+                                  --replay corpus-instrumented.
       --reset                     Clear fuzzing data for one target, but leave corpus intact; to
                                   reset all targets, use --reset-all
       --resume                    Resume target's last fuzzing session
