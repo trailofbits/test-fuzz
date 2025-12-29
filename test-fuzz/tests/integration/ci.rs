@@ -129,7 +129,9 @@ fn readme_contains_usage() {
 
     let assert = Command::new("cargo")
         .args(["run", "--bin=cargo-test-fuzz", "--", "test-fuzz", "--help"])
-        .logged_assert();
+        .current_dir("..")
+        .logged_assert()
+        .success();
     let stdout = &assert.get_output().stdout;
 
     let usage = std::str::from_utf8(stdout)
