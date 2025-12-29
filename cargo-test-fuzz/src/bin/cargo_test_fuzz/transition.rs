@@ -34,8 +34,13 @@ struct TestFuzzWithDeprecations {
     consolidate: bool,
     #[arg(long, hide = true)]
     consolidate_all: bool,
-    #[arg(long, hide = true)]
-    coverage: bool,
+    #[arg(
+        long,
+        help = "Generate coverage for corpus, crashes, hangs, or work queue. By default, an \
+                uninstrumented fuzz target is used. To generate coverage with instrumentation, \
+                append `-instrumented` to <OBJECT>, e.g., --coverage corpus-instrumented."
+    )]
+    coverage: Option<Object>,
     #[arg(
         long,
         help = "Generate coverage for corpus, crashes, hangs, or work queue. By default, an \
