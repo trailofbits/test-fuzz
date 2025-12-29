@@ -117,6 +117,7 @@ mod mutable {
         }
     }
 
+    #[allow(unused_assignments)]
     #[test_fuzz::test_fuzz(convert = "X, Y")]
     fn target(mut x: X) {
         x.0 = true;

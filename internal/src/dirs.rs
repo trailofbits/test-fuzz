@@ -114,10 +114,17 @@ pub fn target_directory(instrumented: bool) -> PathBuf {
     }
     target_dir.into()
 }
+
 #[must_use]
-pub fn workspace_root() -> PathBuf {
+pub fn workspace() -> String {
+    let root = workspace_root();
+    let file_name = root.file_name().unwrap();
+    file_name.to_str().map(ToOwned::to_owned).unwrap()
+}
+
+fn workspace_root() -> PathBuf {
     let mut command = MetadataCommand::new();
-    let mut workspace_root = command.no_deps().exec().unwrap().workspace_root;
+    let workspace_root = command.no_deps().exec().unwrap().workspace_root;
     workspace_root.into()
 }
 
