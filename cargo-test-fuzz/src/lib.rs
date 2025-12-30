@@ -34,8 +34,7 @@ use mio::{Events, Interest, Poll, Token, unix::pipe::Receiver};
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::VecDeque,
-    ffi::OsStr,
+    collections::{HashSet, VecDeque},
     fmt::{Debug, Formatter},
     fs::{File, create_dir_all, read, read_dir, remove_dir_all},
     io::{BufRead, Read},
@@ -328,7 +327,7 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
         // This is easier than trying to capture and colorize `CompilerMessage`s like Cargo does.
         // smoelius: Rather than re-execute the command, just debug print the messages.
         eprintln!("{messages:#?}");
-        bail!("Command failed: {:?}", exec);
+        bail!("Command failed: {exec:?}");
     }
 
     let executables = messages
@@ -404,7 +403,7 @@ fn package_dependency(
         .nodes
         .iter()
         .find(|node| node.id == *package_id)
-        .ok_or_else(|| anyhow!("Could not find package `{}`", package_id))?;
+        .ok_or_else(|| anyhow!("Could not find package `{package_id}`"))?;
     let package_ids_and_names = node
         .dependencies
         .iter()
@@ -436,7 +435,7 @@ fn package<'a>(metadata: &'a Metadata, package_id: &PackageId) -> Result<&'a Pac
         .packages
         .iter()
         .find(|package| package.id == *package_id)
-        .ok_or_else(|| anyhow!("Could not find package `{}`", package_id))
+        .ok_or_else(|| anyhow!("Could not find package `{package_id}`"))
 }
 
 fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec<String>)>> {
@@ -612,12 +611,8 @@ fn check_dependency_version(
             ensure!(
                 as_version_req(dependency_version).matches(binary_version)
                     || as_version_req(binary_version).matches(dependency_version),
-                "`{}` depends on `{} {}`, which is incompatible with `{} {}`.",
-                name,
-                dependency,
-                dependency_version,
-                binary,
-                binary_version
+                "`{name}` depends on `{dependency} {dependency_version}`, which is incompatible \
+                 with `{binary} {binary_version}`."
             );
         }
         if !as_version_req(dependency_version).matches(binary_version) {
@@ -628,7 +623,7 @@ fn check_dependency_version(
             );
         }
     } else {
-        bail!("`{}` does not depend on `{}`", name, dependency)
+        bail!("`{name}` does not depend on `{dependency}`")
     }
     Ok(())
 }
@@ -658,10 +653,7 @@ fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]
                         format!("`read_dir` failed for `{}`", dir.to_string_lossy())
                     })?;
                     let path = entry.path();
-                    let file_name = path
-                        .file_name()
-                        .map(OsStr::to_string_lossy)
-                        .unwrap_or_default();
+                    let file_name = entry.file_name().to_string_lossy().into_owned();
 
                     if file_name == "README.txt" || file_name == ".state" {
                         continue;
@@ -792,10 +784,7 @@ fn for_each_entry(
         let path = entry.path();
         let mut file = File::open(&path)
             .with_context(|| format!("`open` failed for `{}`", path.to_string_lossy()))?;
-        let file_name = path
-            .file_name()
-            .map(OsStr::to_string_lossy)
-            .unwrap_or_default();
+        let file_name = entry.file_name().to_string_lossy().into_owned();
 
         if file_name == "README.txt" || file_name == ".state" {
             continue;
@@ -971,13 +960,14 @@ impl Child {
         }
     }
 
-    fn refresh(opts: &TestFuzz, n_children: usize, children: &mut [Option<Child>]) {
+    fn refresh(opts: &TestFuzz, n_children: usize, children: &mut [Option<Self>]) {
         if opts.no_ui {
             return;
         }
 
         cursor_to_home_position();
 
+        #[allow(clippy::unwrap_used)]
         let termsize::Size { rows, cols } = termsize::get().unwrap();
         let rows = rows as usize;
         let cols = cols as usize;
@@ -996,6 +986,7 @@ impl Child {
             if i_child != 0 {
                 println!("{:-<cols$}", "");
             }
+            #[allow(clippy::bool_to_int_with_if)]
             let n_child_rows = n_available_rows / n_children
                 + if i_child < n_available_rows % n_children {
                     1
@@ -1029,7 +1020,7 @@ fn prefix_with_width(s: &str, width: usize) -> &str {
     let mut min = 0;
     let mut max = s.len();
     while min < max {
-        let mid = (min + max) / 2;
+        let mid = usize::midpoint(min, max);
         let prefix = strip_ansi_escapes::strip(&s[..mid]);
         if prefix.len() < width {
             min = mid + 1;
@@ -1057,7 +1048,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
         let status = command
             .status()
             .with_context(|| format!("Could not get status of `{command:?}`"))?;
-        ensure!(status.success(), "Command failed: {:?}", command);
+        ensure!(status.success(), "Command failed: {command:?}");
         return Ok(());
     }
 
@@ -1098,7 +1089,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
     let mut i_target_prev = executable_targets.len();
 
     // Track failed targets to detect when all targets fail
-    let mut failed_targets = std::collections::HashSet::new();
+    let mut failed_targets = HashSet::new();
 
     loop {
         Child::refresh(opts, n_children, children.as_mut_slice());
@@ -1352,7 +1343,7 @@ fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
         .status()
         .with_context(|| format!("Could not get status of `{command:?}`"))?;
 
-    ensure!(status.success(), "Command failed: {:?}", command);
+    ensure!(status.success(), "Command failed: {command:?}");
 
     Ok(())
 }
@@ -1384,8 +1375,7 @@ mod tests {
         // `only_generic_args`. Currently, those are `generic` and `unserde`.
         let (executable, _) = executable_targets
             .iter()
-            .filter(|(executable, _)| !["generic", "unserde"].contains(&executable.name.as_str()))
-            .next()
+            .find(|(executable, _)| !["generic", "unserde"].contains(&executable.name.as_str()))
             .unwrap();
 
         for enable in [false, true] {
