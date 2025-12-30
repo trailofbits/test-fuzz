@@ -3,7 +3,6 @@ use regex::Regex;
 use similar_asserts::SimpleDiff;
 use std::{
     env,
-    ffi::OsStr,
     fs::{read_dir, read_to_string, write},
     io::Write,
     ops::Range,
@@ -40,6 +39,7 @@ fn actionlint() {
 fn clippy() {
     Command::new("cargo")
         .args(["clippy", "--all-targets", "--", "--deny=warnings"])
+        .current_dir("..")
         .logged_assert()
         .success();
 }
@@ -49,6 +49,7 @@ fn dylint() {
     Command::new("cargo")
         .args(["dylint", "--all", "--", "--all-targets"])
         .env("DYLINT_RUSTFLAGS", "--deny warnings")
+        .current_dir("..")
         .logged_assert()
         .success();
 }
@@ -188,7 +189,7 @@ fn dependencies_are_sorted() {
     for entry in WalkDir::new("..")
         .into_iter()
         .filter_map(Result::ok)
-        .filter(|e| e.file_name() == OsStr::new("Cargo.toml"))
+        .filter(|e| e.file_name() == "Cargo.toml")
     {
         let path = entry.path();
         let contents = read_to_string(path).unwrap();
