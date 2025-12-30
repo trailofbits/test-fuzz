@@ -1,6 +1,8 @@
 use assert_cmd::assert::OutputAssertExt;
+use internal::dirs::{target_directory, workspace};
 use regex::Regex;
 use similar_asserts::SimpleDiff;
+use snapbox::{Redactions, assert_data_eq};
 use std::{
     env,
     fs::{read_dir, read_to_string, write},
@@ -87,6 +89,44 @@ fn license() {
         }
         assert!(re.is_match(line), "{line:?} does not match");
     }
+}
+
+const EXPECTED_SHOW_ENV: &str = "\
+RUSTFLAGS='-C instrument-coverage --cfg=coverage --cfg=trybuild_no_target'
+LLVM_PROFILE_FILE='[TARGET_DIR]/[WS]-%p-%16m.profraw'
+CARGO_LLVM_COV=1
+CARGO_LLVM_COV_SHOW_ENV=1
+CARGO_LLVM_COV_TARGET_DIR=[TARGET_DIR]
+CARGO_LLVM_COV_BUILD_DIR=[TARGET_DIR]
+";
+
+#[test]
+fn llvm_cov_show_env() {
+    let mut command = Command::new("which");
+    command.arg("cargo-llvm-cov");
+    let output = command.output().unwrap();
+    if !output.status.success() {
+        #[allow(clippy::explicit_write)]
+        writeln!(
+            std::io::stderr(),
+            "Skipping `llvm_cov_show_env` test as `cargo-llvm-cov` is unavailable"
+        )
+        .unwrap();
+        return;
+    }
+    let stdout = String::from_utf8(output.stdout).unwrap();
+    let assert = Command::new(stdout.trim_end())
+        .args(["llvm-cov", "show-env"])
+        .logged_assert();
+    let actual_show_env = std::str::from_utf8(&assert.get_output().stdout).unwrap();
+    let mut redactions = Redactions::new();
+    redactions
+        .insert("[TARGET_DIR]", target_directory(false))
+        .unwrap();
+    // smoelius: We need the `WS` redaction because we cannot assume that `test-fuzz` resides in a
+    // directory named `test-fuzz`.
+    redactions.insert("[WS]", workspace()).unwrap();
+    assert_data_eq!(redactions.redact(actual_show_env), EXPECTED_SHOW_ENV);
 }
 
 #[test]
@@ -320,6 +360,7 @@ fn remove_avatars(value: &mut serde_json::Value) {
     }
 }
 
+#[cfg(not(target_os = "macos"))]
 #[test]
 fn udeps() {
     Command::new("cargo")
