@@ -1,10 +1,13 @@
 use internal::dirs::{corpus_directory_from_target, output_directory_from_target};
 use predicates::prelude::*;
-use std::{ffi::OsStr, fs::remove_dir_all};
+use std::fs::remove_dir_all;
 use testing::{CommandExt, examples, retry};
 
 const CPUS: &str = "2";
 const TIME_SLICE: &str = "30";
+
+// smoelius: The uses of `remove_dir_all` below look pretty sketchy. But the uses of `TEST_FUZZ_ID`
+// in `dirs` keep them from interfering with each other.
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
@@ -42,9 +45,7 @@ fn fuzz_parallel() {
             assert!(
                 !walkdir::WalkDir::new(output_dir)
                     .into_iter()
-                    .any(
-                        |entry| entry.unwrap().path().file_name() == Some(OsStr::new(".cur_input"))
-                    )
+                    .any(|entry| entry.unwrap().file_name() == ".cur_input")
             );
         }
     }
@@ -52,6 +53,7 @@ fn fuzz_parallel() {
 
 const MAX_TOTAL_TIME: &str = "10";
 
+#[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
 fn no_premature_termination() {
     let corpus_calm = corpus_directory_from_target("calm_and_panicky", "calm");
