@@ -73,6 +73,7 @@ serde_combinators = { path = "serde_combinators", version = "0.1.0" }
 [workspace.lints.rust.unexpected_cfgs]
 level = "deny"
 check-cfg = [
+    "cfg(coverage)",
     "cfg(dylint_lib, values(any()))",
     "cfg(fuzzing)",
     "cfg(serde_default)",
