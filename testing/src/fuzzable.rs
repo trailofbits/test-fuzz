@@ -27,6 +27,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     ];
     args.extend_from_slice(&["--no-run", "--message-format=json"]);
 
+    #[allow(clippy::disallowed_methods, reason = "runs `cargo test`")]
     let exec = Exec::cmd("cargo").args(&args).stdout(Redirection::Pipe);
     debug!("{exec:?}");
     let mut popen = exec.clone().popen()?;
@@ -70,6 +71,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     );
 
     if let Some(executable) = executables.into_iter().next() {
+        #[allow(clippy::disallowed_methods, reason = "runs `cargo test-fuzz`")]
         let mut command = Command::new(executable);
         command.env("TEST_FUZZ_ID", id());
         command.args(["--exact", test]);
@@ -95,6 +97,7 @@ pub fn test_fuzz_all() -> Result<Command> {
         &serde_format_feature,
     ];
 
+    #[allow(clippy::disallowed_methods, reason = "runs `cargo test-fuzz`")]
     let mut command = Command::new("cargo");
     command.env("AFL_NO_AFFINITY", "1");
     command.env("TEST_FUZZ_ID", id());
