@@ -24,6 +24,7 @@ fn link() {
     let pred = pred.not();
 
     // smoelius: https://stackoverflow.com/questions/7219845/difference-between-nm-and-objdump
+    #[expect(clippy::disallowed_methods)]
     Command::new("nm")
         .args([target_directory(false)
             .join("debug/hello-world")

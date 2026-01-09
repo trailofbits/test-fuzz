@@ -27,7 +27,7 @@ use internal::dirs::{
     corpus_directory_from_target, crashes_directory_from_target,
     generic_args_directory_from_target, hangs_directory_from_target,
     impl_generic_args_directory_from_target, output_directory_from_target,
-    queue_directory_from_target, target_directory, workspace_root,
+    queue_directory_from_target, target_directory, workspace,
 };
 use log::debug;
 use mio::{Events, Interest, Poll, Token, unix::pipe::Receiver};
@@ -36,8 +36,8 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashSet, VecDeque},
     fmt::{Debug, Formatter},
-    fs::{self, File, create_dir_all, read, read_dir, remove_dir_all},
-    io::{self, BufRead, Read},
+    fs::{File, create_dir_all, read, read_dir, remove_dir_all},
+    io::{BufRead, Read},
     iter,
     path::{Path, PathBuf},
     process::{Child as StdChild, Command, Stdio, exit},
@@ -46,6 +46,9 @@ use std::{
 };
 use strum_macros::Display;
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
+
+mod var_guard;
+use var_guard::VarGuard;
 
 const AUTO_GENERATED_SUFFIX: &str = "_fuzz__::auto_generate";
 const ENTRY_SUFFIX: &str = "_fuzz__::entry";
@@ -86,7 +89,7 @@ pub struct TestFuzz {
     pub backtrace: bool,
     pub consolidate: bool,
     pub consolidate_all: bool,
-    pub coverage: bool,
+    pub coverage: Option<Object>,
     pub cpus: Option<usize>,
     pub display: Option<Object>,
     pub exact: bool,
@@ -113,6 +116,63 @@ pub struct TestFuzz {
     pub verbose: bool,
     pub ztarget: Option<String>,
     pub zzargs: Vec<String>,
+}
+
+static LLVM_PROFILE_FILE: OnceLock<PathBuf> = OnceLock::new();
+static TARGET_DIR: OnceLock<PathBuf> = OnceLock::new();
+
+impl TestFuzz {
+    fn set_llvm_cov_env(&self, command: &mut Command) {
+        command.env("CARGO_LLVM_COV", "1");
+        command.env("CARGO_LLVM_COV_SHOW_ENV", "1");
+        command.env(
+            "CARGO_LLVM_COV_TARGET_DIR",
+            self.coverage_target_directory(),
+        );
+        command.env("CARGO_LLVM_COV_BUILD_DIR", self.target_directory());
+    }
+
+    pub fn llvm_profile_file(&self) -> &PathBuf {
+        LLVM_PROFILE_FILE.get_or_init(|| {
+            let workspace = workspace();
+            self.coverage_target_directory()
+                .join(format!("{workspace}-%p-%8m.profraw"))
+        })
+    }
+
+    #[must_use]
+    pub fn coverage_target_directory(&self) -> PathBuf {
+        self.target_directory().clone() // .join("test-fuzz-coverage")
+    }
+
+    pub fn target_directory(&self) -> &PathBuf {
+        #[expect(clippy::disallowed_methods)]
+        TARGET_DIR.get_or_init(|| target_directory(self.use_instrumentation()))
+    }
+
+    const fn use_instrumentation(&self) -> bool {
+        let no_instrumentation = self.list
+            || matches!(
+                self.coverage,
+                Some(Object::Corpus | Object::Crashes | Object::Hangs | Object::Queue)
+            )
+            || matches!(
+                self.display,
+                Some(
+                    Object::Corpus
+                        | Object::Crashes
+                        | Object::Hangs
+                        | Object::ImplGenericArgs
+                        | Object::GenericArgs
+                        | Object::Queue
+                )
+            )
+            || matches!(
+                self.replay,
+                Some(Object::Corpus | Object::Crashes | Object::Hangs | Object::Queue)
+            );
+        !no_instrumentation
+    }
 }
 
 #[derive(Clone, Deserialize, Serialize)]
@@ -154,24 +214,22 @@ pub fn run(opts: TestFuzz) -> Result<()> {
         opts
     };
 
-    let no_instrumentation = opts.list
-        || matches!(
-            opts.display,
-            Some(
-                Object::Corpus
-                    | Object::Crashes
-                    | Object::Hangs
-                    | Object::ImplGenericArgs
-                    | Object::GenericArgs
-                    | Object::Queue
-            )
-        )
-        || matches!(
-            opts.replay,
-            Some(Object::Corpus | Object::Crashes | Object::Hangs | Object::Queue)
-        );
+    // smoelius: `LLVM_PROFILE_FILE` must be set every time a binary with coverage instrumentation
+    // is run. This includes when listing a binary's fuzz targets. To avoid forgetting to set the
+    // environment variable, we set it here, once and for all. Note that we do so using `VarGuard`,
+    // which is from an old version of Clippy. `VarGuard` should restore `LLVM_PROFILE_FILE`'s value
+    // before `cargo-test-fuzz` terminates, and thus should allow one to generate coverage for
+    // `cargo-test-fuzz`.
+    //
+    // Note that we generate coverage for fuzz targets, not tests, which is contrary to what one
+    // might expect.
+    let _var_guard = if opts.coverage.is_some() {
+        Some(VarGuard::set("LLVM_PROFILE_FILE", opts.llvm_profile_file()))
+    } else {
+        None
+    };
 
-    run_without_exit_code(&opts, !no_instrumentation).map_err(|error| {
+    run_without_exit_code(&opts).map_err(|error| {
         if opts.exit_code {
             eprintln!("{error:?}");
             exit(2);
@@ -180,8 +238,16 @@ pub fn run(opts: TestFuzz) -> Result<()> {
     })
 }
 
+#[allow(clippy::too_many_lines)]
 #[doc(hidden)]
-pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Result<()> {
+pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
+    if let Some(object) = opts.coverage {
+        ensure!(
+            !matches!(object, Object::ImplGenericArgs | Object::GenericArgs),
+            "`--coverage {}` is invalid.",
+            object.to_string().to_kebab_case()
+        );
+    }
     if let Some(object) = opts.replay {
         ensure!(
             !matches!(object, Object::ImplGenericArgs | Object::GenericArgs),
@@ -193,11 +259,13 @@ pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Resu
     // smoelius: Ensure `cargo-afl` is installed.
     let _ = cached_cargo_afl_version();
 
+    let coverage = opts.coverage.is_some();
+
     let display = opts.display.is_some();
 
     let replay = opts.replay.is_some();
 
-    let executables = build(opts, use_instrumentation, display || replay, opts.coverage)?;
+    let executables = build(opts, coverage || display || replay)?;
 
     let mut executable_targets = executable_targets(&executables)?;
 
@@ -223,7 +291,7 @@ pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Resu
         return reset(opts, &executable_targets);
     }
 
-    if opts.consolidate || opts.reset || display || replay {
+    if opts.consolidate || opts.reset || coverage || display || replay {
         let (executable, target) = executable_target(opts, &executable_targets)?;
 
         if opts.consolidate || opts.reset {
@@ -233,7 +301,22 @@ pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Resu
             return reset(opts, &executable_targets);
         }
 
+        if coverage {
+            let mut command = Command::new("cargo");
+            command.args(["llvm-cov", "clean", "--profraw-only"]);
+            opts.set_llvm_cov_env(&mut command);
+            debug!("{command:?}");
+            let status = command
+                .status()
+                .with_context(|| format!("Could not get status of `{command:?}`"))?;
+            ensure!(status.success(), "Command failed: {command:?}");
+        }
+
         let (flags, dir) = None
+            .or_else(|| {
+                opts.coverage
+                    .map(|object| flags_and_dir(object, &executable.name, &target))
+            })
             .or_else(|| {
                 opts.display
                     .map(|object| flags_and_dir(object, &executable.name, &target))
@@ -244,70 +327,32 @@ pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Resu
             })
             .unwrap_or_else(|| (Flags::empty(), PathBuf::default()));
 
-        return for_each_entry(opts, &executable, &target, flags, &dir);
-    }
+        for_each_entry(opts, &executable, &target, flags, &dir)?;
 
-    if opts.coverage {
-        // clears coverage data from previous runs and data generated by unrelated tooling.
-        remove_profraw_files(target_directory(false))?;
-    }
+        if coverage {
+            if Path::new("lcov.info")
+                .try_exists()
+                .with_context(|| "Could not determine whether lcov.info exists")?
+            {
+                eprintln!("Warning: Overwriting lcov.info");
+            }
+            let mut command = Command::new("cargo");
+            command.args(["llvm-cov", "report", "--lcov", "--output-path=lcov.info"]);
+            opts.set_llvm_cov_env(&mut command);
+            debug!("{command:?}");
+            let status = command
+                .status()
+                .with_context(|| format!("Could not get status of `{command:?}`"))?;
+            ensure!(status.success(), "Command failed: {command:?}");
+            eprintln!(
+                "\
+Wrote lcov to `lcov.info`. To view it as html, try running:
 
-    let (flags, dir) = None
-        .or_else(|| {
-            opts.display
-                .map(|object| flags_and_dir(object, &executable.name, &target))
-        })
-        .or_else(|| {
-            opts.replay
-                .map(|object| flags_and_dir(object, &executable.name, &target))
-        })
-        .unwrap_or((Flags::empty(), PathBuf::default()));
-
-    if display || replay {
-        let result = for_each_entry(
-            &opts,
-            &executable,
-            &target,
-            display,
-            replay,
-            flags,
-            &dir,
-            opts.coverage,
-        );
-        if opts.coverage {
-            return match result {
-                Ok(_) => {
-                    let mut exec = Exec::cmd("cargo-llvm-cov")
-                        .args(&[
-                            "llvm-cov",
-                            "report",
-                            "--profile",
-                            "debug",
-                            "--html",
-                            "--hide-instantiations",
-                            "-v",
-                            "--ignore-filename-regex",
-                            "test-fuzz",
-                        ])
-                        .env("CARGO_LLVM_COV", "1")
-                        .env("CARGO_LLVM_COV_SHOW_ENV", "1")
-                        .env("CARGO_LLVM_COV_TARGET_DIR", target_directory(false))
-                        .stdout(Redirection::Pipe);
-                    debug!("{:?}", exec);
-                    let mut popen = exec.clone().popen()?;
-                    println!("{:?}", popen.stdout);
-                    popen.wait(); // TODO Handle
-                    Ok(())
-                }
-                Err(e) => Err(e),
-            };
+    genhtml lcov.info --output-directory coverage && open coverage/index.html
+"
+            );
         }
 
-        return result;
-    }
-
-    if opts.no_instrumentation {
-        eprintln!("Stopping before fuzzing since --no-instrumentation was specified.");
         return Ok(());
     }
 
@@ -316,36 +361,13 @@ pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Resu
     fuzz(opts, &executable_targets)
 }
 
-fn remove_profraw_files(dir: PathBuf) -> io::Result<()> {
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_file() {
-                if let Some(extension) = path.extension() {
-                    if extension == "profraw" {
-                        println!("{:?}", &path);
-                        fs::remove_file(path)?;
-                    }
-                }
-            }
-        }
-    }
-    Ok(())
-}
-
 #[allow(clippy::too_many_lines)]
-fn build(
-    opts: &TestFuzz,
-    use_instrumentation: bool,
-    quiet: bool,
-    coverage: bool,
-) -> Result<Vec<Executable>> {
+fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     let metadata = metadata(opts)?;
     let silence_stderr = quiet && !opts.verbose;
 
     let mut args = vec![];
-    if use_instrumentation {
+    if opts.use_instrumentation() {
         args.extend_from_slice(&["afl"]);
     }
     args.extend_from_slice(&["test", "--offline", "--no-run"]);
@@ -358,9 +380,8 @@ fn build(
     if opts.release {
         args.extend_from_slice(&["--release"]);
     }
-    let target_dir = target_directory(true);
-    let target_dir_str = target_dir.to_string_lossy();
-    if use_instrumentation {
+    let target_dir_str = opts.target_directory().to_string_lossy();
+    if opts.use_instrumentation() {
         args.extend_from_slice(&["--target-dir", &target_dir_str]);
     }
     if let Some(path) = &opts.manifest_path {
@@ -379,7 +400,7 @@ fn build(
     // smoelius: Suppress "Warning: AFL++ tools will need to set AFL_MAP_SIZE..." Setting
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to: /dev/null
     // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when
-    // displaying/replaying.
+    // generating coverage, displaying, or replaying.
     let mut exec = Exec::cmd("cargo")
         .args(
             &args
@@ -391,19 +412,15 @@ fn build(
     if silence_stderr {
         exec = exec.stderr(NullFile);
     }
-    debug!("{exec:?}");
-
-    let mut envs = Vec::new();
-
-    if coverage {
-        //envs.push(("LLVM_PROFILE_FILE", profraws.to_str().unwrap()));
-        envs.push((
+    if opts.coverage.is_some() {
+        // smoelius: This will break if we ever need to set `RUSTFLAGS` for another reason.
+        exec = exec.env(
             "RUSTFLAGS",
             "-C instrument-coverage --cfg=coverage --cfg=trybuild_no_target",
-        ));
+        );
     }
-    debug!("{:?}", exec);
-    let mut popen = exec.clone().env_extend(&envs).clone().popen()?;
+    debug!("{exec:?}");
+    let mut popen = exec.clone().popen()?;
     let messages = popen
         .stdout
         .take()
@@ -549,17 +566,11 @@ fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec
 }
 
 fn targets(executable: &Path) -> Result<Vec<String>> {
-    let profraws = target_directory(false).join("ignore-%p-%8m.profraw");
-
-    let mut exec = Exec::cmd(executable)
+    let exec = Exec::cmd(executable)
         .env_extend(&[("AFL_QUIET", "1")])
         .args(&["--list", "--format=terse"])
         .stderr(NullFile);
     debug!("{exec:?}");
-
-    exec = exec.env("LLVM_PROFILE_FILE", profraws.to_str().unwrap());
-
-    debug!("{:?}", exec);
     let stream = exec.clone().stream_stdout()?;
 
     // smoelius: A test executable's --list output ends with an empty line followed by
@@ -827,21 +838,13 @@ fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) 
     }
 }
 
-fn get_last_component(path: &PathBuf) -> Option<String> {
-    path.components()
-        .filter(|comp| comp.as_os_str() != OsStr::new(""))
-        .map(|comp| comp.as_os_str().to_str().unwrap().to_owned())
-        .last()
-}
-
-#[allow(clippy::too_many_lines)]
+#[allow(clippy::too_many_arguments, clippy::too_many_lines)]
 fn for_each_entry(
     opts: &TestFuzz,
     executable: &Executable,
     target: &str,
     flags: Flags,
     dir: &Path,
-    coverage: bool,
 ) -> Result<()> {
     ensure!(
         dir.exists(),
@@ -856,6 +859,9 @@ fn for_each_entry(
 
     let mut envs = BASE_ENVS.to_vec();
     envs.push(("AFL_QUIET", "1"));
+    if opts.coverage.is_some() {
+        envs.push(("TEST_FUZZ_COVERAGE", "1"));
+    }
     if opts.display.is_some() {
         envs.push(("TEST_FUZZ_DISPLAY", "1"));
     }
@@ -867,13 +873,6 @@ fn for_each_entry(
     }
     if opts.pretty {
         envs.push(("TEST_FUZZ_PRETTY_PRINT", "1"));
-    }
-
-    let target_dir = target_directory(false);
-    let workspace = get_last_component(&workspace_root()).unwrap();
-    let profraws = target_dir.join(format!("{workspace}-%p-%8m.profraw"));
-    if coverage {
-        envs.push(("LLVM_PROFILE_FILE", profraws.to_str().unwrap()));
     }
 
     let args: Vec<String> = vec![
@@ -982,9 +981,10 @@ fn for_each_entry(
         return Ok(());
     }
 
-    if (failure || timeout) && opts.replay.is_none() {
+    if (failure || timeout) && opts.coverage.is_none() && opts.replay.is_none() {
         eprintln!(
-            "Encountered a {} while not replaying. A buggy Debug implementation perhaps?",
+            "Encountered a {} while not generating coverage and not replaying. A buggy Debug \
+             implementation perhaps?",
             if failure {
                 "failure"
             } else if timeout {
@@ -1001,7 +1001,13 @@ fn for_each_entry(
 
 fn present_participle(opts: &TestFuzz) -> String {
     let mut actions = String::new();
+    if opts.coverage.is_some() {
+        actions.push_str("generate coverage for");
+    }
     if opts.display.is_some() {
+        if !actions.is_empty() {
+            actions.push('/');
+        }
         actions.push_str("display");
     }
     if opts.replay.is_some() {
@@ -1155,6 +1161,12 @@ fn prefix_with_width(s: &str, width: usize) -> &str {
 
 #[allow(clippy::too_many_lines)]
 fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<()> {
+    ensure!(opts.coverage.is_none(), {
+        // smoelius: I am not sure whether this `ensure!` is reachable.
+        debug_assert!(false);
+        "Fuzzing with coverage is currently disallowed."
+    });
+
     auto_generate_corpora(executable_targets)?;
 
     let mut config = Config {
@@ -1487,7 +1499,7 @@ mod tests {
 
         set_current_dir("../fuzzable").unwrap();
 
-        let executables = build(&TestFuzz::default(), false, false).unwrap();
+        let executables = build(&TestFuzz::default(), false).unwrap();
 
         let executable_targets = executable_targets(&executables).unwrap();
 

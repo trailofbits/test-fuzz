@@ -60,21 +60,25 @@ pub fn output_directory_from_target(krate: &str, target: &str) -> PathBuf {
 
 #[must_use]
 fn impl_generic_args_directory() -> PathBuf {
+    #[expect(clippy::disallowed_methods)]
     target_directory(false).join(path_segment("impl_generic_args"))
 }
 
 #[must_use]
 fn generic_args_directory() -> PathBuf {
+    #[expect(clippy::disallowed_methods)]
     target_directory(false).join(path_segment("generic_args"))
 }
 
 #[must_use]
 fn corpus_directory() -> PathBuf {
+    #[expect(clippy::disallowed_methods)]
     target_directory(false).join(path_segment("corpus"))
 }
 
 #[must_use]
 fn output_directory() -> PathBuf {
+    #[expect(clippy::disallowed_methods)]
     target_directory(true).join(path_segment("output"))
 }
 
@@ -113,6 +117,19 @@ pub fn target_directory(instrumented: bool) -> PathBuf {
         target_dir = target_dir.join("afl");
     }
     target_dir.into()
+}
+
+#[must_use]
+pub fn workspace() -> String {
+    let root = workspace_root();
+    let file_name = root.file_name().unwrap();
+    file_name.to_str().map(ToOwned::to_owned).unwrap()
+}
+
+fn workspace_root() -> PathBuf {
+    let mut command = MetadataCommand::new();
+    let workspace_root = command.no_deps().exec().unwrap().workspace_root;
+    workspace_root.into()
 }
 
 #[must_use]
