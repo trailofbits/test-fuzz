@@ -96,7 +96,7 @@ struct TestFuzzWithDeprecations {
     persistent: bool,
     #[arg(
         long,
-        help = "Pretty-print debug output when displaying/replaying",
+        help = "Pretty-print debug output when generating coverage, displaying, or replaying",
         alias = "pretty-print"
     )]
     pretty: bool,
@@ -143,7 +143,10 @@ struct TestFuzzWithDeprecations {
                 -t <TIMEOUT * 1000> when fuzzing)"
     )]
     timeout: Option<u64>,
-    #[arg(long, help = "Show build output when displaying/replaying")]
+    #[arg(
+        long,
+        help = "Show build output when generating coverage, displaying, or replaying"
+    )]
     verbose: bool,
     #[arg(
         value_name = "TARGETNAME",

@@ -104,6 +104,7 @@ jobs:
           rustup +nightly component add clippy rustfmt
           cargo install cargo-dylint dylint-link || true
           cargo install cargo-license            || true
+          cargo install cargo-llvm-cov --git https://github.com/smoelius/cargo-llvm-cov --branch fix-profraw-only-clean || true
           cargo install cargo-supply-chain       || true
           cargo install cargo-unmaintained       || true
           cargo install group-runner             || true
