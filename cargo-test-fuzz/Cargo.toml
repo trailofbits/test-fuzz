@@ -47,6 +47,7 @@ runtime = { workspace = true }
 assert_cmd = { workspace = true }
 predicates = { workspace = true }
 rlimit = { workspace = true }
+snapbox = { workspace = true }
 tempfile = { workspace = true }
 walkdir = { workspace = true }
 xshell = { workspace = true }
