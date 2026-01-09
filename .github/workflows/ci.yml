@@ -161,6 +161,9 @@ jobs:
             exit 1
           fi
 
+      - name: Check that repository is clean
+        run: ! git diff | grep .
+
   all-checks:
     needs:
       - test
