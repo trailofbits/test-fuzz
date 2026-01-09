@@ -4,10 +4,6 @@ version = "7.2.5"
 edition = "2024"
 publish = false
 
-[[bin]]
-name = "hello-world"
-path = "src/main.rs"
-
 [dependencies]
 serde = { workspace = true }
 test-fuzz = { workspace = true }
