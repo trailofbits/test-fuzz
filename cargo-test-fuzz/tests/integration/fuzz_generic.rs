@@ -1,7 +1,7 @@
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::remove_dir_all;
-use testing::{CommandExt, examples, retry};
+use testing::{CommandExt, fuzzable, retry};
 
 const MAX_TOTAL_TIME: &str = "60";
 
@@ -25,7 +25,7 @@ fn fuzz(test: &str, code: i32) {
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test("generic", test)
+    fuzzable::test("generic", test)
         .unwrap()
         .logged_assert()
         .success();
@@ -33,7 +33,7 @@ fn fuzz(test: &str, code: i32) {
     assert!(corpus.exists());
 
     retry(3, || {
-        examples::test_fuzz("generic", "struct_target")
+        fuzzable::test_fuzz("generic", "struct_target")
             .unwrap()
             .args([
                 "--exit-code",

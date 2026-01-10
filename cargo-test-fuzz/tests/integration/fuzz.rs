@@ -1,7 +1,7 @@
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::remove_dir_all;
-use testing::{CommandExt, examples, retry};
+use testing::{CommandExt, fuzzable, retry};
 
 const MAX_TOTAL_TIME: &str = "60";
 
@@ -24,13 +24,13 @@ fn fuzz(krate: &str, persistent: bool) {
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(corpus).unwrap_or_default();
 
-    examples::test(krate, "test")
+    fuzzable::test(krate, "test")
         .unwrap()
         .logged_assert()
         .success();
 
     retry(3, || {
-        let mut command = examples::test_fuzz(krate, "target").unwrap();
+        let mut command = fuzzable::test_fuzz(krate, "target").unwrap();
 
         let mut args = vec!["--exit-code", "--run-until-crash"];
         if persistent {

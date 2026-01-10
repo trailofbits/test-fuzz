@@ -2,7 +2,7 @@ use anyhow::ensure;
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
-use testing::{CommandExt, examples, retry};
+use testing::{CommandExt, fuzzable, retry};
 
 const CRASH_MAX_TOTAL_TIME: &str = "60";
 
@@ -41,7 +41,7 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test(krate, "test")
+    fuzzable::test(krate, "test")
         .unwrap()
         .logged_assert()
         .success();
@@ -52,13 +52,13 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
         let mut args = vec!["--no-ui"];
         args.extend_from_slice(fuzz_args);
 
-        examples::test_fuzz(krate, target)
+        fuzzable::test_fuzz(krate, target)
             .unwrap()
             .args(args)
             .logged_assert()
             .success();
 
-        examples::test_fuzz(krate, target)
+        fuzzable::test_fuzz(krate, target)
             .unwrap()
             .args(["--consolidate"])
             .logged_assert()
@@ -66,7 +66,7 @@ fn consolidate(krate: &str, target: &str, fuzz_args: &[&str], pattern: &str) {
 
         ensure!(read_dir(&corpus).unwrap().count() > 1);
 
-        examples::test_fuzz(krate, target)
+        fuzzable::test_fuzz(krate, target)
             .unwrap()
             .args(["--display=corpus"])
             .logged_assert()

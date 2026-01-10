@@ -1365,7 +1365,7 @@ mod tests {
         const WARNING: &str = "If you are trying to run a test-fuzz-generated fuzzing harness, be \
                                sure to run with `TEST_FUZZ=1`.";
 
-        set_current_dir("../examples").unwrap();
+        set_current_dir("../fuzzable").unwrap();
 
         let executables = build(&TestFuzz::default(), false, false).unwrap();
 

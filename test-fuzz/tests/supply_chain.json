@@ -1431,7 +1431,7 @@
       "cargo-test-fuzz",
       "serde_combinators",
       "test-fuzz",
-      "test-fuzz-examples",
+      "test-fuzz-fuzzable",
       "test-fuzz-internal",
       "test-fuzz-macro",
       "test-fuzz-runtime",

@@ -1296,7 +1296,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "test-fuzz-examples"
+name = "test-fuzz-fuzzable"
 version = "7.2.5"
 dependencies = [
  "parse_duration",

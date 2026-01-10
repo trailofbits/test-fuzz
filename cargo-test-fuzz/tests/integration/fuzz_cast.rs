@@ -1,11 +1,11 @@
 use predicates::prelude::*;
-use testing::{CommandExt, examples, retry};
+use testing::{CommandExt, fuzzable, retry};
 
 const MAX_TOTAL_TIME: &str = "60";
 
 #[test]
 fn fuzz_cast() {
-    examples::test("cast", "test")
+    fuzzable::test("cast", "test")
         .unwrap()
         .logged_assert()
         .success();
@@ -24,7 +24,7 @@ fn fuzz_cast() {
             0
         };
         retry(3, || {
-            examples::test_fuzz("cast", "target")
+            fuzzable::test_fuzz("cast", "target")
                 .unwrap()
                 .args(&args)
                 .logged_assert()
@@ -32,7 +32,7 @@ fn fuzz_cast() {
         })
         .unwrap();
         if use_cast_checks {
-            examples::test_fuzz("cast", "target")
+            fuzzable::test_fuzz("cast", "target")
                 .unwrap()
                 .args(["--replay=crashes", "--features=test-fuzz/cast_checks"])
                 .logged_assert()

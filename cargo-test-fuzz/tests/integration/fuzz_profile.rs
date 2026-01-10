@@ -1,11 +1,11 @@
 use predicates::prelude::*;
-use testing::{CommandExt, examples, retry};
+use testing::{CommandExt, fuzzable, retry};
 
 const MAX_TOTAL_TIME: &str = "60";
 
 #[test]
 fn fuzz_profile() {
-    examples::test("profile", "test")
+    fuzzable::test("profile", "test")
         .unwrap()
         .logged_assert()
         .success();
@@ -24,7 +24,7 @@ fn fuzz_profile() {
             0
         };
         retry(3, || {
-            examples::test_fuzz("profile", "target")
+            fuzzable::test_fuzz("profile", "target")
                 .unwrap()
                 .args(&args)
                 .logged_assert()
@@ -32,7 +32,7 @@ fn fuzz_profile() {
         })
         .unwrap();
         if use_release {
-            examples::test_fuzz("profile", "target")
+            fuzzable::test_fuzz("profile", "target")
                 .unwrap()
                 .args(["--replay=crashes", "--release"])
                 .logged_assert()

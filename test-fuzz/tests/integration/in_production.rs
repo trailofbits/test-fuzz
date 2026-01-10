@@ -50,7 +50,7 @@ fn test(write: bool, n: usize) {
     command.args([
         "run",
         "--manifest-path",
-        concat!(env!("CARGO_MANIFEST_DIR"), "/../examples/Cargo.toml"),
+        concat!(env!("CARGO_MANIFEST_DIR"), "/../fuzzable/Cargo.toml"),
         "--features",
         &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
     ]);

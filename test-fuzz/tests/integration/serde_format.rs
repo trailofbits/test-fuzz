@@ -3,7 +3,7 @@ use std::{
     fs::{File, read_dir, remove_dir_all},
     io::Read,
 };
-use testing::{CommandExt, examples};
+use testing::{CommandExt, fuzzable};
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
@@ -12,7 +12,7 @@ fn serde_format() {
 
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test("serde", "unit_variant::test")
+    fuzzable::test("serde", "unit_variant::test")
         .unwrap()
         .logged_assert()
         .success();
