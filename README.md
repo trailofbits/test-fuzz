@@ -583,9 +583,9 @@ We reserve the right to change the format of corpora, crashes, hangs, and work q
 [`test_fuzz_impl` macro]: #test_fuzz_impl-macro
 [`test_fuzz` macro]: #test_fuzz-macro
 [`test_fuzz`]: #test_fuzz-macro
-[associated_type.rs]: https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/associated_type.rs#L26
+[associated_type.rs]: https://github.com/trailofbits/test-fuzz/blob/master/fuzzable/tests/associated_type.rs#L26
 [auto-generate corpus files]: #auto-generated-corpus-files
-[conversion.rs]: https://github.com/trailofbits/test-fuzz/blob/master/examples/tests/conversion.rs#L5
+[conversion.rs]: https://github.com/trailofbits/test-fuzz/blob/master/fuzzable/tests/conversion.rs#L5
 [conversions]: #serializable--deserializable-arguments
 [deriving them]: https://serde.rs/derive.html
 [is not enabled]: https://github.com/rust-lang/rust/issues/45599#issuecomment-460488107
