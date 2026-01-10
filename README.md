@@ -283,6 +283,13 @@ Options:
       --backtrace                 Display backtraces
       --consolidate               Move one target's crashes, hangs, and work queue to its corpus; to
                                   consolidate all targets, use --consolidate-all
+      --coverage <COVERAGE>       Generate coverage for corpus, crashes, hangs, or work queue. By
+                                  default, an uninstrumented fuzz target is used. To generate
+                                  coverage with instrumentation, append `-instrumented` to <OBJECT>,
+                                  e.g., --coverage corpus-instrumented. [possible values: corpus,
+                                  corpus-instrumented, crashes, crashes-instrumented, generic-args,
+                                  hangs, hangs-instrumented, impl-generic-args, queue,
+                                  queue-instrumented]
       --cpus <N>                  Fuzz using at most <N> cpus; default is all but one
       --display <OBJECT>          Display corpus, crashes, generic args, `impl` generic args, hangs,
                                   or work queue. By default, an uninstrumented fuzz target is used.

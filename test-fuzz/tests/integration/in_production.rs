@@ -1,13 +1,14 @@
 use internal::dirs::{corpus_directory_from_target, path_segment};
+use snapbox::{Redactions, assert_data_eq};
 use std::{
     env,
     ffi::{OsStr, OsString},
-    fs::{read_dir, remove_dir_all},
-    path::{Component, PathBuf},
+    fs::{read_dir, read_to_string, remove_dir_all},
+    path::{Component, Path, PathBuf},
     process::Command,
     sync::Mutex,
 };
-use testing::CommandExt;
+use testing::{CommandExt, fuzzable::test_fuzz_all};
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
@@ -26,7 +27,7 @@ static MUTEX: Mutex<()> = Mutex::new(());
 fn test(write: bool, n: usize) {
     let _lock = MUTEX.lock().unwrap();
 
-    let thread_specific_corpus = corpus_directory_from_target("hello-world", "target");
+    let thread_specific_corpus = corpus_directory_from_target("hello-world", "intermediary");
 
     // smoelius: HACK. `hello-world` writes to `target/corpus`, not, e.g.,
     // `target/corpus_ThreadId_3_`. For now, just replace `corpus_ThreadId_3_` with `corpus`.
@@ -69,4 +70,28 @@ fn test(write: bool, n: usize) {
         .success();
 
     assert_eq!(read_dir(corpus).map(Iterator::count).unwrap_or_default(), n);
+
+    if write {
+        generate_coverage();
+    }
+}
+
+fn generate_coverage() {
+    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
+    let parent = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+    let expected_lcov_info =
+        read_to_string(parent.join("snapshots/hello_world_lcov.info")).unwrap();
+
+    let mut command = test_fuzz_all().unwrap();
+    // smoelius: As mentioned above, `hello-world` does not write to, e.g.,
+    // `target/corpus_ThreadId_3_`. So do not set `TEST_FUZZ_ID`.
+    command.env_remove("TEST_FUZZ_ID");
+    command.args(["--coverage=corpus", "intermediary", "--exact"]);
+    command.logged_assert().success();
+
+    let actual_lcov_info = read_to_string("lcov.info").unwrap();
+
+    let mut redactions = Redactions::new();
+    redactions.insert("[REPO]", parent).unwrap();
+    assert_data_eq!(redactions.redact(&actual_lcov_info), expected_lcov_info);
 }
