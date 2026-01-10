@@ -183,7 +183,7 @@ fn run_test(
 
         let output = cmd!(
             sh,
-            "cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run"
+            "cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-fuzzable --no-run"
         )
         .ignore_status()
         .read_stderr()?;

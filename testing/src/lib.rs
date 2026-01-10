@@ -1,7 +1,7 @@
 mod command_ext;
 pub use command_ext::CommandExt;
 
-pub mod examples;
+pub mod fuzzable;
 
 mod retry;
 pub use crate::retry::*;

@@ -1,6 +1,6 @@
 use predicates::prelude::*;
 use std::process::Command;
-use testing::{CommandExt, examples::MANIFEST_PATH};
+use testing::{CommandExt, fuzzable::MANIFEST_PATH};
 
 // smoelius: This test will fail if run twice because the target will have already been built.
 #[test]

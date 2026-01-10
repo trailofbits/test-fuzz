@@ -8,15 +8,15 @@ use subprocess::{Exec, Redirection};
 pub static MANIFEST_PATH: LazyLock<String> = LazyLock::new(|| {
     #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../examples/Cargo.toml")
+        .join("../fuzzable/Cargo.toml")
         .to_string_lossy()
         .to_string()
 });
 
 // smoelius: We want to reuse the existing features. So we can't do anything that would cause the
-// examples to be rebuilt.
-// smoelius: What was I worried about? What would cause the examples to be rebuilt? Something about
-// the current working directory? Maybe using the manifest path solves that problem?
+// fuzzable examples to be rebuilt.
+// smoelius: What was I worried about? What would cause the fuzzable examples to be rebuilt?
+// Something about the current working directory? Maybe using the manifest path solves that problem?
 pub fn test(krate: &str, test: &str) -> Result<Command> {
     // smoelius: Put --message-format=json last so that it is easy to copy-and-paste the command
     // without it.

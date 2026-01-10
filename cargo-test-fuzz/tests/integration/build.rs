@@ -1,8 +1,8 @@
-use testing::{CommandExt, examples};
+use testing::{CommandExt, fuzzable};
 
 #[test]
 fn build() {
-    examples::test_fuzz_all()
+    fuzzable::test_fuzz_all()
         .unwrap()
         .args(["--no-run"])
         .logged_assert()
@@ -11,7 +11,7 @@ fn build() {
 
 #[test]
 fn build_persistent() {
-    examples::test_fuzz_all()
+    fuzzable::test_fuzz_all()
         .unwrap()
         .args(["--no-run", "--persistent"])
         .logged_assert()

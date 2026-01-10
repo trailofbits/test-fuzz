@@ -1,5 +1,5 @@
 use predicates::prelude::*;
-use testing::{CommandExt, examples};
+use testing::{CommandExt, fuzzable};
 
 #[test]
 fn display_qwerty() {
@@ -29,12 +29,12 @@ fn display_debug_hang() {
 }
 
 fn display(krate: &str, test: &str, target: &str, stdout: &str, stderr: &str) {
-    examples::test(krate, test)
+    fuzzable::test(krate, test)
         .unwrap()
         .logged_assert()
         .success();
 
-    examples::test_fuzz(krate, target)
+    fuzzable::test_fuzz(krate, target)
         .unwrap()
         .args(["--display=corpus"])
         .logged_assert()

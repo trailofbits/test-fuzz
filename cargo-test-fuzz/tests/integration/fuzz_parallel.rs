@@ -1,7 +1,7 @@
 use internal::dirs::{corpus_directory_from_target, output_directory_from_target};
 use predicates::prelude::*;
 use std::fs::remove_dir_all;
-use testing::{CommandExt, examples, retry};
+use testing::{CommandExt, fuzzable, retry};
 
 const CPUS: &str = "2";
 const TIME_SLICE: &str = "30";
@@ -17,13 +17,13 @@ fn fuzz_parallel() {
         remove_dir_all(output_dir).unwrap_or_default();
     }
 
-    examples::test("parallel", "test")
+    fuzzable::test("parallel", "test")
         .unwrap()
         .logged_assert()
         .success();
 
     retry(3, || {
-        examples::test_fuzz_inexact("parallel", "target")
+        fuzzable::test_fuzz_inexact("parallel", "target")
             .unwrap()
             .args([
                 "--exit-code",
@@ -62,13 +62,13 @@ fn no_premature_termination() {
     let corpus_panicky = corpus_directory_from_target("calm_and_panicky", "panicky");
     remove_dir_all(&corpus_panicky).unwrap_or_default();
 
-    examples::test("calm_and_panicky", "test")
+    fuzzable::test("calm_and_panicky", "test")
         .unwrap()
         .logged_assert()
         .success();
 
     let assert = retry(3, || {
-        examples::test_fuzz_inexact("calm_and_panicky", "")
+        fuzzable::test_fuzz_inexact("calm_and_panicky", "")
             .unwrap()
             .args([
                 "--exit-code",

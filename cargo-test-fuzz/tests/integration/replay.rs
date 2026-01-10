@@ -4,7 +4,7 @@
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::remove_dir_all;
-use testing::{CommandExt, examples, retry};
+use testing::{CommandExt, fuzzable, retry};
 
 // smoelius: The use of `Resource::DATA` affects all threads in the integration test. We should see
 // whether there is a more localized way to achieve this goal.
@@ -59,12 +59,12 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &st
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(corpus).unwrap_or_default();
 
-    examples::test(krate, "test")
+    fuzzable::test(krate, "test")
         .unwrap()
         .logged_assert()
         .success();
 
-    examples::test_fuzz(krate, target)
+    fuzzable::test_fuzz(krate, target)
         .unwrap()
         .args(["--reset"])
         .logged_assert()
@@ -74,7 +74,7 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &st
         let mut args = vec!["--no-ui"];
         args.extend_from_slice(fuzz_args);
 
-        examples::test_fuzz(krate, target)
+        fuzzable::test_fuzz(krate, target)
             .unwrap()
             .args(args)
             .logged_assert()
@@ -83,7 +83,7 @@ fn replay(krate: &str, target: &str, fuzz_args: &[&str], object: Object, re: &st
         // smoelius: The memory limit must be set to replay the crashes, but not the hangs.
         Resource::DATA.set(MEMORY_LIMIT, MEMORY_LIMIT).unwrap();
 
-        let mut command = examples::test_fuzz(krate, target).unwrap();
+        let mut command = fuzzable::test_fuzz(krate, target).unwrap();
 
         command
             .args([match object {

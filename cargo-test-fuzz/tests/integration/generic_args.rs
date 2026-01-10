@@ -1,6 +1,6 @@
 use internal::dirs::{generic_args_directory_from_target, impl_generic_args_directory_from_target};
 use std::fs::remove_dir_all;
-use testing::{CommandExt, examples};
+use testing::{CommandExt, fuzzable};
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
@@ -57,7 +57,7 @@ fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected:
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(generic_args).unwrap_or_default();
 
-    examples::test(krate, test)
+    fuzzable::test(krate, test)
         .unwrap()
         .logged_assert()
         .success();
@@ -66,7 +66,7 @@ fn test(krate: &str, test: &str, target: &str, impl_expected: &[&str], expected:
         ("--display=impl-generic-args", impl_expected),
         ("--display=generic-args", expected),
     ] {
-        let assert = &examples::test_fuzz(krate, target)
+        let assert = &fuzzable::test_fuzz(krate, target)
             .unwrap()
             .args([option])
             .logged_assert()

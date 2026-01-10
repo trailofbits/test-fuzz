@@ -3,7 +3,7 @@
 # cargo-test-fuzz/tests/install.rs will need to be updated.
 members = [
     "cargo-test-fuzz",
-    "examples",
+    "fuzzable",
     "internal",
     "macro",
     "runtime",

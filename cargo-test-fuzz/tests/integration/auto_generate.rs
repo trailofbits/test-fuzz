@@ -2,7 +2,7 @@ use anyhow::ensure;
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
-use testing::{CommandExt, examples, retry};
+use testing::{CommandExt, fuzzable, retry};
 
 const MAX_TOTAL_TIME: &str = "60";
 
@@ -41,7 +41,7 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
     remove_dir_all(&corpus).unwrap_or_default();
 
     let _: &str = retry(3, || {
-        let assert = examples::test_fuzz(krate, target)
+        let assert = fuzzable::test_fuzz(krate, target)
             .unwrap()
             .args([
                 "--no-ui",

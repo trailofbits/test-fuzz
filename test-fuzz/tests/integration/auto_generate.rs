@@ -1,6 +1,6 @@
 use internal::dirs::corpus_directory_from_target;
 use std::fs::{read_dir, remove_dir_all};
-use testing::{CommandExt, examples};
+use testing::{CommandExt, fuzzable};
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
@@ -21,7 +21,7 @@ fn test(name: &str, n: usize) {
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(&corpus).unwrap_or_default();
 
-    examples::test(
+    fuzzable::test(
         "auto_generate",
         &format!("{name}::target_fuzz__::auto_generate"),
     )
