@@ -546,6 +546,7 @@ We reserve the right to change the format of corpora, crashes, hangs, and work q
 [Macros and Inline Functions Exception]: https://spdx.org/licenses/mif-exception.html
 [Overview]: #overview
 [Postcard]: https://github.com/jamesmunns/postcard
+[Semantic versioning policy]: #semantic-versioning-policy
 [Serde attributes]: https://serde.rs/attributes.html
 [Serde field attributes]: https://serde.rs/field-attrs.html
 [Substrate externalities]: https://substrate.dev/docs/en/knowledgebase/runtime/tests#mock-runtime-storage
