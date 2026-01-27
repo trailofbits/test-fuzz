@@ -99,7 +99,7 @@ fn markdown_link_check() {
         .logged_assert()
         .success();
 
-    let readme_md = Path::new(env!("CARGO_MANIFEST_DIR")).join("../README.md");
+    let readme_md = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../README.md"));
 
     Command::new("npx")
         .args(["markdown-link-check", readme_md.to_str().unwrap()])
@@ -282,12 +282,15 @@ fn supply_chain() {
     remove_avatars(&mut value);
     let stdout_normalized = serde_json::to_string_pretty(&value).unwrap();
 
-    let path_buf = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/supply_chain.json");
+    let path = Path::new(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/tests/supply_chain.json"
+    ));
 
     if enabled("BLESS") {
-        write(path_buf, stdout_normalized).unwrap();
+        write(path, stdout_normalized).unwrap();
     } else {
-        let stdout_expected = read_to_string(&path_buf).unwrap();
+        let stdout_expected = read_to_string(path).unwrap();
 
         assert!(
             stdout_expected == stdout_normalized,

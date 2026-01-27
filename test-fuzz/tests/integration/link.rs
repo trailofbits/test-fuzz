@@ -11,7 +11,7 @@ fn link() {
         .args([
             "build",
             "--manifest-path",
-            &MANIFEST_PATH,
+            MANIFEST_PATH,
             "--features",
             &("test-fuzz/".to_owned() + test_fuzz::serde_format::as_feature()),
         ])

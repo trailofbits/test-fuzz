@@ -2,16 +2,11 @@ use anyhow::{Context, Result, bail, ensure};
 use cargo_metadata::{Artifact, ArtifactProfile, Message};
 use internal::serde_format;
 use log::debug;
-use std::{path::Path, process::Command, sync::LazyLock};
+use std::process::Command;
 use subprocess::{Exec, Redirection};
 
-pub static MANIFEST_PATH: LazyLock<String> = LazyLock::new(|| {
-    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
-    Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../fuzzable/Cargo.toml")
-        .to_string_lossy()
-        .to_string()
-});
+#[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
+pub const MANIFEST_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../fuzzable/Cargo.toml");
 
 // smoelius: We want to reuse the existing features. So we can't do anything that would cause the
 // fuzzable examples to be rebuilt.
@@ -24,7 +19,7 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     let mut args = vec![
         "test",
         "--manifest-path",
-        &*MANIFEST_PATH,
+        MANIFEST_PATH,
         "--test",
         krate,
         "--features",
@@ -95,7 +90,7 @@ pub fn test_fuzz_all() -> Result<Command> {
         "--",
         "test-fuzz",
         "--manifest-path",
-        &*MANIFEST_PATH,
+        MANIFEST_PATH,
         "--features",
         &serde_format_feature,
     ];

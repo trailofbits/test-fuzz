@@ -38,8 +38,7 @@ struct Test {
 
 static TESTS: LazyLock<Vec<Test>> = LazyLock::new(|| {
     #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
-    let content =
-        read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("third_party.json")).unwrap();
+    let content = read_to_string(concat!(env!("CARGO_MANIFEST_DIR"), "/third_party.json")).unwrap();
     serde_json::from_str(&content).unwrap()
 });
 
@@ -87,8 +86,7 @@ fn run_test(test: &Test, no_run: bool) {
         .success();
 
     #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
-    let patch = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("patches")
+    let patch = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/patches"))
         .join(&test.patch)
         .canonicalize()
         .unwrap();
