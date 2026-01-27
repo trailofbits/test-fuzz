@@ -9,3 +9,4 @@ mod fuzz_parallel;
 mod fuzz_profile;
 mod generic_args;
 mod replay;
+mod warning;
