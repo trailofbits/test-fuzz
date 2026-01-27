@@ -69,6 +69,9 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
     });
 
     let (impl_items, modules) = map_impl_items(&generics, trait_path.as_ref(), &self_ty, &items);
+    if modules.is_empty() {
+        eprintln!("Warning: No `test_fuzz` attributes found in `impl` block");
+    }
 
     let result = quote! {
         #(#attrs)* #defaultness #unsafety #impl_token #generics #trait_ #self_ty #where_clause {
