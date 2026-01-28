@@ -115,6 +115,7 @@ fn run_test(test: &Test, no_run: bool) {
         "ahash@0.7.7",
         "libc",
         "num-bigint@0.4.0",
+        "proc-macro2",
         "serde_json",
         "tempfile",
         "wasm-bindgen",
