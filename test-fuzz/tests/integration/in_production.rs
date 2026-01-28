@@ -72,40 +72,43 @@ fn test(write: bool, n: usize) {
 
     #[cfg(target_os = "linux")]
     if write {
-        generate_coverage();
+        linux::generate_coverage();
     }
 }
 
 #[cfg(target_os = "linux")]
-fn generate_coverage() {
+mod linux {
+    use super::LoggedAssert;
     use snapbox::{Redactions, assert_data_eq};
     use std::{fs::read_to_string, path::Path};
     use testing::fuzzable::test_fuzz_all;
 
-    #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
-    let parent = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
-    let expected_sorted_lcov_info =
-        read_to_string(parent.join("snapshots/sorted_hello_world_lcov.info")).unwrap();
+    pub fn generate_coverage() {
+        #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
+        let parent = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
+        let expected_sorted_lcov_info =
+            read_to_string(parent.join("snapshots/sorted_hello_world_lcov.info")).unwrap();
 
-    let mut command = test_fuzz_all().unwrap();
-    // smoelius: As mentioned above, `hello-world` does not write to, e.g.,
-    // `target/corpus_ThreadId_3_`. So do not set `TEST_FUZZ_ID`.
-    command.env_remove("TEST_FUZZ_ID");
-    command.args(["--coverage=corpus", "intermediary", "--exact"]);
-    command.logged_assert().success();
+        let mut command = test_fuzz_all().unwrap();
+        // smoelius: As mentioned above, `hello-world` does not write to, e.g.,
+        // `target/corpus_ThreadId_3_`. So do not set `TEST_FUZZ_ID`.
+        command.env_remove("TEST_FUZZ_ID");
+        command.args(["--coverage=corpus", "intermediary", "--exact"]);
+        command.logged_assert().success();
 
-    let actual_lcov_info = read_to_string("lcov.info").unwrap();
-    let mut lines = actual_lcov_info.lines().collect::<Vec<_>>();
-    lines.sort();
-    let sorted_actual_lcov_info = lines
-        .into_iter()
-        .map(|s| format!("{s}\n"))
-        .collect::<String>();
+        let actual_lcov_info = read_to_string("lcov.info").unwrap();
+        let mut lines = actual_lcov_info.lines().collect::<Vec<_>>();
+        lines.sort();
+        let sorted_actual_lcov_info = lines
+            .into_iter()
+            .map(|s| format!("{s}\n"))
+            .collect::<String>();
 
-    let mut redactions = Redactions::new();
-    redactions.insert("[REPO]", parent).unwrap();
-    assert_data_eq!(
-        redactions.redact(&sorted_actual_lcov_info),
-        expected_sorted_lcov_info
-    );
+        let mut redactions = Redactions::new();
+        redactions.insert("[REPO]", parent).unwrap();
+        assert_data_eq!(
+            redactions.redact(&sorted_actual_lcov_info),
+            expected_sorted_lcov_info
+        );
+    }
 }
