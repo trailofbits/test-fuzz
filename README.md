@@ -283,6 +283,13 @@ Options:
       --backtrace                 Display backtraces
       --consolidate               Move one target's crashes, hangs, and work queue to its corpus; to
                                   consolidate all targets, use --consolidate-all
+      --coverage <COVERAGE>       Generate coverage for corpus, crashes, hangs, or work queue. By
+                                  default, an uninstrumented fuzz target is used. To generate
+                                  coverage with instrumentation, append `-instrumented` to <OBJECT>,
+                                  e.g., --coverage corpus-instrumented. [possible values: corpus,
+                                  corpus-instrumented, crashes, crashes-instrumented, generic-args,
+                                  hangs, hangs-instrumented, impl-generic-args, queue,
+                                  queue-instrumented]
       --cpus <N>                  Fuzz using at most <N> cpus; default is all but one
       --display <OBJECT>          Display corpus, crashes, generic args, `impl` generic args, hangs,
                                   or work queue. By default, an uninstrumented fuzz target is used.
@@ -301,7 +308,8 @@ Options:
       --no-ui                     Disable user interface
   -p, --package <PACKAGE>         Package containing fuzz target
       --persistent                Enable persistent mode fuzzing
-      --pretty                    Pretty-print debug output when displaying/replaying
+      --pretty                    Pretty-print debug output when generating coverage, displaying, or
+                                  replaying
       --release                   Build in release mode
       --replay <OBJECT>           Replay corpus, crashes, hangs, or work queue. By default, an
                                   uninstrumented fuzz target is used. To replay with
@@ -317,7 +325,8 @@ Options:
       --test <NAME>               Integration test containing fuzz target
       --timeout <TIMEOUT>         Number of seconds to consider a hang when fuzzing or replaying
                                   (equivalent to -- -t <TIMEOUT * 1000> when fuzzing)
-      --verbose                   Show build output when displaying/replaying
+      --verbose                   Show build output when generating coverage, displaying, or
+                                  replaying
   -h, --help                      Print help
   -V, --version                   Print version
 
