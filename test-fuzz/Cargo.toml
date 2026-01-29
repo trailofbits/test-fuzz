@@ -28,11 +28,16 @@ regex = { workspace = true }
 semver = { workspace = true }
 serde_json = { workspace = true }
 similar-asserts = { workspace = true }
+snapbox = { workspace = true }
 tempfile = { workspace = true }
 toml_edit = { workspace = true }
 walkdir = { workspace = true }
 
 testing = { workspace = true }
+
+[target.'cfg(target_os = "linux")'.dev-dependencies]
+lcov = "0.8"
+rustc-demangle = "0.1"
 
 # smoelius: A list of formats we might support can be found here:
 # https://github.com/djkoloski/rust_serialization_benchmark

@@ -36,6 +36,13 @@ struct TestFuzzWithDeprecations {
     consolidate_all: bool,
     #[arg(
         long,
+        help = "Generate coverage for corpus, crashes, hangs, or work queue. By default, an \
+                uninstrumented fuzz target is used. To generate coverage with instrumentation, \
+                append `-instrumented` to <OBJECT>, e.g., --coverage corpus-instrumented."
+    )]
+    coverage: Option<Object>,
+    #[arg(
+        long,
         value_name = "N",
         help = "Fuzz using at most <N> cpus; default is all but one"
     )]
@@ -89,7 +96,7 @@ struct TestFuzzWithDeprecations {
     persistent: bool,
     #[arg(
         long,
-        help = "Pretty-print debug output when displaying/replaying",
+        help = "Pretty-print debug output when generating coverage, displaying, or replaying",
         alias = "pretty-print"
     )]
     pretty: bool,
@@ -136,7 +143,10 @@ struct TestFuzzWithDeprecations {
                 -t <TIMEOUT * 1000> when fuzzing)"
     )]
     timeout: Option<u64>,
-    #[arg(long, help = "Show build output when displaying/replaying")]
+    #[arg(
+        long,
+        help = "Show build output when generating coverage, displaying, or replaying"
+    )]
     verbose: bool,
     #[arg(
         value_name = "TARGETNAME",
@@ -153,6 +163,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             backtrace,
             consolidate,
             consolidate_all,
+            coverage,
             cpus,
             display,
             exact,
@@ -191,6 +202,7 @@ impl From<TestFuzzWithDeprecations> for super::TestFuzz {
             backtrace,
             consolidate,
             consolidate_all,
+            coverage,
             cpus,
             display,
             exact,

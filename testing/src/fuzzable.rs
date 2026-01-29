@@ -27,6 +27,10 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     ];
     args.extend_from_slice(&["--no-run", "--message-format=json"]);
 
+    // smoelius: As mentioned in cargo-test-fuzz/src/lib.rs, `LLVM_PROFILE_FILE` must be set every
+    // time a binary with coverage instrumentation is run. However, there is no easy way to tell
+    // whether a test binary was compiled with coverage instrumentation. So it is unclear whether
+    // `LLVM_PROFILE_FILE` should be set here.
     let exec = Exec::cmd("cargo").args(&args).stdout(Redirection::Pipe);
     debug!("{exec:?}");
     let mut popen = exec.clone().popen()?;

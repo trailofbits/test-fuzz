@@ -138,6 +138,11 @@ pub fn test_fuzz_enabled() -> bool {
 }
 
 #[must_use]
+pub fn coverage_enabled() -> bool {
+    enabled("COVERAGE")
+}
+
+#[must_use]
 pub fn display_enabled() -> bool {
     enabled("DISPLAY")
 }
