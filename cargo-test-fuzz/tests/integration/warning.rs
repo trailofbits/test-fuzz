@@ -1,5 +1,5 @@
 use predicates::prelude::*;
-use testing::{CommandExt, fuzzable};
+use testing::{CommandExt, fuzzable::MANIFEST_PATH};
 
 #[test]
 fn warning() {
@@ -7,10 +7,11 @@ fn warning() {
         .args([
             "test",
             "--manifest-path",
-            fuzzable::MANIFEST_PATH,
+            MANIFEST_PATH,
             "--no-run",
             "--features",
             &("test-fuzz/".to_owned() + internal::serde_format::as_feature()),
+            "--features=__no_test_fuzz",
             "--test",
             "no_test_fuzz",
         ])

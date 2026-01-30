@@ -19,6 +19,7 @@ serde_json = { workspace = true }
 [features]
 __bar_fuzz = []
 __inapplicable_conversion = []
+__no_test_fuzz = []
 __self_ty_conflict = []
 
 [lints]
