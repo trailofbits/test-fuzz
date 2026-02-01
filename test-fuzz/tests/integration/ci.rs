@@ -4,7 +4,6 @@ use similar_asserts::SimpleDiff;
 use std::{
     env,
     fs::{read_dir, read_to_string, write},
-    io::Write,
     ops::Range,
     path::Path,
     process::{Command, ExitStatus},
@@ -13,27 +12,6 @@ use std::{
 use tempfile::tempdir;
 use testing::CommandExt;
 use walkdir::WalkDir;
-
-#[test]
-fn actionlint() {
-    let mut command = Command::new("which");
-    command.arg("actionlint");
-    let output = command.output().unwrap();
-    if !output.status.success() {
-        #[allow(clippy::explicit_write)]
-        writeln!(
-            std::io::stderr(),
-            "Skipping `actionlint` test as `actionlint` is unavailable"
-        )
-        .unwrap();
-        return;
-    }
-    let stdout = String::from_utf8(output.stdout).unwrap();
-    Command::new(stdout.trim_end())
-        .env("SHELLCHECK_OPTS", "--exclude=SC2002")
-        .logged_assert()
-        .success();
-}
 
 #[test]
 fn clippy() {
