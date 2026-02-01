@@ -107,7 +107,6 @@ jobs:
           cargo install cargo-supply-chain       || true
           cargo install cargo-unmaintained       || true
           cargo install group-runner             || true
-          go install github.com/rhysd/actionlint/cmd/actionlint@latest
           npm install -g prettier
 
       - name: Free up space
