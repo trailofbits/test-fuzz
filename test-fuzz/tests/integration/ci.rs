@@ -22,6 +22,23 @@ fn clippy() {
         .success();
 }
 
+/// Run Clippy with a `cargo-test-fuzz`-specific clippy.toml file
+#[test]
+fn clippy_cargo_test_fuzz() {
+    Command::new("cargo")
+        .args(["clippy", "--all-targets", "--", "--deny=warnings"])
+        .env(
+            "CLIPPY_CONF_DIR",
+            concat!(
+                env!("CARGO_MANIFEST_DIR"),
+                "/../cargo-test-fuzz/clippy_conf"
+            ),
+        )
+        .current_dir("../cargo-test-fuzz")
+        .logged_assert()
+        .success();
+}
+
 #[test]
 fn dylint() {
     Command::new("cargo")

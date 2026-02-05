@@ -60,25 +60,25 @@ pub fn output_directory_from_target(krate: &str, target: &str) -> PathBuf {
 
 #[must_use]
 fn impl_generic_args_directory() -> PathBuf {
-    #[expect(clippy::disallowed_methods)]
+    #[allow(clippy::disallowed_methods)]
     target_directory(false, false).join(path_segment("impl_generic_args"))
 }
 
 #[must_use]
 fn generic_args_directory() -> PathBuf {
-    #[expect(clippy::disallowed_methods)]
+    #[allow(clippy::disallowed_methods)]
     target_directory(false, false).join(path_segment("generic_args"))
 }
 
 #[must_use]
 fn corpus_directory() -> PathBuf {
-    #[expect(clippy::disallowed_methods)]
+    #[allow(clippy::disallowed_methods)]
     target_directory(false, false).join(path_segment("corpus"))
 }
 
 #[must_use]
 fn output_directory() -> PathBuf {
-    #[expect(clippy::disallowed_methods)]
+    #[allow(clippy::disallowed_methods)]
     target_directory(false, true).join(path_segment("output"))
 }
 

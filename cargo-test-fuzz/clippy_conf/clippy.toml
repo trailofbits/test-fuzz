@@ -1,0 +1,4 @@
+disallowed-methods = [
+    { path = "std::process::Command::new", reason = "use `TestFuzz::command`" },
+    { path = "subprocess::Exec::cmd", reason = "use `TestFuzz::command` followed by `to_exec`" },
+]

@@ -211,7 +211,7 @@ impl TestFuzz {
     }
 
     pub fn target_directory(&self) -> &PathBuf {
-        #[expect(clippy::disallowed_methods)]
+        #[allow(clippy::disallowed_methods)]
         TARGET_DIR.get_or_init(|| {
             target_directory(
                 self.include_coverage_instrumentation(),
@@ -1605,6 +1605,7 @@ mod tests {
             .unwrap();
 
         for enable in [false, true] {
+            #[allow(clippy::disallowed_methods)]
             let mut command = Command::new(&executable.path);
             if enable {
                 command.env("TEST_FUZZ", "1");
