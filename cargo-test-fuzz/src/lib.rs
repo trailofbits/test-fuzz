@@ -46,7 +46,10 @@ use std::{
     time::Duration,
 };
 use strum_macros::Display;
-use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
+use subprocess::{CommunicateError, ExitStatus, NullFile, Redirection};
+
+mod to_exec;
+use to_exec::ToExec;
 
 const AUTO_GENERATED_SUFFIX: &str = "_fuzz__::auto_generate";
 const ENTRY_SUFFIX: &str = "_fuzz__::entry";
@@ -1545,33 +1548,6 @@ fn auto_generate_corpus(opts: &TestFuzz, executable: &Executable, target: &str) 
     ensure!(status.success(), "Command failed: {command:?}");
 
     Ok(())
-}
-
-trait ToExec {
-    fn to_exec(&self) -> Exec;
-}
-
-impl ToExec for Command {
-    fn to_exec(&self) -> Exec {
-        exec_from_command(self)
-    }
-}
-
-/// Constructs a [`subprocess::Exec`] from a [`std::process::Command`].
-pub fn exec_from_command(command: &Command) -> Exec {
-    #[allow(clippy::disallowed_methods)]
-    let mut exec = Exec::cmd(command.get_program()).args(&command.get_args().collect::<Vec<_>>());
-    for (key, val) in command.get_envs() {
-        if let Some(val) = val {
-            exec = exec.env(key, val);
-        } else {
-            exec = exec.env_remove(key);
-        }
-    }
-    if let Some(path) = command.get_current_dir() {
-        exec = exec.cwd(path);
-    }
-    exec
 }
 
 #[cfg(test)]
