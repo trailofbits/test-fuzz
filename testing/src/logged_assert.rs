@@ -2,11 +2,11 @@ use assert_cmd::assert::Assert;
 use log::debug;
 use std::process::{Command, Output};
 
-pub trait CommandExt {
+pub trait LoggedAssert {
     fn logged_assert(&mut self) -> Assert;
 }
 
-impl CommandExt for Command {
+impl LoggedAssert for Command {
     fn logged_assert(&mut self) -> Assert {
         debug!("{self:?}");
         let output = self.output().unwrap();
@@ -15,7 +15,6 @@ impl CommandExt for Command {
 }
 
 fn output_stripped_of_ansi_escapes(output: Output) -> Output {
-    #[allow(clippy::disallowed_methods)]
     let Output {
         status,
         stdout,

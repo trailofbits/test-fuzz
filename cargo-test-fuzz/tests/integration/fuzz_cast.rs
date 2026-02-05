@@ -1,5 +1,5 @@
 use predicates::prelude::*;
-use testing::{CommandExt, fuzzable, retry};
+use testing::{LoggedAssert, fuzzable, retry};
 
 const MAX_TOTAL_TIME: &str = "60";
 

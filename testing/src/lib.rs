@@ -1,5 +1,5 @@
-mod command_ext;
-pub use command_ext::CommandExt;
+mod logged_assert;
+pub use logged_assert::LoggedAssert;
 
 pub mod fuzzable;
 

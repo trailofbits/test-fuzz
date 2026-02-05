@@ -1,4 +1,4 @@
-use testing::{CommandExt, fuzzable};
+use testing::{LoggedAssert, fuzzable};
 
 #[test]
 fn build() {

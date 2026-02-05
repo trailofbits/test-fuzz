@@ -1,5 +1,5 @@
 use predicates::prelude::*;
-use testing::{CommandExt, fuzzable::MANIFEST_PATH};
+use testing::{LoggedAssert, fuzzable::MANIFEST_PATH};
 
 #[test]
 fn warning() {

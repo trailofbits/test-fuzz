@@ -14,7 +14,7 @@ use std::{
     sync::LazyLock,
 };
 use tempfile::tempdir_in;
-use testing::CommandExt;
+use testing::LoggedAssert;
 
 option_set! {
     struct Flags: UpperSnake + u8 {

@@ -1,7 +1,7 @@
 use internal::dirs::{corpus_directory_from_target, output_directory_from_target};
 use predicates::prelude::*;
 use std::fs::remove_dir_all;
-use testing::{CommandExt, fuzzable, retry};
+use testing::{LoggedAssert, fuzzable, retry};
 
 const CPUS: &str = "2";
 const TIME_SLICE: &str = "30";
