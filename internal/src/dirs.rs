@@ -124,19 +124,6 @@ pub fn target_directory(coverage: bool, fuzzing: bool) -> PathBuf {
 }
 
 #[must_use]
-pub fn workspace() -> String {
-    let root = workspace_root();
-    let file_name = root.file_name().unwrap();
-    file_name.to_str().map(ToOwned::to_owned).unwrap()
-}
-
-fn workspace_root() -> PathBuf {
-    let mut command = MetadataCommand::new();
-    let workspace_root = command.no_deps().exec().unwrap().workspace_root;
-    workspace_root.into()
-}
-
-#[must_use]
 fn path_from_args_type<T>() -> String {
     let type_name = type_name::<T>();
     let n = type_name
