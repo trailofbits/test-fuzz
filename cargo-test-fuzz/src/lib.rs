@@ -243,7 +243,7 @@ pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Resu
             })
             .unwrap_or_else(|| (Flags::empty(), PathBuf::default()));
 
-        return for_each_entry(opts, &executable, &target, display, replay, flags, &dir);
+        return for_each_entry(opts, &executable, &target, flags, &dir);
     }
 
     if !use_instrumentation {
@@ -731,8 +731,6 @@ fn for_each_entry(
     opts: &TestFuzz,
     executable: &Executable,
     target: &str,
-    display: bool,
-    replay: bool,
     flags: Flags,
     dir: &Path,
 ) -> Result<()> {
@@ -749,10 +747,10 @@ fn for_each_entry(
 
     let mut envs = BASE_ENVS.to_vec();
     envs.push(("AFL_QUIET", "1"));
-    if display {
+    if opts.display.is_some() {
         envs.push(("TEST_FUZZ_DISPLAY", "1"));
     }
-    if replay {
+    if opts.replay.is_some() {
         envs.push(("TEST_FUZZ_REPLAY", "1"));
     }
     if opts.backtrace {
@@ -859,15 +857,7 @@ fn for_each_entry(
     assert!(!(!nonempty && (failure || timeout || output)));
 
     if !nonempty {
-        eprintln!(
-            "Nothing to {}.",
-            match (display, replay) {
-                (true, true) => "display/replay",
-                (true, false) => "display",
-                (false, true) => "replay",
-                (false, false) => unreachable!(),
-            }
-        );
+        eprintln!("Nothing to {}.", present_participle(opts));
         return Ok(());
     }
 
@@ -876,7 +866,7 @@ fn for_each_entry(
         return Ok(());
     }
 
-    if (failure || timeout) && !replay {
+    if (failure || timeout) && opts.replay.is_none() {
         eprintln!(
             "Encountered a {} while not replaying. A buggy Debug implementation perhaps?",
             if failure {
@@ -891,6 +881,20 @@ fn for_each_entry(
     }
 
     Ok(())
+}
+
+fn present_participle(opts: &TestFuzz) -> String {
+    let mut actions = String::new();
+    if opts.display.is_some() {
+        actions.push_str("display");
+    }
+    if opts.replay.is_some() {
+        if !actions.is_empty() {
+            actions.push('/');
+        }
+        actions.push_str("replay");
+    }
+    actions
 }
 
 fn flatten_executable_targets(
