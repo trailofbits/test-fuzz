@@ -1,7 +1,7 @@
 use internal::dirs::target_directory;
 use predicates::prelude::*;
 use std::process::Command;
-use testing::{CommandExt, fuzzable::MANIFEST_PATH};
+use testing::{LoggedAssert, fuzzable::MANIFEST_PATH};
 
 const SERDE_DEFAULT: &str = "bincode";
 

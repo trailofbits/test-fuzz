@@ -2,7 +2,7 @@ use anyhow::ensure;
 use internal::dirs::corpus_directory_from_target;
 use predicates::prelude::*;
 use std::fs::{read_dir, remove_dir_all};
-use testing::{CommandExt, fuzzable, retry};
+use testing::{LoggedAssert, fuzzable, retry};
 
 const MAX_TOTAL_TIME: &str = "60";
 

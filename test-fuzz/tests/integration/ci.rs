@@ -10,7 +10,7 @@ use std::{
     str::FromStr,
 };
 use tempfile::tempdir;
-use testing::CommandExt;
+use testing::LoggedAssert;
 use walkdir::WalkDir;
 
 #[test]

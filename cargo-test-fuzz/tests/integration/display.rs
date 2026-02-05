@@ -1,5 +1,5 @@
 use predicates::prelude::*;
-use testing::{CommandExt, fuzzable};
+use testing::{LoggedAssert, fuzzable};
 
 #[test]
 fn display_qwerty() {

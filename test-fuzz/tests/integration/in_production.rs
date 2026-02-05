@@ -7,7 +7,7 @@ use std::{
     process::Command,
     sync::Mutex,
 };
-use testing::CommandExt;
+use testing::LoggedAssert;
 
 #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
 #[test]
