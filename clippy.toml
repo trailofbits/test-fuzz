@@ -1,5 +1,7 @@
 disallowed-methods = [
     { path = "assert_cmd::assert::OutputAssertExt::assert", reason = "use `test_fuzz_testing::CommandExt::logged_assert`" },
     { path = "assert_cmd::cmd::Command::assert", reason = "use `test_fuzz_testing::CommandExt::logged_assert`" },
+    { path = "std::process::Command::new", reason = "use `TestFuzz::command`" },
+    { path = "subprocess::Exec::cmd", reason = "use `TestFuzz::command` followed by `to_exec`" },
     { path = "test_fuzz_internal::dirs::target_directory", reason = "use `TestFuzz::target_directory`" },
 ]

@@ -27,7 +27,7 @@ use internal::dirs::{
     corpus_directory_from_target, crashes_directory_from_target,
     generic_args_directory_from_target, hangs_directory_from_target,
     impl_generic_args_directory_from_target, output_directory_from_target,
-    queue_directory_from_target, target_directory, workspace,
+    queue_directory_from_target, target_directory,
 };
 use log::debug;
 use mio::{Events, Interest, Poll, Token, unix::pipe::Receiver};
@@ -35,6 +35,7 @@ use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashSet, VecDeque},
+    ffi::OsStr,
     fmt::{Debug, Formatter},
     fs::{File, create_dir_all, read, read_dir, remove_dir_all},
     io::{BufRead, Read},
@@ -47,13 +48,8 @@ use std::{
 use strum_macros::Display;
 use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
 
-mod var_guard;
-use var_guard::VarGuard;
-
 const AUTO_GENERATED_SUFFIX: &str = "_fuzz__::auto_generate";
 const ENTRY_SUFFIX: &str = "_fuzz__::entry";
-
-const BASE_ENVS: &[(&str, &str)] = &[("TEST_FUZZ", "1"), ("TEST_FUZZ_WRITE", "0")];
 
 const DEFAULT_TIMEOUT: u64 = 1;
 
@@ -118,40 +114,135 @@ pub struct TestFuzz {
     pub zzargs: Vec<String>,
 }
 
-static LLVM_PROFILE_FILE: OnceLock<PathBuf> = OnceLock::new();
+static BASE_ENV: OnceLock<Vec<(String, String)>> = OnceLock::new();
+static LLVM_PROFILE_FILE: OnceLock<String> = OnceLock::new();
+static LLVM_ENV: OnceLock<Vec<(String, String)>> = OnceLock::new();
 static TARGET_DIR: OnceLock<PathBuf> = OnceLock::new();
+static METADATA: OnceLock<Metadata> = OnceLock::new();
 
 impl TestFuzz {
-    fn set_llvm_cov_env(&self, command: &mut Command) {
-        command.env("CARGO_LLVM_COV", "1");
-        command.env("CARGO_LLVM_COV_SHOW_ENV", "1");
-        command.env(
-            "CARGO_LLVM_COV_TARGET_DIR",
-            self.coverage_target_directory(),
-        );
-        command.env("CARGO_LLVM_COV_BUILD_DIR", self.target_directory());
+    fn cargo_llvm_cov(&self) -> Command {
+        self.command(["cargo", "llvm-cov"])
     }
 
-    pub fn llvm_profile_file(&self) -> &PathBuf {
-        LLVM_PROFILE_FILE.get_or_init(|| {
-            let workspace = workspace();
-            self.coverage_target_directory()
-                .join(format!("{workspace}-%p-%8m.profraw"))
+    pub fn command<I, S>(&self, args: I) -> Command
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<OsStr>,
+    {
+        let mut args = args.into_iter();
+        #[allow(clippy::panic)]
+        let Some(program) = args.next() else {
+            panic!("`args` must contains at least one element");
+        };
+        #[allow(clippy::disallowed_methods)]
+        let mut command = Command::new(program);
+        command.args(args);
+        command.envs(self.llvm_env().clone());
+        command
+    }
+
+    pub fn test_fuzz_base_envs(&self) -> &Vec<(String, String)> {
+        BASE_ENV.get_or_init(|| {
+            let mut envs = vec![
+                (String::from("TEST_FUZZ"), String::from("1")),
+                (String::from("TEST_FUZZ_WRITE"), String::from("0")),
+            ];
+            envs.extend(self.llvm_env().clone());
+            envs
         })
     }
 
-    #[must_use]
-    pub fn coverage_target_directory(&self) -> PathBuf {
-        self.target_directory().clone() // .join("test-fuzz-coverage")
+    pub fn llvm_profile_file(&self) -> &str {
+        LLVM_PROFILE_FILE.get_or_init(|| {
+            #[allow(clippy::unwrap_used)]
+            self.llvm_env()
+                .iter()
+                .find_map(|(key, value)| {
+                    if key == "LLVM_PROFILE_FILE" {
+                        Some(value.as_str())
+                    } else {
+                        None
+                    }
+                })
+                .map(ToOwned::to_owned)
+                .unwrap()
+        })
+    }
+
+    pub fn llvm_env(&self) -> &Vec<(String, String)> {
+        #[allow(clippy::unwrap_used)]
+        LLVM_ENV.get_or_init(|| {
+            if self.coverage.is_none() {
+                return Vec::new();
+            }
+            let mut vars = Vec::new();
+            #[allow(
+                clippy::disallowed_methods,
+                reason = "`TestFuzz::command` cannot be used here because it relies on this method"
+            )]
+            let mut command = Command::new("cargo");
+            command.args(["llvm-cov", "show-env"]);
+            let output = command.output().unwrap();
+            assert!(output.status.success());
+            let stdout = String::from_utf8(output.stdout).unwrap();
+            for line in stdout.lines() {
+                let (key, value) = line.split_once('=').unwrap();
+                let value = value.trim_matches(|c| c == '\'');
+                let value = self.replace_target_dir(value);
+                vars.push((key.to_owned(), value));
+            }
+            vars
+        })
+    }
+
+    fn replace_target_dir(&self, value: &str) -> String {
+        let target_dir = &self.metadata().target_directory;
+        let path = Path::new(value);
+        let Ok(suffix) = path.strip_prefix(target_dir) else {
+            return value.to_owned();
+        };
+        #[allow(clippy::unwrap_used)]
+        self.target_directory()
+            .join(suffix)
+            .to_str()
+            .map(ToOwned::to_owned)
+            .unwrap()
     }
 
     pub fn target_directory(&self) -> &PathBuf {
         #[expect(clippy::disallowed_methods)]
-        TARGET_DIR.get_or_init(|| target_directory(self.use_instrumentation()))
+        TARGET_DIR.get_or_init(|| {
+            target_directory(
+                self.include_coverage_instrumentation(),
+                self.include_fuzzing_instrumentation(),
+            )
+        })
     }
 
-    const fn use_instrumentation(&self) -> bool {
-        let no_instrumentation = self.list
+    fn metadata(&self) -> &Metadata {
+        METADATA.get_or_init(|| {
+            let mut command = MetadataCommand::new();
+            if self.no_default_features {
+                command.features(CargoOpt::NoDefaultFeatures);
+            }
+            let mut features = self.features.clone();
+            features.push("test-fuzz/__persistent".to_owned());
+            command.features(CargoOpt::SomeFeatures(features));
+            if let Some(path) = &self.manifest_path {
+                command.manifest_path(path);
+            }
+            #[allow(clippy::unwrap_used)]
+            command.exec().unwrap()
+        })
+    }
+
+    const fn include_coverage_instrumentation(&self) -> bool {
+        self.coverage.is_some()
+    }
+
+    const fn include_fuzzing_instrumentation(&self) -> bool {
+        let no_fuzzing_instrumentation = self.list
             || matches!(
                 self.coverage,
                 Some(Object::Corpus | Object::Crashes | Object::Hangs | Object::Queue)
@@ -171,7 +262,7 @@ impl TestFuzz {
                 self.replay,
                 Some(Object::Corpus | Object::Crashes | Object::Hangs | Object::Queue)
             );
-        !no_instrumentation
+        !no_fuzzing_instrumentation
     }
 }
 
@@ -214,21 +305,6 @@ pub fn run(opts: TestFuzz) -> Result<()> {
         opts
     };
 
-    // smoelius: `LLVM_PROFILE_FILE` must be set every time a binary with coverage instrumentation
-    // is run. This includes when listing a binary's fuzz targets. To avoid forgetting to set the
-    // environment variable, we set it here, once and for all. Note that we do so using `VarGuard`,
-    // which is from an old version of Clippy. `VarGuard` should restore `LLVM_PROFILE_FILE`'s value
-    // before `cargo-test-fuzz` terminates, and thus should allow one to generate coverage for
-    // `cargo-test-fuzz`.
-    //
-    // Note that we generate coverage for fuzz targets, not tests, which is contrary to what one
-    // might expect.
-    let _var_guard = if opts.coverage.is_some() {
-        Some(VarGuard::set("LLVM_PROFILE_FILE", opts.llvm_profile_file()))
-    } else {
-        None
-    };
-
     run_without_exit_code(&opts).map_err(|error| {
         if opts.exit_code {
             eprintln!("{error:?}");
@@ -267,7 +343,7 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
 
     let executables = build(opts, coverage || display || replay)?;
 
-    let mut executable_targets = executable_targets(&executables)?;
+    let mut executable_targets = executable_targets(opts, &executables)?;
 
     if let Some(pat) = &opts.ztarget {
         executable_targets = filter_executable_targets(opts, pat, &executable_targets);
@@ -302,9 +378,8 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
         }
 
         if coverage {
-            let mut command = Command::new("cargo");
-            command.args(["llvm-cov", "clean", "--profraw-only"]);
-            opts.set_llvm_cov_env(&mut command);
+            let mut command = opts.cargo_llvm_cov();
+            command.args(["clean", "--profraw-only"]);
             debug!("{command:?}");
             let status = command
                 .status()
@@ -336,9 +411,11 @@ pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
             {
                 eprintln!("Warning: Overwriting lcov.info");
             }
-            let mut command = Command::new("cargo");
-            command.args(["llvm-cov", "report", "--lcov", "--output-path=lcov.info"]);
-            opts.set_llvm_cov_env(&mut command);
+            let mut command = opts.cargo_llvm_cov();
+            command.args(["report", "--lcov", "--output-path=lcov.info"]);
+            if let Some(path) = &opts.manifest_path {
+                command.args(["--manifest-path", path]);
+            }
             debug!("{command:?}");
             let status = command
                 .status()
@@ -363,11 +440,11 @@ Wrote lcov to `lcov.info`. To view it as html, try running:
 
 #[allow(clippy::too_many_lines)]
 fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
-    let metadata = metadata(opts)?;
+    let metadata = opts.metadata();
     let silence_stderr = quiet && !opts.verbose;
 
     let mut args = vec![];
-    if opts.use_instrumentation() {
+    if opts.include_fuzzing_instrumentation() {
         args.extend_from_slice(&["afl"]);
     }
     args.extend_from_slice(&["test", "--offline", "--no-run"]);
@@ -381,7 +458,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         args.extend_from_slice(&["--release"]);
     }
     let target_dir_str = opts.target_directory().to_string_lossy();
-    if opts.use_instrumentation() {
+    if opts.include_coverage_instrumentation() || opts.include_fuzzing_instrumentation() {
         args.extend_from_slice(&["--target-dir", &target_dir_str]);
     }
     if let Some(path) = &opts.manifest_path {
@@ -401,7 +478,9 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to: /dev/null
     // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when
     // generating coverage, displaying, or replaying.
-    let mut exec = Exec::cmd("cargo")
+    let mut exec = opts
+        .command(["cargo"])
+        .to_exec()
         .args(
             &args
                 .iter()
@@ -411,13 +490,6 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         .stdout(Redirection::Pipe);
     if silence_stderr {
         exec = exec.stderr(NullFile);
-    }
-    if opts.coverage.is_some() {
-        // smoelius: This will break if we ever need to set `RUSTFLAGS` for another reason.
-        exec = exec.env(
-            "RUSTFLAGS",
-            "-C instrument-coverage --cfg=coverage --cfg=trybuild_no_target",
-        );
     }
     debug!("{exec:?}");
     let mut popen = exec.clone().popen()?;
@@ -454,7 +526,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
             }) = message
             {
                 let (test_fuzz_version, afl_version) =
-                    test_fuzz_and_afl_versions(&metadata, &package_id)?;
+                    test_fuzz_and_afl_versions(metadata, &package_id)?;
                 Ok(Some(Executable {
                     path: executable.into(),
                     name: build_target.name,
@@ -467,20 +539,6 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         })
         .collect::<Result<Vec<_>>>()?;
     Ok(executables.into_iter().flatten().collect())
-}
-
-fn metadata(opts: &TestFuzz) -> Result<Metadata> {
-    let mut command = MetadataCommand::new();
-    if opts.no_default_features {
-        command.features(CargoOpt::NoDefaultFeatures);
-    }
-    let mut features = opts.features.clone();
-    features.push("test-fuzz/__persistent".to_owned());
-    command.features(CargoOpt::SomeFeatures(features));
-    if let Some(path) = &opts.manifest_path {
-        command.manifest_path(path);
-    }
-    command.exec().map_err(Into::into)
 }
 
 fn test_fuzz_and_afl_versions(
@@ -550,11 +608,14 @@ fn package<'a>(metadata: &'a Metadata, package_id: &PackageId) -> Result<&'a Pac
         .ok_or_else(|| anyhow!("Could not find package `{package_id}`"))
 }
 
-fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec<String>)>> {
+fn executable_targets(
+    opts: &TestFuzz,
+    executables: &[Executable],
+) -> Result<Vec<(Executable, Vec<String>)>> {
     let executable_targets: Vec<(Executable, Vec<String>)> = executables
         .iter()
         .map(|executable| {
-            let targets = targets(&executable.path)?;
+            let targets = targets(opts, &executable.path)?;
             Ok((executable.clone(), targets))
         })
         .collect::<Result<_>>()?;
@@ -565,8 +626,10 @@ fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec
         .collect())
 }
 
-fn targets(executable: &Path) -> Result<Vec<String>> {
-    let exec = Exec::cmd(executable)
+fn targets(opts: &TestFuzz, executable: &Path) -> Result<Vec<String>> {
+    let exec = opts
+        .command([executable])
+        .to_exec()
         .env_extend(&[("AFL_QUIET", "1")])
         .args(&["--list", "--format=terse"])
         .stderr(NullFile);
@@ -692,6 +755,7 @@ fn cached_cargo_afl_version() -> &'static Version {
 static CARGO_AFL_VERSION: OnceLock<Version> = OnceLock::new();
 
 fn cargo_afl_version() -> Result<Version> {
+    #[allow(clippy::disallowed_methods)]
     let mut command = Command::new("cargo");
     command.args(["afl", "--version"]);
     let output = command
@@ -838,7 +902,7 @@ fn flags_and_dir(object: Object, krate: &str, target: &str) -> (Flags, PathBuf) 
     }
 }
 
-#[allow(clippy::too_many_arguments, clippy::too_many_lines)]
+#[allow(clippy::too_many_lines)]
 fn for_each_entry(
     opts: &TestFuzz,
     executable: &Executable,
@@ -857,22 +921,22 @@ fn for_each_entry(
         }
     );
 
-    let mut envs = BASE_ENVS.to_vec();
-    envs.push(("AFL_QUIET", "1"));
+    let mut envs = opts.test_fuzz_base_envs().clone();
+    envs.push((String::from("AFL_QUIET"), String::from("1")));
     if opts.coverage.is_some() {
-        envs.push(("TEST_FUZZ_COVERAGE", "1"));
+        envs.push((String::from("TEST_FUZZ_COVERAGE"), String::from("1")));
     }
     if opts.display.is_some() {
-        envs.push(("TEST_FUZZ_DISPLAY", "1"));
+        envs.push((String::from("TEST_FUZZ_DISPLAY"), String::from("1")));
     }
     if opts.replay.is_some() {
-        envs.push(("TEST_FUZZ_REPLAY", "1"));
+        envs.push((String::from("TEST_FUZZ_REPLAY"), String::from("1")));
     }
     if opts.backtrace {
-        envs.push(("RUST_BACKTRACE", "1"));
+        envs.push((String::from("RUST_BACKTRACE"), String::from("1")));
     }
     if opts.pretty {
-        envs.push(("TEST_FUZZ_PRETTY_PRINT", "1"));
+        envs.push((String::from("TEST_FUZZ_PRETTY_PRINT"), String::from("1")));
     }
 
     let args: Vec<String> = vec![
@@ -910,7 +974,9 @@ fn for_each_entry(
             })?;
             (buffer, Some(ExitStatus::Exited(0)))
         } else {
-            let exec = Exec::cmd(&executable.path)
+            let exec = opts
+                .command([&executable.path])
+                .to_exec()
                 .env_extend(&envs)
                 .args(&args)
                 .stdin(file)
@@ -1161,13 +1227,11 @@ fn prefix_with_width(s: &str, width: usize) -> &str {
 
 #[allow(clippy::too_many_lines)]
 fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<()> {
-    ensure!(opts.coverage.is_none(), {
-        // smoelius: I am not sure whether this `ensure!` is reachable.
-        debug_assert!(false);
-        "Fuzzing with coverage is currently disallowed."
-    });
+    if opts.coverage.is_some() {
+        unreachable!("Fuzzing with coverage should not be possible")
+    }
 
-    auto_generate_corpora(executable_targets)?;
+    auto_generate_corpora(opts, executable_targets)?;
 
     let mut config = Config {
         ui: !opts.no_ui,
@@ -1391,12 +1455,12 @@ fn fuzz_command(
     let output_dir = output_directory_from_target(&executable.name, target);
     create_dir_all(&output_dir).unwrap_or_default();
 
-    let mut envs = BASE_ENVS.to_vec();
+    let mut envs = opts.test_fuzz_base_envs().clone();
     if !config.ui {
-        envs.push(("AFL_NO_UI", "1"));
+        envs.push((String::from("AFL_NO_UI"), String::from("1")));
     }
     if opts.run_until_crash {
-        envs.push(("AFL_BENCH_UNTIL_CRASH", "1"));
+        envs.push((String::from("AFL_BENCH_UNTIL_CRASH"), String::from("1")));
     }
 
     // smoelius: Passing `-c-` disables the cmplog fork server. Use of cmplog with a target that
@@ -1439,13 +1503,16 @@ fn fuzz_command(
         .map(String::from),
     );
 
-    let mut command = Command::new("cargo");
+    let mut command = opts.command(["cargo"]);
     command.envs(envs).args(args);
     debug!("{command:?}");
     command
 }
 
-fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<()> {
+fn auto_generate_corpora(
+    opts: &TestFuzz,
+    executable_targets: &[(Executable, String)],
+) -> Result<()> {
     for (executable, target) in executable_targets {
         let corpus_dir = corpus_directory_from_target(&executable.name, target);
         if !corpus_dir.exists() {
@@ -1453,7 +1520,7 @@ fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<
                 "Could not find `{}`. Trying to auto-generate it...",
                 corpus_dir.to_string_lossy(),
             );
-            auto_generate_corpus(executable, target)?;
+            auto_generate_corpus(opts, executable, target)?;
             ensure!(
                 corpus_dir.exists(),
                 "Could not find or auto-generate `{}`. Please ensure `{}` is tested.",
@@ -1467,8 +1534,8 @@ fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<
     Ok(())
 }
 
-fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
-    let mut command = Command::new(&executable.path);
+fn auto_generate_corpus(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
+    let mut command = opts.command([&executable.path]);
     command.args(["--exact", &(target.to_owned() + AUTO_GENERATED_SUFFIX)]);
     debug!("{command:?}");
     let status = command
@@ -1478,6 +1545,33 @@ fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
     ensure!(status.success(), "Command failed: {command:?}");
 
     Ok(())
+}
+
+trait ToExec {
+    fn to_exec(&self) -> Exec;
+}
+
+impl ToExec for Command {
+    fn to_exec(&self) -> Exec {
+        exec_from_command(self)
+    }
+}
+
+/// Constructs a [`subprocess::Exec`] from a [`std::process::Command`].
+pub fn exec_from_command(command: &Command) -> Exec {
+    #[allow(clippy::disallowed_methods)]
+    let mut exec = Exec::cmd(command.get_program()).args(&command.get_args().collect::<Vec<_>>());
+    for (key, val) in command.get_envs() {
+        if let Some(val) = val {
+            exec = exec.env(key, val);
+        } else {
+            exec = exec.env_remove(key);
+        }
+    }
+    if let Some(path) = command.get_current_dir() {
+        exec = exec.cwd(path);
+    }
+    exec
 }
 
 #[cfg(test)]
@@ -1501,7 +1595,7 @@ mod tests {
 
         let executables = build(&TestFuzz::default(), false).unwrap();
 
-        let executable_targets = executable_targets(&executables).unwrap();
+        let executable_targets = executable_targets(&TestFuzz::default(), &executables).unwrap();
 
         // smoelius: Any example executable should work _except_ the ones that use
         // `only_generic_args`. Currently, those are `generic` and `unserde`.

@@ -61,25 +61,25 @@ pub fn output_directory_from_target(krate: &str, target: &str) -> PathBuf {
 #[must_use]
 fn impl_generic_args_directory() -> PathBuf {
     #[expect(clippy::disallowed_methods)]
-    target_directory(false).join(path_segment("impl_generic_args"))
+    target_directory(false, false).join(path_segment("impl_generic_args"))
 }
 
 #[must_use]
 fn generic_args_directory() -> PathBuf {
     #[expect(clippy::disallowed_methods)]
-    target_directory(false).join(path_segment("generic_args"))
+    target_directory(false, false).join(path_segment("generic_args"))
 }
 
 #[must_use]
 fn corpus_directory() -> PathBuf {
     #[expect(clippy::disallowed_methods)]
-    target_directory(false).join(path_segment("corpus"))
+    target_directory(false, false).join(path_segment("corpus"))
 }
 
 #[must_use]
 fn output_directory() -> PathBuf {
     #[expect(clippy::disallowed_methods)]
-    target_directory(true).join(path_segment("output"))
+    target_directory(false, true).join(path_segment("output"))
 }
 
 #[must_use]
@@ -107,13 +107,17 @@ fn thread_id() -> String {
 }
 
 #[must_use]
-pub fn target_directory(instrumented: bool) -> PathBuf {
+pub fn target_directory(coverage: bool, fuzzing: bool) -> PathBuf {
+    assert!(!(coverage && fuzzing));
     let mut command = MetadataCommand::new();
     if let Ok(path) = env::var("TEST_FUZZ_MANIFEST_PATH") {
         command.manifest_path(path);
     }
     let mut target_dir = command.no_deps().exec().unwrap().target_directory;
-    if instrumented {
+    if coverage {
+        target_dir = target_dir.join("coverage");
+    }
+    if fuzzing {
         target_dir = target_dir.join("afl");
     }
     target_dir.into()

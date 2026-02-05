@@ -104,12 +104,12 @@ mod linux {
         .collect()
     });
 
+    #[cfg_attr(dylint_lib = "supplementary", allow(unnamed_constant))]
     static EXPECTED_LINE_COVERAGE: LazyLock<LineCoverage> = LazyLock::new(|| {
-        [(
+        std::iter::once((
             String::from("fuzzable/src/bin/hello-world.rs"),
             [10, 11, 12].into_iter().collect(),
-        )]
-        .into_iter()
+        ))
         .collect()
     });
 
