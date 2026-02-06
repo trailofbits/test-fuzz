@@ -13,7 +13,8 @@ fn display_debug_crash() {
         "crash::target_fuzz__::auto_generate",
         "crash::target",
         "",
-        "Encountered a failure while not replaying. A buggy Debug implementation perhaps?",
+        "Encountered a failure while not generating coverage and not replaying. A buggy Debug \
+         implementation perhaps?",
     );
 }
 
@@ -24,7 +25,8 @@ fn display_debug_hang() {
         "hang::target_fuzz__::auto_generate",
         "hang::target",
         "",
-        "Encountered a timeout while not replaying. A buggy Debug implementation perhaps?",
+        "Encountered a timeout while not generating coverage and not replaying. A buggy Debug \
+         implementation perhaps?",
     );
 }
 
