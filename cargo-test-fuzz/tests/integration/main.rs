@@ -10,3 +10,4 @@ mod fuzz_profile;
 mod generic_args;
 mod replay;
 mod warning;
+mod multiple_failures;

@@ -1314,6 +1314,7 @@ fn fuzz_command(
 }
 
 fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<()> {
+    let mut errors: Vec<String> = Vec::new();
     for (executable, target) in executable_targets {
         let corpus_dir = corpus_directory_from_target(&executable.name, target);
         if !corpus_dir.exists() {
@@ -1321,18 +1322,23 @@ fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<
                 "Could not find `{}`. Trying to auto-generate it...",
                 corpus_dir.to_string_lossy(),
             );
-            auto_generate_corpus(executable, target)?;
-            ensure!(
-                corpus_dir.exists(),
-                "Could not find or auto-generate `{}`. Please ensure `{}` is tested.",
-                corpus_dir.to_string_lossy(),
-                target
-            );
-            eprintln!("Auto-generated `{}`.", corpus_dir.to_string_lossy());
+            let _ = auto_generate_corpus(executable, target);
+            if !corpus_dir.exists() {
+                errors.push(format!(
+                    "Could not find or auto-generate `{}`. Please ensure `{}` is tested.",
+                    corpus_dir.to_string_lossy(),
+                    target
+                ));
+            } else {
+                eprintln!("Auto-generated `{}`.", corpus_dir.to_string_lossy());
+            }
         }
     }
-
-    Ok(())
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        bail!("\n{}", itertools::join(errors, "\n"))
+    }
 }
 
 fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
