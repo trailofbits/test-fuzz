@@ -1,4 +1,4 @@
 disallowed-methods = [
-    { path = "assert_cmd::assert::OutputAssertExt::assert", reason = "use `test_fuzz_testing::CommandExt::logged_assert`" },
-    { path = "assert_cmd::cmd::Command::assert", reason = "use `test_fuzz_testing::CommandExt::logged_assert`" },
+    { path = "assert_cmd::assert::OutputAssertExt::assert", reason = "use `test_fuzz_testing::LoggedAssert::logged_assert`" },
+    { path = "assert_cmd::cmd::Command::assert", reason = "use `test_fuzz_testing::LoggedAssert::logged_assert`" },
 ]
