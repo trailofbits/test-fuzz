@@ -35,6 +35,7 @@ use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashSet, VecDeque},
+    ffi::OsStr,
     fmt::{Debug, Formatter},
     fs::{File, create_dir_all, read, read_dir, remove_dir_all},
     io::{BufRead, Read},
@@ -45,7 +46,10 @@ use std::{
     time::Duration,
 };
 use strum_macros::Display;
-use subprocess::{CommunicateError, Exec, ExitStatus, NullFile, Redirection};
+use subprocess::{CommunicateError, ExitStatus, NullFile, Redirection};
+
+mod to_exec;
+use to_exec::ToExec;
 
 const AUTO_GENERATED_SUFFIX: &str = "_fuzz__::auto_generate";
 const ENTRY_SUFFIX: &str = "_fuzz__::entry";
@@ -114,6 +118,45 @@ pub struct TestFuzz {
     pub zzargs: Vec<String>,
 }
 
+impl TestFuzz {
+    #[allow(clippy::unused_self)]
+    fn command<I, S>(&self, args: I) -> Command
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<OsStr>,
+    {
+        let mut args = args.into_iter();
+        #[allow(clippy::panic)]
+        let Some(program) = args.next() else {
+            panic!("`args` must contains at least one element");
+        };
+        #[allow(clippy::disallowed_methods)]
+        let mut command = Command::new(program);
+        command.args(args);
+        command
+    }
+
+    const fn include_fuzzing_instrumentation(&self) -> bool {
+        let no_fuzzing_instrumentation = self.list
+            || matches!(
+                self.display,
+                Some(
+                    Object::Corpus
+                        | Object::Crashes
+                        | Object::Hangs
+                        | Object::ImplGenericArgs
+                        | Object::GenericArgs
+                        | Object::Queue
+                )
+            )
+            || matches!(
+                self.replay,
+                Some(Object::Corpus | Object::Crashes | Object::Hangs | Object::Queue)
+            );
+        !no_fuzzing_instrumentation
+    }
+}
+
 #[derive(Clone, Deserialize, Serialize)]
 struct Executable {
     path: PathBuf,
@@ -153,24 +196,7 @@ pub fn run(opts: TestFuzz) -> Result<()> {
         opts
     };
 
-    let no_instrumentation = opts.list
-        || matches!(
-            opts.display,
-            Some(
-                Object::Corpus
-                    | Object::Crashes
-                    | Object::Hangs
-                    | Object::ImplGenericArgs
-                    | Object::GenericArgs
-                    | Object::Queue
-            )
-        )
-        || matches!(
-            opts.replay,
-            Some(Object::Corpus | Object::Crashes | Object::Hangs | Object::Queue)
-        );
-
-    run_without_exit_code(&opts, !no_instrumentation).map_err(|error| {
+    run_without_exit_code(&opts).map_err(|error| {
         if opts.exit_code {
             eprintln!("{error:?}");
             exit(2);
@@ -180,7 +206,7 @@ pub fn run(opts: TestFuzz) -> Result<()> {
 }
 
 #[doc(hidden)]
-pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Result<()> {
+pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
     if let Some(object) = opts.replay {
         ensure!(
             !matches!(object, Object::ImplGenericArgs | Object::GenericArgs),
@@ -196,9 +222,9 @@ pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Resu
 
     let replay = opts.replay.is_some();
 
-    let executables = build(opts, use_instrumentation, display || replay)?;
+    let executables = build(opts, display || replay)?;
 
-    let mut executable_targets = executable_targets(&executables)?;
+    let mut executable_targets = executable_targets(opts, &executables)?;
 
     if let Some(pat) = &opts.ztarget {
         executable_targets = filter_executable_targets(opts, pat, &executable_targets);
@@ -246,7 +272,7 @@ pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Resu
         return for_each_entry(opts, &executable, &target, flags, &dir);
     }
 
-    if !use_instrumentation {
+    if !opts.include_fuzzing_instrumentation() {
         return Ok(());
     }
 
@@ -256,12 +282,12 @@ pub fn run_without_exit_code(opts: &TestFuzz, use_instrumentation: bool) -> Resu
 }
 
 #[allow(clippy::too_many_lines)]
-fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<Executable>> {
+fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     let metadata = metadata(opts)?;
     let silence_stderr = quiet && !opts.verbose;
 
     let mut args = vec![];
-    if use_instrumentation {
+    if opts.include_fuzzing_instrumentation() {
         args.extend_from_slice(&["afl"]);
     }
     args.extend_from_slice(&["test", "--offline", "--no-run"]);
@@ -276,7 +302,7 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
     }
     let target_dir = target_directory(true);
     let target_dir_str = target_dir.to_string_lossy();
-    if use_instrumentation {
+    if opts.include_fuzzing_instrumentation() {
         args.extend_from_slice(&["--target-dir", &target_dir_str]);
     }
     if let Some(path) = &opts.manifest_path {
@@ -296,7 +322,9 @@ fn build(opts: &TestFuzz, use_instrumentation: bool, quiet: bool) -> Result<Vec<
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to: /dev/null
     // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when
     // displaying/replaying.
-    let mut exec = Exec::cmd("cargo")
+    let mut exec = opts
+        .command(["cargo"])
+        .to_exec()
         .args(
             &args
                 .iter()
@@ -438,11 +466,14 @@ fn package<'a>(metadata: &'a Metadata, package_id: &PackageId) -> Result<&'a Pac
         .ok_or_else(|| anyhow!("Could not find package `{package_id}`"))
 }
 
-fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec<String>)>> {
+fn executable_targets(
+    opts: &TestFuzz,
+    executables: &[Executable],
+) -> Result<Vec<(Executable, Vec<String>)>> {
     let executable_targets: Vec<(Executable, Vec<String>)> = executables
         .iter()
         .map(|executable| {
-            let targets = targets(&executable.path)?;
+            let targets = targets(opts, &executable.path)?;
             Ok((executable.clone(), targets))
         })
         .collect::<Result<_>>()?;
@@ -453,8 +484,10 @@ fn executable_targets(executables: &[Executable]) -> Result<Vec<(Executable, Vec
         .collect())
 }
 
-fn targets(executable: &Path) -> Result<Vec<String>> {
-    let exec = Exec::cmd(executable)
+fn targets(opts: &TestFuzz, executable: &Path) -> Result<Vec<String>> {
+    let exec = opts
+        .command([executable])
+        .to_exec()
         .env_extend(&[("AFL_QUIET", "1")])
         .args(&["--list", "--format=terse"])
         .stderr(NullFile);
@@ -580,6 +613,7 @@ fn cached_cargo_afl_version() -> &'static Version {
 static CARGO_AFL_VERSION: OnceLock<Version> = OnceLock::new();
 
 fn cargo_afl_version() -> Result<Version> {
+    #[allow(clippy::disallowed_methods)]
     let mut command = Command::new("cargo");
     command.args(["afl", "--version"]);
     let output = command
@@ -795,7 +829,9 @@ fn for_each_entry(
             })?;
             (buffer, Some(ExitStatus::Exited(0)))
         } else {
-            let exec = Exec::cmd(&executable.path)
+            let exec = opts
+                .command([&executable.path])
+                .to_exec()
                 .env_extend(&envs)
                 .args(&args)
                 .stdin(file)
@@ -1039,7 +1075,7 @@ fn prefix_with_width(s: &str, width: usize) -> &str {
 
 #[allow(clippy::too_many_lines)]
 fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<()> {
-    auto_generate_corpora(executable_targets)?;
+    auto_generate_corpora(opts, executable_targets)?;
 
     let mut config = Config {
         ui: !opts.no_ui,
@@ -1275,22 +1311,18 @@ fn fuzz_command(
     // spawns subprocesses (like libtest does) can leave orphan processes running. This can cause
     // problems, e.g., if those processes hold flocks. See:
     // https://github.com/AFLplusplus/AFLplusplus/issues/2178
-    let mut args = vec![];
-    args.extend(
-        vec![
-            "afl",
-            "fuzz",
-            "-c-",
-            "-i",
-            &input_dir,
-            "-o",
-            &output_dir.to_string_lossy(),
-            "-M",
-            "default",
-        ]
-        .into_iter()
-        .map(String::from),
-    );
+    let mut args = [
+        "-c-",
+        "-i",
+        &input_dir,
+        "-o",
+        &output_dir.to_string_lossy(),
+        "-M",
+        "default",
+    ]
+    .into_iter()
+    .map(String::from)
+    .collect::<Vec<_>>();
     if !config.sufficient_cpus {
         args.extend(["-V".to_owned(), opts.slice.to_string()]);
     } else if let Some(max_total_time) = opts.max_total_time {
@@ -1311,13 +1343,16 @@ fn fuzz_command(
         .map(String::from),
     );
 
-    let mut command = Command::new("cargo");
+    let mut command = opts.command(["cargo", "afl", "fuzz"]);
     command.envs(envs).args(args);
     debug!("{command:?}");
     command
 }
 
-fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<()> {
+fn auto_generate_corpora(
+    opts: &TestFuzz,
+    executable_targets: &[(Executable, String)],
+) -> Result<()> {
     for (executable, target) in executable_targets {
         let corpus_dir = corpus_directory_from_target(&executable.name, target);
         if !corpus_dir.exists() {
@@ -1325,7 +1360,7 @@ fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<
                 "Could not find `{}`. Trying to auto-generate it...",
                 corpus_dir.to_string_lossy(),
             );
-            auto_generate_corpus(executable, target)?;
+            auto_generate_corpus(opts, executable, target)?;
             ensure!(
                 corpus_dir.exists(),
                 "Could not find or auto-generate `{}`. Please ensure `{}` is tested.",
@@ -1339,8 +1374,8 @@ fn auto_generate_corpora(executable_targets: &[(Executable, String)]) -> Result<
     Ok(())
 }
 
-fn auto_generate_corpus(executable: &Executable, target: &str) -> Result<()> {
-    let mut command = Command::new(&executable.path);
+fn auto_generate_corpus(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
+    let mut command = opts.command([&executable.path]);
     command.args(["--exact", &(target.to_owned() + AUTO_GENERATED_SUFFIX)]);
     debug!("{command:?}");
     let status = command
@@ -1371,9 +1406,9 @@ mod tests {
 
         set_current_dir("../fuzzable").unwrap();
 
-        let executables = build(&TestFuzz::default(), false, false).unwrap();
+        let executables = build(&TestFuzz::default(), false).unwrap();
 
-        let executable_targets = executable_targets(&executables).unwrap();
+        let executable_targets = executable_targets(&TestFuzz::default(), &executables).unwrap();
 
         // smoelius: Any example executable should work _except_ the ones that use
         // `only_generic_args`. Currently, those are `generic` and `unserde`.
@@ -1383,6 +1418,7 @@ mod tests {
             .unwrap();
 
         for enable in [false, true] {
+            #[allow(clippy::disallowed_methods)]
             let mut command = Command::new(&executable.path);
             if enable {
                 command.env("TEST_FUZZ", "1");
