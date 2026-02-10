@@ -3,6 +3,7 @@ use testing::{LoggedAssert, fuzzable::MANIFEST_PATH};
 
 #[test]
 fn warning() {
+    #[allow(clippy::disallowed_methods)]
     std::process::Command::new("cargo")
         .args([
             "test",
