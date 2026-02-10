@@ -318,7 +318,6 @@ fn remove_avatars(value: &mut serde_json::Value) {
     }
 }
 
-#[cfg(not(target_os = "macos"))]
 #[test]
 fn udeps() {
     Command::new("cargo")
