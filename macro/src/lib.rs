@@ -240,6 +240,26 @@ fn map_method_or_fn(
     let mut sig = sig.clone();
     let stmts = &block.stmts;
 
+    let warn_if_function_is_nontrivial = if stmts.len() >= 2 {
+        let span = sig.ident.span();
+        let file = span.file();
+        let line = span.start().line;
+        let column = span.start().column + 1;
+        let ident = sig.ident.to_string();
+        quote! {
+            eprintln!(
+                "{}:{}:{}: Warning: Coverage will not be shown for `{}`. To see coverage for \
+                 `{ident}`, apply `test-fuzz` to a wrapper function that calls `{ident}`.",
+                #file,
+                #line,
+                #column,
+                ident = #ident
+            );
+        }
+    } else {
+        quote! {}
+    };
+
     let mut conversions = Conversions::new();
     opts.convert.iter().for_each(|s| {
         let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
@@ -713,6 +733,9 @@ fn map_method_or_fn(
                                 || test_fuzz::runtime::display_enabled()
                                 || test_fuzz::runtime::replay_enabled()
                             {
+                                if test_fuzz::runtime::coverage_enabled() {
+                                    #warn_if_function_is_nontrivial
+                                }
                                 #input_args
                                 if test_fuzz::runtime::display_enabled() {
                                     #output_args
