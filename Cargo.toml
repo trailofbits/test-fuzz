@@ -18,7 +18,7 @@ resolver = "2"
 afl = { version = "0.17" }
 anyhow = { version = "1.0", features = ["backtrace"] }
 assert_cmd = "2.1"
-bitflags = "2.10"
+bitflags = "2.11"
 # smoelius: `cargo_metadata` 0.20.0 pulls in too many new dependencies.
 cargo_metadata = "=0.19"
 cast_checks = { version = "0.1" }
@@ -50,7 +50,7 @@ sha1 = "0.10"
 similar-asserts = "1.7"
 strip-ansi-escapes = "0.2"
 strum_macros = "0.27"
-subprocess = "0.2"
+subprocess = "1.0"
 syn = { version = "2.0", features = ["full", "parsing", "visit", "visit-mut"] }
 tempfile = "3.25"
 termsize = "0.1"
