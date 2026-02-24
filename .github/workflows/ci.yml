@@ -132,7 +132,7 @@ jobs:
           SERDE_FORMAT='test-fuzz/serde_${{ matrix.serde_format }}'
           MAYBE_SHUFFLE=
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
-            MAYBE_SHUFFLE='-Z unstable-options --shuffle --test-threads=1'
+            MAYBE_SHUFFLE='-Z unstable-options --report-time --shuffle --test-threads=1'
           fi
           BUILD_CMD="cargo build $MAYBE_THIRD_PARTY --features $SERDE_FORMAT --all-targets"
           TEST_CMD="cargo test   $MAYBE_THIRD_PARTY --features $SERDE_FORMAT --config $GROUP_RUNNER -- --nocapture $MAYBE_SHUFFLE"
