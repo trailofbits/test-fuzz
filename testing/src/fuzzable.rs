@@ -28,24 +28,27 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     args.extend_from_slice(&["--no-run", "--message-format=json"]);
 
     #[allow(clippy::disallowed_methods, reason = "runs `cargo test`")]
-    let exec = Exec::cmd("cargo").args(&args).stdout(Redirection::Pipe);
+    let exec = Exec::cmd("cargo").args(args).stdout(Redirection::Pipe);
     debug!("{exec:?}");
-    let mut popen = exec.clone().popen()?;
-    let messages = popen
+    let exec_str = format!("{exec:?}");
+    let mut job = exec
+        .start()
+        .with_context(|| format!("`start` failed for `{exec_str}`"))?;
+    let messages = job
         .stdout
         .take()
         .map_or(Ok(vec![]), |stream| -> Result<_> {
             let reader = std::io::BufReader::new(stream);
             let messages: Vec<Message> = Message::parse_stream(reader)
                 .collect::<std::result::Result<_, std::io::Error>>()
-                .with_context(|| format!("`parse_stream` failed for `{exec:?}`"))?;
+                .with_context(|| format!("`parse_stream` failed for `{exec_str}`"))?;
             Ok(messages)
         })?;
-    let status = popen
+    let status = job
         .wait()
-        .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
+        .with_context(|| format!("`wait` failed for `{job:?}`"))?;
 
-    ensure!(status.success(), "Command failed: {exec:?}");
+    ensure!(status.success(), "Command failed: {exec_str}");
 
     let executables = messages
         .into_iter()
