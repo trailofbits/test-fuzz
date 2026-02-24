@@ -46,7 +46,7 @@ use std::{
     time::Duration,
 };
 use strum_macros::Display;
-use subprocess::{CommunicateError, ExitStatus, NullFile, Redirection};
+use subprocess::Redirection;
 
 mod to_exec;
 use to_exec::ToExec;
@@ -455,37 +455,35 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     let mut exec = opts
         .command(["cargo"])
         .to_exec()
-        .args(
-            &args
-                .iter()
-                .chain(iter::once(&"--message-format=json"))
-                .collect::<Vec<_>>(),
-        )
+        .args(args.iter().chain(iter::once(&"--message-format=json")))
         .stdout(Redirection::Pipe);
     if silence_stderr {
-        exec = exec.stderr(NullFile);
+        exec = exec.stderr(Redirection::Null);
     }
     debug!("{exec:?}");
-    let mut popen = exec.clone().popen()?;
-    let messages = popen
+    let exec_str = format!("{exec:?}");
+    let mut job = exec
+        .start()
+        .with_context(|| format!("`start` failed for `{exec_str}`"))?;
+    let messages = job
         .stdout
         .take()
         .map_or(Ok(vec![]), |stream| -> Result<_> {
             let reader = std::io::BufReader::new(stream);
             Message::parse_stream(reader)
                 .collect::<std::result::Result<_, std::io::Error>>()
-                .with_context(|| format!("`parse_stream` failed for `{exec:?}`"))
+                .with_context(|| format!("`parse_stream` failed for `{exec_str}`"))
         })?;
-    let status = popen
+    let status = job
         .wait()
-        .with_context(|| format!("`wait` failed for `{popen:?}`"))?;
+        .with_context(|| format!("`wait` failed for `{job:?}`"))?;
 
     if !status.success() {
         // smoelius: If stderr was silenced, re-execute the command without --message-format=json.
         // This is easier than trying to capture and colorize `CompilerMessage`s like Cargo does.
         // smoelius: Rather than re-execute the command, just debug print the messages.
         eprintln!("{messages:#?}");
-        bail!("Command failed: {exec:?}");
+        bail!("Command failed: {exec_str}");
     }
 
     let executables = messages
@@ -604,18 +602,21 @@ fn targets(opts: &TestFuzz, executable: &Path) -> Result<Vec<String>> {
     let exec = opts
         .command([executable])
         .to_exec()
-        .env_extend(&[("AFL_QUIET", "1")])
-        .args(&["--list", "--format=terse"])
-        .stderr(NullFile);
+        .env_extend([("AFL_QUIET", "1")])
+        .args(["--list", "--format=terse"])
+        .stderr(Redirection::Null);
     debug!("{exec:?}");
-    let stream = exec.clone().stream_stdout()?;
+    let exec_str = format!("{exec:?}");
+    let stream = exec
+        .stream_stdout()
+        .with_context(|| format!("Could not get output of `{exec_str}`"))?;
 
     // smoelius: A test executable's --list output ends with an empty line followed by
     // "M tests, N benchmarks." Stop at the empty line.
     // smoelius: Searching for the empty line is not necessary: https://stackoverflow.com/a/64913357
     let mut targets = Vec::<String>::default();
     for line in std::io::BufReader::new(stream).lines() {
-        let line = line.with_context(|| format!("Could not get output of `{exec:?}`"))?;
+        let line = line.with_context(|| format!("Could not get output of `{exec_str}`"))?;
         let Some(line) = line.strip_suffix(": test") else {
             continue;
         };
@@ -946,41 +947,45 @@ fn for_each_entry(
             file.read_to_end(&mut buffer).with_context(|| {
                 format!("`read_to_end` failed for `{}`", path.to_string_lossy())
             })?;
-            (buffer, Some(ExitStatus::Exited(0)))
+            (buffer, None)
         } else {
             let exec = opts
                 .command([&executable.path])
                 .to_exec()
-                .env_extend(&envs)
-                .args(&args)
+                .env_extend(envs.iter().copied())
+                .args(args.iter().map(String::as_str))
                 .stdin(file)
-                .stdout(NullFile)
+                .stdout(Redirection::Null)
                 .stderr(Redirection::Pipe);
             debug!("{exec:?}");
-            let mut popen = exec
-                .clone()
-                .popen()
-                .with_context(|| format!("`popen` failed for `{exec:?}`"))?;
+            let exec_str = format!("{exec:?}");
+            let mut job = exec
+                .start()
+                .with_context(|| format!("`start` failed for `{exec_str}`"))?;
             let secs = opts.timeout.unwrap_or(DEFAULT_TIMEOUT);
             let time = Duration::from_secs(secs);
-            let mut communicator = popen.communicate_start(None).limit_time(time);
-            match communicator.read() {
-                Ok((_, buffer)) => {
-                    let status = popen.wait()?;
-                    (buffer.unwrap_or_default(), Some(status))
+            let communicator = job
+                .communicate()
+                .with_context(|| format!("`communicate` failed for `{job:?}`"))?;
+            let mut communicator = communicator.limit_time(time);
+            let mut stderr_buf = Vec::new();
+            match communicator.read_to(std::io::sink(), &mut stderr_buf) {
+                Ok(()) => {
+                    let status = job
+                        .wait()
+                        .with_context(|| format!("`wait` failed for `{job:?}`"))?;
+                    (stderr_buf, Some(status))
                 }
-                Err(CommunicateError {
-                    error,
-                    capture: (_, buffer),
-                }) => {
-                    popen
-                        .kill()
-                        .with_context(|| format!("`kill` failed for `{popen:?}`"))?;
+                Err(error) => {
+                    job.kill()
+                        .with_context(|| format!("`kill` failed for `{job:?}`"))?;
                     if error.kind() != std::io::ErrorKind::TimedOut {
                         return Err(anyhow!(error));
                     }
-                    let _ = popen.wait()?;
-                    (buffer.unwrap_or_default(), None)
+                    let _ = job
+                        .wait()
+                        .with_context(|| format!("`wait` failed for `{job:?}`"))?;
+                    (stderr_buf, None)
                 }
             }
         };
@@ -993,18 +998,22 @@ fn for_each_entry(
             }
             output = true;
         }
-        status.map_or_else(
-            || {
-                println!("Timeout");
-                timeout = true;
-            },
-            |status| {
-                if !flags.contains(Flags::RAW) && buffer.is_empty() {
-                    println!("{status:?}");
-                }
-                failure |= !status.success();
-            },
-        );
+        if flags.contains(Flags::RAW) {
+            // No subprocess; nothing to check.
+        } else {
+            status.map_or_else(
+                || {
+                    println!("Timeout");
+                    timeout = true;
+                },
+                |status| {
+                    if buffer.is_empty() {
+                        println!("{status:?}");
+                    }
+                    failure |= !status.success();
+                },
+            );
+        }
 
         nonempty = true;
     }
