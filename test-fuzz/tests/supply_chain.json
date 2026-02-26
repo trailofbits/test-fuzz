@@ -1,27 +1,5 @@
 {
   "crates_io_crates": {
-    "addr2line": [
-      {
-        "id": 696,
-        "kind": "user",
-        "login": "fitzgen",
-        "name": "Nick Fitzgerald"
-      },
-      {
-        "id": 4415,
-        "kind": "user",
-        "login": "philipc",
-        "name": "Philip Craig"
-      }
-    ],
-    "adler2": [
-      {
-        "id": 4968,
-        "kind": "user",
-        "login": "oyvindln",
-        "name": null
-      }
-    ],
     "aho-corasick": [
       {
         "id": 189,
@@ -134,14 +112,6 @@
         "kind": "user",
         "login": "matklad",
         "name": "Alex Kladov"
-      }
-    ],
-    "backtrace": [
-      {
-        "id": 55123,
-        "kind": "user",
-        "login": "rust-lang-owner",
-        "name": null
       }
     ],
     "bincode": [
@@ -548,20 +518,6 @@
         "name": "Nova"
       }
     ],
-    "gimli": [
-      {
-        "id": 696,
-        "kind": "user",
-        "login": "fitzgen",
-        "name": "Nick Fitzgerald"
-      },
-      {
-        "id": 4415,
-        "kind": "user",
-        "login": "philipc",
-        "name": "Philip Craig"
-      }
-    ],
     "heck": [
       {
         "id": 1613,
@@ -750,20 +706,6 @@
         "name": "Andrew Gallant"
       }
     ],
-    "miniz_oxide": [
-      {
-        "id": 4968,
-        "kind": "user",
-        "login": "oyvindln",
-        "name": null
-      },
-      {
-        "id": 10555,
-        "kind": "user",
-        "login": "Frommi",
-        "name": null
-      }
-    ],
     "mio": [
       {
         "id": 10,
@@ -800,20 +742,6 @@
         "kind": "user",
         "login": "seanmonstar",
         "name": "Sean McArthur"
-      }
-    ],
-    "object": [
-      {
-        "id": 696,
-        "kind": "user",
-        "login": "fitzgen",
-        "name": "Nick Fitzgerald"
-      },
-      {
-        "id": 4415,
-        "kind": "user",
-        "login": "philipc",
-        "name": "Philip Craig"
       }
     ],
     "once_cell_polyfill": [
@@ -948,26 +876,6 @@
         "kind": "user",
         "login": "dtolnay",
         "name": "David Tolnay"
-      }
-    ],
-    "rustc-demangle": [
-      {
-        "id": 11,
-        "kind": "team",
-        "login": "github:rust-lang:libs",
-        "name": "libs"
-      },
-      {
-        "id": 408,
-        "kind": "team",
-        "login": "github:rust-lang:compiler",
-        "name": "compiler"
-      },
-      {
-        "id": 55123,
-        "kind": "user",
-        "login": "rust-lang-owner",
-        "name": null
       }
     ],
     "rustix": [
