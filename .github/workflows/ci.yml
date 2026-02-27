@@ -78,7 +78,9 @@ jobs:
 
       # smoelius: The Substrate tests require `protoc`.
       - name: Install protoc
-        run: sudo apt-get install protobuf-compiler
+        run: |
+          sudo apt-get update
+          sudo apt-get install protobuf-compiler
 
       # smoelius: Some of the `install` tests run older versions of cargo-afl that still use the
       # gold linker. However, the gold linker does not work with the nightly toolchain. See:
