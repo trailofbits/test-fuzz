@@ -10,7 +10,7 @@ license = "AGPL-3.0 WITH mif-exception"
 repository = "https://github.com/trailofbits/test-fuzz"
 
 # smoelius: https://github.com/rust-lang/cargo/issues/1839
-# Because of the above issue, the crate for the default format (bincode) must be included regardless
+# Because of the above issue, the crate for the default format (postcard) must be included regardless
 # of whether it is selected. A test-fuzz test (`link`) verifies that the crate's code is not linked
 # in when another format is selected.
 
@@ -19,15 +19,15 @@ cargo_metadata = { workspace = true }
 serde = { workspace = true }
 
 # smoelius: Serde formats
-bincode = { version = "2.0", features = ["serde"] }
-postcard = { version = "1.1", features = ["use-std"], optional = true }
+bincode = { version = "2.0", features = ["serde"], optional = true }
+postcard = { version = "1.1", features = ["use-std"] }
 
 [features]
-__serde_bincode = []
-__serde_postcard = ["postcard"]
+__serde_bincode = ["bincode"]
+__serde_postcard = []
 
 [lints]
 workspace = true
 
 [package.metadata.cargo-udeps.ignore]
-normal = ["bincode"]
+normal = ["postcard"]

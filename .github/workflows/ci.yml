@@ -42,7 +42,7 @@ jobs:
       fail-fast: false
       matrix:
         package: [third-party, other]
-        serde_format: [bincode, postcard]
+        serde_format: [postcard, bincode]
         toolchain: [stable, nightly]
         sha1_filenames: [false, true]
 
