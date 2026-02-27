@@ -3,7 +3,7 @@ use predicates::prelude::*;
 use std::process::Command;
 use testing::{LoggedAssert, fuzzable::MANIFEST_PATH};
 
-const SERDE_DEFAULT: &str = "bincode";
+const SERDE_DEFAULT: &str = "postcard";
 
 #[test]
 fn link() {
@@ -20,7 +20,7 @@ fn link() {
 
     let pred = predicate::str::contains(SERDE_DEFAULT);
 
-    #[cfg(not(any(serde_default, feature = "serde_bincode")))]
+    #[cfg(not(any(serde_default, feature = "serde_postcard")))]
     let pred = pred.not();
 
     // smoelius: https://stackoverflow.com/questions/7219845/difference-between-nm-and-objdump

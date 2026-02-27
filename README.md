@@ -456,9 +456,9 @@ Note that this feature enables `cast_checks` only for functions annotated with t
 
 `test-fuzz` can serialize target arguments in multiple Serde formats. The following are the features used to select a format.
 
-- `serde_bincode` - [Bincode] (default)
+- `serde_postcard` - [Postcard] (default)
 
-- `serde_postcard` - [Postcard]
+- `serde_bincode` - [Bincode]
 
 ## Auto-generated corpus files
 

@@ -100,6 +100,14 @@
         "name": "Ed Page"
       }
     ],
+    "atomic-polyfill": [
+      {
+        "id": 92139,
+        "kind": "user",
+        "login": "Dirbaio",
+        "name": "Dario Nieuwenhuis"
+      }
+    ],
     "autocfg": [
       {
         "id": 539,
@@ -112,22 +120,6 @@
         "kind": "user",
         "login": "matklad",
         "name": "Alex Kladov"
-      }
-    ],
-    "bincode": [
-      {
-        "id": 3672,
-        "kind": "user",
-        "login": "ZoeyR",
-        "name": "Zoey Riordan"
-      }
-    ],
-    "bincode_derive": [
-      {
-        "id": 3672,
-        "kind": "user",
-        "login": "ZoeyR",
-        "name": "Zoey Riordan"
       }
     ],
     "bitflags": [
@@ -159,6 +151,14 @@
       }
     ],
     "bstr": [
+      {
+        "id": 189,
+        "kind": "user",
+        "login": "BurntSushi",
+        "name": "Andrew Gallant"
+      }
+    ],
+    "byteorder": [
       {
         "id": 189,
         "kind": "user",
@@ -290,6 +290,26 @@
         "name": "Ed Page"
       }
     ],
+    "cobs": [
+      {
+        "id": 1016,
+        "kind": "user",
+        "login": "awelkie",
+        "name": "Allen Welkie"
+      },
+      {
+        "id": 4956,
+        "kind": "user",
+        "login": "jamesmunns",
+        "name": "James Munns"
+      },
+      {
+        "id": 124403,
+        "kind": "user",
+        "login": "robamu",
+        "name": "Robin Mueller"
+      }
+    ],
     "colorchoice": [
       {
         "id": 460,
@@ -316,6 +336,20 @@
         "kind": "team",
         "login": "github:rustcrypto:utils",
         "name": "utils"
+      }
+    ],
+    "critical-section": [
+      {
+        "id": 495,
+        "kind": "team",
+        "login": "github:rust-embedded:hal",
+        "name": "HAL"
+      },
+      {
+        "id": 92139,
+        "kind": "user",
+        "login": "Dirbaio",
+        "name": "Dario Nieuwenhuis"
       }
     ],
     "crypto-common": [
@@ -430,6 +464,20 @@
         "name": "Jack Wrenn"
       }
     ],
+    "embedded-io": [
+      {
+        "id": 495,
+        "kind": "team",
+        "login": "github:rust-embedded:hal",
+        "name": "HAL"
+      },
+      {
+        "id": 92139,
+        "kind": "user",
+        "login": "Dirbaio",
+        "name": "Dario Nieuwenhuis"
+      }
+    ],
     "env_filter": [
       {
         "id": 460,
@@ -516,6 +564,52 @@
         "kind": "user",
         "login": "novacrazy",
         "name": "Nova"
+      }
+    ],
+    "hash32": [
+      {
+        "id": 246,
+        "kind": "user",
+        "login": "japaric",
+        "name": "Jorge Aparicio"
+      },
+      {
+        "id": 2675,
+        "kind": "team",
+        "login": "github:rust-embedded-community:all",
+        "name": "all"
+      },
+      {
+        "id": 26212,
+        "kind": "user",
+        "login": "MabezDev",
+        "name": "Scott Mabin"
+      }
+    ],
+    "heapless": [
+      {
+        "id": 246,
+        "kind": "user",
+        "login": "japaric",
+        "name": "Jorge Aparicio"
+      },
+      {
+        "id": 513,
+        "kind": "user",
+        "login": "adamgreig",
+        "name": "Adam Greig"
+      },
+      {
+        "id": 8382,
+        "kind": "team",
+        "login": "github:rust-embedded:libs",
+        "name": "libs"
+      },
+      {
+        "id": 22489,
+        "kind": "user",
+        "login": "korken89",
+        "name": "Emil Fresk"
       }
     ],
     "heck": [
@@ -660,6 +754,20 @@
         "name": "Dan Gohman"
       }
     ],
+    "lock_api": [
+      {
+        "id": 1459,
+        "kind": "user",
+        "login": "faern",
+        "name": "Linus Färnstrand"
+      },
+      {
+        "id": 2915,
+        "kind": "user",
+        "login": "Amanieu",
+        "name": "Amanieu d'Antras"
+      }
+    ],
     "log": [
       {
         "id": 3,
@@ -766,6 +874,14 @@
         "kind": "user",
         "login": "taiki-e",
         "name": "Taiki Endo"
+      }
+    ],
+    "postcard": [
+      {
+        "id": 4956,
+        "kind": "user",
+        "login": "jamesmunns",
+        "name": "James Munns"
       }
     ],
     "predicates": [
@@ -878,12 +994,40 @@
         "name": "David Tolnay"
       }
     ],
+    "rustc_version": [
+      {
+        "id": 394,
+        "kind": "user",
+        "login": "Kimundi",
+        "name": "Marvin Löbel"
+      },
+      {
+        "id": 4556,
+        "kind": "user",
+        "login": "djc",
+        "name": "Dirkjan Ochtman"
+      }
+    ],
     "rustix": [
       {
         "id": 6825,
         "kind": "user",
         "login": "sunfishcode",
         "name": "Dan Gohman"
+      }
+    ],
+    "scopeguard": [
+      {
+        "id": 356,
+        "kind": "user",
+        "login": "bluss",
+        "name": "bluss"
+      },
+      {
+        "id": 2915,
+        "kind": "user",
+        "login": "Amanieu",
+        "name": "Amanieu d'Antras"
       }
     ],
     "semver": [
@@ -968,6 +1112,40 @@
         "kind": "user",
         "login": "newpavlov",
         "name": "Artyom Pavlov"
+      }
+    ],
+    "spin": [
+      {
+        "id": 300,
+        "kind": "user",
+        "login": "mvdnes",
+        "name": "Mathijs van de Nes"
+      },
+      {
+        "id": 21853,
+        "kind": "user",
+        "login": "zesterer",
+        "name": "Joshua Barretto"
+      }
+    ],
+    "stable_deref_trait": [
+      {
+        "id": 394,
+        "kind": "user",
+        "login": "Kimundi",
+        "name": "Marvin Löbel"
+      },
+      {
+        "id": 1574,
+        "kind": "user",
+        "login": "jpernst",
+        "name": null
+      },
+      {
+        "id": 4492,
+        "kind": "user",
+        "login": "Storyyeller",
+        "name": "Robert Grosse"
       }
     ],
     "strip-ansi-escapes": [
@@ -1078,14 +1256,6 @@
         "name": "David Tolnay"
       }
     ],
-    "unty": [
-      {
-        "id": 375387,
-        "kind": "user",
-        "login": "virtue-dummy",
-        "name": null
-      }
-    ],
     "utf8parse": [
       {
         "id": 1317,
@@ -1112,14 +1282,6 @@
         "kind": "user",
         "login": "SergioBenitez",
         "name": "Sergio Benitez"
-      }
-    ],
-    "virtue": [
-      {
-        "id": 375387,
-        "kind": "user",
-        "login": "virtue-dummy",
-        "name": null
       }
     ],
     "vte": [
