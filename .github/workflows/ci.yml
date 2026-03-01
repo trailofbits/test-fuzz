@@ -130,12 +130,14 @@ jobs:
             MAYBE_THIRD_PARTY='--workspace --exclude third-party --features=test-install'
           fi
           SERDE_FORMAT='test-fuzz/serde_${{ matrix.serde_format }}'
-          MAYBE_SHUFFLE=
+          NIGHTLY_CARGO_TEST_OPTIONS=
+          NIGHTLY_LIBTEST_OPTIONS=
           if [[ ${{ matrix.toolchain }} = nightly ]]; then
-            MAYBE_SHUFFLE='-Z unstable-options --report-time --shuffle --test-threads=1'
+            NIGHTLY_CARGO_TEST_OPTIONS='--bins --lib --tests'
+            NIGHTLY_LIBTEST_OPTIONS='-Z unstable-options --report-time --shuffle --test-threads=1'
           fi
           BUILD_CMD="cargo build $MAYBE_THIRD_PARTY --features $SERDE_FORMAT --all-targets"
-          TEST_CMD="cargo test   $MAYBE_THIRD_PARTY --features $SERDE_FORMAT --config $GROUP_RUNNER -- --nocapture $MAYBE_SHUFFLE"
+          TEST_CMD="cargo test   $MAYBE_THIRD_PARTY --features $SERDE_FORMAT $NIGHTLY_CARGO_TEST_OPTIONS --config $GROUP_RUNNER -- --nocapture $NIGHTLY_LIBTEST_OPTIONS"
           echo "BUILD_CMD=$BUILD_CMD" >> "$GITHUB_ENV"
           echo "TEST_CMD=$TEST_CMD" >> "$GITHUB_ENV"
           if ${{ matrix.sha1_filenames }}; then
