@@ -1,5 +1,20 @@
 # Changelog
 
+## 7.3.0
+
+- Documentation improvements ([6bb0b90](https://github.com/trailofbits/test-fuzz/commit/6bb0b909a56244d7e526aa9b1765658dd67341f7), [cbcb4ac](https://github.com/trailofbits/test-fuzz/commit/cbcb4acad5bc1376e77d0ddf9ca16614d7025474), and [b2bb36f](https://github.com/trailofbits/test-fuzz/commit/b2bb36f4e1f410609c2346bf4e6b586f601fa5dd))
+- FEATURE: Add warning for missing `test_fuzz` attributes in `test_fuzz_impl` blocks ([cca7099](https://github.com/trailofbits/test-fuzz/commit/cca709971dad7c64548564982cc265f984a8d60e))&mdash;thanks [@HiteshMittal07](https://github.com/HiteshMittal07)
+- Add location information to "No `test_fuzz`" warning ([75124a2](https://github.com/trailofbits/test-fuzz/commit/75124a22cacaa40e0711ae4f9975acd1b9714d93))
+- FEATURE: Add experimental support for generating coverage ([20cd470](https://github.com/trailofbits/test-fuzz/commit/20cd47042c7c25cd4acc780affa58b802ca65ce3), [f8af264](https://github.com/trailofbits/test-fuzz/commit/f8af2648d3f73a0f29d950e531e15736bf521671), [c4b2b8e](https://github.com/trailofbits/test-fuzz/commit/c4b2b8eeb3152c03e94523095eb6b80b405d7528), and [cb7dbed](https://github.com/trailofbits/test-fuzz/commit/cb7dbed83c50742c39f24af71d40406a2c0b5238))
+- Warn when generating coverage for non-trivial functions ([8e052ec](https://github.com/trailofbits/test-fuzz/commit/8e052ecc165446179a6cd3407e1901e256b5fa1c))
+- Make `postcard` the default serialization format ([cc73c48](https://github.com/trailofbits/test-fuzz/commit/cc73c48babc054d35765f9da513d520f203801e1))
+- Dependency updates
+  - `darling` upgraded to version 0.23
+  - `rlimit` upgraded to version 0.11 and made a Linux only dependency
+  - `strum_macros` upgraded to version 0.28
+  - `subprocess` upgraded to version 1.0
+  - `toml_edit` upgraded to version 0.25
+
 ## 7.2.5
 
 - Eliminate `cargo-test-fuzz`'s dependence on `test-fuzz` ([#649](https://github.com/trailofbits/test-fuzz/pull/649))
