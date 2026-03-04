@@ -9,6 +9,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
+      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v6
@@ -56,4 +57,4 @@ jobs:
           body_path: body.md
           draft: false
           prerelease: ${{ contains(github.ref, 'pre') || contains(github.ref, 'rc') }}
-          token: ${{ secrets.REPO_TOKEN }}
+          token: ${{ github.token }}
