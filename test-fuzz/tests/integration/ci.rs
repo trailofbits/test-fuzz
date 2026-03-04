@@ -60,7 +60,8 @@ fn fmt() {
 
 #[test]
 fn license() {
-    let re = Regex::new(r"^[^:]*\b(Apache-2.0|BSD-2-Clause|BSD-3-Clause|ISC|MIT|N/A)\b").unwrap();
+    let re =
+        Regex::new(r"^[^:]*\b(Apache-2.0|BSD-2-Clause|BSD-3-Clause|ISC|MIT|Zlib|N/A)\b").unwrap();
 
     for line in std::str::from_utf8(
         &Command::new("cargo")
