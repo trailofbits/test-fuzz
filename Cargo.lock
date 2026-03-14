@@ -1327,7 +1327,6 @@ name = "test-fuzz-macro"
 version = "7.3.0"
 dependencies = [
  "darling",
- "heck",
  "itertools",
  "prettyplease",
  "proc-macro2",

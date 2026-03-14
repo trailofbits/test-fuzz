@@ -18,7 +18,7 @@ fn self_ty_conflict() {
         .logged_assert()
         .failure()
         .stderr(predicate::str::contains(
-            "the name `struct_target_fuzz__` is defined multiple times",
+            "the name `Struct_target_fuzz__` is defined multiple times",
         ));
 }
 
