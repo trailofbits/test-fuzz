@@ -21,7 +21,7 @@ fn fuzz_bar_asdfgh() {
 }
 
 fn fuzz(test: &str, code: i32) {
-    let corpus = corpus_directory_from_target("generic", "struct_target");
+    let corpus = corpus_directory_from_target("generic", "Struct_target");
 
     #[cfg_attr(dylint_lib = "general", allow(non_thread_safe_call_in_test))]
     remove_dir_all(&corpus).unwrap_or_default();
@@ -34,7 +34,7 @@ fn fuzz(test: &str, code: i32) {
     assert!(corpus.exists());
 
     retry(3, || {
-        fuzzable::test_fuzz("generic", "struct_target")
+        fuzzable::test_fuzz("generic", "Struct_target")
             .unwrap()
             .args([
                 "--exit-code",

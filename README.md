@@ -180,7 +180,7 @@ Note, however, that just because a target was called with certain parameters dur
 Treat the target as though its name is `name` when adding a module to the enclosing scope. Expansion of the `test_fuzz` macro adds a module definition to the enclosing scope. By default, the module is named as follows:
 
 - If the target does not appear in an `impl` block, the module is named `target_fuzz__`, where `target` is the name of the target.
-- If the target appears in an `impl` block, the module is named `path_target_fuzz__`, where `path` is the path of the `impl`'s `Self` type converted to snake case and joined with `_`.
+- If the target appears in an `impl` block, the module is named `path_target_fuzz__`, where `path` is the last segment of the `impl`'s `Self` type path.
 
 However, use of this option causes the module to instead be named `name_fuzz__`. Example:
 

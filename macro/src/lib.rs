@@ -1160,9 +1160,7 @@ fn mod_ident(opts: &TestFuzzOpts, self_ty_base: Option<&Ident>, target_ident: &I
         s.push_str(&name.to_string());
     } else {
         if let Some(ident) = self_ty_base {
-            s.push_str(&<str as heck::ToSnakeCase>::to_snake_case(
-                &ident.to_string(),
-            ));
+            s.push_str(&ident.to_string());
             s.push('_');
         }
         s.push_str(&target_ident.to_string());
