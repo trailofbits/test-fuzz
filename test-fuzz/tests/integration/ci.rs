@@ -167,6 +167,21 @@ fn readme_reference_links_are_sorted() {
 }
 
 #[test]
+fn readme_reference_links_are_used() {
+    let re = Regex::new(r"(?m)^(\[[^\]]*\]):").unwrap();
+    let readme = read_to_string("README.md").unwrap();
+    for captures in re.captures_iter(&readme) {
+        assert_eq!(2, captures.len());
+        let m = captures.get(1).unwrap();
+        assert!(
+            readme[..m.start()].contains(m.as_str()),
+            "{} is unused",
+            m.as_str()
+        );
+    }
+}
+
+#[test]
 fn shellcheck() {
     for entry in read_dir("../scripts").unwrap() {
         let entry = entry.unwrap();

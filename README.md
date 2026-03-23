@@ -554,7 +554,7 @@ We reserve the right to change the format of corpora, crashes, hangs, and work q
 [Semantic versioning policy]: #semantic-versioning-policy
 [Serde attributes]: https://serde.rs/attributes.html
 [Serde field attributes]: https://serde.rs/field-attrs.html
-[Substrate externalities]: https://substrate.dev/docs/en/knowledgebase/runtime/tests#mock-runtime-storage
+[Substrate externalities]: https://docs.polkadot.com/parachains/customize-runtime/pallet-development/mock-runtime/
 [The Cargo Book]: https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#choosing-features
 [Tips and tricks]: #tips-and-tricks
 [`Clone`]: https://doc.rust-lang.org/std/clone/trait.Clone.html
@@ -578,7 +578,6 @@ We reserve the right to change the format of corpora, crashes, hangs, and work q
 [`impl_generic_args`]: #impl_generic_args--parameters
 [`num_traits::One`]: https://docs.rs/num-traits/0.2.14/num_traits/identities/trait.One.html
 [`num_traits::bounds::Bounded`]: https://docs.rs/num-traits/0.2.14/num_traits/bounds/trait.Bounded.html
-[`proc_macro_span`]: https://github.com/rust-lang/rust/issues/54725
 [`rename`]: #rename--name
 [`serde::Deserialize`]: https://docs.serde.rs/serde/trait.Deserialize.html
 [`serde::Serialize`]: https://docs.serde.rs/serde/trait.Serialize.html
