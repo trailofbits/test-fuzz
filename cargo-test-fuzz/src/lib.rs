@@ -421,7 +421,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     if opts.include_fuzzing_instrumentation() {
         args.extend_from_slice(&["afl"]);
     }
-    args.extend_from_slice(&["test", "--offline", "--no-run"]);
+    args.extend_from_slice(&["test", "--no-run"]);
     if opts.no_default_features {
         args.extend_from_slice(&["--no-default-features"]);
     }
