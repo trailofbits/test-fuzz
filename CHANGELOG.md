@@ -1,5 +1,13 @@
 # Changelog
 
+## 8.0.0
+
+- BREAKING CHANGE: Remove `--offline` in `cargo-test-fuzz` ([31bbf29](https://github.com/trailofbits/test-fuzz/commit/31bbf296e1da4b077967d431d6ead2c74ca2a132))
+- BREAKING CHANGE: Remove `pub` from `run_without_exit_code` ([d4e71a8](https://github.com/trailofbits/test-fuzz/commit/d4e71a8710368c948fe675e2847211dc06a7af0b))
+- BREAKING CHANGE: Eliminate use of snake case for function names ([546cf8c](https://github.com/trailofbits/test-fuzz/commit/546cf8ca44fbb256b67beac16b323bdf6c03e5a6))
+- Dependency updates
+  - `heck` removed
+
 ## 7.3.0
 
 - Documentation improvements ([6bb0b90](https://github.com/trailofbits/test-fuzz/commit/6bb0b909a56244d7e526aa9b1765658dd67341f7), [cbcb4ac](https://github.com/trailofbits/test-fuzz/commit/cbcb4acad5bc1376e77d0ddf9ca16614d7025474), and [b2bb36f](https://github.com/trailofbits/test-fuzz/commit/b2bb36f4e1f410609c2346bf4e6b586f601fa5dd))
