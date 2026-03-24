@@ -283,7 +283,7 @@ pub fn run(opts: TestFuzz) -> Result<()> {
 
 #[allow(clippy::too_many_lines)]
 #[doc(hidden)]
-pub fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
+fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
     if let Some(object) = opts.coverage {
         ensure!(
             matches!(
