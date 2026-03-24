@@ -139,7 +139,7 @@ jobs:
             NIGHTLY_LIBTEST_OPTIONS='-Z unstable-options --report-time --shuffle --test-threads=1'
           fi
           BUILD_CMD="cargo build $MAYBE_THIRD_PARTY --features $SERDE_FORMAT --all-targets"
-          TEST_CMD="cargo test   $MAYBE_THIRD_PARTY --features $SERDE_FORMAT $NIGHTLY_CARGO_TEST_OPTIONS --config $GROUP_RUNNER -- --nocapture $NIGHTLY_LIBTEST_OPTIONS"
+          TEST_CMD="cargo test   $MAYBE_THIRD_PARTY --features $SERDE_FORMAT $NIGHTLY_CARGO_TEST_OPTIONS --config $GROUP_RUNNER -- $NIGHTLY_LIBTEST_OPTIONS"
           echo "BUILD_CMD=$BUILD_CMD" >> "$GITHUB_ENV"
           echo "TEST_CMD=$TEST_CMD" >> "$GITHUB_ENV"
           if ${{ matrix.sha1_filenames }}; then
