@@ -37,6 +37,6 @@
     "subdir": ".",
     "test_package": "solana-sbpf",
     "fuzz_package": "test_utils",
-    "targets": ["syscall_str_cmp_rust"]
+    "targets": ["SyscallStrCmp_rust"]
   }
 ]
