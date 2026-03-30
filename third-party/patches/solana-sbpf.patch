@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 35f484a..e19b4f1 100644
+index 2199b6c..6c350c6 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
@@ -10,18 +10,18 @@ index 35f484a..e19b4f1 100644
 +
  [target.'cfg(windows)'.dependencies]
  winapi = { version = "0.3", features = ["memoryapi", "sysinfoapi", "winnt", "errhandlingapi"], optional = true }
-@@ -49,2 +52,4 @@ elf = "0.0.10"
+@@ -50,2 +53,4 @@ elf = "0.0.10"
  json = "0.12"
  test_utils = { path = "test_utils/" }
 +
 +[workspace]
 diff --git a/src/memory_region.rs b/src/memory_region.rs
-index 5ca5cc5..83a6797 100644
+index 69d09d2..affb30d 100644
 --- a/src/memory_region.rs
 +++ b/src/memory_region.rs
-@@ -58,4 +58,85 @@ pub struct MemoryRegion {
+@@ -59,4 +59,85 @@ pub struct MemoryRegion {
  }
-
+ 
 +#[derive(serde::Deserialize, serde::Serialize)]
 +struct SerializableMemoryRegion {
 +    host_mem_seed: Option<u64>,
@@ -105,54 +105,18 @@ index 5ca5cc5..83a6797 100644
 +
  impl MemoryRegion {
      fn new(slice: &[u8], vm_addr: u64, vm_gap_size: u64, writable: bool) -> Self {
-@@ -183,8 +264,10 @@ pub enum AccessType {
+@@ -195,4 +276,36 @@ pub struct UnalignedMemoryMapping {
+ }
  
- /// Common parts of [UnalignedMemoryMapping] and [AlignedMemoryMapping]
-+#[derive(serde::Deserialize, serde::Serialize)]
- pub struct CommonMemoryMapping {
-     /// Mapped memory regions
-     regions: Box<[MemoryRegion]>,
-     /// Access violation handler
-+    #[serde(skip, default = "boxed_default_access_violation_handler")]
-     access_violation_handler: AccessViolationHandler,
-     /// VM configuration
-@@ -196,4 +279,21 @@ pub struct CommonMemoryMapping {
- }
-
-+impl Clone for CommonMemoryMapping {
-+    fn clone(&self) -> Self {
-+        Self {
-+            regions: self.regions.clone(),
-+            access_violation_handler: boxed_default_access_violation_handler(),
-+            allow_memory_region_zero: self.allow_memory_region_zero,
-+            max_call_depth: self.max_call_depth,
-+            stack_frame_size: self.stack_frame_size,
-+            sbpf_version: self.sbpf_version,
-+        }
-+    }
-+}
-+
-+fn boxed_default_access_violation_handler() -> AccessViolationHandler {
-+    Box::new(default_access_violation_handler)
-+}
-+
- impl CommonMemoryMapping {
-     fn generate_access_violation(
-@@ -246,4 +346,39 @@ pub struct UnalignedMemoryMapping {
- }
-
 +impl<'de> serde::Deserialize<'de> for UnalignedMemoryMapping {
 +    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 +    where
 +        D: serde::Deserializer<'de>,
 +    {
-+        let common = CommonMemoryMapping::deserialize(deserializer)?;
-+        Ok(Self {
-+            common,
-+            region_addresses: Box::new([]),
-+            region_index_lookup: Box::new([]),
-+            cache: UnsafeCell::new(MappingCache::new()),
-+        })
++        let regions = Vec::<MemoryRegion>::deserialize(deserializer)?;
++        let mut mapping = Self::new_uninitialized(regions);
++        mapping.initialize().map_err(serde::de::Error::custom)?;
++        Ok(mapping)
 +    }
 +}
 +
@@ -161,14 +125,14 @@ index 5ca5cc5..83a6797 100644
 +    where
 +        S: serde::Serializer,
 +    {
-+        self.common.serialize(serializer)
++        self.regions.serialize(serializer)
 +    }
 +}
 +
 +impl Clone for UnalignedMemoryMapping {
 +    fn clone(&self) -> Self {
 +        Self {
-+            common: self.common.clone(),
++            regions: self.regions.clone(),
 +            region_addresses: self.region_addresses.clone(),
 +            region_index_lookup: self.region_index_lookup.clone(),
 +            cache: UnsafeCell::new(unsafe { &*self.cache.get() as &MappingCache }.clone()),
@@ -178,20 +142,87 @@ index 5ca5cc5..83a6797 100644
 +
  impl fmt::Debug for UnalignedMemoryMapping {
      fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-@@ -356,4 +491,5 @@ impl<'a> UnalignedMemoryMapping {
+@@ -302,5 +415,5 @@ impl UnalignedMemoryMapping {
  /// Memory mapping that uses the upper half of an address to identify the
  /// underlying memory region.
-+#[derive(Clone, serde::Deserialize, serde::Serialize)]
+-#[derive(Debug)]
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct AlignedMemoryMapping {
-     /// Common parts
-@@ -460,5 +596,5 @@ impl AlignedMemoryMapping {
+     regions: Vec<MemoryRegion>,
+@@ -424,6 +537,71 @@ impl fmt::Debug for MemoryMapping {
+ }
  
++impl Clone for MemoryMapping {
++    fn clone(&self) -> Self {
++        Self {
++            access_violation_handler: Box::new(default_access_violation_handler),
++            max_call_depth: self.max_call_depth,
++            stack_frame_size: self.stack_frame_size,
++            disable_address_translation: self.disable_address_translation,
++            sbpf_version: self.sbpf_version,
++            initialized: self.initialized,
++            ty: self.ty.clone(),
++        }
++    }
++}
++
++impl<'de> serde::Deserialize<'de> for MemoryMapping {
++    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
++    where
++        D: serde::Deserializer<'de>,
++    {
++        #[derive(serde::Deserialize)]
++        struct Helper {
++            max_call_depth: i64,
++            stack_frame_size: i64,
++            disable_address_translation: bool,
++            sbpf_version: SBPFVersion,
++            initialized: bool,
++            ty: MemoryMappingType,
++        }
++        let Helper {
++            max_call_depth,
++            stack_frame_size,
++            disable_address_translation,
++            sbpf_version,
++            initialized,
++            ty,
++        } = Helper::deserialize(deserializer)?;
++        Ok(Self {
++            access_violation_handler: Box::new(default_access_violation_handler),
++            max_call_depth,
++            stack_frame_size,
++            disable_address_translation,
++            sbpf_version,
++            initialized,
++            ty,
++        })
++    }
++}
++
++impl serde::Serialize for MemoryMapping {
++    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
++    where
++        S: serde::Serializer,
++    {
++        use serde::ser::SerializeStruct;
++        let mut state = serializer.serialize_struct("MemoryMapping", 6)?;
++        state.serialize_field("max_call_depth", &self.max_call_depth)?;
++        state.serialize_field("stack_frame_size", &self.stack_frame_size)?;
++        state.serialize_field("disable_address_translation", &self.disable_address_translation)?;
++        state.serialize_field("sbpf_version", &self.sbpf_version)?;
++        state.serialize_field("initialized", &self.initialized)?;
++        state.serialize_field("ty", &self.ty)?;
++        state.end()
++    }
++}
++
  /// Maps virtual memory to host memory.
 -#[derive(Debug)]
-+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
- pub enum MemoryMapping {
-     /// Used when address translation is disabled
-@@ -646,5 +782,5 @@ impl MemoryMapping {
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+ pub enum MemoryMappingType {
+     /// Aligned memory mapping which uses the upper half of an address to
+@@ -678,5 +856,5 @@ impl MemoryMapping {
  
  /// Fast, small linear cache used to speed up unaligned memory mapping.
 -#[derive(Debug)]
@@ -199,24 +230,24 @@ index 5ca5cc5..83a6797 100644
  struct MappingCache {
      // The cached entries.
 diff --git a/src/program.rs b/src/program.rs
-index af2642e..f5a69ec 100644
+index a886e9a..684f0a7 100644
 --- a/src/program.rs
 +++ b/src/program.rs
-@@ -11,5 +11,5 @@ use {
+@@ -10,5 +10,5 @@ use {
  
  /// Defines a set of sbpf_version of an executable
 -#[derive(Debug, PartialEq, PartialOrd, Eq, Clone, Copy)]
 +#[derive(Debug, PartialEq, PartialOrd, Eq, Clone, Copy, serde::Deserialize, serde::Serialize)]
  pub enum SBPFVersion {
      /// The legacy format
-@@ -423,5 +423,5 @@ macro_rules! declare_builtin_function {
+@@ -414,5 +414,5 @@ macro_rules! declare_builtin_function {
      (
          $(#[$attr:meta])*
 -        $name:ident $(<$($generic_ident:tt : $generic_type:tt),+>)?,
 +        $name:ident,
          fn rust(
              $vm:ident : &mut $ContextObject:ty,
-@@ -440,4 +440,54 @@ macro_rules! declare_builtin_function {
+@@ -430,4 +430,49 @@ macro_rules! declare_builtin_function {
              $($codegen:tt)*
          })?
 +    ) => {
@@ -236,11 +267,7 @@ index af2642e..f5a69ec 100644
 +                $arg_c: u64,
 +                $arg_d: u64,
 +                $arg_e: u64,
-+                $memory_mapping: &mut $MemoryMapping,
 +            ) -> core::result::Result<$Ok, $Err> {
-+                if matches!($memory_mapping, MemoryMapping::Identity) {
-+                    std::process::exit(0);
-+                }
 +                $($rust)*
 +            }
 +            $(fn codegen(
@@ -260,7 +287,6 @@ index af2642e..f5a69ec 100644
 +            $arg_c:ident : u64,
 +            $arg_d:ident : u64,
 +            $arg_e:ident : u64,
-+            $memory_mapping:ident : &mut $MemoryMapping:ty,
 +        ) -> Result<$Ok:ty, $Err:ty> {
 +            $($rust:tt)*
 +        }
@@ -271,7 +297,7 @@ index af2642e..f5a69ec 100644
 +        })?
      ) => {
          $(#[$attr])*
-@@ -462,7 +512,7 @@ macro_rules! declare_builtin_function {
+@@ -451,7 +496,7 @@ macro_rules! declare_builtin_function {
              }
              $(fn codegen(
 -                $jit: &mut $crate::program::JitCompiler<$ContextObject2>,
@@ -282,10 +308,10 @@ index af2642e..f5a69ec 100644
              })?
          }
 diff --git a/src/vm.rs b/src/vm.rs
-index 58d6b3e..b9bf426 100644
+index ba8d41a..e6aefb3 100644
 --- a/src/vm.rs
 +++ b/src/vm.rs
-@@ -59,5 +59,5 @@ pub enum ExecutionMode {
+@@ -111,5 +111,5 @@ pub enum ExecutionMode {
  
  /// VM configuration settings
 -#[derive(Debug, Clone, PartialEq, Eq)]
@@ -293,7 +319,7 @@ index 58d6b3e..b9bf426 100644
  pub struct Config {
      /// Maximum call depth
 diff --git a/test_utils/Cargo.toml b/test_utils/Cargo.toml
-index ef2eed6..d29c1d7 100644
+index a4da443..6d93e6a 100644
 --- a/test_utils/Cargo.toml
 +++ b/test_utils/Cargo.toml
 @@ -9,2 +9,5 @@ publish = false
@@ -303,13 +329,13 @@ index ef2eed6..d29c1d7 100644
 +serde = "1.0"
 +test-fuzz = { path = "../../../test-fuzz" }
 diff --git a/test_utils/src/lib.rs b/test_utils/src/lib.rs
-index 6f2a799..880ef16 100644
+index c94415b..04b2577 100644
 --- a/test_utils/src/lib.rs
 +++ b/test_utils/src/lib.rs
-@@ -23,5 +23,5 @@ pub mod syscalls;
+@@ -25,5 +25,5 @@ pub mod syscalls;
  
  /// Simple instruction meter for testing
--#[derive(Debug, Clone, Default)]
-+#[derive(Debug, Clone, Default, serde::Deserialize, serde::Serialize)]
+-#[derive(Debug)]
++#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct TestContextObject {
      /// Maximal amount of instructions which still can be executed
