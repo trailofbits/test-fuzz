@@ -91,6 +91,8 @@ struct-field-names = "allow"
 [workspace.metadata.unmaintained]
 ignore = [
     "atomic-polyfill",
+    # smoelius: `lazy_static` and `parse_duration` are used only for testing.
+    "lazy_static",
     "parse_duration",
     "strip-ansi-escapes",
     # https://github.com/alacritty/vte/pull/122#issuecomment-2579278540
