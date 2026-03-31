@@ -21,7 +21,7 @@ index 5ca5cc5..83a6797 100644
 +++ b/src/memory_region.rs
 @@ -58,4 +58,85 @@ pub struct MemoryRegion {
  }
-
+ 
 +#[derive(serde::Deserialize, serde::Serialize)]
 +struct SerializableMemoryRegion {
 +    host_mem_seed: Option<u64>,
@@ -118,7 +118,7 @@ index 5ca5cc5..83a6797 100644
      /// VM configuration
 @@ -196,4 +279,21 @@ pub struct CommonMemoryMapping {
  }
-
+ 
 +impl Clone for CommonMemoryMapping {
 +    fn clone(&self) -> Self {
 +        Self {
@@ -140,7 +140,7 @@ index 5ca5cc5..83a6797 100644
      fn generate_access_violation(
 @@ -246,4 +346,39 @@ pub struct UnalignedMemoryMapping {
  }
-
+ 
 +impl<'de> serde::Deserialize<'de> for UnalignedMemoryMapping {
 +    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
 +    where
