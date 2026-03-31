@@ -47,7 +47,10 @@ jobs:
         sha1_filenames: [false, true]
 
     steps:
+      # smoelius: `fetch-depth: 0` is needed for the `git diff` command below.
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
       - name: Dylint versions
         run: cargo search dylint | grep '^dylint' | sort | tee dylint_versions.txt
