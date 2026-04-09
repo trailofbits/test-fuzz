@@ -324,6 +324,20 @@
         "name": "Ed Page"
       }
     ],
+    "const-oid": [
+      {
+        "id": 267,
+        "kind": "user",
+        "login": "tarcieri",
+        "name": "Tony Arcieri"
+      },
+      {
+        "id": 4457,
+        "kind": "team",
+        "login": "github:rustcrypto:formats",
+        "name": "formats"
+      }
+    ],
     "cpufeatures": [
       {
         "id": 267,
@@ -552,20 +566,6 @@
         "name": "Michael Dilger"
       }
     ],
-    "generic-array": [
-      {
-        "id": 1793,
-        "kind": "user",
-        "login": "fizyk20",
-        "name": "Bartłomiej Kamiński"
-      },
-      {
-        "id": 5704,
-        "kind": "user",
-        "login": "novacrazy",
-        "name": "Nova"
-      }
-    ],
     "hash32": [
       {
         "id": 246,
@@ -646,6 +646,20 @@
         "kind": "user",
         "login": "KokaKiwi",
         "name": "KokaKiwi"
+      }
+    ],
+    "hybrid-array": [
+      {
+        "id": 267,
+        "kind": "user",
+        "login": "tarcieri",
+        "name": "Tony Arcieri"
+      },
+      {
+        "id": 2398,
+        "kind": "team",
+        "login": "github:rustcrypto:utils",
+        "name": "utils"
       }
     ],
     "ident_case": [
@@ -1274,14 +1288,6 @@
         "kind": "user",
         "login": "chrisduerr",
         "name": "Christian Duerr"
-      }
-    ],
-    "version_check": [
-      {
-        "id": 3864,
-        "kind": "user",
-        "login": "SergioBenitez",
-        "name": "Sergio Benitez"
       }
     ],
     "vte": [
