@@ -37,7 +37,8 @@ option_set = "0.4"
 parse_duration = "2.1"
 predicates = "3.1"
 prettyplease = "0.2"
-proc-macro2 = { version = "1.0", features = ["span-locations"] }
+# smoelius: Force use of version 1.0.95 or later. Version 1.0.95 added `Span::file`.
+proc-macro2 = { version = "1.0.95", features = ["span-locations"] }
 quote = "1.0"
 regex = "1.12"
 remain = "0.2"
