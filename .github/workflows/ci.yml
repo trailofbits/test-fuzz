@@ -158,7 +158,6 @@ jobs:
         env:
           AFL_NO_AFFINITY: 1
           RUST_BACKTRACE: 1
-          RUST_LOG: warn
 
       - name: Check for non-SHA1 filenames
         if: ${{ matrix.sha1_filenames }}
