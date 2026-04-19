@@ -479,10 +479,11 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         .with_context(|| format!("`wait` failed for `{job:?}`"))?;
 
     if !status.success() {
-        // smoelius: If stderr was silenced, re-execute the command without --message-format=json.
-        // This is easier than trying to capture and colorize `CompilerMessage`s like Cargo does.
-        // smoelius: Rather than re-execute the command, just debug print the messages.
-        eprintln!("{messages:#?}");
+        for message in &messages {
+            if let Message::CompilerMessage(msg) = message {
+                eprint!("{msg}");
+            }
+        }
         bail!("Command failed: {exec_str}");
     }
 
