@@ -29,11 +29,17 @@ struct Test {
     flags: Flags,
     url: String,
     rev: String,
-    patch: String,
     subdir: String,
     test_package: String,
     fuzz_package: String,
     targets: Vec<String>,
+}
+
+impl Test {
+    fn patch(&self) -> String {
+        let repo = self.url.rsplit('/').next().unwrap();
+        format!("{repo}.patch")
+    }
 }
 
 static TESTS: LazyLock<Vec<Test>> = LazyLock::new(|| {
@@ -87,7 +93,7 @@ fn run_test(test: &Test, no_run: bool) {
 
     #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
     let patch = Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/patches"))
-        .join(&test.patch)
+        .join(test.patch())
         .canonicalize()
         .unwrap();
 
@@ -250,7 +256,7 @@ fn patches_are_current() {
 
         let patch_path = Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("patches")
-            .join(&test.patch);
+            .join(test.patch());
         let patch = read_to_string(patch_path).unwrap();
 
         // smoelius: To use `std::process::Command` here, the `write_stdin` would have to be

@@ -15,8 +15,11 @@ DIR="$(dirname "$(realpath "$0")")/.."
 
 cd "$DIR"
 
-paste <(jq -r .[].url third-party/third_party.json) <(jq -r .[].rev third-party/third_party.json) <(jq -r .[].patch third-party/third_party.json) |
-while read -r URL REV_OLD PATCH; do
+paste <(jq -r .[].url third-party/third_party.json) <(jq -r .[].rev third-party/third_party.json) |
+while read -r URL REV_OLD; do
+    # Strip everything through the last '/' in URL to get the repo name, then append ".patch".
+    PATCH="${URL##*/}.patch"
+
     pushd "$(mktemp -d)"
 
     git clone --depth 1 "$URL" .
