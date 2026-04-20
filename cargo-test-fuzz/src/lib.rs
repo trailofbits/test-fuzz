@@ -1099,6 +1099,7 @@ struct Config {
 
 struct Child {
     exec: String,
+    target: String,
     popen: StdChild,
     receiver: Receiver,
     unprinted_data: Vec<u8>,
@@ -1148,9 +1149,9 @@ impl Child {
         let rows = rows as usize;
         let cols = cols as usize;
 
-        // smoelius: `n_children` - 1 lines for dividers plus one line at the bottom of the
-        // terminal to hold the cursor.
-        let Some(n_available_rows) = rows.checked_sub(n_children) else {
+        // smoelius: `n_children` lines for dividers plus one line at the bottom of the terminal
+        // to hold the cursor.
+        let Some(n_available_rows) = rows.checked_sub(n_children + 1) else {
             return;
         };
 
@@ -1159,9 +1160,9 @@ impl Child {
         assert_eq!(n_children, children.len());
 
         for (i_child, child) in children.into_iter().enumerate() {
-            if i_child != 0 {
-                println!("{:-<cols$}", "");
-            }
+            print!("{}", divider_with_width(&child.target, cols));
+            clear_to_end_of_line();
+            println!();
             #[allow(clippy::bool_to_int_with_if)]
             let n_child_rows = n_available_rows / n_children
                 + if i_child < n_available_rows % n_children {
@@ -1189,6 +1190,18 @@ fn cursor_to_home_position() {
 
 fn clear_to_end_of_line() {
     print!("\x1b[0K");
+}
+
+fn divider_with_width(target: &str, width: usize) -> String {
+    let prefix = format!("{target} ");
+    if prefix.len() >= width {
+        return prefix_with_width(&prefix, width).to_owned();
+    }
+    format!(
+        "{prefix}{:-<remaining$}",
+        "",
+        remaining = width - prefix.len()
+    )
 }
 
 #[cfg_attr(dylint_lib = "supplementary", allow(commented_out_code))]
@@ -1330,6 +1343,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                 .with_context(|| "Could not register receiver")?;
             children[i_target] = Some(Child {
                 exec,
+                target: target.clone(),
                 popen,
                 receiver,
                 unprinted_data: Vec::new(),
@@ -1368,13 +1382,10 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                 if line.contains("+++ Testing aborted programmatically +++") {
                     child.testing_aborted_programmatically = true;
                 }
-                if opts.no_ui
-                    && i_target_prev < executable_targets.len()
-                    && i_target_prev != i_target
-                {
-                    println!("---");
+                if opts.no_ui && i_target_prev != i_target {
+                    println!("{target} ---");
                 }
-                child.print_line(opts, format!("{target}: {line}"));
+                child.print_line(opts, line.to_owned());
                 i_target_prev = i_target;
             }
 
