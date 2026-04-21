@@ -337,16 +337,14 @@ fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
         return reset(opts, &executable_targets);
     }
 
-    if opts.consolidate || opts.reset || coverage || display || replay {
-        let (executable, target) = executable_target(opts, &executable_targets)?;
-
-        if opts.consolidate || opts.reset {
-            if opts.consolidate {
-                consolidate(opts, &executable_targets)?;
-            }
-            return reset(opts, &executable_targets);
+    if opts.consolidate || opts.reset {
+        if opts.consolidate {
+            consolidate(opts, &executable_targets)?;
         }
+        return reset(opts, &executable_targets);
+    }
 
+    if coverage || display || replay {
         if coverage {
             let mut command = opts.command(["cargo", "llvm-cov", "clean", "--profraw-only"]);
             debug!("{command:?}");
@@ -356,22 +354,34 @@ fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
             ensure!(status.success(), "Command failed: {command:?}");
         }
 
-        let (flags, dir) = None
-            .or_else(|| {
-                opts.coverage
-                    .map(|object| flags_and_dir(object, &executable.name, &target))
-            })
-            .or_else(|| {
-                opts.display
-                    .map(|object| flags_and_dir(object, &executable.name, &target))
-            })
-            .or_else(|| {
-                opts.replay
-                    .map(|object| flags_and_dir(object, &executable.name, &target))
-            })
-            .unwrap_or_else(|| (Flags::empty(), PathBuf::default()));
+        let executable_targets = flatten_executable_targets(opts, executable_targets)?;
+        let multiple = executable_targets.len() > 1;
+        let width = termsize::get().map(|size| size.cols as usize);
+        for (executable, target) in &executable_targets {
+            if multiple {
+                println!(
+                    "{}",
+                    divider_with_width(target, width.unwrap_or_else(|| target.len() + 4))
+                );
+            }
 
-        for_each_entry(opts, &executable, &target, flags, &dir)?;
+            let (flags, dir) = None
+                .or_else(|| {
+                    opts.coverage
+                        .map(|object| flags_and_dir(object, &executable.name, target))
+                })
+                .or_else(|| {
+                    opts.display
+                        .map(|object| flags_and_dir(object, &executable.name, target))
+                })
+                .or_else(|| {
+                    opts.replay
+                        .map(|object| flags_and_dir(object, &executable.name, target))
+                })
+                .unwrap_or_else(|| (Flags::empty(), PathBuf::default()));
+
+            for_each_entry(opts, executable, target, flags, &dir)?;
+        }
 
         if coverage {
             if Path::new("lcov.info")
@@ -658,41 +668,6 @@ fn filter_targets(opts: &TestFuzz, pat: &str, targets: &[String]) -> Vec<String>
         .filter(|target| (!opts.exact && target.contains(pat)) || target.as_str() == pat)
         .cloned()
         .collect()
-}
-
-fn executable_target(
-    opts: &TestFuzz,
-    executable_targets: &[(Executable, Vec<String>)],
-) -> Result<(Executable, String)> {
-    let mut executable_targets = executable_targets.to_vec();
-
-    ensure!(
-        executable_targets.len() <= 1,
-        "Found multiple executables with fuzz targets{}: {:#?}",
-        match_message(opts),
-        executable_targets
-    );
-
-    let Some(mut executable_targets) = executable_targets.pop() else {
-        bail!("Found no fuzz targets{}", match_message(opts));
-    };
-
-    ensure!(
-        executable_targets.1.len() <= 1,
-        "Found multiple fuzz targets{} in {:?}: {:#?}",
-        match_message(opts),
-        executable_targets.0,
-        executable_targets.1
-    );
-
-    #[allow(clippy::expect_used)]
-    Ok((
-        executable_targets.0,
-        executable_targets
-            .1
-            .pop()
-            .expect("Executable with no fuzz targets"),
-    ))
 }
 
 fn match_message(opts: &TestFuzz) -> String {
