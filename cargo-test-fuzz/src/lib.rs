@@ -38,7 +38,7 @@ use std::{
     ffi::OsStr,
     fmt::{Debug, Formatter},
     fs::{File, create_dir_all, read, read_dir, remove_dir_all},
-    io::{BufRead, Read},
+    io::{BufRead, IsTerminal, Read},
     iter,
     path::{Path, PathBuf},
     process::{Child as StdChild, Command, Stdio, exit},
@@ -452,10 +452,15 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to: /dev/null
     // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when
     // generating coverage, displaying, or replaying.
+    let message_format = if std::io::stderr().is_terminal() {
+        "--message-format=json-diagnostic-rendered-ansi"
+    } else {
+        "--message-format=json"
+    };
     let mut exec = opts
         .command(["cargo"])
         .to_exec()
-        .args(args.iter().chain(iter::once(&"--message-format=json")))
+        .args(args.iter().chain(iter::once(&message_format)))
         .stdout(Redirection::Pipe);
     if silence_stderr {
         exec = exec.stderr(Redirection::Null);
