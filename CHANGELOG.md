@@ -1,5 +1,12 @@
 # Changelog
 
+## 8.1.0
+
+- FEATURE: Show all targets that could not be started, rather than just the first target that could not be started ([4a50441](https://github.com/trailofbits/test-fuzz/commit/4a5044176c1f0289092e44613b86dc7656249a04))&mdash;thanks [@HiteshMittal07](https://github.com/HiteshMittal07)
+- FEATURE: When a build fails, show only compiler messages ([1931015](https://github.com/trailofbits/test-fuzz/commit/19310155ebd6e35e57f0a7bbba8f78485139668d) and [74ad6fc](https://github.com/trailofbits/test-fuzz/commit/74ad6fc0be0ec1a43e352d5d724d90193833aee3))
+- FEATURE: Begin dividers with targets names, rather than preceding output lines with target names ([4c8e92b](https://github.com/trailofbits/test-fuzz/commit/4c8e92bd41f0f0325b0ca4a2d1e384e4047bfe2d))
+- FEATURE: `--display`, etc. now show multiple targets. That is, the flags no longer require a unique target to be named. The new output format resembles [4c8e92b](https://github.com/trailofbits/test-fuzz/commit/4c8e92bd41f0f0325b0ca4a2d1e384e4047bfe2d). ([51b6b89](https://github.com/trailofbits/test-fuzz/commit/51b6b8962b9fb5e31b027ab5e559eb9d96b0b506))
+
 ## 8.0.0
 
 - BREAKING CHANGE: Remove `--offline` in `cargo-test-fuzz` ([31bbf29](https://github.com/trailofbits/test-fuzz/commit/31bbf296e1da4b077967d431d6ead2c74ca2a132))
