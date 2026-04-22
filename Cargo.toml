@@ -15,7 +15,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-afl = { version = "0.17" }
+afl = { version = "0.18" }
 anyhow = "1.0"
 assert_cmd = "2.2"
 bitflags = "2.11"
