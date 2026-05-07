@@ -23,7 +23,7 @@ bitflags = "2.11"
 cargo_metadata = "=0.19"
 cast_checks = { version = "0.1" }
 clap = { version = "4.6", features = ["cargo", "derive", "wrap_help"] }
-ctor = "0.11"
+ctor = "1.0"
 darling = "0.23"
 env_logger = "0.11"
 heck = "0.5"
@@ -50,7 +50,7 @@ sha1 = "0.11"
 similar-asserts = "2.0"
 strip-ansi-escapes = "0.2"
 strum_macros = "0.28"
-subprocess = "1.0"
+subprocess = "1.1"
 syn = { version = "2.0", features = ["full", "parsing", "visit", "visit-mut"] }
 tempfile = "3.27"
 termsize = "0.1"
