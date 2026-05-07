@@ -10,7 +10,7 @@ mod serde_format;
 mod test_fuzz_log;
 mod versions;
 
-#[ctor::ctor]
+#[ctor::ctor(unsafe)]
 fn initialize() {
     unsafe {
         std::env::set_var("CARGO_TERM_COLOR", "never");
