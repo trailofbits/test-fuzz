@@ -6,7 +6,7 @@ pub mod fuzzable;
 mod retry;
 pub use crate::retry::*;
 
-#[ctor::ctor]
+#[ctor::ctor(unsafe)]
 fn init() {
     internal::dirs::IN_TEST.store(true, std::sync::atomic::Ordering::SeqCst);
 
