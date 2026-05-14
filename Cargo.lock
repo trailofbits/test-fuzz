@@ -4,9 +4,9 @@ version = 4
 
 [[package]]
 name = "afl"
-version = "0.18.1"
+version = "0.18.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25f85f013c45496fbafc0f85c4bb2451f5c0a1aded6187a3dc7e11bd14d199e5"
+checksum = "97f234ba65eadcb51ea4e5c33dfdf05d6c512e297b4fb8fd31159e2dac4e7cc8"
 dependencies = [
  "home",
  "libc",
@@ -81,9 +81,9 @@ checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
 name = "assert_cmd"
-version = "2.2.1"
+version = "2.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "39bae1d3fa576f7c6519514180a72559268dd7d1fe104070956cb687bc6673bd"
+checksum = "2aa3a22042e45de04255c7bf3626e239f450200fd0493c1e382263544b20aea6"
 dependencies = [
  "anstyle",
  "bstr",
@@ -357,9 +357,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "1.0.2"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5449af32ecd0738fb1be3f9faa3c10da8509044fed757aaa2bc1c16f9a74e0c5"
+checksum = "378f0974ae2468eaf63aa036dbe9c926b0dc7ea64c156f2ea618bc2f75b934f0"
 dependencies = [
  "link-section",
  "linktime-proc-macro",
@@ -685,9 +685,9 @@ checksum = "52ff2c0fe9bc6cb6b14a0592c2ff4fa9ceb83eea9db979b0487cd054946a2b8f"
 
 [[package]]
 name = "link-section"
-version = "0.15.0"
+version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4641b91711debb59c61b07eb5e30521ed6d9e2bdd9fd04f934e7da3a5bc386d4"
+checksum = "5c8600ca3dbe044f07955b443ff606c50f45295b863289bbe7d0844d50cf11e4"
 
 [[package]]
 name = "linktime-proc-macro"
