@@ -242,7 +242,6 @@ struct Executable {
 }
 
 impl Debug for Executable {
-    #[cfg_attr(dylint_lib = "general", allow(non_local_effect_before_error_return))]
     fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
         let test_fuzz_version = self
             .test_fuzz_version
