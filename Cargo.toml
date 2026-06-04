@@ -18,7 +18,7 @@ resolver = "2"
 afl = { version = "0.18" }
 anyhow = "1.0"
 assert_cmd = "2.2"
-bitflags = "2.11"
+bitflags = "2.12"
 # smoelius: `cargo_metadata` 0.20.0 pulls in too many new dependencies.
 cargo_metadata = "=0.19"
 cast_checks = { version = "0.1" }
