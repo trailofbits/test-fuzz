@@ -48,7 +48,7 @@ jobs:
 
     steps:
       # smoelius: `fetch-depth: 0` is needed for the `git diff` command below.
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
