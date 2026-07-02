@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index af473aa..926067e 100644
+index b8685bc..1a09739 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
@@ -16,10 +16,10 @@ index af473aa..926067e 100644
 +
 +[workspace]
 diff --git a/src/memory_region.rs b/src/memory_region.rs
-index afd7c35..4328232 100644
+index 17da0ac..cfb3b21 100644
 --- a/src/memory_region.rs
 +++ b/src/memory_region.rs
-@@ -157,4 +157,85 @@ pub struct MemoryRegion {
+@@ -258,4 +258,87 @@ pub struct MemoryRegion {
  }
  
 +#[derive(serde::Deserialize, serde::Serialize)]
@@ -51,12 +51,16 @@ index afd7c35..4328232 100644
 +            let mut rng: StdRng = SeedableRng::seed_from_u64(seed);
 +            rng.fill_bytes(&mut bytes);
 +        };
++        let bytes = bytes.leak();
++        let host = if writable {
++            HostBuffer::Mutable(ptr::slice_from_raw_parts_mut(bytes.as_mut_ptr(), bytes.len()))
++        } else {
++            HostBuffer::Immutable(ptr::slice_from_raw_parts(bytes.as_ptr(), bytes.len()))
++        };
 +        Self {
-+            host_addr: bytes.leak().as_ptr() as u64,
++            host,
 +            vm_addr,
-+            len,
 +            vm_gap_shift,
-+            writable,
 +            access_violation_handler_payload,
 +        }
 +    }
@@ -65,19 +69,17 @@ index afd7c35..4328232 100644
 +impl From<&MemoryRegion> for SerializableMemoryRegion {
 +    fn from(value: &MemoryRegion) -> Self {
 +        let MemoryRegion {
-+            host_addr: _,
++            host,
 +            vm_addr,
-+            len,
 +            vm_gap_shift,
-+            writable,
 +            access_violation_handler_payload,
 +        } = value;
 +        Self {
 +            host_mem_seed: None,
 +            vm_addr: *vm_addr,
-+            len: *len,
++            len: host.len() as u64,
 +            vm_gap_shift: *vm_gap_shift,
-+            writable: *writable,
++            writable: host.is_mutable(),
 +            access_violation_handler_payload: *access_violation_handler_payload,
 +        }
 +    }
@@ -105,7 +107,7 @@ index afd7c35..4328232 100644
 +
  impl MemoryRegion {
      /// Create a VM memory region with host `address` pointing to a `len` bytes of data.
-@@ -301,4 +382,36 @@ pub struct UnalignedMemoryMapping {
+@@ -469,4 +552,36 @@ pub struct UnalignedMemoryMapping {
  }
  
 +impl<'de> serde::Deserialize<'de> for UnalignedMemoryMapping {
@@ -142,14 +144,14 @@ index afd7c35..4328232 100644
 +
  impl fmt::Debug for UnalignedMemoryMapping {
      fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-@@ -424,5 +537,5 @@ impl UnalignedMemoryMapping {
+@@ -592,5 +707,5 @@ impl UnalignedMemoryMapping {
  /// Memory mapping that uses the upper half of an address to identify the
  /// underlying memory region.
 -#[derive(Debug)]
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct AlignedMemoryMapping {
      regions: Vec<MemoryRegion>,
-@@ -564,6 +677,71 @@ impl fmt::Debug for MemoryMapping {
+@@ -732,6 +847,71 @@ impl fmt::Debug for MemoryMapping {
  }
  
 +impl Clone for MemoryMapping {
@@ -222,7 +224,7 @@ index afd7c35..4328232 100644
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub enum MemoryMappingType {
      /// Aligned memory mapping which uses the upper half of an address to
-@@ -846,5 +1024,5 @@ impl MemoryMapping {
+@@ -1049,5 +1229,5 @@ impl MemoryMapping {
  
  /// Fast, small linear cache used to speed up unaligned memory mapping.
 -#[derive(Debug)]
@@ -319,7 +321,7 @@ index 519b628..ee925a7 100644
  pub struct Config {
      /// Maximum call depth
 diff --git a/test_utils/Cargo.toml b/test_utils/Cargo.toml
-index cc79274..05f30b6 100644
+index 6211979..b760674 100644
 --- a/test_utils/Cargo.toml
 +++ b/test_utils/Cargo.toml
 @@ -9,2 +9,5 @@ publish = false

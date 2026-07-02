@@ -1,5 +1,5 @@
 diff --git a/contracts/cw20-base/Cargo.toml b/contracts/cw20-base/Cargo.toml
-index e3cffc3..77ad75e 100644
+index 77bbb10..a3234bc 100644
 --- a/contracts/cw20-base/Cargo.toml
 +++ b/contracts/cw20-base/Cargo.toml
 @@ -28,4 +28,6 @@ serde = { workspace = true }
