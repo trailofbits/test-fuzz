@@ -23,7 +23,7 @@ cargo_metadata = "0.23"
 cast_checks = { version = "0.1" }
 clap = { version = "4.6", features = ["cargo", "derive", "wrap_help"] }
 ctor = "1.0"
-darling = "0.23"
+darling = "0.24"
 env_logger = "0.11"
 heck = "0.5"
 hex = "0.4"
@@ -35,8 +35,7 @@ num-traits = "0.2"
 option_set = "0.4"
 parse_duration = "2.1"
 predicates = "3.1"
-# smoelius: `prettyplease` must be upgraded in conjunction with `syn` (see below).
-prettyplease = "=0.2"
+prettyplease = "0.3"
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
 quote = "1.0"
 regex = "1.13"
@@ -51,9 +50,13 @@ similar-asserts = "2.0"
 strip-ansi-escapes = "0.2"
 strum_macros = "0.28"
 subprocess = "1.2"
-# smoelius: Pin `syn` version until this `darling` PR is merged:
-# https://github.com/TedDriggs/darling/pull/431
-syn = { version = "=2.0", features = ["full", "parsing", "visit", "visit-mut"] }
+syn = { version = "3.0", features = [
+    "extra-traits",
+    "full",
+    "parsing",
+    "visit",
+    "visit-mut",
+] }
 tempfile = "3.27"
 termsize = "0.1"
 toml_edit = "0.25"

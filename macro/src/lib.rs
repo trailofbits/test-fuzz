@@ -15,11 +15,12 @@ use std::{
     },
 };
 use syn::{
-    Attribute, Block, Expr, Field, FieldValue, File, FnArg, GenericArgument, GenericParam,
-    Generics, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, ItemMod, LifetimeParam, PatType, Path,
-    PathArguments, PathSegment, Receiver, ReturnType, Signature, Stmt, Type, TypeParam, TypePath,
-    TypeReference, TypeSlice, Visibility, WhereClause, WherePredicate, parse::Parser,
-    parse_macro_input, parse_quote, parse_str, parse2, punctuated::Punctuated, token,
+    Attribute, Block, Expr, Field, FieldValue, File, FnArg, FnModifiers, GenericArgument,
+    GenericParam, Generics, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, ItemMod, LifetimeParam,
+    PatType, Path, PathArguments, PathSegment, Receiver, ReceiverKind, ReturnType, Signature, Stmt,
+    Type, TypeParam, TypePath, TypeReference, TypeSlice, Visibility, WhereClause, WherePredicate,
+    parse::Parser, parse_macro_input, parse_quote, parse_str, parse2, punctuated::Punctuated,
+    token,
 };
 
 mod ord_type;
@@ -49,7 +50,7 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
     let item = parse_macro_input!(item as ItemImpl);
     let ItemImpl {
         attrs,
-        defaultness,
+        modifiers,
         unsafety,
         impl_token,
         generics,
@@ -61,11 +62,12 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
 
     let (_, _, where_clause) = generics.split_for_impl();
 
+    let defaultness = modifiers.defaultness;
+    let polarity = modifiers.polarity;
     // smoelius: Without the next line, you get:
-    //   the trait `quote::ToTokens` is not implemented for `(std::option::Option<syn::token::Bang>,
-    // syn::Path, syn::token::For)`
-    let (trait_path, trait_) = trait_.map_or((None, None), |(bang, path, for_)| {
-        (Some(path.clone()), Some(quote! { #bang #path #for_ }))
+    //   the trait bound `(syn::Path, For): quote::ToTokens` is not satisfied
+    let (trait_path, trait_) = trait_.map_or((None, None), |(path, for_)| {
+        (Some(path.clone()), Some(quote! { #path #for_ }))
     });
 
     let (impl_items, modules) = map_impl_items(&generics, trait_path.as_ref(), &self_ty, &items);
@@ -80,7 +82,7 @@ pub fn test_fuzz_impl(args: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     let result = quote! {
-        #(#attrs)* #defaultness #unsafety #impl_token #generics #trait_ #self_ty #where_clause {
+        #(#attrs)* #defaultness #unsafety #impl_token #generics #polarity #trait_ #self_ty #where_clause {
             #(#impl_items)*
         }
 
@@ -136,7 +138,7 @@ fn map_impl_item_fn(
     let ImplItemFn {
         attrs,
         vis,
-        defaultness,
+        modifiers,
         sig,
         block,
     } = &impl_item_fn;
@@ -155,7 +157,7 @@ fn map_impl_item_fn(
                 &opts,
                 &attrs,
                 vis,
-                defaultness.as_ref(),
+                modifiers,
                 sig,
                 block,
             );
@@ -197,6 +199,7 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
     let ItemFn {
         attrs,
         vis,
+        modifiers,
         sig,
         block,
     } = &item;
@@ -207,7 +210,7 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
         &opts,
         attrs,
         vis,
-        None,
+        modifiers,
         sig,
         block,
     );
@@ -233,7 +236,7 @@ fn map_method_or_fn(
     opts: &TestFuzzOpts,
     attrs: &Vec<Attribute>,
     vis: &Visibility,
-    defaultness: Option<&token::Default>,
+    modifiers: &FnModifiers,
     sig: &Signature,
     block: &Block,
 ) -> (TokenStream2, ItemMod) {
@@ -765,6 +768,7 @@ fn map_method_or_fn(
             },
         )
     };
+    let defaultness = modifiers.defaultness;
     (
         parse_quote! {
             #(#attrs)* #vis #defaultness #sig {
@@ -862,15 +866,17 @@ fn map_arg<'a>(
         let (fn_arg_attrs, ident, expr, ty, fmt) = match arg {
             FnArg::Receiver(Receiver {
                 attrs,
-                reference,
                 mutability,
-                ..
+                self_token: _,
+                kind,
             }) => {
                 let ident = anonymous_ident();
                 let expr = parse_quote! { self };
-                let reference = reference
-                    .as_ref()
-                    .map(|(and, lifetime)| quote! { #and #lifetime });
+                let reference = if let ReceiverKind::Reference(and, lifetime, mutability) = kind {
+                    quote! { #and #lifetime #mutability }
+                } else {
+                    quote! {}
+                };
                 let ty = parse_quote! { #reference #mutability #self_ty };
                 let fmt = parse_quote! {
                     test_fuzz::runtime::TryDebug(&self.#ident).apply(&mut |value| {

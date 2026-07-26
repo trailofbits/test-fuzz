@@ -27,7 +27,12 @@ struct GenericParamVisitor<'a> {
 
 impl VisitMut for GenericParamVisitor<'_> {
     fn visit_type_mut(&mut self, ty: &mut Type) {
-        if let Type::Path(TypePath { qself: None, path }) = ty
+        if let Type::Path(TypePath {
+            attrs,
+            qself: None,
+            path,
+        }) = ty
+            && attrs.is_empty()
             && let Some(ident) = path.get_ident()
             && let Some(generic_arg) = self.map.get(ident)
         {
