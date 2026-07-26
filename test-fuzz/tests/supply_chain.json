@@ -412,6 +412,84 @@
         "name": "Ted Driggs"
       }
     ],
+    "defmt": [
+      {
+        "id": 246,
+        "kind": "user",
+        "login": "japaric",
+        "name": "Jorge Aparicio"
+      },
+      {
+        "id": 2769,
+        "kind": "team",
+        "login": "github:knurling-rs:crate-owners",
+        "name": "crate-owners"
+      },
+      {
+        "id": 84779,
+        "kind": "user",
+        "login": "jonathanpallant",
+        "name": "Jonathan Pallant"
+      },
+      {
+        "id": 336166,
+        "kind": "user",
+        "login": "knurling-infra",
+        "name": null
+      }
+    ],
+    "defmt-macros": [
+      {
+        "id": 246,
+        "kind": "user",
+        "login": "japaric",
+        "name": "Jorge Aparicio"
+      },
+      {
+        "id": 2769,
+        "kind": "team",
+        "login": "github:knurling-rs:crate-owners",
+        "name": "crate-owners"
+      },
+      {
+        "id": 84779,
+        "kind": "user",
+        "login": "jonathanpallant",
+        "name": "Jonathan Pallant"
+      },
+      {
+        "id": 336166,
+        "kind": "user",
+        "login": "knurling-infra",
+        "name": null
+      }
+    ],
+    "defmt-parser": [
+      {
+        "id": 246,
+        "kind": "user",
+        "login": "japaric",
+        "name": "Jorge Aparicio"
+      },
+      {
+        "id": 2769,
+        "kind": "team",
+        "login": "github:knurling-rs:crate-owners",
+        "name": "crate-owners"
+      },
+      {
+        "id": 84779,
+        "kind": "user",
+        "login": "jonathanpallant",
+        "name": "Jonathan Pallant"
+      },
+      {
+        "id": 336166,
+        "kind": "user",
+        "login": "knurling-infra",
+        "name": null
+      }
+    ],
     "difflib": [
       {
         "id": 3481,
@@ -677,6 +755,14 @@
       }
     ],
     "jiff": [
+      {
+        "id": 189,
+        "kind": "user",
+        "login": "BurntSushi",
+        "name": "Andrew Gallant"
+      }
+    ],
+    "jiff-core": [
       {
         "id": 189,
         "kind": "user",
