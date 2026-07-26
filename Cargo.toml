@@ -18,9 +18,8 @@ resolver = "2"
 afl = { version = "0.18" }
 anyhow = "1.0"
 assert_cmd = "2.2"
-bitflags = "2.12"
-# smoelius: `cargo_metadata` 0.20.0 pulls in too many new dependencies.
-cargo_metadata = "=0.19"
+bitflags = "2.13"
+cargo_metadata = "0.23"
 cast_checks = { version = "0.1" }
 clap = { version = "4.6", features = ["cargo", "derive", "wrap_help"] }
 ctor = "1.0"
@@ -36,10 +35,11 @@ num-traits = "0.2"
 option_set = "0.4"
 parse_duration = "2.1"
 predicates = "3.1"
+# smoelius: `prettyplease` must be upgraded in conjunction with `syn` (see below).
 prettyplease = "0.2"
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
 quote = "1.0"
-regex = "1.12"
+regex = "1.13"
 remain = "0.2"
 rustc_version = "0.4"
 semver = "1.0"
@@ -50,8 +50,10 @@ sha1 = "0.11"
 similar-asserts = "2.0"
 strip-ansi-escapes = "0.2"
 strum_macros = "0.28"
-subprocess = "1.1"
-syn = { version = "2.0", features = ["full", "parsing", "visit", "visit-mut"] }
+subprocess = "1.2"
+# smoelius: Pin `syn` version until this `darling` PR is merged:
+# https://github.com/TedDriggs/darling/pull/431
+syn = { version = "=2.0", features = ["full", "parsing", "visit", "visit-mut"] }
 tempfile = "3.27"
 termsize = "0.1"
 toml_edit = "0.25"
