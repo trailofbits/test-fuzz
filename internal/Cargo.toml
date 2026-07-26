@@ -19,7 +19,7 @@ cargo_metadata = { workspace = true }
 serde = { workspace = true }
 
 # smoelius: Serde formats
-bincode = { version = "2.0", features = ["serde"], optional = true }
+bincode = { version = "=2.0", features = ["serde"], optional = true }
 postcard = { version = "1.1", features = ["use-std"] }
 
 [features]
