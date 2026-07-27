@@ -36,7 +36,7 @@ option_set = "0.4"
 parse_duration = "2.1"
 predicates = "3.1"
 # smoelius: `prettyplease` must be upgraded in conjunction with `syn` (see below).
-prettyplease = "0.2"
+prettyplease = "0.3"
 proc-macro2 = { version = "1.0", features = ["span-locations"] }
 quote = "1.0"
 regex = "1.13"
