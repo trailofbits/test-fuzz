@@ -234,9 +234,9 @@ dependencies = [
 
 [[package]]
 name = "cast_checks"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44aa193310eb2d93199c80e80035cb4df8da2849776e2b9d5b839efe5eb64681"
+checksum = "2ca14c641e42aa4d39a0d64ace7e6ce832d0a5250827b6b4b7e740a3f8a50254"
 dependencies = [
  "cast_checks_convert",
  "cast_checks_macro",
@@ -244,15 +244,15 @@ dependencies = [
 
 [[package]]
 name = "cast_checks_convert"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07832b84341778d3b2bf64c0325e0cb81f9f0b588ed9e9a983071edf73d3e11c"
+checksum = "aa16f35b5451385b4754631414de805ca822e052e15ce751baceaeebc3f17d96"
 
 [[package]]
 name = "cast_checks_macro"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6350b593b002684b1667244eb3d0e89d0e64552cd46344345ab6b35baafe90ff"
+checksum = "9dbbae938c76e241eb3c88035bdf09a9ab9775ee6fc9a7b7a84ca5a160ba4702"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -364,9 +364,9 @@ dependencies = [
 
 [[package]]
 name = "ctor"
-version = "1.0.11"
+version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e9bb72bb94fdc1bd619f4c18cc91ecf6302aeb333d31b3c6ec0bb841cd920209"
+checksum = "2d83cb7e7a873830708d6b02a78cd36a592c6fa14bf267b68725103b85c0d77f"
 dependencies = [
  "link-section",
  "linktime-proc-macro",
@@ -704,15 +704,15 @@ checksum = "3eaf3ede3fee6db1a4c2ee091bf8a8b4dccdc6d17f656fb07896ee72867612f2"
 
 [[package]]
 name = "link-section"
-version = "0.19.1"
+version = "0.19.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8dc98458dfe90986c5e2f6ddcf68360c7e5c4252600153e06aa4ee8176c0f8d1"
+checksum = "5ee1a0d6e252afe82e7bc2db42fba60e02ddf3b1accaf8cb21d96e34ba61f3d4"
 
 [[package]]
 name = "linktime-proc-macro"
-version = "0.2.0"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c7b0a3383c2a1002d11349c92c85a666a5fb679e96c79d782cf0dbe557fd6ee"
+checksum = "348d0075b1fc163b26d72a7f75fc5141daf2fd1bdf128d873cbaf6785d495bdf"
 
 [[package]]
 name = "linux-raw-sys"
