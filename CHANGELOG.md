@@ -1,5 +1,15 @@
 # Changelog
 
+## 8.1.1
+
+- Dependency updates
+  - `cargo_metadata` upgraded to version 0.23
+  - `ctor` upgraded to version 1.0
+  - `darling` upgraded to version 0.24
+  - `itertools` upgraded to version 0.15
+  - `prettyplease` upgraded to version 0.3
+  - `syn` upgraded to version 3.0
+
 ## 8.1.0
 
 - FEATURE: Show all targets that could not be started, rather than just the first target that could not be started ([4a50441](https://github.com/trailofbits/test-fuzz/commit/4a5044176c1f0289092e44613b86dc7656249a04))&mdash;thanks [@HiteshMittal07](https://github.com/HiteshMittal07)
