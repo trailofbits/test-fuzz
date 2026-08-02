@@ -25,7 +25,7 @@ test-fuzz = { workspace = true }
 testing = { workspace = true }
 
 [features]
-test-third-party-full = []
+test-full = []
 
 [lints]
 workspace = true

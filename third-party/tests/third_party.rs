@@ -55,7 +55,7 @@ fn test() {
     for test in TESTS.iter() {
         run_test(
             test,
-            (!cfg!(feature = "test-third-party-full") && test.flags.contains(Flags::EXPENSIVE))
+            (!cfg!(feature = "test-full") && test.flags.contains(Flags::EXPENSIVE))
                     // || test.flags.contains(Flags::SKIP)
                     || (test.flags.contains(Flags::SKIP_NIGHTLY)
                         && version_meta.channel == Channel::Nightly),
@@ -237,7 +237,7 @@ where
     assert
 }
 
-#[cfg(feature = "test-third-party-full")]
+#[cfg(feature = "test-full")]
 #[test]
 fn patches_are_current() {
     // smoelius: This should match `scripts/update_patches.sh`.

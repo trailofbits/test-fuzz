@@ -126,7 +126,7 @@ jobs:
             if [[ ${{ github.event_name }} = 'schedule' ]] ||
               git diff --name-only ${{ github.event.pull_request.base.sha }} | grep -w 'patches\|third_party' >/dev/null
             then
-              MAYBE_THIRD_PARTY="$MAYBE_THIRD_PARTY --features=test-third-party-full"
+              MAYBE_THIRD_PARTY="$MAYBE_THIRD_PARTY --features=third-party/test-full"
             fi
           else
             MAYBE_THIRD_PARTY='--workspace --exclude third-party --features=test-install'
