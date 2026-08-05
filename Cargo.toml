@@ -84,14 +84,14 @@ check-cfg = [
 [workspace.lints.clippy]
 nursery = { level = "warn", priority = -1 }
 pedantic = { level = "warn", priority = -1 }
-cognitive-complexity = "allow"
-missing-errors-doc = "allow"
-missing-panics-doc = "allow"
-multiple-bound-locations = "allow"
-option-if-let-else = "allow"
-redundant-pub-crate = "allow"
-result-large-err = "allow"
-struct-field-names = "allow"
+cognitive_complexity = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+multiple_bound_locations = "allow"
+option_if_let_else = "allow"
+redundant_pub_crate = "allow"
+result_large_err = "allow"
+struct_field_names = "allow"
 
 [workspace.metadata.unmaintained]
 ignore = [
