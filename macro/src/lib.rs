@@ -21,12 +21,12 @@ use std::{
     },
 };
 use syn::{
-    Attribute, Block, Expr, Field, FieldValue, File, FnArg, FnModifiers, GenericArgument,
-    GenericParam, Generics, Ident, ImplItem, ImplItemFn, ItemFn, ItemImpl, ItemMod, LifetimeParam,
-    PatType, Path, PathArguments, PathSegment, Receiver, ReceiverKind, ReturnType, Signature, Stmt,
-    Type, TypeParam, TypePath, TypeReference, TypeSlice, Visibility, WhereClause, WherePredicate,
-    parse::Parser, parse_macro_input, parse_quote, parse_str, parse2, punctuated::Punctuated,
-    token,
+    AngleBracketedGenericArguments, Attribute, Block, Expr, Field, FieldValue, File, FnArg,
+    FnModifiers, GenericArgument, GenericParam, Generics, Ident, ImplItem, ImplItemFn, ItemFn,
+    ItemImpl, ItemMod, ItemUse, LifetimeParam, PatType, Path, PathArguments, PathSegment, Receiver,
+    ReceiverKind, ReturnType, Signature, Stmt, Type, TypeParam, TypePath, TypeReference, TypeSlice,
+    Visibility, WhereClause, WherePredicate, parse::Parser, parse_macro_input, parse_quote,
+    parse_str, parse2, punctuated::Punctuated, token,
 };
 
 mod ord_type;
@@ -570,14 +570,14 @@ fn map_method_or_fn(
                                 }
                                 #input_args
                                 if test_fuzz::runtime::display_enabled() {
-                                    #output_args
+                                    #(#output_args)*
                                 }
                                 if test_fuzz::runtime::coverage_enabled()
                                     || test_fuzz::runtime::replay_enabled()
                                 {
                                     #call_in_environment_with_deserialized_arguments
                                     if test_fuzz::runtime::replay_enabled() {
-                                        #output_ret
+                                        #(#output_ret)*
                                     }
                                 }
                             } else {
@@ -632,14 +632,14 @@ fn map_method_or_fn(
 
 /// Returns a statement that warns that coverage will not be shown for the target, or nothing if
 /// the target's body has fewer than two statements.
-fn warn_if_function_is_nontrivial(sig: &Signature, stmts: &[Stmt]) -> TokenStream2 {
+fn warn_if_function_is_nontrivial(sig: &Signature, stmts: &[Stmt]) -> Option<Stmt> {
     if stmts.len() >= 2 {
         let span = sig.ident.span();
         let file = span.file();
         let line = span.start().line;
         let column = span.start().column + 1;
         let ident = sig.ident.to_string();
-        quote! {
+        Some(parse_quote! {
             eprintln!(
                 "{}:{}:{}: Warning: Coverage will not be shown for `{}`. To see coverage for \
                  `{ident}`, apply `test-fuzz` to a wrapper function that calls `{ident}`.",
@@ -648,9 +648,9 @@ fn warn_if_function_is_nontrivial(sig: &Signature, stmts: &[Stmt]) -> TokenStrea
                 #column,
                 ident = #ident
             );
-        }
+        })
     } else {
-        quote! {}
+        None
     }
 }
 
@@ -701,16 +701,16 @@ fn assert_generic_args_specified(
 /// Returns a `use` declaration for `cast_checks` when the `__cast_checks` feature is enabled, or
 /// nothing when it is not. In the former case, pushes the corresponding `enable` attribute onto
 /// `attrs`.
-fn maybe_use_cast_checks(attrs: &mut Attrs) -> TokenStream2 {
+fn maybe_use_cast_checks(attrs: &mut Attrs) -> Option<ItemUse> {
     if cfg!(feature = "__cast_checks") {
         attrs.push(parse_quote! {
             #[test_fuzz::cast_checks::enable]
         });
-        quote! {
+        Some(parse_quote! {
             use test_fuzz::cast_checks;
-        }
+        })
     } else {
-        quote! {}
+        None
     }
 }
 
@@ -852,7 +852,7 @@ where
 fn combined_generic_args_with_dummy_lifetimes(
     combined_generics: &Generics,
     combined_generic_args: Option<Punctuated<GenericArgument, token::Comma>>,
-) -> TokenStream2 {
+) -> AngleBracketedGenericArguments {
     let mut args = combined_generic_args.unwrap_or_default();
     let n_lifetime_params = combined_generics.lifetimes().count();
     let n_lifetime_args = args
@@ -1147,48 +1147,51 @@ fn mod_ident(opts: &TestFuzzOpts, self_ty_base: Option<&Ident>, target_ident: &I
 /// Returns an `auto_generate` test for the target, or nothing if `no_auto_generate` was specified.
 fn auto_generate(
     opts: &TestFuzzOpts,
-    combined_generic_args: Option<&TokenStream2>,
-) -> TokenStream2 {
+    combined_generic_args: Option<&AngleBracketedGenericArguments>,
+) -> Option<ItemFn> {
     if opts.no_auto_generate {
-        quote! {}
+        None
     } else {
-        quote! {
+        Some(parse_quote! {
             #[test]
             fn auto_generate() {
                 Args #combined_generic_args :: auto_generate();
             }
-        }
+        })
     }
 }
 
 /// Returns a statement that reads the target's arguments from standard input, or nothing when the
 /// `__persistent` feature is enabled.
-#[cfg_attr(feature = "__persistent", allow(unused_variables))]
-fn input_args(combined_generic_args: Option<&TokenStream2>) -> TokenStream2 {
-    #[cfg(feature = "__persistent")]
-    quote! {}
-    #[cfg(not(feature = "__persistent"))]
-    quote! {
-        let mut args = UsingReader::<_>::read_args #combined_generic_args (std::io::stdin());
+fn input_args(combined_generic_args: Option<&AngleBracketedGenericArguments>) -> Option<Stmt> {
+    if cfg!(feature = "__persistent") {
+        return None;
     }
+    Some(parse_quote! {
+        let mut args = UsingReader::<_>::read_args #combined_generic_args (std::io::stdin());
+    })
 }
 
 /// Returns statements that print the target's arguments, or nothing when the `__persistent`
 /// feature is enabled.
-fn output_args() -> TokenStream2 {
-    #[cfg(feature = "__persistent")]
-    quote! {}
-    #[cfg(not(feature = "__persistent"))]
-    quote! {
-        args.as_ref().map(|x| {
-            if test_fuzz::runtime::pretty_print_enabled() {
-                eprint!("{:#?}", x);
-            } else {
-                eprint!("{:?}", x);
-            };
-        });
-        eprintln!();
+fn output_args() -> Vec<Stmt> {
+    if cfg!(feature = "__persistent") {
+        return Vec::new();
     }
+    vec![
+        parse_quote! {
+            args.as_ref().map(|x| {
+                if test_fuzz::runtime::pretty_print_enabled() {
+                    eprint!("{:#?}", x);
+                } else {
+                    eprint!("{:?}", x);
+                };
+            });
+        },
+        parse_quote! {
+            eprintln!();
+        },
+    ]
 }
 
 /// Returns a call to the target, qualified by the `impl` type (and trait, if any) when the target
@@ -1199,7 +1202,7 @@ fn call(
     self_ty: Option<&Type>,
     opts_impl_generic_args: Option<Punctuated<GenericArgument, token::Comma>>,
     target_ident: &Ident,
-    generic_args: Option<&TokenStream2>,
+    generic_args: Option<&AngleBracketedGenericArguments>,
     de_args: &[Expr],
 ) -> Expr {
     if let Some(self_ty) = self_ty {
@@ -1247,23 +1250,22 @@ fn call_in_environment(opts: &TestFuzzOpts, call: Expr) -> Expr {
 /// Returns statements that call the target with deserialized arguments and bind the result to
 /// `ret`. When the `__persistent` feature is enabled, the call is wrapped in an AFL fuzzing loop
 /// that reads each set of arguments from the fuzzer.
-#[cfg_attr(not(feature = "__persistent"), allow(unused_variables))]
 fn call_in_environment_with_deserialized_arguments(
-    combined_generic_args: Option<&TokenStream2>,
+    combined_generic_args: Option<&AngleBracketedGenericArguments>,
     args_ret_ty: &Type,
     call_in_environment: &Expr,
-) -> TokenStream2 {
-    #[cfg(feature = "__persistent")]
-    quote! {
-        test_fuzz::afl::fuzz!(|data: &[u8]| {
-            let mut args = UsingReader::<_>::read_args #combined_generic_args (data);
-            let ret: Option< #args_ret_ty > = args.map(|mut args|
-                #call_in_environment
-            );
-        });
+) -> Stmt {
+    if cfg!(feature = "__persistent") {
+        return parse_quote! {
+            test_fuzz::afl::fuzz!(|data: &[u8]| {
+                let mut args = UsingReader::<_>::read_args #combined_generic_args (data);
+                let ret: Option< #args_ret_ty > = args.map(|mut args|
+                    #call_in_environment
+                );
+            });
+        };
     }
-    #[cfg(not(feature = "__persistent"))]
-    quote! {
+    parse_quote! {
         let ret: Option< #args_ret_ty > = args.map(|mut args|
             #call_in_environment
         );
@@ -1272,35 +1274,45 @@ fn call_in_environment_with_deserialized_arguments(
 
 /// Returns statements that print the target's return value, or, when the `__persistent` feature is
 /// enabled, a binding that suppresses an unused variable warning.
-fn output_ret(args_ret_ty: &Type) -> TokenStream2 {
-    #[cfg(feature = "__persistent")]
-    quote! {
+fn output_ret(args_ret_ty: &Type) -> Vec<Stmt> {
+    if cfg!(feature = "__persistent") {
         // smoelius: Suppress unused variable warning.
-        let _: Option< #args_ret_ty > = None;
+        return vec![parse_quote! {
+            let _: Option< #args_ret_ty > = None;
+        }];
     }
-    #[cfg(not(feature = "__persistent"))]
-    quote! {
-        struct Ret( #args_ret_ty );
-        impl std::fmt::Debug for Ret {
-            fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                use test_fuzz::runtime::TryDebugFallback;
-                let mut debug_tuple = fmt.debug_tuple("Ret");
-                test_fuzz::runtime::TryDebug(&self.0).apply(&mut |value| {
-                    debug_tuple.field(value);
-                });
-                debug_tuple.finish()
+    vec![
+        parse_quote! {
+            struct Ret( #args_ret_ty );
+        },
+        parse_quote! {
+            impl std::fmt::Debug for Ret {
+                fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    use test_fuzz::runtime::TryDebugFallback;
+                    let mut debug_tuple = fmt.debug_tuple("Ret");
+                    test_fuzz::runtime::TryDebug(&self.0).apply(&mut |value| {
+                        debug_tuple.field(value);
+                    });
+                    debug_tuple.finish()
+                }
             }
-        }
-        let ret = ret.map(Ret);
-        ret.map(|x| {
-            if test_fuzz::runtime::pretty_print_enabled() {
-                eprint!("{:#?}", x);
-            } else {
-                eprint!("{:?}", x);
-            };
-        });
-        eprintln!();
-    }
+        },
+        parse_quote! {
+            let ret = ret.map(Ret);
+        },
+        parse_quote! {
+            ret.map(|x| {
+                if test_fuzz::runtime::pretty_print_enabled() {
+                    eprint!("{:#?}", x);
+                } else {
+                    eprint!("{:?}", x);
+                };
+            });
+        },
+        parse_quote! {
+            eprintln!();
+        },
+    ]
 }
 
 /// Returns whether the attribute is a [`test_fuzz`] attribute.
@@ -1333,8 +1345,10 @@ fn is_generic(generics: &Generics) -> bool {
 }
 
 /// Returns the generic arguments as a turbofish.
-fn args_as_turbofish(args: &Punctuated<GenericArgument, token::Comma>) -> TokenStream2 {
-    quote! {
+fn args_as_turbofish(
+    args: &Punctuated<GenericArgument, token::Comma>,
+) -> AngleBracketedGenericArguments {
+    parse_quote! {
         ::<#args>
     }
 }
