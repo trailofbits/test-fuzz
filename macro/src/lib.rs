@@ -245,7 +245,6 @@ pub fn test_fuzz(args: TokenStream, item: TokenStream) -> TokenStream {
     clippy::too_many_lines,
     clippy::trivially_copy_pass_by_ref
 )]
-#[cfg_attr(dylint_lib = "supplementary", allow(commented_out_code))]
 fn map_method_or_fn(
     generics: &Generics,
     trait_path: Option<&Path>,
@@ -260,37 +259,9 @@ fn map_method_or_fn(
     let mut sig = sig.clone();
     let stmts = &block.stmts;
 
-    let warn_if_function_is_nontrivial = if stmts.len() >= 2 {
-        let span = sig.ident.span();
-        let file = span.file();
-        let line = span.start().line;
-        let column = span.start().column + 1;
-        let ident = sig.ident.to_string();
-        quote! {
-            eprintln!(
-                "{}:{}:{}: Warning: Coverage will not be shown for `{}`. To see coverage for \
-                 `{ident}`, apply `test-fuzz` to a wrapper function that calls `{ident}`.",
-                #file,
-                #line,
-                #column,
-                ident = #ident
-            );
-        }
-    } else {
-        quote! {}
-    };
+    let warn_if_function_is_nontrivial = warn_if_function_is_nontrivial(&sig, stmts);
 
-    let mut conversions = Conversions::new();
-    opts.convert.iter().for_each(|s| {
-        let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
-        let args = Parser::parse(Punctuated::<Type, token::Comma>::parse_terminated, tokens)
-            .expect("Could not parse `convert` argument");
-        assert!(args.len() == 2, "Could not parse `convert` argument");
-        let mut iter = args.into_iter();
-        let key = iter.next().expect("Should have two `convert` arguments");
-        let value = iter.next().expect("Should have two `convert` arguments");
-        conversions.insert(OrdType(key), (value, false));
-    });
+    let mut conversions = conversions(opts);
 
     let opts_impl_generic_args = opts
         .impl_generic_args
@@ -301,46 +272,23 @@ fn map_method_or_fn(
 
     // smoelius: Error early.
     #[cfg(fuzzing)]
-    if !opts.only_generic_args {
-        if is_generic(generics) && opts_impl_generic_args.is_none() {
-            panic!(
-                "`{}` appears in a generic impl but `impl_generic_args` was not specified",
-                sig.ident.to_string(),
-            );
-        }
-
-        if is_generic(&sig.generics) && opts_generic_args.is_none() {
-            panic!(
-                "`{}` is generic but `generic_args` was not specified",
-                sig.ident.to_string(),
-            );
-        }
-    }
+    assert_generic_args_specified(
+        generics,
+        &sig,
+        opts,
+        opts_impl_generic_args.as_ref(),
+        opts_generic_args.as_ref(),
+    );
 
     let mut attrs = attrs.clone();
-    let maybe_use_cast_checks = if cfg!(feature = "__cast_checks") {
-        attrs.push(parse_quote! {
-            #[test_fuzz::cast_checks::enable]
-        });
-        quote! {
-            use test_fuzz::cast_checks;
-        }
-    } else {
-        quote! {}
-    };
+    let maybe_use_cast_checks = maybe_use_cast_checks(&mut attrs);
 
     let impl_ty_idents = type_idents(generics);
     let ty_idents = type_idents(&sig.generics);
     let combined_type_idents = [impl_ty_idents.clone(), ty_idents.clone()].concat();
 
-    let impl_ty_names: Vec<Expr> = impl_ty_idents
-        .iter()
-        .map(|ident| parse_quote! { std::any::type_name::< #ident >() })
-        .collect();
-    let ty_names: Vec<Expr> = ty_idents
-        .iter()
-        .map(|ident| parse_quote! { std::any::type_name::< #ident >() })
-        .collect();
+    let impl_ty_names = type_names(&impl_ty_idents);
+    let ty_names = type_names(&ty_idents);
 
     let combined_generics = combine_generics(generics, &sig.generics);
     let combined_generics_deserializable = restrict_to_deserialize(&combined_generics);
@@ -348,32 +296,9 @@ fn map_method_or_fn(
     let (impl_generics, ty_generics, where_clause) = combined_generics.split_for_impl();
     let (impl_generics_deserializable, _, _) = combined_generics_deserializable.split_for_impl();
 
-    let args_where_clause: Option<WhereClause> = opts.bounds.as_ref().map(|bounds| {
-        let tokens = TokenStream::from_str(bounds).expect("Could not tokenize string");
-        let where_predicates = Parser::parse(
-            Punctuated::<WherePredicate, token::Comma>::parse_terminated,
-            tokens,
-        )
-        .expect("Could not parse type bounds");
-        parse_quote! {
-            where #where_predicates
-        }
-    });
+    let args_where_clause = args_where_clause(opts);
 
-    // smoelius: "Constraints don’t count as 'using' a type parameter," as explained by Daniel Keep
-    // here: https://users.rust-lang.org/t/error-parameter-t-is-never-used-e0392-but-i-use-it/5673
-    // So, for each type parameter `T`, add a `PhantomData<T>` member to `Args` to ensure that `T`
-    // is used. See also: https://github.com/rust-lang/rust/issues/23246
-    let (phantom_idents, phantom_tys): (Vec<_>, Vec<_>) =
-        type_generic_phantom_idents_and_types(&combined_generics)
-            .into_iter()
-            .unzip();
-    let phantoms: Vec<FieldValue> = phantom_idents
-        .iter()
-        .map(|ident| {
-            parse_quote! { #ident: std::marker::PhantomData }
-        })
-        .collect();
+    let (phantom_idents, phantom_tys, phantoms) = phantom_idents_tys_and_values(&combined_generics);
 
     let impl_generic_args = opts_impl_generic_args.as_ref().map(args_as_turbofish);
     let generic_args = opts_generic_args.as_ref().map(args_as_turbofish);
@@ -386,25 +311,8 @@ fn map_method_or_fn(
         },
     );
     let combined_generic_args = combined_generic_args_base.as_ref().map(args_as_turbofish);
-    // smoelius: The macro generates code like this:
-    //  struct Ret(<Args as HasRetTy>::RetTy);
-    // If `Args` has lifetime parameters, this code won't compile. Insert `'static` for each
-    // parameter that is not filled.
-    let combined_generic_args_with_dummy_lifetimes = {
-        let mut args = combined_generic_args_base.unwrap_or_default();
-        let n_lifetime_params = combined_generics.lifetimes().count();
-        let n_lifetime_args = args
-            .iter()
-            .filter(|arg| matches!(arg, GenericArgument::Lifetime(..)))
-            .count();
-        #[allow(clippy::cast_possible_wrap)]
-        let n_missing_lifetime_args =
-            usize::try_from(n_lifetime_params as isize - n_lifetime_args as isize)
-                .expect("n_lifetime_params < n_lifetime_args");
-        let dummy_lifetime = GenericArgument::Lifetime(parse_quote! { 'static });
-        args.extend(std::iter::repeat_n(dummy_lifetime, n_missing_lifetime_args));
-        args_as_turbofish(&args)
-    };
+    let combined_generic_args_with_dummy_lifetimes =
+        combined_generic_args_with_dummy_lifetimes(&combined_generics, combined_generic_args_base);
 
     let self_ty_base = self_ty.and_then(type_utils::type_base);
 
@@ -417,15 +325,7 @@ fn map_method_or_fn(
             self_ty,
             sig.inputs.iter_mut(),
         );
-        for (from, (to, used)) in conversions {
-            assert!(
-                used,
-                r#"Conversion "{}" -> "{}" does not apply to the following candidates: {:#?}"#,
-                from,
-                OrdType(to),
-                candidates
-            );
-        }
+        assert_conversions_used(conversions, &candidates);
         result
     };
     arg_attrs.extend(phantom_idents.iter().map(|_| Attrs::new()));
@@ -463,13 +363,7 @@ fn map_method_or_fn(
         })
         .collect();
     let args_from_autos = args_from_autos(&arg_idents, &autos);
-    let ret_ty = match &sig.output {
-        ReturnType::Type(_, ty) => self_ty.as_ref().map_or_else(
-            || *ty.clone(),
-            |self_ty| type_utils::expand_self(trait_path, self_ty, ty),
-        ),
-        ReturnType::Default => parse_quote! { () },
-    };
+    let ret_ty = ret_ty(trait_path, self_ty, &sig.output);
 
     let target_ident = &sig.ident;
     let mod_ident = mod_ident(opts, self_ty_base, target_ident);
@@ -547,124 +441,29 @@ fn map_method_or_fn(
             },
         )
     };
-    let auto_generate = if opts.no_auto_generate {
-        quote! {}
-    } else {
-        quote! {
-            #[test]
-            fn auto_generate() {
-                Args #combined_generic_args :: auto_generate();
-            }
-        }
-    };
-    let input_args = {
-        #[cfg(feature = "__persistent")]
-        quote! {}
-        #[cfg(not(feature = "__persistent"))]
-        quote! {
-            let mut args = UsingReader::<_>::read_args #combined_generic_args (std::io::stdin());
-        }
-    };
-    let output_args = {
-        #[cfg(feature = "__persistent")]
-        quote! {}
-        #[cfg(not(feature = "__persistent"))]
-        quote! {
-            args.as_ref().map(|x| {
-                if test_fuzz::runtime::pretty_print_enabled() {
-                    eprint!("{:#?}", x);
-                } else {
-                    eprint!("{:?}", x);
-                };
-            });
-            eprintln!();
-        }
-    };
+    let auto_generate = auto_generate(opts, combined_generic_args.as_ref());
+    let input_args = input_args(combined_generic_args.as_ref());
+    let output_args = output_args();
     let args_ret_ty: Type = parse_quote! {
         <Args #combined_generic_args_with_dummy_lifetimes as HasRetTy>::RetTy
     };
-    let call: Expr = if let Some(self_ty) = self_ty {
-        let opts_impl_generic_args = opts_impl_generic_args.unwrap_or_default();
-        let map = generic_params_map(generics, &opts_impl_generic_args);
-        let self_ty_with_generic_args =
-            type_utils::type_as_turbofish(&type_utils::map_type_generic_params(&map, self_ty));
-        let qualified_self = if let Some(trait_path) = trait_path {
-            let trait_path_with_generic_args = type_utils::path_as_turbofish(
-                &type_utils::map_path_generic_params(&map, trait_path),
-            );
-            quote! {
-                < #self_ty_with_generic_args as #trait_path_with_generic_args >
-            }
-        } else {
-            self_ty_with_generic_args
-        };
-        parse_quote! {
-            #qualified_self :: #target_ident #generic_args (
-                #(#de_args),*
-            )
-        }
-    } else {
-        parse_quote! {
-            super :: #target_ident #generic_args (
-                #(#de_args),*
-            )
-        }
-    };
-    let call_in_environment = if let Some(s) = &opts.execute_with {
-        let execute_with: Expr = parse_str(s).expect("Could not parse `execute_with` argument");
-        parse_quote! {
-            #execute_with (|| #call)
-        }
-    } else {
-        call
-    };
-    let call_in_environment_with_deserialized_arguments = {
-        #[cfg(feature = "__persistent")]
-        quote! {
-            test_fuzz::afl::fuzz!(|data: &[u8]| {
-                let mut args = UsingReader::<_>::read_args #combined_generic_args (data);
-                let ret: Option< #args_ret_ty > = args.map(|mut args|
-                    #call_in_environment
-                );
-            });
-        }
-        #[cfg(not(feature = "__persistent"))]
-        quote! {
-            let ret: Option< #args_ret_ty > = args.map(|mut args|
-                #call_in_environment
-            );
-        }
-    };
-    let output_ret = {
-        #[cfg(feature = "__persistent")]
-        quote! {
-            // smoelius: Suppress unused variable warning.
-            let _: Option< #args_ret_ty > = None;
-        }
-        #[cfg(not(feature = "__persistent"))]
-        quote! {
-            struct Ret( #args_ret_ty );
-            impl std::fmt::Debug for Ret {
-                fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                    use test_fuzz::runtime::TryDebugFallback;
-                    let mut debug_tuple = fmt.debug_tuple("Ret");
-                    test_fuzz::runtime::TryDebug(&self.0).apply(&mut |value| {
-                        debug_tuple.field(value);
-                    });
-                    debug_tuple.finish()
-                }
-            }
-            let ret = ret.map(Ret);
-            ret.map(|x| {
-                if test_fuzz::runtime::pretty_print_enabled() {
-                    eprint!("{:#?}", x);
-                } else {
-                    eprint!("{:?}", x);
-                };
-            });
-            eprintln!();
-        }
-    };
+    let call = call(
+        generics,
+        trait_path,
+        self_ty,
+        opts_impl_generic_args,
+        target_ident,
+        generic_args.as_ref(),
+        &de_args,
+    );
+    let call_in_environment = call_in_environment(opts, call);
+    let call_in_environment_with_deserialized_arguments =
+        call_in_environment_with_deserialized_arguments(
+            combined_generic_args.as_ref(),
+            &args_ret_ty,
+            &call_in_environment,
+        );
+    let output_ret = output_ret(&args_ret_ty);
     let mod_items = if opts.only_generic_args {
         quote! {}
     } else {
@@ -818,6 +617,217 @@ fn map_method_or_fn(
     )
 }
 
+fn warn_if_function_is_nontrivial(sig: &Signature, stmts: &[Stmt]) -> TokenStream2 {
+    if stmts.len() >= 2 {
+        let span = sig.ident.span();
+        let file = span.file();
+        let line = span.start().line;
+        let column = span.start().column + 1;
+        let ident = sig.ident.to_string();
+        quote! {
+            eprintln!(
+                "{}:{}:{}: Warning: Coverage will not be shown for `{}`. To see coverage for \
+                 `{ident}`, apply `test-fuzz` to a wrapper function that calls `{ident}`.",
+                #file,
+                #line,
+                #column,
+                ident = #ident
+            );
+        }
+    } else {
+        quote! {}
+    }
+}
+
+fn conversions(opts: &TestFuzzOpts) -> Conversions {
+    let mut conversions = Conversions::new();
+    opts.convert.iter().for_each(|s| {
+        let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
+        let args = Parser::parse(Punctuated::<Type, token::Comma>::parse_terminated, tokens)
+            .expect("Could not parse `convert` argument");
+        assert!(args.len() == 2, "Could not parse `convert` argument");
+        let mut iter = args.into_iter();
+        let key = iter.next().expect("Should have two `convert` arguments");
+        let value = iter.next().expect("Should have two `convert` arguments");
+        conversions.insert(OrdType(key), (value, false));
+    });
+    conversions
+}
+
+#[cfg(fuzzing)]
+fn assert_generic_args_specified(
+    generics: &Generics,
+    sig: &Signature,
+    opts: &TestFuzzOpts,
+    opts_impl_generic_args: Option<&Punctuated<GenericArgument, token::Comma>>,
+    opts_generic_args: Option<&Punctuated<GenericArgument, token::Comma>>,
+) {
+    if !opts.only_generic_args {
+        if is_generic(generics) && opts_impl_generic_args.is_none() {
+            panic!(
+                "`{}` appears in a generic impl but `impl_generic_args` was not specified",
+                sig.ident.to_string(),
+            );
+        }
+
+        if is_generic(&sig.generics) && opts_generic_args.is_none() {
+            panic!(
+                "`{}` is generic but `generic_args` was not specified",
+                sig.ident.to_string(),
+            );
+        }
+    }
+}
+
+fn maybe_use_cast_checks(attrs: &mut Attrs) -> TokenStream2 {
+    if cfg!(feature = "__cast_checks") {
+        attrs.push(parse_quote! {
+            #[test_fuzz::cast_checks::enable]
+        });
+        quote! {
+            use test_fuzz::cast_checks;
+        }
+    } else {
+        quote! {}
+    }
+}
+
+fn type_idents(generics: &Generics) -> Vec<Ident> {
+    generics
+        .params
+        .iter()
+        .filter_map(|param| {
+            if let GenericParam::Type(ty_param) = param {
+                Some(ty_param.ident.clone())
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn type_names(idents: &[Ident]) -> Vec<Expr> {
+    idents
+        .iter()
+        .map(|ident| parse_quote! { std::any::type_name::< #ident >() })
+        .collect()
+}
+
+fn combine_generics(left: &Generics, right: &Generics) -> Generics {
+    let mut generics = left.clone();
+    generics.params.extend(right.params.clone());
+    generics.where_clause = combine_options(
+        generics.where_clause,
+        right.where_clause.clone(),
+        |mut left, right| {
+            left.predicates.extend(right.predicates);
+            left
+        },
+    );
+    generics
+}
+
+fn restrict_to_deserialize(generics: &Generics) -> Generics {
+    let mut generics = generics.clone();
+    generics.params.iter_mut().for_each(|param| {
+        if let GenericParam::Type(ty_param) = param {
+            ty_param
+                .bounds
+                .push(parse_quote! { serde::de::DeserializeOwned });
+        }
+    });
+    generics
+}
+
+fn args_where_clause(opts: &TestFuzzOpts) -> Option<WhereClause> {
+    opts.bounds.as_ref().map(|bounds| {
+        let tokens = TokenStream::from_str(bounds).expect("Could not tokenize string");
+        let where_predicates = Parser::parse(
+            Punctuated::<WherePredicate, token::Comma>::parse_terminated,
+            tokens,
+        )
+        .expect("Could not parse type bounds");
+        parse_quote! {
+            where #where_predicates
+        }
+    })
+}
+
+// smoelius: "Constraints don’t count as 'using' a type parameter," as explained by Daniel Keep
+// here: https://users.rust-lang.org/t/error-parameter-t-is-never-used-e0392-but-i-use-it/5673
+// So, for each type parameter `T`, add a `PhantomData<T>` member to `Args` to ensure that `T`
+// is used. See also: https://github.com/rust-lang/rust/issues/23246
+fn phantom_idents_tys_and_values(generics: &Generics) -> (Vec<Ident>, Vec<Type>, Vec<FieldValue>) {
+    let (idents, tys): (Vec<_>, Vec<_>) = type_generic_phantom_idents_and_types(generics)
+        .into_iter()
+        .unzip();
+    let values = idents
+        .iter()
+        .map(|ident| {
+            parse_quote! { #ident: std::marker::PhantomData }
+        })
+        .collect();
+    (idents, tys, values)
+}
+
+fn type_generic_phantom_idents_and_types(generics: &Generics) -> Vec<(Ident, Type)> {
+    generics
+        .params
+        .iter()
+        .filter_map(|param| match param {
+            GenericParam::Type(TypeParam { ident, .. }) => Some((
+                anonymous_ident(),
+                parse_quote! { std::marker::PhantomData< #ident > },
+            )),
+            GenericParam::Lifetime(LifetimeParam { lifetime, .. }) => Some((
+                anonymous_ident(),
+                parse_quote! { std::marker::PhantomData< & #lifetime () > },
+            )),
+            GenericParam::Const(_) => None,
+        })
+        .collect()
+}
+
+// smoelius: Is there a better name for this operation? The closest thing I've found is the `<|>`
+// operation in Haskell's `Alternative` class (thanks, @incertia):
+// https://en.wikibooks.org/wiki/Haskell/Alternative_and_MonadPlus
+// ... (<|>) is a binary function which combines two computations.
+//                                      ^^^^^^^^
+
+fn combine_options<T, F>(x: Option<T>, y: Option<T>, f: F) -> Option<T>
+where
+    F: FnOnce(T, T) -> T,
+{
+    match (x, y) {
+        (Some(x), Some(y)) => Some(f(x, y)),
+        (x, None) => x,
+        (None, y) => y,
+    }
+}
+
+// smoelius: The macro generates code like this:
+//  struct Ret(<Args as HasRetTy>::RetTy);
+// If `Args` has lifetime parameters, this code won't compile. Insert `'static` for each
+// parameter that is not filled.
+fn combined_generic_args_with_dummy_lifetimes(
+    combined_generics: &Generics,
+    combined_generic_args: Option<Punctuated<GenericArgument, token::Comma>>,
+) -> TokenStream2 {
+    let mut args = combined_generic_args.unwrap_or_default();
+    let n_lifetime_params = combined_generics.lifetimes().count();
+    let n_lifetime_args = args
+        .iter()
+        .filter(|arg| matches!(arg, GenericArgument::Lifetime(..)))
+        .count();
+    #[allow(clippy::cast_possible_wrap)]
+    let n_missing_lifetime_args =
+        usize::try_from(n_lifetime_params as isize - n_lifetime_args as isize)
+            .expect("n_lifetime_params < n_lifetime_args");
+    let dummy_lifetime = GenericArgument::Lifetime(parse_quote! { 'static });
+    args.extend(std::iter::repeat_n(dummy_lifetime, n_missing_lifetime_args));
+    args_as_turbofish(&args)
+}
+
 #[allow(clippy::type_complexity)]
 fn map_args<'a, I>(
     conversions: &mut Conversions,
@@ -907,6 +917,13 @@ fn map_arg<'a>(
     }
 }
 
+static INDEX: AtomicU32 = AtomicU32::new(0);
+
+fn anonymous_ident() -> Ident {
+    let index = INDEX.fetch_add(1, Ordering::SeqCst);
+    Ident::new(&format!("_{index}"), Span::call_site())
+}
+
 fn map_typed_arg(
     conversions: &mut Conversions,
     candidates: &mut BTreeSet<OrdType>,
@@ -992,110 +1009,15 @@ fn map_path_arg(
     )
 }
 
-fn is_test_fuzz(attr: &Attribute) -> bool {
-    attr.path()
-        .segments
-        .iter()
-        .all(|PathSegment { ident, .. }| ident == "test_fuzz")
-}
-
-fn parse_generic_arguments(s: &str) -> Punctuated<GenericArgument, token::Comma> {
-    let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
-    Parser::parse(
-        Punctuated::<GenericArgument, token::Comma>::parse_terminated,
-        tokens,
-    )
-    .expect("Could not parse generic arguments")
-}
-
-#[cfg(fuzzing)]
-fn is_generic(generics: &Generics) -> bool {
-    generics
-        .params
-        .iter()
-        .filter(|param| !matches!(param, GenericParam::Lifetime(_)))
-        .next()
-        .is_some()
-}
-
-fn type_idents(generics: &Generics) -> Vec<Ident> {
-    generics
-        .params
-        .iter()
-        .filter_map(|param| {
-            if let GenericParam::Type(ty_param) = param {
-                Some(ty_param.ident.clone())
-            } else {
-                None
-            }
-        })
-        .collect()
-}
-
-fn combine_generics(left: &Generics, right: &Generics) -> Generics {
-    let mut generics = left.clone();
-    generics.params.extend(right.params.clone());
-    generics.where_clause = combine_options(
-        generics.where_clause,
-        right.where_clause.clone(),
-        |mut left, right| {
-            left.predicates.extend(right.predicates);
-            left
-        },
-    );
-    generics
-}
-
-fn restrict_to_deserialize(generics: &Generics) -> Generics {
-    let mut generics = generics.clone();
-    generics.params.iter_mut().for_each(|param| {
-        if let GenericParam::Type(ty_param) = param {
-            ty_param
-                .bounds
-                .push(parse_quote! { serde::de::DeserializeOwned });
-        }
-    });
-    generics
-}
-
-fn type_generic_phantom_idents_and_types(generics: &Generics) -> Vec<(Ident, Type)> {
-    generics
-        .params
-        .iter()
-        .filter_map(|param| match param {
-            GenericParam::Type(TypeParam { ident, .. }) => Some((
-                anonymous_ident(),
-                parse_quote! { std::marker::PhantomData< #ident > },
-            )),
-            GenericParam::Lifetime(LifetimeParam { lifetime, .. }) => Some((
-                anonymous_ident(),
-                parse_quote! { std::marker::PhantomData< & #lifetime () > },
-            )),
-            GenericParam::Const(_) => None,
-        })
-        .collect()
-}
-
-// smoelius: Is there a better name for this operation? The closest thing I've found is the `<|>`
-// operation in Haskell's `Alternative` class (thanks, @incertia):
-// https://en.wikibooks.org/wiki/Haskell/Alternative_and_MonadPlus
-// ... (<|>) is a binary function which combines two computations.
-//                                      ^^^^^^^^
-
-fn combine_options<T, F>(x: Option<T>, y: Option<T>, f: F) -> Option<T>
-where
-    F: FnOnce(T, T) -> T,
-{
-    match (x, y) {
-        (Some(x), Some(y)) => Some(f(x, y)),
-        (x, None) => x,
-        (None, y) => y,
-    }
-}
-
-fn args_as_turbofish(args: &Punctuated<GenericArgument, token::Comma>) -> TokenStream2 {
-    quote! {
-        ::<#args>
+fn assert_conversions_used(conversions: Conversions, candidates: &BTreeSet<OrdType>) {
+    for (from, (to, used)) in conversions {
+        assert!(
+            used,
+            r#"Conversion "{}" -> "{}" does not apply to the following candidates: {:#?}"#,
+            from,
+            OrdType(to),
+            candidates
+        );
     }
 }
 
@@ -1136,6 +1058,16 @@ fn args_from_autos(idents: &[Ident], autos: &[Expr]) -> Expr {
     }}
 }
 
+fn ret_ty(trait_path: Option<&Path>, self_ty: Option<&Type>, output: &ReturnType) -> Type {
+    match output {
+        ReturnType::Type(_, ty) => self_ty.as_ref().map_or_else(
+            || *ty.clone(),
+            |self_ty| type_utils::expand_self(trait_path, self_ty, ty),
+        ),
+        ReturnType::Default => parse_quote! { () },
+    }
+}
+
 #[allow(unused_variables)]
 fn mod_ident(opts: &TestFuzzOpts, self_ty_base: Option<&Ident>, target_ident: &Ident) -> Ident {
     let mut s = String::new();
@@ -1150,6 +1082,183 @@ fn mod_ident(opts: &TestFuzzOpts, self_ty_base: Option<&Ident>, target_ident: &I
     }
     s.push_str("_fuzz__");
     Ident::new(&s, Span::call_site())
+}
+
+fn auto_generate(
+    opts: &TestFuzzOpts,
+    combined_generic_args: Option<&TokenStream2>,
+) -> TokenStream2 {
+    if opts.no_auto_generate {
+        quote! {}
+    } else {
+        quote! {
+            #[test]
+            fn auto_generate() {
+                Args #combined_generic_args :: auto_generate();
+            }
+        }
+    }
+}
+
+#[cfg_attr(feature = "__persistent", allow(unused_variables))]
+fn input_args(combined_generic_args: Option<&TokenStream2>) -> TokenStream2 {
+    #[cfg(feature = "__persistent")]
+    quote! {}
+    #[cfg(not(feature = "__persistent"))]
+    quote! {
+        let mut args = UsingReader::<_>::read_args #combined_generic_args (std::io::stdin());
+    }
+}
+
+fn output_args() -> TokenStream2 {
+    #[cfg(feature = "__persistent")]
+    quote! {}
+    #[cfg(not(feature = "__persistent"))]
+    quote! {
+        args.as_ref().map(|x| {
+            if test_fuzz::runtime::pretty_print_enabled() {
+                eprint!("{:#?}", x);
+            } else {
+                eprint!("{:?}", x);
+            };
+        });
+        eprintln!();
+    }
+}
+
+fn call(
+    generics: &Generics,
+    trait_path: Option<&Path>,
+    self_ty: Option<&Type>,
+    opts_impl_generic_args: Option<Punctuated<GenericArgument, token::Comma>>,
+    target_ident: &Ident,
+    generic_args: Option<&TokenStream2>,
+    de_args: &[Expr],
+) -> Expr {
+    if let Some(self_ty) = self_ty {
+        let opts_impl_generic_args = opts_impl_generic_args.unwrap_or_default();
+        let map = generic_params_map(generics, &opts_impl_generic_args);
+        let self_ty_with_generic_args =
+            type_utils::type_as_turbofish(&type_utils::map_type_generic_params(&map, self_ty));
+        let qualified_self = if let Some(trait_path) = trait_path {
+            let trait_path_with_generic_args = type_utils::path_as_turbofish(
+                &type_utils::map_path_generic_params(&map, trait_path),
+            );
+            quote! {
+                < #self_ty_with_generic_args as #trait_path_with_generic_args >
+            }
+        } else {
+            self_ty_with_generic_args
+        };
+        parse_quote! {
+            #qualified_self :: #target_ident #generic_args (
+                #(#de_args),*
+            )
+        }
+    } else {
+        parse_quote! {
+            super :: #target_ident #generic_args (
+                #(#de_args),*
+            )
+        }
+    }
+}
+
+fn call_in_environment(opts: &TestFuzzOpts, call: Expr) -> Expr {
+    if let Some(s) = &opts.execute_with {
+        let execute_with: Expr = parse_str(s).expect("Could not parse `execute_with` argument");
+        parse_quote! {
+            #execute_with (|| #call)
+        }
+    } else {
+        call
+    }
+}
+
+#[cfg_attr(not(feature = "__persistent"), allow(unused_variables))]
+fn call_in_environment_with_deserialized_arguments(
+    combined_generic_args: Option<&TokenStream2>,
+    args_ret_ty: &Type,
+    call_in_environment: &Expr,
+) -> TokenStream2 {
+    #[cfg(feature = "__persistent")]
+    quote! {
+        test_fuzz::afl::fuzz!(|data: &[u8]| {
+            let mut args = UsingReader::<_>::read_args #combined_generic_args (data);
+            let ret: Option< #args_ret_ty > = args.map(|mut args|
+                #call_in_environment
+            );
+        });
+    }
+    #[cfg(not(feature = "__persistent"))]
+    quote! {
+        let ret: Option< #args_ret_ty > = args.map(|mut args|
+            #call_in_environment
+        );
+    }
+}
+
+fn output_ret(args_ret_ty: &Type) -> TokenStream2 {
+    #[cfg(feature = "__persistent")]
+    quote! {
+        // smoelius: Suppress unused variable warning.
+        let _: Option< #args_ret_ty > = None;
+    }
+    #[cfg(not(feature = "__persistent"))]
+    quote! {
+        struct Ret( #args_ret_ty );
+        impl std::fmt::Debug for Ret {
+            fn fmt(&self, fmt: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                use test_fuzz::runtime::TryDebugFallback;
+                let mut debug_tuple = fmt.debug_tuple("Ret");
+                test_fuzz::runtime::TryDebug(&self.0).apply(&mut |value| {
+                    debug_tuple.field(value);
+                });
+                debug_tuple.finish()
+            }
+        }
+        let ret = ret.map(Ret);
+        ret.map(|x| {
+            if test_fuzz::runtime::pretty_print_enabled() {
+                eprint!("{:#?}", x);
+            } else {
+                eprint!("{:?}", x);
+            };
+        });
+        eprintln!();
+    }
+}
+
+fn is_test_fuzz(attr: &Attribute) -> bool {
+    attr.path()
+        .segments
+        .iter()
+        .all(|PathSegment { ident, .. }| ident == "test_fuzz")
+}
+
+fn parse_generic_arguments(s: &str) -> Punctuated<GenericArgument, token::Comma> {
+    let tokens = TokenStream::from_str(s).expect("Could not tokenize string");
+    Parser::parse(
+        Punctuated::<GenericArgument, token::Comma>::parse_terminated,
+        tokens,
+    )
+    .expect("Could not parse generic arguments")
+}
+
+#[cfg(fuzzing)]
+fn is_generic(generics: &Generics) -> bool {
+    generics
+        .params
+        .iter()
+        .filter(|param| !matches!(param, GenericParam::Lifetime(_)))
+        .next()
+        .is_some()
+}
+
+fn args_as_turbofish(args: &Punctuated<GenericArgument, token::Comma>) -> TokenStream2 {
+    quote! {
+        ::<#args>
+    }
 }
 
 fn generic_params_map<'a, 'b>(
@@ -1179,13 +1288,6 @@ fn generic_params_map<'a, 'b>(
             }
         })
         .collect()
-}
-
-static INDEX: AtomicU32 = AtomicU32::new(0);
-
-fn anonymous_ident() -> Ident {
-    let index = INDEX.fetch_add(1, Ordering::SeqCst);
-    Ident::new(&format!("_{index}"), Span::call_site())
 }
 
 fn log(tokens: &TokenStream2) {
