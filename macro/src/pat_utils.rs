@@ -16,6 +16,7 @@ impl<'a> Visit<'a> for PatVisitor<'a> {
     }
 }
 
+/// Returns the identifiers bound by the pattern.
 pub fn pat_idents(pat: &Pat) -> Vec<&Ident> {
     let mut visitor = PatVisitor { idents: Vec::new() };
     visitor.visit_pat(pat);
