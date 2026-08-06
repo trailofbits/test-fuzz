@@ -234,9 +234,9 @@ dependencies = [
 
 [[package]]
 name = "cast_checks"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2ca14c641e42aa4d39a0d64ace7e6ce832d0a5250827b6b4b7e740a3f8a50254"
+checksum = "3ff17c5c901d9d1919457e0ea424f2f384a55802f50e4fa679ffc4f05dbf4cfd"
 dependencies = [
  "cast_checks_convert",
  "cast_checks_macro",
@@ -244,19 +244,19 @@ dependencies = [
 
 [[package]]
 name = "cast_checks_convert"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa16f35b5451385b4754631414de805ca822e052e15ce751baceaeebc3f17d96"
+checksum = "528f6241eab7f6cfa2abe06a403bfb68e2d9d0e3be9a06e24834db829e9931fa"
 
 [[package]]
 name = "cast_checks_macro"
-version = "0.1.7"
+version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9dbbae938c76e241eb3c88035bdf09a9ab9775ee6fc9a7b7a84ca5a160ba4702"
+checksum = "c3eb00b5e7e48595999f15db10c1fe6e25b3af88ab387527cd1ea61c4239e96f"
 dependencies = [
  "proc-macro2",
  "quote",
- "syn 2.0.119",
+ "syn 3.0.3",
 ]
 
 [[package]]
@@ -267,9 +267,9 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
 name = "clap"
-version = "4.6.4"
+version = "4.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d91e0c145792ef73a6ad36d27c75ac09f1832222a3c209689d90f534685ee5b7"
+checksum = "301b56658598e48f3648647ac6fc887be7e7108eddfa4e9b63fcf3ec58c0cadf"
 dependencies = [
  "clap_builder",
  "clap_derive",
@@ -277,9 +277,9 @@ dependencies = [
 
 [[package]]
 name = "clap_builder"
-version = "4.6.2"
+version = "4.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f09628afdcc538b57f3c6341e9c8e9970f18e4a481690a64974d7023bd33548b"
+checksum = "94a65403d1a1bd28f7dc68eb8506e8874808ee5eecb59298de588e2e1407a078"
 dependencies = [
  "anstream",
  "anstyle",
