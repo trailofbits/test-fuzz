@@ -703,11 +703,11 @@ fn check_test_fuzz_and_afl_versions(
 }
 
 fn cached_cargo_afl_version() -> &'static Version {
+    static CARGO_AFL_VERSION: OnceLock<Version> = OnceLock::new();
+
     #[allow(clippy::unwrap_used)]
     CARGO_AFL_VERSION.get_or_init(|| cargo_afl_version().unwrap())
 }
-
-static CARGO_AFL_VERSION: OnceLock<Version> = OnceLock::new();
 
 fn cargo_afl_version() -> Result<Version> {
     #[allow(clippy::disallowed_methods)]
