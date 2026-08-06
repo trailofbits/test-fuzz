@@ -8,6 +8,7 @@ pattern = [
     "examples/restriction/const_path_join",
     "examples/restriction/inconsistent_qualification",
     "examples/restriction/misleading_variable_name",
+    "examples/restriction/non_topologically_sorted_functions",
     "examples/restriction/question_mark_in_expression",
     "examples/restriction/ref_aware_redundant_closure_for_method_calls",
     "examples/restriction/suboptimal_pattern",
