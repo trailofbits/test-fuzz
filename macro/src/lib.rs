@@ -1,4 +1,10 @@
 #![deny(clippy::unwrap_used)]
+// smoelius: Re the `clippy::redundant_field_names` allowance, see:
+// https://github.com/rust-lang/rust-clippy/issues/17525
+// The lint triggers on the `convert` field of `TestFuzzOpts`. Placing this `allow` attribute above
+// `TestFuzzOpts`' `derive` attribute does not seem to be sufficient.
+#![cfg_attr(dylint_lib = "general", allow(crate_wide_allow))]
+#![allow(clippy::redundant_field_names)]
 
 use darling::{FromMeta, ast::NestedMeta};
 use itertools::MultiUnzip;
