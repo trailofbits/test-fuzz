@@ -7,6 +7,8 @@ use syn::{
     visit_mut::{VisitMut, visit_type_mut},
 };
 
+/// Returns the path with each generic parameter appearing in `map` replaced by the generic
+/// argument it maps to.
 pub fn map_path_generic_params(map: &BTreeMap<&Ident, &GenericArgument>, path: &Path) -> Path {
     let mut path = path.clone();
     let mut visitor = GenericParamVisitor { map };
@@ -14,6 +16,8 @@ pub fn map_path_generic_params(map: &BTreeMap<&Ident, &GenericArgument>, path: &
     path
 }
 
+/// Returns the type with each generic parameter appearing in `map` replaced by the generic
+/// argument it maps to.
 pub fn map_type_generic_params(map: &BTreeMap<&Ident, &GenericArgument>, ty: &Type) -> Type {
     let mut ty = ty.clone();
     let mut visitor = GenericParamVisitor { map };
@@ -49,6 +53,8 @@ impl VisitMut for GenericParamVisitor<'_> {
     }
 }
 
+/// Returns the path's tokens with `::` inserted before each set of generic arguments, e.g. the
+/// tokens of `Struct<T>` as those of `Struct::<T>`.
 pub fn path_as_turbofish(path: &Path) -> TokenStream {
     let tokens = path.to_token_stream().into_iter().collect::<Vec<_>>();
     let mut visitor = TurbofishVisitor { tokens };
@@ -56,6 +62,8 @@ pub fn path_as_turbofish(path: &Path) -> TokenStream {
     visitor.tokens.into_iter().collect()
 }
 
+/// Returns the type's tokens with `::` inserted before each set of generic arguments, e.g. the
+/// tokens of `Struct<T>` as those of `Struct::<T>`.
 pub fn type_as_turbofish(ty: &Type) -> TokenStream {
     let tokens = ty.to_token_stream().into_iter().collect::<Vec<_>>();
     let mut visitor = TurbofishVisitor { tokens };
@@ -98,10 +106,13 @@ impl Visit<'_> for TurbofishVisitor {
     }
 }
 
+/// Returns the string representation of each token.
 fn token_strings(tokens: &[TokenTree]) -> Vec<String> {
     tokens.iter().map(ToString::to_string).collect::<Vec<_>>()
 }
 
+/// Returns the type with `Self` replaced by `self_ty`, and each path beginning with `Self`
+/// qualified by `trait_path`, e.g. `Self::Item` as `<self_ty as trait_path>::Item`.
 pub fn expand_self(trait_path: Option<&Path>, self_ty: &Type, ty: &Type) -> Type {
     let mut ty = ty.clone();
     let mut visitor = ExpandSelfVisitor {
@@ -146,6 +157,9 @@ impl VisitMut for ExpandSelfVisitor<'_> {
     }
 }
 
+/// Returns the generic arguments of the path's final segment if the path's segments, ignoring
+/// those arguments, are exactly `other`. A path that matches but has no arguments gives
+/// `Some(PathArguments::None)`; `None` means the path did not match.
 pub fn match_type_path(path: &TypePath, other: &[&str]) -> Option<PathArguments> {
     let mut path = path.clone();
     let args = path.path.segments.last_mut().map(|segment| {
@@ -171,6 +185,7 @@ pub fn match_type_path(path: &TypePath, other: &[&str]) -> Option<PathArguments>
     }
 }
 
+/// Returns the identifier of the type's final path segment, or `None` if the type is not a path.
 pub fn type_base(ty: &Type) -> Option<&Ident> {
     if let Type::Path(path) = ty
         && let Some(segment) = path.path.segments.last()
