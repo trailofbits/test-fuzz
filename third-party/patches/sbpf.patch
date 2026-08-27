@@ -1,5 +1,5 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index b8685bc..1a09739 100644
+index 5cef175..380cca5 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
 @@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
@@ -16,7 +16,7 @@ index b8685bc..1a09739 100644
 +
 +[workspace]
 diff --git a/src/memory_region.rs b/src/memory_region.rs
-index 17da0ac..cfb3b21 100644
+index 2b677bc..558bf77 100644
 --- a/src/memory_region.rs
 +++ b/src/memory_region.rs
 @@ -258,4 +258,87 @@ pub struct MemoryRegion {
@@ -151,7 +151,7 @@ index 17da0ac..cfb3b21 100644
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub struct AlignedMemoryMapping {
      regions: Vec<MemoryRegion>,
-@@ -732,6 +847,71 @@ impl fmt::Debug for MemoryMapping {
+@@ -712,6 +827,71 @@ impl fmt::Debug for MemoryMapping {
  }
  
 +impl Clone for MemoryMapping {
@@ -224,7 +224,7 @@ index 17da0ac..cfb3b21 100644
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub enum MemoryMappingType {
      /// Aligned memory mapping which uses the upper half of an address to
-@@ -1049,5 +1229,5 @@ impl MemoryMapping {
+@@ -1029,5 +1209,5 @@ impl MemoryMapping {
  
  /// Fast, small linear cache used to speed up unaligned memory mapping.
 -#[derive(Debug)]
@@ -310,7 +310,7 @@ index a886e9a..684f0a7 100644
              })?
          }
 diff --git a/src/vm.rs b/src/vm.rs
-index 519b628..ee925a7 100644
+index 87d5ebe..8443324 100644
 --- a/src/vm.rs
 +++ b/src/vm.rs
 @@ -111,5 +111,5 @@ pub enum ExecutionMode {
@@ -321,7 +321,7 @@ index 519b628..ee925a7 100644
  pub struct Config {
      /// Maximum call depth
 diff --git a/test_utils/Cargo.toml b/test_utils/Cargo.toml
-index 6211979..b760674 100644
+index c892bcf..5a61903 100644
 --- a/test_utils/Cargo.toml
 +++ b/test_utils/Cargo.toml
 @@ -9,2 +9,5 @@ publish = false
@@ -331,7 +331,7 @@ index 6211979..b760674 100644
 +serde = "1.0"
 +test-fuzz = { path = "../../../test-fuzz" }
 diff --git a/test_utils/src/lib.rs b/test_utils/src/lib.rs
-index 40d6d19..38105aa 100644
+index 75b9296..45fa65f 100644
 --- a/test_utils/src/lib.rs
 +++ b/test_utils/src/lib.rs
 @@ -25,5 +25,5 @@ pub mod syscalls;
