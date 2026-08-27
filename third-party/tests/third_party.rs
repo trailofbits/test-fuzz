@@ -243,7 +243,9 @@ fn patches_are_current() {
     // smoelius: This should match `scripts/update_patches.sh`.
     const LINES_OF_CONTEXT: u32 = 2;
 
-    let re = regex::Regex::new(r"^index [[:xdigit:]]{7}\.\.[[:xdigit:]]{7} [0-7]{6}$").unwrap();
+    let index_re =
+        regex::Regex::new(r"^index [[:xdigit:]]{7}\.\.[[:xdigit:]]{7} [0-7]{6}$").unwrap();
+    let hunk_re = regex::Regex::new(r"^@@ -[0-9]+(,[0-9]+)? \+[0-9]+(,[0-9]+)? @@( .*)?$").unwrap();
 
     for test in TESTS.iter() {
         let tempdir = tempdir_in(env!("CARGO_MANIFEST_DIR")).unwrap();
@@ -289,7 +291,9 @@ fn patches_are_current() {
         assert_eq!(patch_lines.len(), diff_lines.len());
 
         for (patch_line, diff_line) in patch_lines.into_iter().zip(diff_lines) {
-            if !(re.is_match(patch_line) && re.is_match(diff_line)) {
+            if !((index_re.is_match(patch_line) && index_re.is_match(diff_line))
+                || (hunk_re.is_match(patch_line) && hunk_re.is_match(diff_line)))
+            {
                 assert_eq!(patch_line, diff_line);
             }
         }
