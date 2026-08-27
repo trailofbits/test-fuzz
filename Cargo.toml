@@ -50,6 +50,7 @@ similar-asserts = "2.0"
 strip-ansi-escapes = "0.2"
 strum_macros = "0.28"
 subprocess = "1.2"
+supply_chain = "0.1"
 syn = { version = "3.0", features = [
     "extra-traits",
     "full",

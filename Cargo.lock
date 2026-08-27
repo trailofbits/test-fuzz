@@ -1215,6 +1215,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "supply_chain"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1e18c7619d13ca46c62abd2cc31786f4b86d264bfbf2c96ec8d043e5c0af469b"
+dependencies = [
+ "anyhow",
+ "serde_json",
+ "similar-asserts",
+]
+
+[[package]]
 name = "syn"
 version = "2.0.119"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1293,6 +1304,7 @@ dependencies = [
  "serde_combinators",
  "serde_json",
  "similar-asserts",
+ "supply_chain",
  "tempfile",
  "test-fuzz-internal",
  "test-fuzz-macro",
