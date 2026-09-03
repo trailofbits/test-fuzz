@@ -1216,9 +1216,9 @@ dependencies = [
 
 [[package]]
 name = "supply_chain"
-version = "0.1.1"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e18c7619d13ca46c62abd2cc31786f4b86d264bfbf2c96ec8d043e5c0af469b"
+checksum = "281f578d5368f10a30805a842a16790697899d64f129c43947d2e90f8f133f95"
 dependencies = [
  "anyhow",
  "serde_json",
