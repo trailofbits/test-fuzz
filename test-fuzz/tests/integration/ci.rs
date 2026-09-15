@@ -3,9 +3,10 @@ use similar_asserts::SimpleDiff;
 use std::{
     env,
     fs::{read_dir, read_to_string},
+    io::{Write, stderr},
     ops::Range,
     path::Path,
-    process::Command,
+    process::{Command, Stdio},
 };
 use tempfile::tempdir;
 use testing::LoggedAssert;
@@ -49,8 +50,9 @@ fn dylint() {
 
 #[test]
 fn fmt() {
+    // smoelius: Use default toolchain, which, for some CI jobs, is nightly.
     Command::new("cargo")
-        .args(["+nightly", "fmt", "--check"])
+        .args(["fmt", "--check"])
         .current_dir("..")
         .logged_assert()
         .success();
@@ -280,16 +282,30 @@ fn supply_chain() {
 
 #[test]
 fn udeps() {
+    if !is_nightly() {
+        #[allow(clippy::explicit_write)]
+        writeln!(
+            stderr(),
+            "Skipping `udeps` test since toolchain is not nightly."
+        )
+        .unwrap();
+        return;
+    }
+
     Command::new("cargo")
-        .args([
-            "+nightly",
-            "udeps",
-            "--features=test-install",
-            "--all-targets",
-        ])
+        .args(["udeps", "--features=test-install", "--all-targets"])
         .current_dir("..")
         .logged_assert()
         .success();
+}
+
+fn is_nightly() -> bool {
+    Command::new("rustc")
+        .args(["-Z", "help"])
+        .stderr(Stdio::null())
+        .status()
+        .unwrap()
+        .success()
 }
 
 #[test]
