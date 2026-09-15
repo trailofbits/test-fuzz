@@ -83,6 +83,23 @@ fn output_directory() -> PathBuf {
 }
 
 #[must_use]
+pub fn target_directory(coverage: bool, fuzzing: bool) -> PathBuf {
+    assert!(!(coverage && fuzzing));
+    let mut command = MetadataCommand::new();
+    if let Ok(path) = env::var("TEST_FUZZ_MANIFEST_PATH") {
+        command.manifest_path(path);
+    }
+    let mut target_dir = command.no_deps().exec().unwrap().target_directory;
+    if coverage {
+        target_dir = target_dir.join("coverage");
+    }
+    if fuzzing {
+        target_dir = target_dir.join("afl");
+    }
+    target_dir.into()
+}
+
+#[must_use]
 pub fn path_segment(s: &str) -> String {
     let maybe_id = maybe_id();
     format!(
@@ -104,23 +121,6 @@ fn maybe_id() -> Option<String> {
 
 fn thread_id() -> String {
     format!("{:?}", std::thread::current().id()).replace(['(', ')'], "_")
-}
-
-#[must_use]
-pub fn target_directory(coverage: bool, fuzzing: bool) -> PathBuf {
-    assert!(!(coverage && fuzzing));
-    let mut command = MetadataCommand::new();
-    if let Ok(path) = env::var("TEST_FUZZ_MANIFEST_PATH") {
-        command.manifest_path(path);
-    }
-    let mut target_dir = command.no_deps().exec().unwrap().target_directory;
-    if coverage {
-        target_dir = target_dir.join("coverage");
-    }
-    if fuzzing {
-        target_dir = target_dir.join("afl");
-    }
-    target_dir.into()
 }
 
 #[must_use]

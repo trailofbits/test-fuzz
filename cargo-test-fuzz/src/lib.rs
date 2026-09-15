@@ -421,6 +421,91 @@ Wrote lcov to `lcov.info`. To view it as html, try running:
     fuzz(opts, &executable_targets)
 }
 
+fn check_test_fuzz_and_afl_versions(
+    executable_targets: &[(Executable, Vec<String>)],
+) -> Result<()> {
+    let cargo_test_fuzz_version = Version::parse(crate_version!())?;
+    for (executable, _) in executable_targets {
+        check_dependency_version(
+            &executable.name,
+            "test-fuzz",
+            executable.test_fuzz_version.as_ref(),
+            "cargo-test-fuzz",
+            &cargo_test_fuzz_version,
+        )?;
+        check_dependency_version(
+            &executable.name,
+            "afl",
+            executable.afl_version.as_ref(),
+            "cargo-afl",
+            cached_cargo_afl_version(),
+        )?;
+    }
+    Ok(())
+}
+
+fn check_dependency_version(
+    name: &str,
+    dependency: &str,
+    dependency_version: Option<&Version>,
+    binary: &str,
+    binary_version: &Version,
+) -> Result<()> {
+    if let Some(dependency_version) = dependency_version {
+        // smoelius: Disable dependency-binary-compatibility check when binary is a prerelease.
+        if binary_version.pre.is_empty() {
+            ensure!(
+                as_version_req(dependency_version).matches(binary_version)
+                    || as_version_req(binary_version).matches(dependency_version),
+                "`{name}` depends on `{dependency} {dependency_version}`, which is incompatible \
+                 with `{binary} {binary_version}`."
+            );
+        }
+        if !as_version_req(dependency_version).matches(binary_version) {
+            eprintln!(
+                "`{name}` depends on `{dependency} {dependency_version}`, which is newer than \
+                 `{binary} {binary_version}`. Consider upgrading with `cargo install {binary} \
+                 --force --version '>={dependency_version}'`."
+            );
+        }
+    } else {
+        bail!("`{name}` does not depend on `{dependency}`")
+    }
+    Ok(())
+}
+
+fn as_version_req(version: &Version) -> VersionReq {
+    #[allow(clippy::expect_used)]
+    VersionReq::parse(&version.to_string()).expect("Could not parse version as version request")
+}
+
+fn cached_cargo_afl_version() -> &'static Version {
+    static CARGO_AFL_VERSION: OnceLock<Version> = OnceLock::new();
+
+    #[allow(clippy::unwrap_used)]
+    CARGO_AFL_VERSION.get_or_init(|| cargo_afl_version().unwrap())
+}
+
+fn cargo_afl_version() -> Result<Version> {
+    #[allow(clippy::disallowed_methods)]
+    let mut command = Command::new("cargo");
+    command.args(["afl", "--version"]);
+    let output = command
+        .output()
+        .with_context(|| format!("Could not get output of `{command:?}`"))?;
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let version = stdout
+        .strip_prefix("cargo-afl ")
+        .and_then(|s| s.split_ascii_whitespace().next())
+        .ok_or_else(|| {
+            anyhow!(
+                "Could not determine `cargo-afl` version. Is it installed? Try `cargo install \
+                 cargo-afl`."
+            )
+        })?;
+    Version::parse(version).map_err(Into::into)
+}
+
 #[allow(clippy::too_many_lines)]
 fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     let metadata = opts.metadata();
@@ -669,101 +754,6 @@ fn filter_targets(opts: &TestFuzz, pat: &str, targets: &[String]) -> Vec<String>
         .collect()
 }
 
-fn match_message(opts: &TestFuzz) -> String {
-    opts.ztarget.as_ref().map_or(String::new(), |pat| {
-        format!(
-            " {} `{}`",
-            if opts.exact { "equal to" } else { "containing" },
-            pat
-        )
-    })
-}
-
-fn check_test_fuzz_and_afl_versions(
-    executable_targets: &[(Executable, Vec<String>)],
-) -> Result<()> {
-    let cargo_test_fuzz_version = Version::parse(crate_version!())?;
-    for (executable, _) in executable_targets {
-        check_dependency_version(
-            &executable.name,
-            "test-fuzz",
-            executable.test_fuzz_version.as_ref(),
-            "cargo-test-fuzz",
-            &cargo_test_fuzz_version,
-        )?;
-        check_dependency_version(
-            &executable.name,
-            "afl",
-            executable.afl_version.as_ref(),
-            "cargo-afl",
-            cached_cargo_afl_version(),
-        )?;
-    }
-    Ok(())
-}
-
-fn cached_cargo_afl_version() -> &'static Version {
-    static CARGO_AFL_VERSION: OnceLock<Version> = OnceLock::new();
-
-    #[allow(clippy::unwrap_used)]
-    CARGO_AFL_VERSION.get_or_init(|| cargo_afl_version().unwrap())
-}
-
-fn cargo_afl_version() -> Result<Version> {
-    #[allow(clippy::disallowed_methods)]
-    let mut command = Command::new("cargo");
-    command.args(["afl", "--version"]);
-    let output = command
-        .output()
-        .with_context(|| format!("Could not get output of `{command:?}`"))?;
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let version = stdout
-        .strip_prefix("cargo-afl ")
-        .and_then(|s| s.split_ascii_whitespace().next())
-        .ok_or_else(|| {
-            anyhow!(
-                "Could not determine `cargo-afl` version. Is it installed? Try `cargo install \
-                 cargo-afl`."
-            )
-        })?;
-    Version::parse(version).map_err(Into::into)
-}
-
-fn check_dependency_version(
-    name: &str,
-    dependency: &str,
-    dependency_version: Option<&Version>,
-    binary: &str,
-    binary_version: &Version,
-) -> Result<()> {
-    if let Some(dependency_version) = dependency_version {
-        // smoelius: Disable dependency-binary-compatibility check when binary is a prerelease.
-        if binary_version.pre.is_empty() {
-            ensure!(
-                as_version_req(dependency_version).matches(binary_version)
-                    || as_version_req(binary_version).matches(dependency_version),
-                "`{name}` depends on `{dependency} {dependency_version}`, which is incompatible \
-                 with `{binary} {binary_version}`."
-            );
-        }
-        if !as_version_req(dependency_version).matches(binary_version) {
-            eprintln!(
-                "`{name}` depends on `{dependency} {dependency_version}`, which is newer than \
-                 `{binary} {binary_version}`. Consider upgrading with `cargo install {binary} \
-                 --force --version '>={dependency_version}'`."
-            );
-        }
-    } else {
-        bail!("`{name}` does not depend on `{dependency}`")
-    }
-    Ok(())
-}
-
-fn as_version_req(version: &Version) -> VersionReq {
-    #[allow(clippy::expect_used)]
-    VersionReq::parse(&version.to_string()).expect("Could not parse version as version request")
-}
-
 fn consolidate(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> Result<()> {
     assert!(opts.consolidate_all || executable_targets.len() == 1);
 
@@ -828,6 +818,169 @@ fn reset(opts: &TestFuzz, executable_targets: &[(Executable, Vec<String>)]) -> R
     }
 
     Ok(())
+}
+
+fn flatten_executable_targets(
+    opts: &TestFuzz,
+    executable_targets: Vec<(Executable, Vec<String>)>,
+) -> Result<Vec<(Executable, String)>> {
+    let executable_targets = executable_targets
+        .into_iter()
+        .flat_map(|(executable, targets)| {
+            targets
+                .into_iter()
+                .map(move |target| (executable.clone(), target))
+        })
+        .collect::<Vec<_>>();
+
+    ensure!(
+        !executable_targets.is_empty(),
+        "Found no fuzz targets{}",
+        match_message(opts)
+    );
+
+    Ok(executable_targets)
+}
+
+fn match_message(opts: &TestFuzz) -> String {
+    opts.ztarget.as_ref().map_or(String::new(), |pat| {
+        format!(
+            " {} `{}`",
+            if opts.exact { "equal to" } else { "containing" },
+            pat
+        )
+    })
+}
+
+struct Config {
+    ui: bool,
+    sufficient_cpus: bool,
+    first_run: bool,
+}
+
+struct Child {
+    exec: String,
+    target: String,
+    popen: StdChild,
+    receiver: Receiver,
+    unprinted_data: Vec<u8>,
+    output_buffer: VecDeque<String>,
+    time_limit_was_reached: bool,
+    testing_aborted_programmatically: bool,
+}
+
+impl Child {
+    fn read_lines(&mut self) -> Result<String> {
+        loop {
+            let mut buf = [0; 4096];
+            let n = match self.receiver.read(&mut buf) {
+                Ok(0) => break,
+                Ok(n) => n,
+                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => break,
+                Err(error) => return Err(error.into()),
+            };
+            self.unprinted_data.extend_from_slice(&buf[0..n]);
+        }
+        if let Some(i) = self.unprinted_data.iter().rev().position(|&c| c == b'\n') {
+            let mut buf = self.unprinted_data.split_off(self.unprinted_data.len() - i);
+            std::mem::swap(&mut self.unprinted_data, &mut buf);
+            String::from_utf8(buf).map_err(Into::into)
+        } else {
+            Ok(String::new())
+        }
+    }
+
+    fn print_line(&mut self, opts: &TestFuzz, line: String) {
+        if opts.no_ui {
+            println!("{line}");
+        } else {
+            self.output_buffer.push_back(line);
+        }
+    }
+
+    fn refresh(opts: &TestFuzz, n_children: usize, children: &mut [Option<Self>]) {
+        if opts.no_ui {
+            return;
+        }
+
+        cursor_to_home_position();
+
+        #[allow(clippy::unwrap_used)]
+        let termsize::Size { rows, cols } = termsize::get().unwrap();
+        let rows = rows as usize;
+        let cols = cols as usize;
+
+        // smoelius: `n_children` lines for dividers plus one line at the bottom of the terminal
+        // to hold the cursor.
+        let Some(n_available_rows) = rows.checked_sub(n_children + 1) else {
+            return;
+        };
+
+        let children = children.iter_mut().flatten().collect::<Vec<_>>();
+
+        assert_eq!(n_children, children.len());
+
+        for (i_child, child) in children.into_iter().enumerate() {
+            print!("{}", divider_with_width(&child.target, cols));
+            clear_to_end_of_line();
+            println!();
+            #[allow(clippy::bool_to_int_with_if)]
+            let n_child_rows = n_available_rows / n_children
+                + if i_child < n_available_rows % n_children {
+                    1
+                } else {
+                    0
+                };
+            let n_lines_to_skip = child.output_buffer.len().saturating_sub(n_child_rows);
+            child.output_buffer.drain(..n_lines_to_skip);
+            for i in 0..n_child_rows {
+                if let Some(line) = child.output_buffer.get(i) {
+                    let prefix = prefix_with_width(line, cols);
+                    print!("{prefix}");
+                }
+                clear_to_end_of_line();
+                println!();
+            }
+        }
+    }
+}
+
+fn cursor_to_home_position() {
+    print!("\x1b[H");
+}
+
+fn clear_to_end_of_line() {
+    print!("\x1b[0K");
+}
+
+fn divider_with_width(target: &str, width: usize) -> String {
+    let prefix = format!("{target} ");
+    if prefix.len() >= width {
+        return prefix_with_width(&prefix, width).to_owned();
+    }
+    format!(
+        "{prefix}{:-<remaining$}",
+        "",
+        remaining = width - prefix.len()
+    )
+}
+
+#[cfg_attr(dylint_lib = "supplementary", allow(commented_out_code))]
+fn prefix_with_width(s: &str, width: usize) -> &str {
+    let mut min = 0;
+    let mut max = s.len();
+    while min < max {
+        let mid = usize::midpoint(min, max);
+        let prefix = strip_ansi_escapes::strip(&s[..mid]);
+        if prefix.len() < width {
+            min = mid + 1;
+        } else {
+            // width <= prefix.len()
+            max = mid;
+        }
+    }
+    assert_eq!(min, max);
+    &s[..min]
 }
 
 #[allow(clippy::panic)]
@@ -1048,159 +1201,6 @@ fn present_participle(opts: &TestFuzz) -> String {
     actions
 }
 
-fn flatten_executable_targets(
-    opts: &TestFuzz,
-    executable_targets: Vec<(Executable, Vec<String>)>,
-) -> Result<Vec<(Executable, String)>> {
-    let executable_targets = executable_targets
-        .into_iter()
-        .flat_map(|(executable, targets)| {
-            targets
-                .into_iter()
-                .map(move |target| (executable.clone(), target))
-        })
-        .collect::<Vec<_>>();
-
-    ensure!(
-        !executable_targets.is_empty(),
-        "Found no fuzz targets{}",
-        match_message(opts)
-    );
-
-    Ok(executable_targets)
-}
-
-struct Config {
-    ui: bool,
-    sufficient_cpus: bool,
-    first_run: bool,
-}
-
-struct Child {
-    exec: String,
-    target: String,
-    popen: StdChild,
-    receiver: Receiver,
-    unprinted_data: Vec<u8>,
-    output_buffer: VecDeque<String>,
-    time_limit_was_reached: bool,
-    testing_aborted_programmatically: bool,
-}
-
-impl Child {
-    fn read_lines(&mut self) -> Result<String> {
-        loop {
-            let mut buf = [0; 4096];
-            let n = match self.receiver.read(&mut buf) {
-                Ok(0) => break,
-                Ok(n) => n,
-                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => break,
-                Err(error) => return Err(error.into()),
-            };
-            self.unprinted_data.extend_from_slice(&buf[0..n]);
-        }
-        if let Some(i) = self.unprinted_data.iter().rev().position(|&c| c == b'\n') {
-            let mut buf = self.unprinted_data.split_off(self.unprinted_data.len() - i);
-            std::mem::swap(&mut self.unprinted_data, &mut buf);
-            String::from_utf8(buf).map_err(Into::into)
-        } else {
-            Ok(String::new())
-        }
-    }
-
-    fn print_line(&mut self, opts: &TestFuzz, line: String) {
-        if opts.no_ui {
-            println!("{line}");
-        } else {
-            self.output_buffer.push_back(line);
-        }
-    }
-
-    fn refresh(opts: &TestFuzz, n_children: usize, children: &mut [Option<Self>]) {
-        if opts.no_ui {
-            return;
-        }
-
-        cursor_to_home_position();
-
-        #[allow(clippy::unwrap_used)]
-        let termsize::Size { rows, cols } = termsize::get().unwrap();
-        let rows = rows as usize;
-        let cols = cols as usize;
-
-        // smoelius: `n_children` lines for dividers plus one line at the bottom of the terminal
-        // to hold the cursor.
-        let Some(n_available_rows) = rows.checked_sub(n_children + 1) else {
-            return;
-        };
-
-        let children = children.iter_mut().flatten().collect::<Vec<_>>();
-
-        assert_eq!(n_children, children.len());
-
-        for (i_child, child) in children.into_iter().enumerate() {
-            print!("{}", divider_with_width(&child.target, cols));
-            clear_to_end_of_line();
-            println!();
-            #[allow(clippy::bool_to_int_with_if)]
-            let n_child_rows = n_available_rows / n_children
-                + if i_child < n_available_rows % n_children {
-                    1
-                } else {
-                    0
-                };
-            let n_lines_to_skip = child.output_buffer.len().saturating_sub(n_child_rows);
-            child.output_buffer.drain(..n_lines_to_skip);
-            for i in 0..n_child_rows {
-                if let Some(line) = child.output_buffer.get(i) {
-                    let prefix = prefix_with_width(line, cols);
-                    print!("{prefix}");
-                }
-                clear_to_end_of_line();
-                println!();
-            }
-        }
-    }
-}
-
-fn cursor_to_home_position() {
-    print!("\x1b[H");
-}
-
-fn clear_to_end_of_line() {
-    print!("\x1b[0K");
-}
-
-fn divider_with_width(target: &str, width: usize) -> String {
-    let prefix = format!("{target} ");
-    if prefix.len() >= width {
-        return prefix_with_width(&prefix, width).to_owned();
-    }
-    format!(
-        "{prefix}{:-<remaining$}",
-        "",
-        remaining = width - prefix.len()
-    )
-}
-
-#[cfg_attr(dylint_lib = "supplementary", allow(commented_out_code))]
-fn prefix_with_width(s: &str, width: usize) -> &str {
-    let mut min = 0;
-    let mut max = s.len();
-    while min < max {
-        let mid = usize::midpoint(min, max);
-        let prefix = strip_ansi_escapes::strip(&s[..mid]);
-        if prefix.len() < width {
-            min = mid + 1;
-        } else {
-            // width <= prefix.len()
-            max = mid;
-        }
-    }
-    assert_eq!(min, max);
-    &s[..min]
-}
-
 #[allow(clippy::too_many_lines)]
 fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<()> {
     assert!(
@@ -1413,6 +1413,51 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
     Ok(())
 }
 
+fn auto_generate_corpora(
+    opts: &TestFuzz,
+    executable_targets: &[(Executable, String)],
+) -> Result<()> {
+    let mut errors: Vec<String> = Vec::new();
+    for (executable, target) in executable_targets {
+        let corpus_dir = corpus_directory_from_target(&executable.name, target);
+        if !corpus_dir.exists() {
+            eprintln!(
+                "Could not find `{}`. Trying to auto-generate it...",
+                corpus_dir.to_string_lossy(),
+            );
+            if let Err(error) = auto_generate_corpus(opts, executable, target) {
+                errors.push(format!("{error:#}"));
+            } else if !corpus_dir.exists() {
+                errors.push(format!(
+                    "Could not find or auto-generate `{}`. Please ensure `{}` is tested.",
+                    corpus_dir.to_string_lossy(),
+                    target
+                ));
+            } else {
+                eprintln!("Auto-generated `{}`.", corpus_dir.to_string_lossy());
+            }
+        }
+    }
+    if errors.is_empty() {
+        Ok(())
+    } else {
+        bail!("\n{}", itertools::join(errors, "\n"))
+    }
+}
+
+fn auto_generate_corpus(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
+    let mut command = opts.command([&executable.path]);
+    command.args(["--exact", &(target.to_owned() + AUTO_GENERATED_SUFFIX)]);
+    debug!("{command:?}");
+    let status = command
+        .status()
+        .with_context(|| format!("Could not get status of `{command:?}`"))?;
+
+    ensure!(status.success(), "Command failed: {command:?}");
+
+    Ok(())
+}
+
 fn fuzz_command(
     opts: &TestFuzz,
     config: &Config,
@@ -1478,51 +1523,6 @@ fn fuzz_command(
     command.envs(envs).args(args);
     debug!("{command:?}");
     command
-}
-
-fn auto_generate_corpora(
-    opts: &TestFuzz,
-    executable_targets: &[(Executable, String)],
-) -> Result<()> {
-    let mut errors: Vec<String> = Vec::new();
-    for (executable, target) in executable_targets {
-        let corpus_dir = corpus_directory_from_target(&executable.name, target);
-        if !corpus_dir.exists() {
-            eprintln!(
-                "Could not find `{}`. Trying to auto-generate it...",
-                corpus_dir.to_string_lossy(),
-            );
-            if let Err(error) = auto_generate_corpus(opts, executable, target) {
-                errors.push(format!("{error:#}"));
-            } else if !corpus_dir.exists() {
-                errors.push(format!(
-                    "Could not find or auto-generate `{}`. Please ensure `{}` is tested.",
-                    corpus_dir.to_string_lossy(),
-                    target
-                ));
-            } else {
-                eprintln!("Auto-generated `{}`.", corpus_dir.to_string_lossy());
-            }
-        }
-    }
-    if errors.is_empty() {
-        Ok(())
-    } else {
-        bail!("\n{}", itertools::join(errors, "\n"))
-    }
-}
-
-fn auto_generate_corpus(opts: &TestFuzz, executable: &Executable, target: &str) -> Result<()> {
-    let mut command = opts.command([&executable.path]);
-    command.args(["--exact", &(target.to_owned() + AUTO_GENERATED_SUFFIX)]);
-    debug!("{command:?}");
-    let status = command
-        .status()
-        .with_context(|| format!("Could not get status of `{command:?}`"))?;
-
-    ensure!(status.success(), "Command failed: {command:?}");
-
-    Ok(())
 }
 
 #[cfg(test)]
