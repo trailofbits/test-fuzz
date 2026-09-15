@@ -96,8 +96,10 @@ jobs:
           sudo rm -f /usr/bin/ld.gold
           sudo ln -s /usr/bin/ld /usr/bin/ld.gold
 
-      - name: Install cargo-afl
-        run: cargo install cargo-afl || true
+      - name: Install cargo-afl and build AFL LLVM runtime
+        run: |
+          cargo install cargo-afl  || true
+          cargo afl config --build || true
 
       - name: Run afl-system-config
         run: cargo afl system-config
