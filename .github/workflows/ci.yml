@@ -72,7 +72,13 @@ jobs:
       # smoelius: The Substrate tests require the `rust-src` component and the wasm32 target.
       - name: Set toolchain
         run: |
-          rustup default ${{ matrix.toolchain }}
+          # smoelius: Pin to nightly-2026-05-03 until the following fix is published on crates.io:
+          # https://github.com/bytecodealliance/rustix/issues/1620
+          if [[ ${{ matrix.toolchain }} = 'nightly' ]]; then
+            rustup default nightly-2026-05-03
+          else
+            rustup default ${{ matrix.toolchain }}
+          fi
           rustup component add rust-src
           rustup target add wasm32-unknown-unknown
 
@@ -103,7 +109,7 @@ jobs:
       # smoelius: I expect this list to grow.
       - name: Install tools
         run: |
-          rustup +nightly component add clippy rustfmt
+          rustup component add clippy rustfmt
           cargo install cargo-dylint dylint-link || true
           cargo install cargo-license            || true
           cargo install cargo-supply-chain       || true
