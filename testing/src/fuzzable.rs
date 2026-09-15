@@ -84,6 +84,20 @@ pub fn test(krate: &str, test: &str) -> Result<Command> {
     }
 }
 
+pub fn test_fuzz(krate: &str, target: &str) -> Result<Command> {
+    test_fuzz_all().map(|mut command| {
+        command.args(["--test", krate, "--exact", target]);
+        command
+    })
+}
+
+pub fn test_fuzz_inexact(krate: &str, target: &str) -> Result<Command> {
+    test_fuzz_all().map(|mut command| {
+        command.args(["--test", krate, target]);
+        command
+    })
+}
+
 pub fn test_fuzz_all() -> Result<Command> {
     let serde_format_feature = "test-fuzz/".to_owned() + serde_format::as_feature();
     #[cfg_attr(dylint_lib = "general", allow(abs_home_path))]
@@ -106,20 +120,6 @@ pub fn test_fuzz_all() -> Result<Command> {
     command.env("TEST_FUZZ_ID", id());
     command.args(args);
     Ok(command)
-}
-
-pub fn test_fuzz(krate: &str, target: &str) -> Result<Command> {
-    test_fuzz_all().map(|mut command| {
-        command.args(["--test", krate, "--exact", target]);
-        command
-    })
-}
-
-pub fn test_fuzz_inexact(krate: &str, target: &str) -> Result<Command> {
-    test_fuzz_all().map(|mut command| {
-        command.args(["--test", krate, target]);
-        command
-    })
 }
 
 fn id() -> String {

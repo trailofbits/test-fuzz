@@ -172,6 +172,17 @@ fn map_impl_item_fn(
     )
 }
 
+fn opts_from_attr(attr: &Attribute) -> TestFuzzOpts {
+    attr.parse_args::<TokenStream2>().map_or_else(
+        |_| TestFuzzOpts::default(),
+        |tokens| {
+            let attr_args =
+                NestedMeta::parse_meta_list(tokens).expect("Could not parse attribute args");
+            TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options")
+        },
+    )
+}
+
 #[allow(clippy::struct_excessive_bools)]
 #[derive(Clone, Debug, Default, FromMeta)]
 struct TestFuzzOpts {
@@ -807,35 +818,6 @@ fn map_method_or_fn(
     )
 }
 
-fn generic_params_map<'a, 'b>(
-    generics: &'a Generics,
-    impl_generic_args: &'b Punctuated<GenericArgument, token::Comma>,
-) -> BTreeMap<&'a Ident, &'b GenericArgument> {
-    let n = generics
-        .params
-        .len()
-        .checked_sub(impl_generic_args.len())
-        .unwrap_or_else(|| {
-            panic!(
-                "{:?} is shorter than {:?}",
-                generics.params, impl_generic_args
-            );
-        });
-    generics
-        .params
-        .iter()
-        .skip(n)
-        .zip(impl_generic_args)
-        .filter_map(|(key, value)| {
-            if let GenericParam::Type(TypeParam { ident, .. }) = key {
-                Some((ident, value))
-            } else {
-                None
-            }
-        })
-        .collect()
-}
-
 #[allow(clippy::type_complexity)]
 fn map_args<'a, I>(
     conversions: &mut Conversions,
@@ -952,20 +934,6 @@ fn map_typed_arg(
     }
 }
 
-fn map_path_arg(
-    _conversions: &mut Conversions,
-    _candidates: &mut BTreeSet<OrdType>,
-    ident: &Ident,
-    expr: &Expr,
-    path: &TypePath,
-) -> (Type, FieldValue, Expr) {
-    (
-        parse_quote! { #path },
-        parse_quote! { #ident: #expr.clone() },
-        parse_quote! { args.#ident },
-    )
-}
-
 fn map_ref_arg(
     conversions: &mut Conversions,
     candidates: &mut BTreeSet<OrdType>,
@@ -1010,14 +978,17 @@ fn map_ref_arg(
     }
 }
 
-fn opts_from_attr(attr: &Attribute) -> TestFuzzOpts {
-    attr.parse_args::<TokenStream2>().map_or_else(
-        |_| TestFuzzOpts::default(),
-        |tokens| {
-            let attr_args =
-                NestedMeta::parse_meta_list(tokens).expect("Could not parse attribute args");
-            TestFuzzOpts::from_list(&attr_args).expect("Could not parse `test_fuzz` options")
-        },
+fn map_path_arg(
+    _conversions: &mut Conversions,
+    _candidates: &mut BTreeSet<OrdType>,
+    ident: &Ident,
+    expr: &Expr,
+    path: &TypePath,
+) -> (Type, FieldValue, Expr) {
+    (
+        parse_quote! { #path },
+        parse_quote! { #ident: #expr.clone() },
+        parse_quote! { args.#ident },
     )
 }
 
@@ -1075,23 +1046,6 @@ fn combine_generics(left: &Generics, right: &Generics) -> Generics {
     generics
 }
 
-// smoelius: Is there a better name for this operation? The closest thing I've found is the `<|>`
-// operation in Haskell's `Alternative` class (thanks, @incertia):
-// https://en.wikibooks.org/wiki/Haskell/Alternative_and_MonadPlus
-// ... (<|>) is a binary function which combines two computations.
-//                                      ^^^^^^^^
-
-fn combine_options<T, F>(x: Option<T>, y: Option<T>, f: F) -> Option<T>
-where
-    F: FnOnce(T, T) -> T,
-{
-    match (x, y) {
-        (Some(x), Some(y)) => Some(f(x, y)),
-        (x, None) => x,
-        (None, y) => y,
-    }
-}
-
 fn restrict_to_deserialize(generics: &Generics) -> Generics {
     let mut generics = generics.clone();
     generics.params.iter_mut().for_each(|param| {
@@ -1120,6 +1074,23 @@ fn type_generic_phantom_idents_and_types(generics: &Generics) -> Vec<(Ident, Typ
             GenericParam::Const(_) => None,
         })
         .collect()
+}
+
+// smoelius: Is there a better name for this operation? The closest thing I've found is the `<|>`
+// operation in Haskell's `Alternative` class (thanks, @incertia):
+// https://en.wikibooks.org/wiki/Haskell/Alternative_and_MonadPlus
+// ... (<|>) is a binary function which combines two computations.
+//                                      ^^^^^^^^
+
+fn combine_options<T, F>(x: Option<T>, y: Option<T>, f: F) -> Option<T>
+where
+    F: FnOnce(T, T) -> T,
+{
+    match (x, y) {
+        (Some(x), Some(y)) => Some(f(x, y)),
+        (x, None) => x,
+        (None, y) => y,
+    }
 }
 
 fn args_as_turbofish(args: &Punctuated<GenericArgument, token::Comma>) -> TokenStream2 {
@@ -1179,6 +1150,35 @@ fn mod_ident(opts: &TestFuzzOpts, self_ty_base: Option<&Ident>, target_ident: &I
     }
     s.push_str("_fuzz__");
     Ident::new(&s, Span::call_site())
+}
+
+fn generic_params_map<'a, 'b>(
+    generics: &'a Generics,
+    impl_generic_args: &'b Punctuated<GenericArgument, token::Comma>,
+) -> BTreeMap<&'a Ident, &'b GenericArgument> {
+    let n = generics
+        .params
+        .len()
+        .checked_sub(impl_generic_args.len())
+        .unwrap_or_else(|| {
+            panic!(
+                "{:?} is shorter than {:?}",
+                generics.params, impl_generic_args
+            );
+        });
+    generics
+        .params
+        .iter()
+        .skip(n)
+        .zip(impl_generic_args)
+        .filter_map(|(key, value)| {
+            if let GenericParam::Type(TypeParam { ident, .. }) = key {
+                Some((ident, value))
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 static INDEX: AtomicU32 = AtomicU32::new(0);
