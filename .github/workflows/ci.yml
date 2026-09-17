@@ -62,6 +62,7 @@ jobs:
             ~/.cargo/bin/
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
+            ~/.cargo/registry/src/
             ~/.cargo/git/db/
             ~/.dylint_drivers/
             ~/.local/share/afl.rs/
