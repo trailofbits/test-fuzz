@@ -73,13 +73,7 @@ jobs:
       # smoelius: The Substrate tests require the `rust-src` component and the wasm32 target.
       - name: Set toolchain
         run: |
-          # smoelius: Pin to nightly-2026-05-03 until the following fix is published on crates.io:
-          # https://github.com/bytecodealliance/rustix/issues/1620
-          if [[ ${{ matrix.toolchain }} = 'nightly' ]]; then
-            rustup default nightly-2026-05-03
-          else
-            rustup default ${{ matrix.toolchain }}
-          fi
+          rustup default ${{ matrix.toolchain }}
           rustup component add rust-src
           rustup target add wasm32-unknown-unknown
 
