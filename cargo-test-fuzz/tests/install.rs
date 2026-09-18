@@ -41,6 +41,7 @@ fn uninstalled_cargo_afl() -> Result<()> {
           echo "$OUTPUT"
           echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `afl [^`]*`, which is incompatible with `cargo-afl [^`]*`.$'
 */
+#[ignore = "reenable once a version of cargo-afl with rustix@1.1.5 has been published"]
 #[test]
 fn incompatible_cargo_afl() -> Result<()> {
     run_test(
@@ -71,6 +72,7 @@ fn incompatible_cargo_afl() -> Result<()> {
           echo "$OUTPUT" | grep 'Consider upgrading with `cargo install afl --force --version [^`]*`.$'
 */
 #[test]
+#[ignore = "reenable once two versions of cargo-afl with rustix@1.1.5 have been published"]
 fn newer_afl() -> Result<()> {
     run_test(
         Some("0.13.2"),
