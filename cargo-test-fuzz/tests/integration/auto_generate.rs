@@ -59,7 +59,7 @@ fn auto_generate(krate: &str, target: &str, success: bool, pattern: &str, n: usi
 
         assert.try_stderr(predicate::str::contains(pattern))?;
 
-        ensure!(read_dir(&corpus).map(Iterator::count).unwrap_or_default() == n);
+        ensure!(read_dir(&corpus).map_or_default(Iterator::count) == n);
 
         Ok("")
     })

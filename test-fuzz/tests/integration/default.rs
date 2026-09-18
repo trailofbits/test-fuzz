@@ -26,5 +26,5 @@ fn test(name: &str, n: usize) {
         .logged_assert()
         .success();
 
-    assert_eq!(read_dir(corpus).map(Iterator::count).unwrap_or_default(), n);
+    assert_eq!(read_dir(corpus).map_or_default(Iterator::count), n);
 }

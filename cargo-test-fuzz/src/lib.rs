@@ -246,13 +246,11 @@ impl Debug for Executable {
         let test_fuzz_version = self
             .test_fuzz_version
             .as_ref()
-            .map(ToString::to_string)
-            .unwrap_or_default();
+            .map_or_default(ToString::to_string);
         let afl_version = self
             .afl_version
             .as_ref()
-            .map(ToString::to_string)
-            .unwrap_or_default();
+            .map_or_default(ToString::to_string);
         fmt.debug_struct("Executable")
             .field("path", &self.path)
             .field("name", &self.name)
