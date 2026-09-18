@@ -2,7 +2,7 @@ use super::Object;
 use anyhow::Result;
 use clap::{ArgAction, Parser, crate_version};
 use serde::{Deserialize, Serialize};
-use std::ffi::OsStr;
+use std::{ffi::OsStr, process::ExitCode};
 
 #[derive(Debug, Parser)]
 #[command(bin_name = "cargo")]
@@ -249,7 +249,7 @@ macro_rules! process_deprecated_action_object {
     };
 }
 
-pub(crate) fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<()> {
+pub(crate) fn cargo_test_fuzz<T: AsRef<OsStr>>(args: &[T]) -> Result<ExitCode> {
     let SubCommand::TestFuzz(opts) = Opts::parse_from(args).subcmd;
 
     super::run(super::TestFuzz::from(opts))

@@ -1,5 +1,6 @@
 disallowed-methods = [
     { path = "assert_cmd::assert::OutputAssertExt::assert", reason = "use `test_fuzz_testing::LoggedAssert::logged_assert`" },
     { path = "assert_cmd::cmd::Command::assert", reason = "use `test_fuzz_testing::LoggedAssert::logged_assert`" },
+    { path = "std::process::exit", reason = "return a `std::process::ExitCode`" },
     { path = "test_fuzz_internal::dirs::target_directory", reason = "use `TestFuzz::target_directory`" },
 ]
