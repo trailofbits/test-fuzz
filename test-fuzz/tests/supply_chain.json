@@ -182,12 +182,6 @@
     ],
     "cargo-platform": [
       {
-        "id": 4282,
-        "kind": "team",
-        "login": "github:rust-lang:release-publishers",
-        "name": "release-publishers"
-      },
-      {
         "id": 55123,
         "kind": "user",
         "login": "rust-lang-owner",
