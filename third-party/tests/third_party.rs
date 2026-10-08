@@ -116,6 +116,9 @@ fn run_test(test: &Test, no_run: bool) {
     // smoelius: `cw20-base` relies on `serde_json` 1.0.114, which is before `serde_json::Value`
     // started deriving `Hash`:
     // https://github.com/serde-rs/json/blob/e1b3a6d8a161ff5ec4865b487d148c17d0188e3e/src/value/mod.rs#L115
+    // `example-helloworld` locks `tar` 0.4.38, which requires `xattr` 0.2. `xattr` 0.2 uses
+    // `libc::ENOATTR`, which libc 0.2.190 removed. `xattr` 1.1.0 and later do not use
+    // `libc::ENOATTR`, and `tar` 0.4.41 and later require `xattr` 1.1.3 or later.
     for package in [
         "ahash@0.7.6",
         "ahash@0.7.7",
@@ -123,6 +126,7 @@ fn run_test(test: &Test, no_run: bool) {
         "num-bigint@0.4.0",
         "proc-macro2@1",
         "serde_json",
+        "tar",
         "tempfile",
         "wasm-bindgen",
     ] {
