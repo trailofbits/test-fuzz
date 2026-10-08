@@ -1,8 +1,8 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index 5cef175..380cca5 100644
+index 9feca19..7b9e05d 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -31,4 +31,7 @@ shuttle = { version = "0.7.1", optional = true }
+@@ -34,4 +34,7 @@ shuttle = { version = "0.9.3", optional = true }
  thiserror = "2.0.9"
  
 +serde = "1.0"
@@ -10,13 +10,13 @@ index 5cef175..380cca5 100644
 +
  [target.'cfg(windows)'.dependencies]
  winapi = { version = "0.3", features = ["memoryapi", "sysinfoapi", "winnt", "errhandlingapi"], optional = true }
-@@ -50,2 +53,4 @@ elf = "0.0.10"
- json = "0.12"
- test_utils = { path = "test_utils/" }
+@@ -72,2 +75,4 @@ harness = false
+ name = "vm_execution"
+ harness = false
 +
 +[workspace]
 diff --git a/src/memory_region.rs b/src/memory_region.rs
-index 2b677bc..558bf77 100644
+index 9a12a1c..5cccb04 100644
 --- a/src/memory_region.rs
 +++ b/src/memory_region.rs
 @@ -258,4 +258,87 @@ pub struct MemoryRegion {
@@ -224,7 +224,7 @@ index 2b677bc..558bf77 100644
 +#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
  pub enum MemoryMappingType {
      /// Aligned memory mapping which uses the upper half of an address to
-@@ -1029,5 +1209,5 @@ impl MemoryMapping {
+@@ -1081,5 +1261,5 @@ impl MemoryMapping {
  
  /// Fast, small linear cache used to speed up unaligned memory mapping.
 -#[derive(Debug)]
@@ -232,7 +232,7 @@ index 2b677bc..558bf77 100644
  struct MappingCache {
      // The cached entries.
 diff --git a/src/program.rs b/src/program.rs
-index a886e9a..684f0a7 100644
+index e5d850f..0d41e2f 100644
 --- a/src/program.rs
 +++ b/src/program.rs
 @@ -10,5 +10,5 @@ use {
@@ -249,7 +249,7 @@ index a886e9a..684f0a7 100644
 +        $name:ident,
          fn rust(
              $vm:ident : &mut $ContextObject:ty,
-@@ -430,4 +430,49 @@ macro_rules! declare_builtin_function {
+@@ -428,4 +428,49 @@ macro_rules! declare_builtin_function {
              $($codegen:tt)*
          })?
 +    ) => {
@@ -299,7 +299,7 @@ index a886e9a..684f0a7 100644
 +        })?
      ) => {
          $(#[$attr])*
-@@ -451,7 +496,7 @@ macro_rules! declare_builtin_function {
+@@ -449,7 +494,7 @@ macro_rules! declare_builtin_function {
              }
              $(fn codegen(
 -                $jit: &mut $crate::program::JitCompiler<$ContextObject2>,
@@ -310,7 +310,7 @@ index a886e9a..684f0a7 100644
              })?
          }
 diff --git a/src/vm.rs b/src/vm.rs
-index 87d5ebe..8443324 100644
+index 4a1abef..22f5f90 100644
 --- a/src/vm.rs
 +++ b/src/vm.rs
 @@ -111,5 +111,5 @@ pub enum ExecutionMode {
@@ -321,7 +321,7 @@ index 87d5ebe..8443324 100644
  pub struct Config {
      /// Maximum call depth
 diff --git a/test_utils/Cargo.toml b/test_utils/Cargo.toml
-index c892bcf..5a61903 100644
+index c8d49ab..e33bcf2 100644
 --- a/test_utils/Cargo.toml
 +++ b/test_utils/Cargo.toml
 @@ -9,2 +9,5 @@ publish = false
@@ -331,7 +331,7 @@ index c892bcf..5a61903 100644
 +serde = "1.0"
 +test-fuzz = { path = "../../../test-fuzz" }
 diff --git a/test_utils/src/lib.rs b/test_utils/src/lib.rs
-index 75b9296..45fa65f 100644
+index 6ba33c0..d588052 100644
 --- a/test_utils/src/lib.rs
 +++ b/test_utils/src/lib.rs
 @@ -25,5 +25,5 @@ pub mod syscalls;
