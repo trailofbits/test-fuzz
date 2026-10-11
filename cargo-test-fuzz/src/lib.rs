@@ -41,7 +41,7 @@ use std::{
     io::{BufRead, IsTerminal, Read},
     iter,
     path::{Path, PathBuf},
-    process::{Child as StdChild, Command, Stdio, exit},
+    process::{Child as StdChild, Command, ExitCode, Stdio},
     sync::OnceLock,
     time::Duration,
 };
@@ -260,7 +260,7 @@ impl Debug for Executable {
     }
 }
 
-pub fn run(opts: TestFuzz) -> Result<()> {
+pub fn run(opts: TestFuzz) -> Result<ExitCode> {
     let opts = {
         let mut opts = opts;
         if opts.exit_code {
@@ -269,18 +269,22 @@ pub fn run(opts: TestFuzz) -> Result<()> {
         opts
     };
 
-    run_without_exit_code(&opts).map_err(|error| {
-        if opts.exit_code {
-            eprintln!("{error:?}");
-            exit(2);
+    match run_without_exit_code(&opts) {
+        Ok(exit_code) => Ok(exit_code),
+        Err(error) => {
+            // smoelius: If `--exit-code` was passed, map errors to exit code 2.
+            if opts.exit_code {
+                eprintln!("{error:?}");
+                return Ok(ExitCode::from(2));
+            }
+            Err(error)
         }
-        error
-    })
+    }
 }
 
 #[allow(clippy::too_many_lines)]
 #[doc(hidden)]
-fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
+fn run_without_exit_code(opts: &TestFuzz) -> Result<ExitCode> {
     if let Some(object) = opts.coverage {
         ensure!(
             matches!(
@@ -320,25 +324,25 @@ fn run_without_exit_code(opts: &TestFuzz) -> Result<()> {
 
     if opts.list {
         println!("{executable_targets:#?}");
-        return Ok(());
+        return Ok(ExitCode::SUCCESS);
     }
 
     if opts.no_run {
-        return Ok(());
+        return Ok(ExitCode::SUCCESS);
     }
 
     if opts.consolidate_all || opts.reset_all {
         if opts.consolidate_all {
             consolidate(opts, &executable_targets)?;
         }
-        return reset(opts, &executable_targets);
+        return reset(opts, &executable_targets).map(|()| ExitCode::SUCCESS);
     }
 
     if opts.consolidate || opts.reset {
         if opts.consolidate {
             consolidate(opts, &executable_targets)?;
         }
-        return reset(opts, &executable_targets);
+        return reset(opts, &executable_targets).map(|()| ExitCode::SUCCESS);
     }
 
     if coverage || display || replay {
@@ -411,7 +415,7 @@ Wrote lcov to `lcov.info`. To view it as html, try running:
             );
         }
 
-        return Ok(());
+        return Ok(ExitCode::SUCCESS);
     }
 
     let executable_targets = flatten_executable_targets(opts, executable_targets)?;
@@ -1200,7 +1204,7 @@ fn present_participle(opts: &TestFuzz) -> String {
 }
 
 #[allow(clippy::too_many_lines)]
-fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<()> {
+fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<ExitCode> {
     assert!(
         opts.coverage.is_none(),
         "Fuzzing with coverage should not be possible"
@@ -1220,7 +1224,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
             .status()
             .with_context(|| format!("Could not get status of `{command:?}`"))?;
         ensure!(status.success(), "Command failed: {command:?}");
-        return Ok(());
+        return Ok(ExitCode::SUCCESS);
     }
 
     let n_cpus = std::cmp::min(
@@ -1402,13 +1406,13 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
                 }
 
                 if opts.exit_code && !child.time_limit_was_reached {
-                    exit(1);
+                    return Ok(ExitCode::FAILURE);
                 }
             }
         }
     }
 
-    Ok(())
+    Ok(ExitCode::SUCCESS)
 }
 
 fn auto_generate_corpora(
