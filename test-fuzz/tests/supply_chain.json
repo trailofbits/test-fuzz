@@ -578,12 +578,6 @@
         "kind": "user",
         "login": "sebasmagri",
         "name": "Sebastián Magrí"
-      },
-      {
-        "id": 55123,
-        "kind": "user",
-        "login": "rust-lang-owner",
-        "name": null
       }
     ],
     "errno": [
