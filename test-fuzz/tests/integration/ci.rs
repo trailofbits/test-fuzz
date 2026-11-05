@@ -63,18 +63,14 @@ fn license() {
     let re =
         Regex::new(r"^[^:]*\b(Apache-2.0|BSD-2-Clause|BSD-3-Clause|ISC|MIT|Zlib|N/A)\b").unwrap();
 
-    for line in std::str::from_utf8(
-        &Command::new("cargo")
-            .arg("license")
-            .current_dir("..")
-            .logged_assert()
-            .success()
-            .get_output()
-            .stdout,
-    )
-    .unwrap()
-    .lines()
-    {
+    let assert = Command::new("cargo")
+        .arg("license")
+        .current_dir("..")
+        .logged_assert()
+        .success();
+    let stdout = str::from_utf8(&assert.get_output().stdout).unwrap();
+
+    for line in stdout.lines() {
         if line
             == "AGPL-3.0 WITH mif-exception (5): cargo-test-fuzz, test-fuzz, test-fuzz-internal, \
                 test-fuzz-macro, test-fuzz-runtime"
@@ -131,7 +127,7 @@ fn readme_contains_usage() {
         .success();
     let stdout = &assert.get_output().stdout;
 
-    let usage = std::str::from_utf8(stdout)
+    let usage = str::from_utf8(stdout)
         .unwrap()
         .split_inclusive('\n')
         .skip(2)
