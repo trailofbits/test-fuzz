@@ -128,12 +128,6 @@
         "kind": "user",
         "login": "KodrAus",
         "name": "Ashley Mannix"
-      },
-      {
-        "id": 55123,
-        "kind": "user",
-        "login": "rust-lang-owner",
-        "name": null
       }
     ],
     "block-buffer": [
@@ -726,6 +720,12 @@
         "kind": "user",
         "login": "jswrenn",
         "name": "Jack Wrenn"
+      },
+      {
+        "id": 5742,
+        "kind": "user",
+        "login": "phimuemue",
+        "name": "phimuemue"
       }
     ],
     "itoa": [
