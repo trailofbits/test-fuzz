@@ -4,6 +4,7 @@ use std::{
     env,
     path::PathBuf,
     sync::atomic::{AtomicBool, Ordering},
+    thread,
 };
 
 pub static IN_TEST: AtomicBool = AtomicBool::new(false);
@@ -120,7 +121,7 @@ fn maybe_id() -> Option<String> {
 }
 
 fn thread_id() -> String {
-    format!("{:?}", std::thread::current().id()).replace(['(', ')'], "_")
+    format!("{:?}", thread::current().id()).replace(['(', ')'], "_")
 }
 
 #[must_use]
