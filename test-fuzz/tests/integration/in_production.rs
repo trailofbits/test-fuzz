@@ -84,8 +84,10 @@ mod linux {
     use std::{
         collections::{BTreeMap, BTreeSet},
         fs::read_to_string,
+        iter,
         os::unix::ffi::OsStrExt,
         path::Path,
+        str,
         sync::LazyLock,
     };
     use testing::fuzzable::test_fuzz_all;
@@ -105,7 +107,7 @@ mod linux {
 
     #[cfg_attr(dylint_lib = "supplementary", allow(unnamed_constant))]
     static EXPECTED_LINE_COVERAGE: LazyLock<LineCoverage> = LazyLock::new(|| {
-        std::iter::once((
+        iter::once((
             String::from("fuzzable/src/bin/hello-world.rs"),
             [10, 11, 12].into_iter().collect(),
         ))
@@ -158,7 +160,7 @@ mod linux {
                     if let Some(source_file) = &source_file {
                         panic!("source file already given: {source_file}");
                     }
-                    let path_utf8 = std::str::from_utf8(path.as_os_str().as_bytes()).unwrap();
+                    let path_utf8 = str::from_utf8(path.as_os_str().as_bytes()).unwrap();
                     source_file = Some(path_utf8.to_owned());
                 }
                 Record::LineData {

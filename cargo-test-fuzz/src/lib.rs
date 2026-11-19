@@ -34,14 +34,16 @@ use mio::{Events, Interest, Poll, Token, unix::pipe::Receiver};
 use semver::{Version, VersionReq};
 use serde::{Deserialize, Serialize};
 use std::{
+    cmp,
     collections::{HashSet, VecDeque},
     ffi::OsStr,
-    fmt::{Debug, Formatter},
+    fmt::{self, Debug, Formatter},
     fs::{File, create_dir_all, read, read_dir, remove_dir_all},
-    io::{BufRead, IsTerminal, Read},
-    iter,
+    io::{self, BufRead, IsTerminal, Read},
+    iter, mem,
     path::{Path, PathBuf},
     process::{Child as StdChild, Command, Stdio, exit},
+    result,
     sync::OnceLock,
     time::Duration,
 };
@@ -242,7 +244,7 @@ struct Executable {
 }
 
 impl Debug for Executable {
-    fn fmt(&self, fmt: &mut Formatter) -> std::fmt::Result {
+    fn fmt(&self, fmt: &mut Formatter) -> fmt::Result {
         let test_fuzz_version = self
             .test_fuzz_version
             .as_ref()
@@ -544,7 +546,7 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
     // `AFL_QUIET=1` doesn't work here, so pipe standard error to: /dev/null
     // smoelius: Suppressing all of standard error is too extreme. For now, suppress only when
     // generating coverage, displaying, or replaying.
-    let message_format = if std::io::stderr().is_terminal() {
+    let message_format = if io::stderr().is_terminal() {
         "--message-format=json-diagnostic-rendered-ansi"
     } else {
         "--message-format=json"
@@ -566,9 +568,9 @@ fn build(opts: &TestFuzz, quiet: bool) -> Result<Vec<Executable>> {
         .stdout
         .take()
         .map_or(Ok(vec![]), |stream| -> Result<_> {
-            let reader = std::io::BufReader::new(stream);
+            let reader = io::BufReader::new(stream);
             Message::parse_stream(reader)
-                .collect::<std::result::Result<_, std::io::Error>>()
+                .collect::<result::Result<_, io::Error>>()
                 .with_context(|| format!("`parse_stream` failed for `{exec_str}`"))
         })?;
     let status = job
@@ -713,7 +715,7 @@ fn targets(opts: &TestFuzz, executable: &Path) -> Result<Vec<String>> {
     // "M tests, N benchmarks." Stop at the empty line.
     // smoelius: Searching for the empty line is not necessary: https://stackoverflow.com/a/64913357
     let mut targets = Vec::<String>::default();
-    for line in std::io::BufReader::new(stream).lines() {
+    for line in io::BufReader::new(stream).lines() {
         let line = line.with_context(|| format!("Could not get output of `{exec_str}`"))?;
         let Some(line) = line.strip_suffix(": test") else {
             continue;
@@ -874,14 +876,14 @@ impl Child {
             let n = match self.receiver.read(&mut buf) {
                 Ok(0) => break,
                 Ok(n) => n,
-                Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => break,
+                Err(error) if error.kind() == io::ErrorKind::WouldBlock => break,
                 Err(error) => return Err(error.into()),
             };
             self.unprinted_data.extend_from_slice(&buf[0..n]);
         }
         if let Some(i) = self.unprinted_data.iter().rev().position(|&c| c == b'\n') {
             let mut buf = self.unprinted_data.split_off(self.unprinted_data.len() - i);
-            std::mem::swap(&mut self.unprinted_data, &mut buf);
+            mem::swap(&mut self.unprinted_data, &mut buf);
             String::from_utf8(buf).map_err(Into::into)
         } else {
             Ok(String::new())
@@ -1100,7 +1102,7 @@ fn for_each_entry(
                 .with_context(|| format!("`communicate` failed for `{job:?}`"))?;
             let mut communicator = communicator.limit_time(time);
             let mut stderr_buf = Vec::new();
-            match communicator.read_to(std::io::sink(), &mut stderr_buf) {
+            match communicator.read_to(io::sink(), &mut stderr_buf) {
                 Ok(()) => {
                     let status = job
                         .wait()
@@ -1110,7 +1112,7 @@ fn for_each_entry(
                 Err(error) => {
                     job.kill()
                         .with_context(|| format!("`kill` failed for `{job:?}`"))?;
-                    if error.kind() != std::io::ErrorKind::TimedOut {
+                    if error.kind() != io::ErrorKind::TimedOut {
                         return Err(anyhow!(error));
                     }
                     let _ = job
@@ -1223,7 +1225,7 @@ fn fuzz(opts: &TestFuzz, executable_targets: &[(Executable, String)]) -> Result<
         return Ok(());
     }
 
-    let n_cpus = std::cmp::min(
+    let n_cpus = cmp::min(
         opts.cpus.unwrap_or_else(|| num_cpus::get() - 1),
         num_cpus::get(),
     );
