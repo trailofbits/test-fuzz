@@ -106,13 +106,16 @@ fn newer_afl() -> Result<()> {
 */
 #[test]
 fn incompatible_test_fuzz() -> Result<()> {
+    let mut version = semver::Version::parse(env!("CARGO_PKG_VERSION"))?;
+    version.major = 0;
+    version.minor = 0;
+    let version_script =
+        format!(r#"s/^version = {{ workspace = true }}$/version = \"{version}\"/"#);
+
     run_test(
         Some("*"),
         &[
-            (
-                r#"s/^\(version = "\)[^.]*\.[^.]*\.\([^"]*"\)$/\10.0.\2/"#,
-                &["test-fuzz/Cargo.toml"],
-            ),
+            (version_script.as_str(), &["test-fuzz/Cargo.toml"]),
             (
                 r#"s/^\(test-fuzz = {.*\<version = "=\)[^.]*\.[^.]*\.\([^"]*".*}\)$/\10.0.\2/"#,
                 &["Cargo.toml"],
@@ -146,19 +149,29 @@ fn incompatible_test_fuzz() -> Result<()> {
 */
 #[test]
 fn newer_test_fuzz() -> Result<()> {
+    let mut test_fuzz_version = semver::Version::parse(env!("CARGO_PKG_VERSION"))?;
+    test_fuzz_version.patch = 255;
+    test_fuzz_version.pre = semver::Prerelease::EMPTY;
+    test_fuzz_version.build = semver::BuildMetadata::EMPTY;
+    let test_fuzz_version_script =
+        format!(r#"s/^version = {{ workspace = true }}$/version = \"{test_fuzz_version}\"/"#);
+
+    let cargo_test_fuzz_version = env!("CARGO_PKG_VERSION")
+        .split_once('-')
+        .map_or(env!("CARGO_PKG_VERSION"), |(version, _)| version);
+    let cargo_test_fuzz_version_script =
+        format!(r#"s/^version = {{ workspace = true }}$/version = \"{cargo_test_fuzz_version}\"/"#);
+
     run_test(
         Some("*"),
         &[
-            (
-                r#"s/^\(version = "[^.]*\.[^.]*\)\.[^"]*\("\)$/\1.255\2/"#,
-                &["test-fuzz/Cargo.toml"],
-            ),
+            (test_fuzz_version_script.as_str(), &["test-fuzz/Cargo.toml"]),
             (
                 r#"s/^\(test-fuzz = {.*\<version = "=[^.]*\.[^.]*\)\.[^"]*\(".*}\)$/\1.255\2/"#,
                 &["Cargo.toml"],
             ),
             (
-                r#"s/^\(version = "[^-]*\)-[^"]*\("\)$/\1\2/"#,
+                cargo_test_fuzz_version_script.as_str(),
                 &["cargo-test-fuzz/Cargo.toml"],
             ),
         ],
