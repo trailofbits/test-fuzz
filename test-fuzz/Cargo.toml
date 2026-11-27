@@ -1,13 +1,11 @@
 [package]
 name = "test-fuzz"
-version = "8.1.1"
-edition = "2024"
-
 description = "To make fuzzing Rust easy"
 
-authors = ["Samuel E. Moelius III <sam@moeli.us>"]
-license = "AGPL-3.0 WITH mif-exception"
-repository = "https://github.com/trailofbits/test-fuzz"
+edition = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+version = { workspace = true }
 
 [dependencies]
 afl = { workspace = true, optional = true }

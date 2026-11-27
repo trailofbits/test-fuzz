@@ -12,7 +12,13 @@ members = [
     "testing",
     "third-party",
 ]
-resolver = "2"
+resolver = "3"
+
+[workspace.package]
+edition = "2024"
+license = "AGPL-3.0 WITH mif-exception"
+repository = "https://github.com/trailofbits/test-fuzz"
+version = "8.1.1"
 
 [workspace.dependencies]
 afl = { version = "0.18" }
