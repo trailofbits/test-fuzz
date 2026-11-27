@@ -1,8 +1,9 @@
 [package]
 name = "third-party"
-version = "8.1.1"
-edition = "2024"
+version = "0.1.0"
 publish = false
+
+edition = { workspace = true }
 
 [dependencies]
 

@@ -1278,7 +1278,7 @@ dependencies = [
 
 [[package]]
 name = "test-fuzz-fuzzable"
-version = "8.1.1"
+version = "0.1.0"
 dependencies = [
  "parse_duration",
  "serde",
@@ -1321,7 +1321,7 @@ dependencies = [
 
 [[package]]
 name = "test-fuzz-testing"
-version = "8.1.1"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "assert_cmd",
@@ -1336,7 +1336,7 @@ dependencies = [
 
 [[package]]
 name = "third-party"
-version = "8.1.1"
+version = "0.1.0"
 dependencies = [
  "assert_cmd",
  "bitflags",
