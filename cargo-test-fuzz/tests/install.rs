@@ -8,15 +8,7 @@ use std::{env::join_paths, fs::write, path::Path};
 use tempfile::NamedTempFile;
 use xshell::{Shell, cmd};
 
-/*
-  test-uninstalled-cargo-afl:
-    ...
-      - name: Test
-        run: |
-          OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
-          echo "$OUTPUT"
-          echo "$OUTPUT" | grep '^Error: Could not determine `cargo-afl` version. Is it installed? Try `cargo install afl`.$'
-*/
+// Verify that cargo-test-fuzz reports an error when cargo-afl is not installed.
 #[test]
 fn uninstalled_cargo_afl() -> Result<()> {
     run_test(
@@ -29,18 +21,8 @@ fn uninstalled_cargo_afl() -> Result<()> {
     )
 }
 
-/*
-  test-incompatible-cargo-afl:
-    ...
-      - name: Install older afl
-        run: cargo install afl --version=0.11.0
-
-      - name: Test
-        run: |
-          OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
-          echo "$OUTPUT"
-          echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `afl [^`]*`, which is incompatible with `cargo-afl [^`]*`.$'
-*/
+// Verify that cargo-test-fuzz reports an error when the selected afl package is incompatible with
+// the installed cargo-afl version.
 #[ignore = "reenable once a version of cargo-afl with rustix@1.1.5 has been published"]
 #[test]
 fn incompatible_cargo_afl() -> Result<()> {
@@ -54,23 +36,8 @@ fn incompatible_cargo_afl() -> Result<()> {
     )
 }
 
-/*
-  test-newer-afl:
-    ...
-      - name: Install afl 0.12.2
-        run: cargo install afl --version=0.12.2
-
-      - name: Require afl 0.12.3
-        run: |
-          sed -i 's/^\(afl = {.*\<version = "\)[^"]*\(".*}\)$/\1=0.12.3\2/' test-fuzz/Cargo.toml
-
-      - name: Test
-        run: |
-          OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
-          echo "$OUTPUT"
-          echo "$OUTPUT" | grep '^`[^`]*` depends on `afl [^`]*`, which is newer than `cargo-afl [^`]*`.'
-          echo "$OUTPUT" | grep 'Consider upgrading with `cargo install afl --force --version [^`]*`.$'
-*/
+// Verify that cargo-test-fuzz warns and suggests an upgrade when the selected afl package is newer
+// than the installed cargo-afl version.
 #[test]
 #[ignore = "reenable once two versions of cargo-afl with rustix@1.1.5 have been published"]
 fn newer_afl() -> Result<()> {
@@ -87,23 +54,8 @@ fn newer_afl() -> Result<()> {
     )
 }
 
-/*
-  test-incompatible-test-fuzz:
-    ...
-      - name: Install afl
-        run: cargo install afl
-
-      - name: Downgrade test-fuzz version
-        run: |
-          sed -i 's/^\(version = "\)[^.]*\.[^.]*\.\([^"]*"\)$/\10.0.\2/' test-fuzz/Cargo.toml
-          sed -i 's/^\(test-fuzz = {.*\<version = "=\)[^.]*\.[^.]*\.\([^"]*".*}\)$/\10.0.\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
-
-      - name: Test
-        run: |
-          OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
-          echo "$OUTPUT"
-          echo "$OUTPUT" | grep '^Error: `[^`]*` depends on `test-fuzz [^`]*`, which is incompatible with `cargo-test-fuzz [^`]*`.$'
-*/
+// Verify that cargo-test-fuzz reports an error when the selected test-fuzz package has an
+// incompatible version.
 #[test]
 fn incompatible_test_fuzz() -> Result<()> {
     let mut version = semver::Version::parse(env!("CARGO_PKG_VERSION"))?;
@@ -128,25 +80,8 @@ fn incompatible_test_fuzz() -> Result<()> {
     )
 }
 
-/*
-  test-newer-test-fuzz:
-    ...
-      - name: Install afl
-        run: cargo install afl
-
-      - name: Upgrade test-fuzz version
-        run: |
-          sed -i 's/^\(version = "[^.]*\.[^.]*\)\.[^"]*\("\)$/\1.255\2/' test-fuzz/Cargo.toml
-          sed -i 's/^\(test-fuzz = {.*\<version = "=[^.]*\.[^.]*\)\.[^"]*\(".*}\)$/\1.255\2/' cargo-test-fuzz/Cargo.toml examples/Cargo.toml
-          sed -i 's/^\(version = "[^-]*\)-[^"]*\("\)$/\1\2/' cargo-test-fuzz/Cargo.toml
-
-      - name: Test
-        run: |
-          OUTPUT="$(cargo run -p cargo-test-fuzz -- test-fuzz -p test-fuzz-examples --no-run 2>&1 1>/dev/null || true)"
-          echo "$OUTPUT"
-          echo "$OUTPUT" | grep '^`[^`]*` depends on `test-fuzz [^`]*`, which is newer than `cargo-test-fuzz [^`]*`.'
-          echo "$OUTPUT" | grep 'Consider upgrading with `cargo install cargo-test-fuzz --force --version [^`]*`.$'
-*/
+// Verify that cargo-test-fuzz warns and suggests an upgrade when the selected test-fuzz package is
+// newer than cargo-test-fuzz.
 #[test]
 fn newer_test_fuzz() -> Result<()> {
     let mut test_fuzz_version = semver::Version::parse(env!("CARGO_PKG_VERSION"))?;
